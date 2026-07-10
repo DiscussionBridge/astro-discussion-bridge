@@ -1,0 +1,50 @@
+---
+import config from "virtual:discussion-bridge/config";
+import { createDiscourseClient, type DiscoursePost } from "astro-discussion-bridge/client";
+
+interface Props {
+  topicId?: number | string;
+  minScore?: number;
+  maxReplies?: number;
+  discourseUrl?: string;
+  class?: string;
+}
+
+const topicId = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
+const minScore = Astro.props.minScore ?? config.replies.minScore;
+const maxReplies = Astro.props.maxReplies ?? config.replies.maxReplies;
+const discourseUrl = Astro.props.discourseUrl ?? config.discourseUrl;
+let replies: DiscoursePost[] = [];
+
+if (config.replies.enabled && topicId) {
+  const discourse = createDiscourseClient({ discourseUrl });
+  const topic = await discourse.topic(topicId);
+  replies = topic.post_stream.posts
+    .filter((post) => post.post_number > 1)
+    .filter((post) => post.score >= minScore)
+    .slice(0, maxReplies);
+}
+---
+
+{config.replies.enabled && replies.length > 0 && (
+  <section class:list={["discussion-bridge-replies", Astro.props.class]}>
+    <h2>Discussion</h2>
+    <ol>
+      {replies.map((reply) => (
+        <li>
+          <article>
+            <header>
+              <strong>{reply.display_username ?? reply.username}</strong>
+              <a href={`${discourseUrl}/t/${reply.topic_slug}/${reply.topic_id}/${reply.post_number}`}>
+                <time datetime={reply.created_at}>{new Date(reply.created_at).toLocaleDateString()}</time>
+              </a>
+            </header>
+            <div set:html={reply.cooked} />
+          </article>
+        </li>
+      ))}
+    </ol>
+  </section>
+)}
+
+

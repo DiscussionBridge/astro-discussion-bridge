@@ -1,0 +1,137 @@
+export interface DiscourseClientOptions {
+  discourseUrl: string;
+  apiKey?: string;
+  apiUsername?: string;
+  fetch?: typeof fetch;
+}
+
+export interface CreateTopicInput {
+  title: string;
+  raw: string;
+  category?: number;
+  tags?: string[];
+  embedUrl?: string;
+}
+
+export interface CreateTopicResponse {
+  id: number;
+  name: string;
+  username: string;
+  avatar_template: string;
+  created_at: string;
+  cooked: string;
+  post_number: number;
+  post_type: number;
+  updated_at: string;
+  reply_count: number;
+  reply_to_post_number: number | null;
+  quote_count: number;
+  incoming_link_count: number;
+  reads: number;
+  readers_count: number;
+  score: number;
+  topic_id: number;
+  topic_slug: string;
+}
+
+export interface TopicResponse {
+  id: number;
+  title: string;
+  fancy_title: string;
+  posts_count: number;
+  created_at: string;
+  post_stream: {
+    posts: DiscoursePost[];
+    stream: number[];
+  };
+}
+
+export interface DiscoursePost {
+  id: number;
+  name: string;
+  username: string;
+  avatar_template: string;
+  created_at: string;
+  cooked: string;
+  post_number: number;
+  post_type: number;
+  updated_at: string;
+  reply_count: number;
+  reply_to_post_number: number | null;
+  quote_count: number;
+  incoming_link_count: number;
+  reads: number;
+  readers_count: number;
+  score: number;
+  yours?: boolean;
+  topic_id: number;
+  topic_slug: string;
+  display_username: string | null;
+  primary_group_name: string | null;
+  flair_name: string | null;
+  flair_url: string | null;
+  flair_bg_color: string | null;
+  flair_color: string | null;
+  version: number;
+  can_edit?: boolean;
+  can_delete?: boolean;
+  can_recover?: boolean;
+  can_wiki?: boolean;
+  user_title: string | null;
+  trust_level?: number;
+  user_id?: number;
+}
+
+export function createDiscourseClient(options: DiscourseClientOptions) {
+  const discourseUrl = normalizeBaseUrl(options.discourseUrl);
+  const fetcher = options.fetch ?? fetch;
+
+  async function request<T>(pathname: string, init: RequestInit = {}): Promise<T> {
+    const response = await fetcher(new URL(pathname, discourseUrl), {
+      ...init,
+      headers: {
+        Accept: "application/json",
+        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.apiKey ? { "Api-Key": options.apiKey } : {}),
+        ...(options.apiUsername ? { "Api-Username": options.apiUsername } : {}),
+        ...init.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(
+        `Discourse request failed: ${response.status} ${response.statusText}${body ? `\n${body}` : ""}`,
+      );
+    }
+
+    return response.json() as Promise<T>;
+  }
+
+  return {
+    discourseUrl,
+    createTopic(input: CreateTopicInput) {
+      const body: Record<string, unknown> = {
+        title: input.title,
+        raw: input.raw,
+      };
+
+      if (input.category) body.category = input.category;
+      if (input.tags?.length) body.tags = input.tags;
+      if (input.embedUrl) body.embed_url = input.embedUrl;
+
+      return request<CreateTopicResponse>("/posts.json", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    },
+    topic(topicId: number | string) {
+      return request<TopicResponse>(`/t/${topicId}.json`);
+    },
+    request,
+  };
+}
+
+function normalizeBaseUrl(value: string): string {
+  return new URL(value).href.replace(/\/+$/, "");
+}

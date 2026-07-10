@@ -1,0 +1,22 @@
+# Dependencies and builds
+node_modules/
+dist/
+build/
+.astro/
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# Package artifacts
+*.tgz
+*.tar
+*.tar.gz
+
+# Logs and local scratch
+*.log
+tmp/
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,9 @@
+---
+import DefaultFooter from "@astrojs/starlight/components/Footer.astro";
+import Discussion from "astro-discussion-bridge/Discussion.astro";
+
+const topicUrl = Astro.locals.starlightRoute.entry.data.discussionUrl ?? Astro.locals.starlightRoute.entry.data.discourseTopicUrl;
+---
+
+<Discussion topicUrl={topicUrl} />
+<DefaultFooter />

@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "name": "DiscussionBridge Package",
+      "path": "packages/astro-discussion-bridge"
+    },
+    {
+      "name": "Demo Starlight Site",
+      "path": "examples/starlight-demo"
+    }
+  ],
+  "settings": {
+    "typescript.tsdk": "packages/astro-discussion-bridge/node_modules/typescript/lib"
+  }
+}

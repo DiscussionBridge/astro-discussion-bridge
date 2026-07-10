@@ -1,0 +1,65 @@
+---
+import config from "virtual:discussion-bridge/config";
+
+interface Props {
+  class?: string;
+  embedUrl?: string;
+  heading?: string;
+  topicUrl?: string;
+}
+
+const discourseUrl = `${config.discourseUrl}/`;
+const embedUrl = Astro.props.embedUrl ?? Astro.url.href;
+const heading = Astro.props.heading ?? "Comments";
+const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
+---
+
+{config.comments.enabled && (
+  <section class:list={["discussion-bridge-discussion", Astro.props.class]}>
+    <div class="discussion-bridge-discussion__header">
+      <h2>{heading}</h2>
+      {topicUrl && <a href={topicUrl}>Open discussion</a>}
+    </div>
+    <div id="discourse-comments"></div>
+  </section>
+)}
+
+{config.comments.enabled && (
+  <script define:vars={{ discourseUrl, embedUrl }}>
+    window.DiscourseEmbed = {
+      discourseUrl,
+      discourseEmbedUrl: embedUrl,
+    };
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `${discourseUrl}javascripts/embed.js`;
+    document.body.appendChild(script);
+  </script>
+)}
+
+<style>
+  .discussion-bridge-discussion {
+    margin-block-start: 3rem;
+    border-block-start: 1px solid var(--sl-color-gray-5);
+    padding-block-start: 2rem;
+  }
+
+  .discussion-bridge-discussion__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-end: 1rem;
+  }
+
+  .discussion-bridge-discussion__header h2 {
+    margin: 0;
+    font-size: var(--sl-text-h3);
+  }
+
+  .discussion-bridge-discussion__header a {
+    font-size: var(--sl-text-sm);
+  }
+</style>
+

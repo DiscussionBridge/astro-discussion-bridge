@@ -1,0 +1,17 @@
+---
+import DiscourseDiscussion from "./DiscourseDiscussion.astro";
+
+interface Props {
+  class?: string;
+  embedUrl?: string;
+  heading?: string;
+  topicUrl?: string;
+}
+---
+
+<DiscourseDiscussion
+  class={Astro.props.class}
+  embedUrl={Astro.props.embedUrl}
+  heading={Astro.props.heading}
+  topicUrl={Astro.props.topicUrl}
+/>
