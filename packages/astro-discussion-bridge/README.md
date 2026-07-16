@@ -150,7 +150,7 @@ The older `sync` command is kept as an alias, but `publish-new` is the recommend
 
 ### Sync Existing Topics
 
-`sync-existing` updates the managed first-post summary for pages that already have `discourseTopicId`. Astro remains the source of truth for the page, while Discourse keeps the companion discussion thread and a current summary/link block.
+`sync-existing` updates the managed first post for pages that already have `discourseTopicId`. Astro remains the source of truth for the page, while Discourse keeps the companion discussion thread and a current source-content block.
 
 Preview without editing Discourse or files.
 
@@ -171,7 +171,7 @@ npx astro-discussion-bridge sync-existing src/content/docs
 `publish-and-sync` is the explicit full workflow:
 
 - create missing companion topics
-- update existing first-post summaries when Astro source content changed
+- update existing first posts when Astro source content changed
 - skip unchanged pages
 - leave replies untouched
 
@@ -196,6 +196,8 @@ discussionSourceHash: "..."
 discussionLastSyncedAt: "2026-07-16T00:00:00.000Z"
 ```
 
+By default, DiscussionBridge syncs the full Markdown or MDX body into the managed first post and lets Discourse enforce its own post limits. Add `discussionSummary` frontmatter when a page should use a curated companion summary instead of the full source body.
+
 ### Automatic publish hook
 
 Turn on `publishOnBuild` when you want `astro build` to create missing companion topics before the site builds.
@@ -218,7 +220,7 @@ discussionBridge({
 
 With this option enabled, creating a new doc and running `astro build` will create the missing Discourse topic and write the topic metadata into that doc's frontmatter. Pages that already have `discourseTopicId` are skipped.
 
-To also sync existing first-post summaries during `astro build`, opt in explicitly with `syncExisting: true`.
+To also sync existing first posts during `astro build`, opt in explicitly with `syncExisting: true`.
 
 ```js
 // astro.config.mjs

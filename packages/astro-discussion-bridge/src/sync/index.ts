@@ -53,12 +53,11 @@ export async function syncDiscourseTopics(
     const parsed = parseMarkdown(source);
     const title = parsed.frontmatter.title || findFirstHeading(parsed.body) || titleFromFile(filePath);
     const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl });
-    const summary = summaryForPage(parsed);
+    const content = discussionContentForPage(parsed);
     const sourceHash = hashDiscussionSource({
       title,
       pageUrl,
-      summary,
-      source: parsed.body,
+      content,
     });
     const existingTopicId = parsed.frontmatter.discourseTopicId;
     const existingTopicUrl = parsed.frontmatter.discourseTopicUrl;
@@ -114,7 +113,7 @@ export async function syncDiscourseTopics(
         raw: companionTopicBody({
           title,
           pageUrl,
-          summary,
+          content,
           lastSyncedAt: new Date().toISOString(),
         }),
         editReason: "Sync DiscussionBridge companion summary from Astro source",
@@ -159,7 +158,7 @@ export async function syncDiscourseTopics(
     const lastSyncedAt = new Date().toISOString();
     const topic = await discourse.createTopic({
       title,
-      raw: companionTopicBody({ title, pageUrl, summary, lastSyncedAt }),
+      raw: companionTopicBody({ title, pageUrl, content, lastSyncedAt }),
       category: options.categoryId,
       tags: options.tags,
       embedUrl: pageUrl,
@@ -313,28 +312,15 @@ function pageUrlForFile(input: { docsDir: string; filePath: string; siteUrl: str
   return `${input.siteUrl.replace(/\/+$/, "")}/${pathname}`;
 }
 
-function summaryForPage(parsed: ParsedMarkdown): string {
-  if (parsed.frontmatter.description) return parsed.frontmatter.description;
+function discussionContentForPage(parsed: ParsedMarkdown): string {
+  if (parsed.frontmatter.discussionSummary) return parsed.frontmatter.discussionSummary;
 
-  const withoutHeadings = parsed.body
-    .replace(/^import\s+.+$/gm, "")
-    .replace(/^#\s+.+$/gm, "")
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/<[^>]+>/g, "")
-    .trim();
-  const summary = withoutHeadings
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
-    .filter(Boolean)
-    .slice(0, 3)
-    .join("\n\n");
-
-  if (!summary) return "See the linked Astro page for the current source content.";
-  if (summary.length <= 640) return summary;
-  return `${summary.slice(0, 637).replace(/\s+\S*$/, "")}...`;
+  const content = parsed.body.trim();
+  if (!content) return "See the linked Astro page for the current source content.";
+  return content;
 }
 
-function hashDiscussionSource(input: { title: string; pageUrl: string; summary: string; source: string }): string {
+function hashDiscussionSource(input: { title: string; pageUrl: string; content: string }): string {
   return createHash("sha256")
     .update(JSON.stringify(input))
     .digest("hex");
@@ -343,7 +329,7 @@ function hashDiscussionSource(input: { title: string; pageUrl: string; summary: 
 function companionTopicBody(input: {
   title: string;
   pageUrl: string;
-  summary: string;
+  content: string;
   lastSyncedAt: string;
 }): string {
   return [
@@ -351,8 +337,8 @@ function companionTopicBody(input: {
     "",
     `[${input.title}](${input.pageUrl})`,
     "",
-    "Summary:",
-    input.summary,
+    "Source content:",
+    input.content,
     "",
     `Last synced from Astro: ${input.lastSyncedAt}`,
     "",
