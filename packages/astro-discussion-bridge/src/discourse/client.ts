@@ -46,6 +46,17 @@ export interface TopicResponse {
   };
 }
 
+export interface UpdatePostInput {
+  postId: number | string;
+  raw: string;
+  editReason?: string;
+  bypassBump?: boolean;
+}
+
+export interface UpdatePostResponse {
+  post: DiscoursePost;
+}
+
 export interface DiscoursePost {
   id: number;
   name: string;
@@ -127,6 +138,18 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     },
     topic(topicId: number | string) {
       return request<TopicResponse>(`/t/${topicId}.json`);
+    },
+    updatePost(input: UpdatePostInput) {
+      return request<UpdatePostResponse>(`/posts/${input.postId}.json`, {
+        method: "PUT",
+        body: JSON.stringify({
+          post: {
+            raw: input.raw,
+            ...(input.editReason ? { edit_reason: input.editReason } : {}),
+          },
+          ...(input.bypassBump !== undefined ? { bypass_bump: input.bypassBump } : {}),
+        }),
+      });
     },
     request,
   };

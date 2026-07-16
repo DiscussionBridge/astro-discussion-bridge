@@ -7,7 +7,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "publish-new:dry-run": "astro-discussion-bridge publish-new src/content/docs --dry-run --discourse-url https://discourse.codinghorror.com --site-url https://docs.example.com"
+    "publish-new:dry-run": "astro-discussion-bridge publish-new src/content/docs --dry-run --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlightdemo.discussionbridge.dev --category-id 5 --tags discussionbridge,starlight-demo",
+    "sync-existing:dry-run": "astro-discussion-bridge sync-existing src/content/docs --dry-run --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlightdemo.discussionbridge.dev --category-id 5 --tags discussionbridge,starlight-demo",
+    "publish-and-sync:dry-run": "astro-discussion-bridge publish-and-sync src/content/docs --dry-run --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlightdemo.discussionbridge.dev --category-id 5 --tags discussionbridge,starlight-demo"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.2",

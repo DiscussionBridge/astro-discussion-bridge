@@ -38,7 +38,9 @@
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "sync": "astro-discussion-bridge sync",
-    "publish-new": "astro-discussion-bridge publish-new"
+    "publish-new": "astro-discussion-bridge publish-new",
+    "sync-existing": "astro-discussion-bridge sync-existing",
+    "publish-and-sync": "astro-discussion-bridge publish-and-sync"
   },
   "keywords": [
     "astro",

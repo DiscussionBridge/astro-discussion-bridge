@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import path from "node:path";
-import { syncDiscourseTopics } from "./sync/index.js";
+import { syncDiscourseTopics, type SyncMode } from "./sync/index.js";
 
 const command = process.argv[2] ?? "help";
-const validCommands = new Set(["sync", "publish-new"]);
+const validCommands = new Set(["sync", "publish-new", "sync-existing", "publish-and-sync"]);
 
 if (!validCommands.has(command)) {
   printUsage(command === "help" ? undefined : `Unknown command: ${command}`);
@@ -19,6 +19,7 @@ const apiKey = args.values.get("api-key") ?? process.env.DISCOURSE_API_KEY;
 const apiUsername = args.values.get("api-username") ?? process.env.DISCOURSE_API_USERNAME;
 const categoryId = numberFromValue(args.values.get("category-id") ?? process.env.DISCOURSE_CATEGORY_ID);
 const tags = tagsFromValue(args.values.get("tags") ?? process.env.DISCOURSE_TAGS);
+const mode = modeForCommand(command);
 
 const missing = [
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
@@ -32,8 +33,16 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-if (command === "publish-new" && !dryRun) {
+if (mode === "publish-new" && !dryRun) {
   console.log("Publishing missing discussion companion topics. Existing linked docs will be skipped.");
+}
+
+if (mode === "sync-existing" && !dryRun) {
+  console.log("Syncing existing discussion companion topic summaries. Missing topics will be skipped.");
+}
+
+if (mode === "publish-and-sync" && !dryRun) {
+  console.log("Publishing missing topics and syncing existing companion summaries.");
 }
 
 const results = await syncDiscourseTopics({
@@ -45,6 +54,7 @@ const results = await syncDiscourseTopics({
   categoryId,
   tags,
   dryRun,
+  mode,
 });
 
 for (const result of results) {
@@ -53,9 +63,11 @@ for (const result of results) {
 }
 
 const created = results.filter((result) => result.status === "created").length;
+const updated = results.filter((result) => result.status === "updated").length;
 const skipped = results.filter((result) => result.status === "skipped").length;
-const previewed = results.filter((result) => result.status === "dry-run").length;
-console.log(`Done: ${created} created, ${skipped} skipped, ${previewed} dry-run.`);
+const unchanged = results.filter((result) => result.status === "unchanged").length;
+const previewed = results.filter((result) => result.status.startsWith("dry-run")).length;
+console.log(`Done: ${created} created, ${updated} updated, ${skipped} skipped, ${unchanged} unchanged, ${previewed} dry-run.`);
 
 function parseArgs(rawArgs: string[]) {
   const values = new Map<string, string>();
@@ -100,9 +112,17 @@ function tagsFromValue(value: string | undefined): string[] | undefined {
   return value.split(",").map((tag) => tag.trim()).filter(Boolean);
 }
 
+function modeForCommand(command: string): SyncMode {
+  if (command === "sync-existing") return "sync-existing";
+  if (command === "publish-and-sync") return "publish-and-sync";
+  return "publish-new";
+}
+
 function printUsage(error?: string) {
   if (error) console.error(error);
   console.error("Usage:");
   console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
 }

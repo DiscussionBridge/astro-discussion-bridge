@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
+import { syncDiscourseTopics } from "./sync/index.js";
 
 type DiscussionBridgeIntegration = {
   name: string;
@@ -13,7 +14,7 @@ type DiscussionBridgeIntegration = {
       logger: { info: (message: string) => void };
     }) => Promise<void>;
   };
-};import { syncDiscourseTopics } from "./sync/index.js";
+};
 
 export type DiscussionBridgeProvider = "discourse";
 export type DiscussionBridgePreset =
@@ -39,6 +40,7 @@ export interface DiscussionBridgeOptions {
   };
   publishOnBuild?: {
     enabled?: boolean;
+    syncExisting?: boolean;
     docsDir?: string;
     apiKey?: string;
     apiUsername?: string;
@@ -68,6 +70,7 @@ interface PublicOptions {
 interface ResolvedOptions extends PublicOptions {
   publishOnBuild: {
     enabled: boolean;
+    syncExisting: boolean;
     docsDir: string;
     apiKey?: string;
     apiUsername?: string;
@@ -124,13 +127,16 @@ export default function discussionBridge(
           categoryId,
           tags,
           dryRun: resolvedOptions.publishOnBuild.dryRun,
+          mode: resolvedOptions.publishOnBuild.syncExisting ? "publish-and-sync" : "publish-new",
         });
         const created = results.filter((result) => result.status === "created").length;
+        const updated = results.filter((result) => result.status === "updated").length;
         const skipped = results.filter((result) => result.status === "skipped").length;
-        const dryRun = results.filter((result) => result.status === "dry-run").length;
+        const unchanged = results.filter((result) => result.status === "unchanged").length;
+        const dryRun = results.filter((result) => result.status.startsWith("dry-run")).length;
 
         logger.info(
-          `DiscussionBridge topic publish complete: ${created} created, ${skipped} skipped, ${dryRun} dry-run.`,
+          `DiscussionBridge topic publish complete: ${created} created, ${updated} updated, ${skipped} skipped, ${unchanged} unchanged, ${dryRun} dry-run.`,
         );
       },
     },
@@ -169,6 +175,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
     },
     publishOnBuild: {
       enabled: options.publishOnBuild?.enabled ?? false,
+      syncExisting: options.publishOnBuild?.syncExisting ?? false,
       docsDir: options.publishOnBuild?.docsDir ?? defaultDocsDirForPreset(preset),
       apiKey: options.publishOnBuild?.apiKey,
       apiUsername: options.publishOnBuild?.apiUsername,

@@ -1,6 +1,9 @@
+import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createDiscourseClient } from "../discourse/client.js";
+
+export type SyncMode = "publish-new" | "sync-existing" | "publish-and-sync";
 
 export interface SyncDiscourseTopicsOptions {
   docsDir: string;
@@ -11,6 +14,7 @@ export interface SyncDiscourseTopicsOptions {
   categoryId?: number;
   tags?: string[];
   dryRun?: boolean;
+  mode?: SyncMode;
 }
 
 export interface SyncedPage {
@@ -19,7 +23,8 @@ export interface SyncedPage {
   pageUrl: string;
   topicId?: number;
   topicUrl?: string;
-  status: "created" | "skipped" | "dry-run";
+  status: "created" | "updated" | "skipped" | "unchanged" | "dry-run-create" | "dry-run-update";
+  reason?: string;
 }
 
 interface ParsedMarkdown {
@@ -34,6 +39,7 @@ export async function syncDiscourseTopics(
   options: SyncDiscourseTopicsOptions,
 ): Promise<SyncedPage[]> {
   const docsDir = path.resolve(options.docsDir);
+  const mode = options.mode ?? "publish-new";
   const files = await findMarkdownFiles(docsDir);
   const discourse = createDiscourseClient({
     discourseUrl: options.discourseUrl,
@@ -47,28 +53,108 @@ export async function syncDiscourseTopics(
     const parsed = parseMarkdown(source);
     const title = parsed.frontmatter.title || findFirstHeading(parsed.body) || titleFromFile(filePath);
     const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl });
+    const summary = summaryForPage(parsed);
+    const sourceHash = hashDiscussionSource({ title, pageUrl, summary });
     const existingTopicId = parsed.frontmatter.discourseTopicId;
+    const existingTopicUrl = parsed.frontmatter.discourseTopicUrl;
+    const previousHash = parsed.frontmatter.discussionSourceHash;
 
     if (existingTopicId) {
+      if (mode === "publish-new") {
+        results.push({
+          filePath,
+          title,
+          pageUrl,
+          topicId: Number(existingTopicId),
+          topicUrl: existingTopicUrl,
+          status: "skipped",
+          reason: "already linked",
+        });
+        continue;
+      }
+
+      if (previousHash === sourceHash) {
+        results.push({
+          filePath,
+          title,
+          pageUrl,
+          topicId: Number(existingTopicId),
+          topicUrl: existingTopicUrl,
+          status: "unchanged",
+          reason: "source hash unchanged",
+        });
+        continue;
+      }
+
+      if (options.dryRun) {
+        results.push({
+          filePath,
+          title,
+          pageUrl,
+          topicId: Number(existingTopicId),
+          topicUrl: existingTopicUrl,
+          status: "dry-run-update",
+        });
+        continue;
+      }
+
+      const topic = await discourse.topic(existingTopicId);
+      const firstPost = topic.post_stream.posts.find((post) => post.post_number === 1);
+      if (!firstPost) {
+        throw new Error(`Could not find first post for Discourse topic ${existingTopicId}.`);
+      }
+
+      await discourse.updatePost({
+        postId: firstPost.id,
+        raw: companionTopicBody({
+          title,
+          pageUrl,
+          summary,
+          lastSyncedAt: new Date().toISOString(),
+        }),
+        editReason: "Sync DiscussionBridge companion summary from Astro source",
+        bypassBump: true,
+      });
+
+      await fs.writeFile(
+        filePath,
+        updateFrontmatter(source, {
+          discussionSourceHash: sourceHash,
+          discussionLastSyncedAt: new Date().toISOString(),
+        }),
+      );
+
       results.push({
         filePath,
         title,
         pageUrl,
         topicId: Number(existingTopicId),
-        topicUrl: parsed.frontmatter.discourseTopicUrl,
+        topicUrl: existingTopicUrl,
+        status: "updated",
+      });
+      continue;
+    }
+
+    if (mode === "sync-existing") {
+      results.push({
+        filePath,
+        title,
+        pageUrl,
         status: "skipped",
+        reason: "not linked",
       });
       continue;
     }
 
     if (options.dryRun) {
-      results.push({ filePath, title, pageUrl, status: "dry-run" });
+      results.push({ filePath, title, pageUrl, status: "dry-run-create" });
       continue;
     }
 
+    const lastSyncedAt = new Date().toISOString();
     const topic = await discourse.createTopic({
       title,
-      raw: companionTopicBody({ title, pageUrl }),
+      raw: companionTopicBody({ title, pageUrl, summary, lastSyncedAt }),
       category: options.categoryId,
       tags: options.tags,
       embedUrl: pageUrl,
@@ -80,6 +166,8 @@ export async function syncDiscourseTopics(
       updateFrontmatter(source, {
         discourseTopicId: String(topic.topic_id),
         discourseTopicUrl: topicUrl,
+        discussionSourceHash: sourceHash,
+        discussionLastSyncedAt: lastSyncedAt,
       }),
     );
 
@@ -220,7 +308,45 @@ function pageUrlForFile(input: { docsDir: string; filePath: string; siteUrl: str
   return `${input.siteUrl.replace(/\/+$/, "")}/${pathname}`;
 }
 
-function companionTopicBody(input: { title: string; pageUrl: string }): string {
-  return `This is a companion discussion topic for the original entry at ${input.pageUrl}\n\nUse this thread for comments, corrections, and follow-up questions about ${input.title}.`;
+function summaryForPage(parsed: ParsedMarkdown): string {
+  if (parsed.frontmatter.description) return parsed.frontmatter.description;
+
+  const withoutHeadings = parsed.body
+    .replace(/^import\s+.+$/gm, "")
+    .replace(/^#\s+.+$/gm, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/<[^>]+>/g, "")
+    .trim();
+  const firstParagraph = withoutHeadings.split(/\n\s*\n/).find((paragraph) => paragraph.trim());
+  const summary = firstParagraph?.replace(/\s+/g, " ").trim() ?? "";
+
+  if (!summary) return "See the linked Astro page for the current source content.";
+  if (summary.length <= 320) return summary;
+  return `${summary.slice(0, 317).replace(/\s+\S*$/, "")}...`;
 }
 
+function hashDiscussionSource(input: { title: string; pageUrl: string; summary: string }): string {
+  return createHash("sha256")
+    .update(JSON.stringify(input))
+    .digest("hex");
+}
+
+function companionTopicBody(input: {
+  title: string;
+  pageUrl: string;
+  summary: string;
+  lastSyncedAt: string;
+}): string {
+  return [
+    "This is a companion discussion topic for:",
+    "",
+    `[${input.title}](${input.pageUrl})`,
+    "",
+    "Summary:",
+    input.summary,
+    "",
+    `Last synced from Astro: ${input.lastSyncedAt}`,
+    "",
+    "Use this thread for comments, corrections, and follow-up questions.",
+  ].join("\n");
+}

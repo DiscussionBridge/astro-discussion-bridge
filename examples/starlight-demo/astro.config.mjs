@@ -3,7 +3,7 @@ import starlight from "@astrojs/starlight";
 import discussionBridge from "astro-discussion-bridge";
 
 export default defineConfig({
-  site: "https://docs.example.com",
+  site: "https://astrostarlightdemo.discussionbridge.dev",
   integrations: [
     starlight({
       title: "DiscussionBridge Demo",
@@ -23,8 +23,8 @@ export default defineConfig({
     discussionBridge({
       provider: "discourse",
       preset: "starlight",
-      discourseUrl: "https://discourse.codinghorror.com",
-      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.discussionbridge.dev",
+      siteUrl: "https://astrostarlightdemo.discussionbridge.dev",
       publishOnBuild: {
         enabled: false,
       },
