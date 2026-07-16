@@ -4,6 +4,15 @@
   "description": "Astro integration toolkit for bridging pages to hosted discussions, starting with Discourse.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DiscussionBridge/astro-discussion-bridge.git",
+    "directory": "packages/astro-discussion-bridge"
+  },
+  "bugs": {
+    "url": "https://github.com/DiscussionBridge/astro-discussion-bridge/issues"
+  },
+  "homepage": "https://github.com/DiscussionBridge/astro-discussion-bridge#readme",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
