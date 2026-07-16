@@ -122,6 +122,14 @@ DISCOURSE_TAGS=docs,starlight
 SITE_URL=https://docs.example.com
 ```
 
+For create-and-sync workflows, the API user/key must be able to:
+
+- create topics and posts in the target category
+- read existing topics and posts
+- update the managed first post for linked companion topics
+
+For early testing a global key works, but production usage should prefer the narrowest granular key that still supports those actions.
+
 ### Explicit publish command
 
 Run `publish-new` from the Astro project root when you are ready to create missing companion topics.

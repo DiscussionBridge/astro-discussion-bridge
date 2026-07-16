@@ -54,7 +54,12 @@ export async function syncDiscourseTopics(
     const title = parsed.frontmatter.title || findFirstHeading(parsed.body) || titleFromFile(filePath);
     const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl });
     const summary = summaryForPage(parsed);
-    const sourceHash = hashDiscussionSource({ title, pageUrl, summary });
+    const sourceHash = hashDiscussionSource({
+      title,
+      pageUrl,
+      summary,
+      source: parsed.body,
+    });
     const existingTopicId = parsed.frontmatter.discourseTopicId;
     const existingTopicUrl = parsed.frontmatter.discourseTopicUrl;
     const previousHash = parsed.frontmatter.discussionSourceHash;
@@ -317,15 +322,19 @@ function summaryForPage(parsed: ParsedMarkdown): string {
     .replace(/```[\s\S]*?```/g, "")
     .replace(/<[^>]+>/g, "")
     .trim();
-  const firstParagraph = withoutHeadings.split(/\n\s*\n/).find((paragraph) => paragraph.trim());
-  const summary = firstParagraph?.replace(/\s+/g, " ").trim() ?? "";
+  const summary = withoutHeadings
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join("\n\n");
 
   if (!summary) return "See the linked Astro page for the current source content.";
-  if (summary.length <= 320) return summary;
-  return `${summary.slice(0, 317).replace(/\s+\S*$/, "")}...`;
+  if (summary.length <= 640) return summary;
+  return `${summary.slice(0, 637).replace(/\s+\S*$/, "")}...`;
 }
 
-function hashDiscussionSource(input: { title: string; pageUrl: string; summary: string }): string {
+function hashDiscussionSource(input: { title: string; pageUrl: string; summary: string; source: string }): string {
   return createHash("sha256")
     .update(JSON.stringify(input))
     .digest("hex");

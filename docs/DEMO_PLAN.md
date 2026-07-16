@@ -26,7 +26,8 @@ Develop in public with a visible path from local preview to a live Cloudflare de
    - Use the public `Alpha` category at `https://forum.discussionbridge.dev/c/alpha/5` for test/demo topics.
    - Use Discourse category ID `5` for `publish-new` tests.
    - Use tags for product and demo details, for example `discussionbridge`, `starlight-demo`, and `cloudflare-demo`.
-   - Create an API key scoped for topic/post creation in the Alpha category.
+   - Current API key is global for the `discussbridge-bot` user.
+   - Longer term, replace it with a granular key that can create topics/posts in Alpha, read existing topics/posts, and update the managed first post for linked companion topics.
    - Enable embedding for localhost preview, `astrodemo.discussionbridge.dev`, and `astrostarlightdemo.discussionbridge.dev`.
    - Pre-integration backup checkpoint: `discussion-bridge-forum-2026-07-16-140054-v20260715090434.tar.gz`.
 
@@ -35,6 +36,8 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - Existing `.md` docs render `<Discussion />` through the Starlight layout override.
 - `publish-new --dry-run` detects missing topics without requiring API credentials.
 - `publish-new` creates one real Discourse companion topic in the Alpha category.
+- `sync-existing --dry-run` reports linked pages as unchanged after first-post summaries are synced.
+- `publish-and-sync --dry-run` previews both create and sync actions without writing to Discourse.
 - The built Cloudflare demo page loads the native Discourse discussion UI.
 - Logged-in Discourse users can interact with replies and likes in the embedded UI.
 - Multiple Astro hosts can connect to `forum.discussionbridge.dev` without topic collisions, using the `Alpha` category plus tags/URLs for namespacing.
@@ -49,6 +52,9 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - 2026-07-16: Starlight demo deployed to Cloudflare Pages and verified at https://astrostarlightdemo.discussionbridge.dev/.
   - Homepage returns `200` and links topic 21.
   - `/existing-md-page/` returns `200` and links topic 20.
+- 2026-07-16: Starlight demo synced existing first-post summaries for topics 20 and 21.
+  - Follow-up `sync-existing --dry-run` reported both pages unchanged.
+  - Source tracking frontmatter now includes `discussionSourceHash` and `discussionLastSyncedAt`.
 
 ## Notes
 

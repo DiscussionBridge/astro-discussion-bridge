@@ -4,8 +4,8 @@ description: A plain Markdown page proving MD docs do not need to become MDX.
 discourseTopicId: 20
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/existing-md-page/20"
 
-discussionSourceHash: "fa05447b13ca361aab9a11eb07cd4ef6213d723c89f2b7a056dc84588f276a25"
-discussionLastSyncedAt: "2026-07-16T18:08:00.089Z"
+discussionSourceHash: "d2267592e08729f14b994f55229e0348c9a8b8aad946c5f7be9b5a59c8dc4b07"
+discussionLastSyncedAt: "2026-07-16T18:38:15.808Z"
 
 ---
 
