@@ -15,6 +15,7 @@ export interface SyncDiscourseTopicsOptions {
   tags?: string[];
   dryRun?: boolean;
   mode?: SyncMode;
+  unlistSyncedTopics?: boolean;
 }
 
 export interface SyncedPage {
@@ -120,6 +121,20 @@ export async function syncDiscourseTopics(
         bypassBump: true,
       });
 
+      await discourse.updateTopic({
+        topicId: existingTopicId,
+        title,
+        categoryId: options.categoryId,
+      });
+
+      if (options.unlistSyncedTopics) {
+        await discourse.updateTopicStatus({
+          topicId: existingTopicId,
+          status: "visible",
+          enabled: false,
+        });
+      }
+
       await fs.writeFile(
         filePath,
         updateFrontmatter(source, {
@@ -164,6 +179,14 @@ export async function syncDiscourseTopics(
       embedUrl: pageUrl,
     });
     const topicUrl = `${discourse.discourseUrl}/t/${topic.topic_slug}/${topic.topic_id}`;
+
+    if (options.unlistSyncedTopics) {
+      await discourse.updateTopicStatus({
+        topicId: topic.topic_id,
+        status: "visible",
+        enabled: false,
+      });
+    }
 
     await fs.writeFile(
       filePath,

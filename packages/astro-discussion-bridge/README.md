@@ -166,6 +166,12 @@ npx astro-discussion-bridge sync-existing src/content/docs
 
 `sync-existing` does not create missing topics. Pages without `discourseTopicId` are skipped.
 
+Use `--unlist` for demo/test companion topics that should keep direct links and embeds working without appearing in category discovery. The configured Discourse API user must be allowed to change topic visibility; on typical Discourse installs that means a staff or moderator-level user. Retitling replied topics can require the same level of authority.
+
+```sh
+npx astro-discussion-bridge sync-existing src/content/docs --unlist
+```
+
 ### Publish and Sync
 
 `publish-and-sync` is the explicit full workflow:
@@ -186,6 +192,8 @@ Then run it intentionally when the dry run looks correct.
 ```sh
 npx astro-discussion-bridge publish-and-sync src/content/docs
 ```
+
+Add `--unlist` when newly created or synced demo/test topics should be unlisted. This uses the same API credentials as post creation and first-post sync, but Discourse may require a staff or moderator-level API user for topic visibility and retitling replied topics.
 
 When a topic is created or synced, DiscussionBridge writes source-tracking metadata to frontmatter:
 
@@ -232,6 +240,7 @@ discussionBridge({
   publishOnBuild: {
     enabled: true,
     syncExisting: true,
+    unlistSyncedTopics: true,
     docsDir: "src/content/docs",
     categoryId: 12,
     tags: ["docs", "starlight"],
@@ -239,7 +248,7 @@ discussionBridge({
 });
 ```
 
-The build hook is always opt-in. By default, `publishOnBuild.enabled` is `false`, and `publishOnBuild.syncExisting` is also `false`.
+The build hook is always opt-in. By default, `publishOnBuild.enabled` is `false`, `publishOnBuild.syncExisting` is `false`, and `publishOnBuild.unlistSyncedTopics` is `false`. Only enable `unlistSyncedTopics` when the build-time Discourse API credentials are permitted to unlist managed topics.
 
 For each Markdown or MDX page that does not already have a topic, `publish-new` or the automatic publish hook writes these fields into frontmatter. Existing `.md` files do not need to be converted to `.mdx` unless you want to place Astro components directly inside the page body:
 

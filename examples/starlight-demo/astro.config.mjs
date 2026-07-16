@@ -6,7 +6,7 @@ export default defineConfig({
   site: "https://astrostarlightdemo.discussionbridge.dev",
   integrations: [
     starlight({
-      title: "DiscussionBridge Demo",
+      title: "Discussion Bridge for Astro",
       components: {
         Footer: "./src/components/Footer.astro",
       },
@@ -14,8 +14,8 @@ export default defineConfig({
         {
           label: "Demo",
           items: [
-            { label: "Welcome", slug: "" },
-            { label: "Existing MD Page", slug: "existing-md-page" },
+            { label: "Starlight Demo", slug: "" },
+            { label: "Plain Markdown Demo", slug: "existing-md-page" },
           ],
         },
       ],

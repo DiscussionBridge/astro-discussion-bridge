@@ -2,7 +2,7 @@
 
 ## Goal
 
-Develop in public with a visible path from local preview to a live Cloudflare demo backed by a real Discourse sandbox. DiscussionBridge is Discourse-first; the demo should prove an excellent Discourse integration across Astro, Starlight, and deployment targets.
+Develop in public with a visible path from local preview to a live Cloudflare demo backed by a real Discourse sandbox. Discussion Bridge is Discourse-first; the Astro demo should prove an excellent Discourse integration across Astro, Starlight, and deployment targets.
 
 ## Demo Stages
 
@@ -21,13 +21,14 @@ Develop in public with a visible path from local preview to a live Cloudflare de
    - Use `astrostarlightdemo.discussionbridge.dev` as the stable Astro/Starlight demo hostname.
    - Use this as the real docs-site embed-host test target.
 
-4. Live Discourse Alpha category
+4. Live Discourse category for Astro
    - Use `forum.discussionbridge.dev` as the Discourse host.
-   - Use the public `Alpha` category at `https://forum.discussionbridge.dev/c/alpha/5` for test/demo topics.
+   - Use the public `Discussion Bridge for Astro` category at `https://forum.discussionbridge.dev/c/alpha/5` for test/demo topics.
    - Use Discourse category ID `5` for `publish-new` tests.
-   - Use tags for product and demo details, for example `discussionbridge`, `starlight-demo`, and `cloudflare-demo`.
+   - Use tags for product and demo details, for example `discussionbridge`, `astro`, `starlight-demo`, and `cloudflare-demo`.
    - Current API key is global for the `discussbridge-bot` user.
-   - Longer term, replace it with a granular key that can create topics/posts in Alpha, read existing topics/posts, and update the managed first post for linked companion topics.
+   - Longer term, replace it with a granular key that can create topics/posts in Alpha, read existing topics/posts, update the managed first post for linked companion topics, update topic metadata, and unlist demo/test topics.
+   - Topic visibility and retitling replied topics require a Discourse user with enough topic-management authority; the current `discussbridge-bot` key can sync first posts but is blocked from unlisting topics.
    - Enable embedding for localhost preview, `astrodemo.discussionbridge.dev`, and `astrostarlightdemo.discussionbridge.dev`.
    - Pre-integration backup checkpoint: `discussion-bridge-forum-2026-07-16-140054-v20260715090434.tar.gz`.
 
@@ -35,16 +36,18 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 
 - Existing `.md` docs render `<Discussion />` through the Starlight layout override.
 - `publish-new --dry-run` detects missing topics without requiring API credentials.
-- `publish-new` creates one real Discourse companion topic in the Alpha category.
+- `publish-new` creates one real Discourse companion topic in the Discussion Bridge for Astro category.
 - `sync-existing --dry-run` reports linked pages as unchanged after first posts are synced from Astro source content.
 - `publish-and-sync --dry-run` previews both create and sync actions without writing to Discourse.
 - The built Cloudflare demo page loads the native Discourse discussion UI.
 - Logged-in Discourse users can interact with replies and likes in the embedded UI.
-- Multiple Astro hosts can connect to `forum.discussionbridge.dev` without topic collisions, using the `Alpha` category plus tags/URLs for namespacing.
+- Multiple Astro hosts can connect to `forum.discussionbridge.dev` without topic collisions, using the Discussion Bridge for Astro category plus tags/URLs for namespacing.
+- Demo/test companion topics can be unlisted to keep category discovery clean while preserving direct links and embeds.
+- Topic title/category metadata sync is part of the managed companion-topic path, subject to Discourse permissions.
 
 ## Live Publish Checkpoints
 
-- 2026-07-16: Starlight demo published companion topics to the public Alpha category.
+- 2026-07-16: Starlight demo published companion topics to the public Discussion Bridge for Astro category.
   - `existing-md-page.md`: https://forum.discussionbridge.dev/t/existing-md-page/20
   - `index.md`: https://forum.discussionbridge.dev/t/discussionbridge-starlight-demo/21
   - API user: `discussbridge-bot`
@@ -55,6 +58,11 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - 2026-07-16: Starlight demo synced existing first posts for topics 20 and 21.
   - Follow-up `sync-existing --dry-run` reported both pages unchanged.
   - Source tracking frontmatter now includes `discussionSourceHash` and `discussionLastSyncedAt`.
+- 2026-07-16: Naming pass aligned the demo with the Discussion Bridge product-family strategy.
+  - Astro lane name: Discussion Bridge for Astro.
+  - Topic 20 title updated through the bot key because the topic has no replies.
+  - Topic 21 first post synced, but the topic title remained unchanged because Discourse did not allow the bot user to retitle a replied topic.
+  - `sync-existing --unlist` reached Discourse topic visibility management and was rejected with `403 Forbidden`; promote the bot or use a granular key tied to a staff/moderator-capable user before enabling unlisting in automation.
 
 ## Notes
 
@@ -66,8 +74,10 @@ Coding Horror is useful as a public reference, but it cannot be used for embedde
 - `astrodemo.discussionbridge.dev` hosts the live Astro demo.
 - `astrostarlightdemo.discussionbridge.dev` hosts the live Astro/Starlight demo.
 - `forum.discussionbridge.dev` hosts the Discourse instance.
-- Discourse category names should describe purpose, not repeat the brand. Use `Alpha`, not `DiscussionBridge Alpha`.
-- Tags should carry product, demo, and provider details such as `discussionbridge`, `starlight-demo`, `cloudflare-demo`.
+- Discussion Bridge is the umbrella product family.
+- Discussion Bridge for Astro is this Astro/Starlight integration and demo lane.
+- Future integration lanes can use parallel names such as Discussion Bridge for Statamic.
+- Tags should carry product, integration, demo, and provider details such as `discussionbridge`, `astro`, `starlight-demo`, `cloudflare-demo`.
 
 
 

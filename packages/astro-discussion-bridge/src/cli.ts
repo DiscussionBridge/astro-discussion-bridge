@@ -13,6 +13,7 @@ if (!validCommands.has(command)) {
 const args = parseArgs(process.argv.slice(3));
 const docsDir = path.resolve(args.positionals[0] ?? "src/content/docs");
 const dryRun = args.flags.has("dry-run");
+const unlistSyncedTopics = args.flags.has("unlist");
 const discourseUrl = args.values.get("discourse-url") ?? process.env.DISCOURSE_URL;
 const siteUrl = args.values.get("site-url") ?? process.env.SITE_URL;
 const apiKey = args.values.get("api-key") ?? process.env.DISCOURSE_API_KEY;
@@ -55,6 +56,7 @@ const results = await syncDiscourseTopics({
   tags,
   dryRun,
   mode,
+  unlistSyncedTopics,
 });
 
 for (const result of results) {
@@ -122,7 +124,7 @@ function printUsage(error?: string) {
   if (error) console.error(error);
   console.error("Usage:");
   console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
 }

@@ -1,15 +1,15 @@
 ---
-title: Existing MD Page
-description: A plain Markdown page proving MD docs do not need to become MDX.
+title: "Discussion Bridge for Astro: Plain Markdown Demo"
+description: A plain Markdown page proving Discussion Bridge for Astro docs do not need to become MDX.
 discourseTopicId: 20
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/existing-md-page/20"
 
-discussionSourceHash: "9183dcdf4b60e6e976bc06efad3f9a0170eee07d16de0216621366ff45c99f9c"
-discussionLastSyncedAt: "2026-07-16T18:50:36.164Z"
+discussionSourceHash: "1a7f7606792224cbf87f0af890513ebb237b7de7682cc79d15188bf5c6aacc5f"
+discussionLastSyncedAt: "2026-07-16T19:20:33.442Z"
 
 ---
 
-# Existing MD Page
+# Discussion Bridge for Astro: Plain Markdown Demo
 
 This page is intentionally `.md`, not `.mdx`.
 

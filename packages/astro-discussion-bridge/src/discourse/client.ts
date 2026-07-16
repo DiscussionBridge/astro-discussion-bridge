@@ -57,6 +57,18 @@ export interface UpdatePostResponse {
   post: DiscoursePost;
 }
 
+export interface UpdateTopicInput {
+  topicId: number | string;
+  title?: string;
+  categoryId?: number;
+}
+
+export interface UpdateTopicStatusInput {
+  topicId: number | string;
+  status: "visible" | "closed" | "archived" | "pinned";
+  enabled: boolean;
+}
+
 export interface DiscoursePost {
   id: number;
   name: string;
@@ -138,6 +150,26 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     },
     topic(topicId: number | string) {
       return request<TopicResponse>(`/t/${topicId}.json`);
+    },
+    updateTopic(input: UpdateTopicInput) {
+      return request<TopicResponse>(`/t/-/${input.topicId}.json`, {
+        method: "PUT",
+        body: JSON.stringify({
+          topic: {
+            ...(input.title ? { title: input.title } : {}),
+            ...(input.categoryId ? { category_id: input.categoryId } : {}),
+          },
+        }),
+      });
+    },
+    updateTopicStatus(input: UpdateTopicStatusInput) {
+      return request<unknown>(`/t/${input.topicId}/status.json`, {
+        method: "PUT",
+        body: JSON.stringify({
+          status: input.status,
+          enabled: String(input.enabled),
+        }),
+      });
     },
     updatePost(input: UpdatePostInput) {
       return request<UpdatePostResponse>(`/posts/${input.postId}.json`, {

@@ -1,16 +1,16 @@
 ---
-title: DiscussionBridge Starlight Demo
+title: "Discussion Bridge for Astro: Starlight Demo"
 discourseTopicId: 21
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/discussionbridge-starlight-demo/21"
 
-discussionSourceHash: "7c1ac40e705c57ace259ad2620a9632b92f2defe65a41b0838480ed1fe6c23c4"
-discussionLastSyncedAt: "2026-07-16T18:50:36.700Z"
+discussionSourceHash: "e416f16af7fca203e52c5ec00f17321ced5fa96710fea86e45780f11b4f60115"
+discussionLastSyncedAt: "2026-07-16T19:20:34.127Z"
 
 ---
 
-# DiscussionBridge Starlight Demo
+# Discussion Bridge for Astro: Starlight Demo
 
-This is a demo Starlight site that installs `astro-discussion-bridge` from a local package tarball.
+This is a demo Starlight site for Discussion Bridge for Astro. It installs `astro-discussion-bridge` from a local package tarball.
 
 The discussion section is added by a Starlight `Footer` override, so this page can remain plain Markdown.
 

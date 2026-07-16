@@ -41,6 +41,7 @@ export interface DiscussionBridgeOptions {
   publishOnBuild?: {
     enabled?: boolean;
     syncExisting?: boolean;
+    unlistSyncedTopics?: boolean;
     docsDir?: string;
     apiKey?: string;
     apiUsername?: string;
@@ -71,6 +72,7 @@ interface ResolvedOptions extends PublicOptions {
   publishOnBuild: {
     enabled: boolean;
     syncExisting: boolean;
+    unlistSyncedTopics: boolean;
     docsDir: string;
     apiKey?: string;
     apiUsername?: string;
@@ -128,6 +130,7 @@ export default function discussionBridge(
           tags,
           dryRun: resolvedOptions.publishOnBuild.dryRun,
           mode: resolvedOptions.publishOnBuild.syncExisting ? "publish-and-sync" : "publish-new",
+          unlistSyncedTopics: resolvedOptions.publishOnBuild.unlistSyncedTopics,
         });
         const created = results.filter((result) => result.status === "created").length;
         const updated = results.filter((result) => result.status === "updated").length;
@@ -176,6 +179,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
     publishOnBuild: {
       enabled: options.publishOnBuild?.enabled ?? false,
       syncExisting: options.publishOnBuild?.syncExisting ?? false,
+      unlistSyncedTopics: options.publishOnBuild?.unlistSyncedTopics ?? false,
       docsDir: options.publishOnBuild?.docsDir ?? defaultDocsDirForPreset(preset),
       apiKey: options.publishOnBuild?.apiKey,
       apiUsername: options.publishOnBuild?.apiUsername,
