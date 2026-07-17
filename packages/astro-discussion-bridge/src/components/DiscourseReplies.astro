@@ -38,8 +38,56 @@ function likeCount(post: DiscoursePost): number {
   return post.like_count ?? likeAction?.count ?? 0;
 }
 
+function reactionItems(post: DiscoursePost): Array<{ icon: string; label: string; count: number }> {
+  if (post.reactions?.length) {
+    return post.reactions.map((reaction) => ({
+      icon: reactionIcon(reaction.id),
+      label: reactionLabel(reaction.id),
+      count: reaction.count,
+    }));
+  }
+
+  const count = likeCount(post);
+  return count > 0 ? [{ icon: "♡", label: "likes", count }] : [];
+}
+
+function reactionIcon(id: string): string {
+  const icons: Record<string, string> = {
+    "+1": "👍",
+    clap: "👏",
+    confetti_ball: "🎉",
+    heart: "♡",
+    hugs: "🤗",
+    laughing: "😄",
+    open_mouth: "😮",
+  };
+  return icons[id] ?? id;
+}
+
+function reactionLabel(id: string): string {
+  const labels: Record<string, string> = {
+    "+1": "thumbs up",
+    clap: "claps",
+    confetti_ball: "celebrations",
+    heart: "likes",
+    hugs: "hugs",
+    laughing: "laughs",
+    open_mouth: "surprises",
+  };
+  return labels[id] ?? id;
+}
+
 function replyUrl(post: DiscoursePost): string {
   return `${discourseUrl}/t/${post.topic_slug}/${post.topic_id}/${post.post_number}`;
+}
+
+function userUrl(post: DiscoursePost): string {
+  return `${discourseUrl}/u/${encodeURIComponent(post.username.toLowerCase())}`;
+}
+
+function replyRecipientUrl(post: DiscoursePost): string | undefined {
+  if (!post.reply_to_user) return undefined;
+  return `${discourseUrl}/u/${encodeURIComponent(post.reply_to_user.username.toLowerCase())}`;
 }
 
 function avatarUrl(post: DiscoursePost): string | undefined {
@@ -56,6 +104,15 @@ function cookedHtml(post: DiscoursePost): string {
 function absolutizeDiscourseLinks(html: string, baseUrl: string): string {
   const normalizedBase = baseUrl.replace(/\/+$/, "");
   return html.replace(/\s(href|src)="\/(?!\/)([^"]*)"/g, ` $1="${normalizedBase}/$2"`);
+}
+
+function actionItems(post: DiscoursePost): Array<{ icon: string; label: string; count: number }> {
+  if (!showLikes) return [];
+  return [
+    ...reactionItems(post),
+    ...(post.reply_count > 0 ? [{ icon: "↩", label: "replies", count: post.reply_count }] : []),
+    ...(post.quote_count > 0 ? [{ icon: "❞", label: "quotes", count: post.quote_count }] : []),
+  ];
 }
 
 const refreshConfig = topicId
@@ -95,20 +152,32 @@ const refreshConfig = topicId
               </div>
               <div class="discussion-bridge-reply__content">
                 <header class="discussion-bridge-reply__header">
-                  <strong class="discussion-bridge-reply__author">{reply.display_username ?? reply.username}</strong>
-                  <span aria-hidden="true">·</span>
+                  <div class="discussion-bridge-reply__identity">
+                    <a class="discussion-bridge-reply__author" href={userUrl(reply)}>
+                      {reply.display_username ?? reply.username}
+                    </a>
+                    {reply.reply_to_user && (
+                      <span class="discussion-bridge-reply__reply-to">
+                        replying to <a href={replyRecipientUrl(reply)}>@{reply.reply_to_user.username}</a>
+                      </span>
+                    )}
+                  </div>
                   <a class="discussion-bridge-reply__permalink" href={replyUrl(reply)}>
                     <time datetime={reply.created_at}>{new Date(reply.created_at).toLocaleDateString()}</time>
                   </a>
                 </header>
                 <div class="discussion-bridge-reply__body" set:html={cookedHtml(reply)} />
+                {actionItems(reply).length > 0 && (
+                  <ul class="discussion-bridge-reply__actions" aria-label="Post actions">
+                    {actionItems(reply).map((action) => (
+                      <li aria-label={`${action.count} ${action.label}`}>
+                        <span aria-hidden="true">{action.icon}</span>
+                        <span>{action.count}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              {showLikes && likeCount(reply) > 0 && (
-                <p class="discussion-bridge-reply__actions" aria-label={`${likeCount(reply)} likes`}>
-                  <span aria-hidden="true">♡</span>
-                  <span>{likeCount(reply)}</span>
-                </p>
-              )}
             </article>
           </li>
         ))
@@ -154,8 +223,8 @@ const refreshConfig = topicId
       const avatar = document.createElement("div");
       const content = document.createElement("div");
       const header = document.createElement("header");
-      const author = document.createElement("strong");
-      const separator = document.createElement("span");
+      const identity = document.createElement("div");
+      const author = document.createElement("a");
       const link = document.createElement("a");
       const time = document.createElement("time");
       const body = document.createElement("div");
@@ -182,10 +251,10 @@ const refreshConfig = topicId
       }
       content.className = "discussion-bridge-reply__content";
       header.className = "discussion-bridge-reply__header";
+      identity.className = "discussion-bridge-reply__identity";
       author.className = "discussion-bridge-reply__author";
+      author.href = `${refreshConfig.discourseUrl}/u/${encodeURIComponent(reply.username.toLowerCase())}`;
       author.textContent = reply.display_username ?? reply.username;
-      separator.setAttribute("aria-hidden", "true");
-      separator.textContent = "·";
       time.dateTime = reply.created_at;
       time.textContent = createdAt.toLocaleDateString();
       link.className = "discussion-bridge-reply__permalink";
@@ -194,24 +263,40 @@ const refreshConfig = topicId
       body.className = "discussion-bridge-reply__body";
       body.innerHTML = absolutizeDiscourseLinks(reply.cooked, refreshConfig.discourseUrl);
 
-      header.append(author, separator, link);
+      identity.append(author);
+      if (reply.reply_to_user) {
+        const replyTo = document.createElement("span");
+        const replyToLink = document.createElement("a");
+        replyTo.className = "discussion-bridge-reply__reply-to";
+        replyTo.append("replying to ");
+        replyToLink.href = `${refreshConfig.discourseUrl}/u/${encodeURIComponent(reply.reply_to_user.username.toLowerCase())}`;
+        replyToLink.textContent = `@${reply.reply_to_user.username}`;
+        replyTo.append(replyToLink);
+        identity.append(replyTo);
+      }
+      header.append(identity, link);
       content.append(header, body);
-      article.append(avatar, content);
 
-      const count = likeCount(reply);
-      if (refreshConfig.showLikes && count > 0) {
-        const meta = document.createElement("p");
-        const icon = document.createElement("span");
-        const value = document.createElement("span");
-        meta.className = "discussion-bridge-reply__actions";
-        meta.setAttribute("aria-label", `${count} likes`);
-        icon.setAttribute("aria-hidden", "true");
-        icon.textContent = "♡";
-        value.textContent = String(count);
-        meta.append(icon, value);
-        article.append(meta);
+      const actions = actionItems(reply, refreshConfig);
+      if (actions.length > 0) {
+        const list = document.createElement("ul");
+        list.className = "discussion-bridge-reply__actions";
+        list.setAttribute("aria-label", "Post actions");
+        for (const action of actions) {
+          const item = document.createElement("li");
+          const icon = document.createElement("span");
+          const value = document.createElement("span");
+          item.setAttribute("aria-label", `${action.count} ${action.label}`);
+          icon.setAttribute("aria-hidden", "true");
+          icon.textContent = action.icon;
+          value.textContent = String(action.count);
+          item.append(icon, value);
+          list.append(item);
+        }
+        content.append(list);
       }
 
+      article.append(avatar, content);
       item.append(article);
       return item;
     }
@@ -219,6 +304,51 @@ const refreshConfig = topicId
     function likeCount(post) {
       const likeAction = post.actions_summary?.find((action) => action.id === 2);
       return post.like_count ?? likeAction?.count ?? 0;
+    }
+
+    function actionItems(post, refreshConfig) {
+      const reactions = post.reactions?.length
+        ? post.reactions.map((reaction) => ({
+            icon: reactionIcon(reaction.id),
+            label: reactionLabel(reaction.id),
+            count: reaction.count,
+          }))
+        : [];
+      const likes = reactions.length || !refreshConfig.showLikes || likeCount(post) <= 0
+        ? []
+        : [{ icon: "♡", label: "likes", count: likeCount(post) }];
+      return [
+        ...reactions,
+        ...likes,
+        ...(post.reply_count > 0 ? [{ icon: "↩", label: "replies", count: post.reply_count }] : []),
+        ...(post.quote_count > 0 ? [{ icon: "❞", label: "quotes", count: post.quote_count }] : []),
+      ];
+    }
+
+    function reactionIcon(id) {
+      const icons = {
+        "+1": "👍",
+        clap: "👏",
+        confetti_ball: "🎉",
+        heart: "♡",
+        hugs: "🤗",
+        laughing: "😄",
+        open_mouth: "😮",
+      };
+      return icons[id] ?? id;
+    }
+
+    function reactionLabel(id) {
+      const labels = {
+        "+1": "thumbs up",
+        clap: "claps",
+        confetti_ball: "celebrations",
+        heart: "likes",
+        hugs: "hugs",
+        laughing: "laughs",
+        open_mouth: "surprises",
+      };
+      return labels[id] ?? id;
     }
 
     function absolutizeDiscourseLinks(html, baseUrl) {
@@ -264,11 +394,11 @@ const refreshConfig = topicId
   .discussion-bridge-replies article {
     position: relative;
     display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr);
-    column-gap: 0.875rem;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    column-gap: 1rem;
     margin: 0;
     border-block-start: 1px solid var(--sl-color-gray-5);
-    padding: 1.125rem 0;
+    padding: 1.25rem 0;
   }
 
   .discussion-bridge-replies li:first-child article {
@@ -277,8 +407,8 @@ const refreshConfig = topicId
   }
 
   .discussion-bridge-reply__avatar {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: 999px;
     overflow: hidden;
     background: #e5e0d6;
@@ -300,17 +430,36 @@ const refreshConfig = topicId
   }
 
   .discussion-bridge-reply__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: start;
+    gap: 0.75rem;
+    margin-block-end: 0.45rem;
+    line-height: 1.3;
+  }
+
+  .discussion-bridge-reply__identity {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.35rem;
-    margin-block-end: 0.375rem;
-    line-height: 1.3;
+    gap: 0.35rem 0.625rem;
+    min-width: 0;
   }
 
   .discussion-bridge-reply__author {
     color: inherit;
     font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .discussion-bridge-reply__author:hover {
+    text-decoration: underline;
+  }
+
+  .discussion-bridge-reply__reply-to {
+    color: #62665d;
+    font-size: 0.875rem;
   }
 
   .discussion-bridge-reply__permalink {
@@ -336,17 +485,24 @@ const refreshConfig = topicId
   }
 
   .discussion-bridge-reply__actions {
-    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: #62665d;
+    line-height: 1;
+  }
+
+  .discussion-bridge-reply__actions li {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    width: max-content;
-    margin-block: 0.625rem 0;
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 999px;
     padding: 0.2rem 0.5rem;
-    color: #62665d;
-    line-height: 1;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -356,6 +512,7 @@ const refreshConfig = topicId
     }
 
     .discussion-bridge-reply__permalink,
+    .discussion-bridge-reply__reply-to,
     .discussion-bridge-reply__actions {
       color: #b7b0a4;
     }

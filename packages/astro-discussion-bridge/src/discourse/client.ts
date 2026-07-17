@@ -31,6 +31,7 @@ export interface CreateTopicResponse {
   updated_at: string;
   reply_count: number;
   reply_to_post_number: number | null;
+  reply_to_user?: DiscourseReplyToUser;
   quote_count: number;
   incoming_link_count: number;
   reads: number;
@@ -97,6 +98,7 @@ export interface DiscoursePost {
   score: number;
   like_count?: number;
   actions_summary?: DiscoursePostActionSummary[];
+  reactions?: DiscoursePostReaction[];
   yours?: boolean;
   topic_id: number;
   topic_slug: string;
@@ -121,6 +123,19 @@ export interface DiscoursePostActionSummary {
   count?: number;
   acted?: boolean;
   can_act?: boolean;
+}
+
+export interface DiscourseReplyToUser {
+  id: number;
+  username: string;
+  name: string | null;
+  avatar_template: string;
+}
+
+export interface DiscoursePostReaction {
+  id: string;
+  type: string;
+  count: number;
 }
 
 export function createDiscourseClient(options: DiscourseClientOptions) {

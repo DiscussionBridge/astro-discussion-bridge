@@ -15,6 +15,7 @@ const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteract
 const embedHeight = config.comments.embedHeight;
 const heading = Astro.props.heading ?? "Comments";
 const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
+const fullAppEmbedUrl = `${discourseUrl}embed/comments?embed_url=${encodeURIComponent(embedUrl)}&full_app=true`;
 ---
 
 {config.comments.enabled && (
@@ -23,11 +24,24 @@ const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopic
       <h2>{heading}</h2>
       {topicUrl && <a href={topicUrl}>Open discussion</a>}
     </div>
-    <div id="discourse-comments"></div>
+    {fullApp ? (
+      <iframe
+        class="discussion-bridge-discussion__iframe"
+        id="discourse-embed-frame"
+        src={fullAppEmbedUrl}
+        title={heading}
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        sandbox="allow-same-origin allow-scripts allow-forms"
+        style={`height: ${embedHeight};`}
+      />
+    ) : (
+      <div id="discourse-comments"></div>
+    )}
   </section>
 )}
 
-{config.comments.enabled && (
+{config.comments.enabled && !fullApp && (
   <script define:vars={{ discourseUrl, embedUrl, fullApp, embedHeight }}>
     window.DiscourseEmbed = {
       discourseUrl,
@@ -64,6 +78,12 @@ const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopic
 
   .discussion-bridge-discussion__header a {
     font-size: var(--sl-text-sm);
+  }
+
+  .discussion-bridge-discussion__iframe {
+    display: block;
+    width: 100%;
+    border: 0;
   }
 </style>
 
