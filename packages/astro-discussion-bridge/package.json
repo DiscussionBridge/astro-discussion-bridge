@@ -27,6 +27,10 @@
       "types": "./dist/discourse/client.d.ts",
       "import": "./dist/discourse/client.js"
     },
+    "./import-existing": {
+      "types": "./dist/import-existing.d.ts",
+      "import": "./dist/import-existing.js"
+    },
     "./sync": {
       "types": "./dist/sync/index.d.ts",
       "import": "./dist/sync/index.js"
@@ -50,7 +54,8 @@
     "sync": "astro-discussion-bridge sync",
     "publish-new": "astro-discussion-bridge publish-new",
     "sync-existing": "astro-discussion-bridge sync-existing",
-    "publish-and-sync": "astro-discussion-bridge publish-and-sync"
+    "publish-and-sync": "astro-discussion-bridge publish-and-sync",
+    "import-existing": "astro-discussion-bridge import-existing"
   },
   "keywords": [
     "astro",

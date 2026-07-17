@@ -7,6 +7,7 @@ It is modeled after the Ghost and WordPress Discourse integrations:
 - Astro owns the page.
 - Discourse owns the discussion thread.
 - An explicit `publish-new` command creates companion topics for pages that need them.
+- An explicit `import-existing` command can bring an existing Discourse topic into Astro as a linked Markdown page.
 - Page frontmatter can store the discussion topic ID and URL.
 - Astro components embed the native Discourse discussion UI, with optional static reply excerpts for server-rendered pages.
 
@@ -265,6 +266,34 @@ discussionLastSyncedAt: "2026-07-16T00:00:00.000Z"
 ```
 
 By default, DiscussionBridge syncs the full Markdown or MDX body into the managed first post and lets Discourse enforce its own post limits. Add `discussionSummary` frontmatter when a page should use a curated companion summary instead of the full source body.
+
+### Import Existing Topics
+
+`import-existing` is for the reverse onboarding case: the topic already exists in Discourse, and you want Astro to become the source page for it.
+
+Preview one or more imports first.
+
+```sh
+npx astro-discussion-bridge import-existing src/content/blog \
+  --topic https://forum.example.com/t/existing-topic/123 \
+  --site-url https://docs.example.com \
+  --discourse-url https://forum.example.com \
+  --dry-run
+```
+
+Then import intentionally.
+
+```sh
+npx astro-discussion-bridge import-existing src/content/blog \
+  --topic https://forum.example.com/t/existing-topic/123 \
+  --site-url https://docs.example.com \
+  --discourse-url https://forum.example.com \
+  --comments-display full
+```
+
+You can also pass comma-separated ids with `--topic-id 123,124`. Existing files are skipped by default; add `--overwrite` only when you mean to replace the local Markdown file.
+
+Imported files include the Discourse linkage fields, `discussionImportedAt`, and `discussionSourceHash`, so a later `sync-existing` run can tell whether the Astro source has changed before updating the Discourse first post.
 
 ### Automatic publish hook
 

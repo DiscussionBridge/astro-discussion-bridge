@@ -83,6 +83,7 @@ export interface DiscoursePost {
   username: string;
   avatar_template: string;
   created_at: string;
+  raw?: string;
   cooked: string;
   post_number: number;
   post_type: number;
@@ -178,6 +179,9 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     },
     topic(topicId: number | string) {
       return request<TopicResponse>(`/t/${topicId}.json`);
+    },
+    post(postId: number | string) {
+      return request<DiscoursePost>(`/posts/${postId}.json`);
     },
     updateTopic(input: UpdateTopicInput) {
       return request<TopicResponse>(`/t/-/${input.topicId}.json`, {

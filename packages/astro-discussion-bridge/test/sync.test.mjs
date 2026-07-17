@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { importExistingDiscourseTopics } from "../dist/import-existing.js";
 import { syncDiscourseTopics, validateDiscourseTopicTitle } from "../dist/sync/index.js";
 
 test("validates titles before publishing to Discourse", () => {
@@ -436,6 +437,136 @@ test("routeBase maps content lane files to their public URL prefix", async () =>
   }
 });
 
+test("import-existing writes linked Astro Markdown from a Discourse topic URL", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-"));
+  const docsDir = path.join(dir, "blog");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 21,
+        title: "Imported Discourse Topic",
+        category_id: 5,
+        visible: true,
+        post_stream: {
+          posts: [
+            {
+              id: 101,
+              post_number: 1,
+              topic_id: 21,
+              topic_slug: "imported-discourse-topic",
+              cooked: "<p>Cooked fallback.</p>",
+            },
+          ],
+        },
+      },
+      post: {
+        id: 101,
+        post_number: 1,
+        topic_id: 21,
+        topic_slug: "imported-discourse-topic",
+        raw: "# Imported Body\n\nThis came from Discourse.",
+        cooked: "<p>This came from Discourse.</p>",
+      },
+    });
+
+    const results = await importExistingDiscourseTopics({
+      docsDir,
+      routeBase: "blog",
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["https://forum.example.com/t/imported-discourse-topic/21/2?u=philh"],
+      commentsDisplay: "full",
+    });
+
+    assert.equal(results[0].status, "imported");
+    assert.equal(results[0].pageUrl, "https://docs.example.com/blog/imported-discourse-topic/");
+    assert.equal(calls.some((call) => call.pathname === "/t/21.json"), true);
+    assert.equal(calls.some((call) => call.pathname === "/posts/101.json"), true);
+
+    const source = await readFile(path.join(docsDir, "imported-discourse-topic.md"), "utf8");
+    assert.match(source, /title: "Imported Discourse Topic"/);
+    assert.match(source, /discourseTopicId: 21/);
+    assert.match(source, /discussionCommentsDisplay: "full"/);
+    assert.match(source, /discussionSourceHash: "[a-f0-9]{64}"/);
+    assert.match(source, /# Imported Body/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing skips existing files unless overwrite is enabled", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-skip-"));
+  const docsDir = path.join(dir, "blog");
+  const filePath = path.join(docsDir, "existing-topic.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(filePath, "keep me\n");
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Existing Topic",
+        category_id: 5,
+        visible: true,
+        post_stream: {
+          posts: [
+            {
+              id: 101,
+              post_number: 1,
+              topic_id: 21,
+              topic_slug: "existing-topic",
+              cooked: "<p>Replacement.</p>",
+            },
+          ],
+        },
+      },
+      post: {
+        id: 101,
+        post_number: 1,
+        topic_id: 21,
+        topic_slug: "existing-topic",
+        raw: "Replacement.",
+        cooked: "<p>Replacement.</p>",
+      },
+    });
+
+    const skipped = await importExistingDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+    });
+
+    assert.equal(skipped[0].status, "skipped");
+    assert.equal(await readFile(filePath, "utf8"), "keep me\n");
+
+    const overwritten = await importExistingDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+      overwrite: true,
+    });
+
+    assert.equal(overwritten[0].status, "imported");
+    assert.match(await readFile(filePath, "utf8"), /Replacement\./);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("frontmatter failure recipients receive page-specific publish errors", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-page-notify-"));
   const docsDir = path.join(dir, "docs");
@@ -518,7 +649,7 @@ test("frontmatter failure recipients receive page-specific publish errors", asyn
   }
 });
 
-function mockDiscourseFetch(calls, { topic, createdTopic }) {
+function mockDiscourseFetch(calls, { topic, createdTopic, post }) {
   return async (url, init = {}) => {
     const parsed = new URL(url);
     const method = init.method ?? "GET";
@@ -527,6 +658,10 @@ function mockDiscourseFetch(calls, { topic, createdTopic }) {
 
     if (method === "GET" && parsed.pathname === "/t/21.json") {
       return jsonResponse(topic);
+    }
+
+    if (method === "GET" && parsed.pathname === "/posts/101.json") {
+      return jsonResponse(post ?? topic?.post_stream?.posts?.[0]);
     }
 
     if (method === "PUT" && parsed.pathname === "/posts/101.json") {

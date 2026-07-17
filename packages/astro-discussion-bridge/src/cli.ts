@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import path from "node:path";
+import { importExistingDiscourseTopics } from "./import-existing.js";
 import { syncDiscourseTopics, type SyncMode } from "./sync/index.js";
 
 const command = process.argv[2] ?? "help";
-const validCommands = new Set(["sync", "publish-new", "sync-existing", "publish-and-sync"]);
+const validCommands = new Set(["sync", "publish-new", "sync-existing", "publish-and-sync", "import-existing"]);
 
 if (!validCommands.has(command)) {
   printUsage(command === "help" ? undefined : `Unknown command: ${command}`);
@@ -26,12 +27,21 @@ const titleMinLength = numberFromValue(args.values.get("title-min-length") ?? pr
 const tags = tagsFromValue(args.values.get("tags") ?? process.env.DISCOURSE_TAGS);
 const notifyRecipients = csvFromValue(args.values.get("notify-recipients") ?? process.env.DISCOURSE_NOTIFY_RECIPIENTS);
 const mode = modeForCommand(command);
+const topics = [
+  ...(csvFromValue(args.values.get("topic")) ?? []),
+  ...(csvFromValue(args.values.get("topics")) ?? []),
+  ...(csvFromValue(args.values.get("topic-id")) ?? []),
+  ...(csvFromValue(args.values.get("topic-ids")) ?? []),
+];
+const overwrite = args.flags.has("overwrite");
+const commentsDisplay = commentsDisplayFromValue(args.values.get("comments-display"));
 
 const missing = [
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
   ...(!siteUrl ? ["SITE_URL or --site-url"] : []),
   ...(!dryRun && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
   ...(!dryRun && !apiUsername ? ["DISCOURSE_API_USERNAME or --api-username"] : []),
+  ...(command === "import-existing" && topics.length === 0 ? ["--topic URL[,URL] or --topic-id ID[,ID]"] : []),
 ];
 
 if (missing.length > 0) {
@@ -49,6 +59,35 @@ if (mode === "sync-existing" && !dryRun) {
 
 if (mode === "publish-and-sync" && !dryRun) {
   console.log("Publishing missing topics and syncing existing companion summaries.");
+}
+
+if (command === "import-existing") {
+  if (!dryRun) {
+    console.log("Importing existing Discourse topics into Astro Markdown files.");
+  }
+
+  const results = await importExistingDiscourseTopics({
+    docsDir,
+    siteUrl: siteUrl!,
+    routeBase,
+    discourseUrl: discourseUrl!,
+    apiKey: apiKey ?? "",
+    apiUsername: apiUsername ?? "",
+    topics,
+    dryRun,
+    overwrite,
+    commentsDisplay,
+  });
+
+  for (const result of results) {
+    console.log(`${result.status}: ${result.filePath} -> ${result.topicUrl}`);
+  }
+
+  const imported = results.filter((result) => result.status === "imported").length;
+  const skipped = results.filter((result) => result.status === "skipped").length;
+  const previewed = results.filter((result) => result.status.startsWith("dry-run")).length;
+  console.log(`Done: ${imported} imported, ${skipped} skipped, ${previewed} dry-run.`);
+  process.exit(0);
 }
 
 const results = await syncDiscourseTopics({
@@ -130,6 +169,13 @@ function csvFromValue(value: string | undefined): string[] | undefined {
   return value.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
+function commentsDisplayFromValue(value: string | undefined): "simple" | "full" | "fullInteractive" | undefined {
+  if (!value) return undefined;
+  if (value === "simple" || value === "full" || value === "fullInteractive") return value;
+  printUsage(`Invalid --comments-display value: ${value}`);
+  process.exit(1);
+}
+
 function modeForCommand(command: string): SyncMode {
   if (command === "sync-existing") return "sync-existing";
   if (command === "publish-and-sync") return "publish-and-sync";
@@ -142,5 +188,6 @@ function printUsage(error?: string) {
   console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [--topic-id ID[,ID]] [--dry-run] [--overwrite] [--route-base PATH] [--comments-display simple|full|fullInteractive] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--route-base PATH] [--discourse-url URL] [--site-url URL]");
 }
