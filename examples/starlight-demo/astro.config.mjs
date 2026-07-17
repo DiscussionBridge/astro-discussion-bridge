@@ -58,6 +58,13 @@ export default defineConfig({
             categoryId: 5,
             tags: ["discussionbridge", "astro", "starlight-demo", "news"],
           },
+          {
+            name: "comments",
+            docsDir: "src/content/comments",
+            routeBase: "comments",
+            categoryId: 5,
+            tags: ["discussionbridge", "astro", "starlight-demo", "comments"],
+          },
         ],
       },
     }),

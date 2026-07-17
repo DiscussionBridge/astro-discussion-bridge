@@ -5,6 +5,7 @@ interface Props {
   commentsDisplay?: "simple" | "full" | "fullInteractive";
   date: Date;
   description: string;
+  embedUrl?: string;
   laneLabel: string;
   title: string;
   topicId?: number | string;
@@ -31,6 +32,7 @@ const formattedDate = new Intl.DateTimeFormat("en", {
         <a href="/releases/">Releases</a>
         <a href="/blog/">Blog</a>
         <a href="/news/">News</a>
+        <a href="/comments/">Comments</a>
       </nav>
     </header>
     <main>
@@ -43,6 +45,7 @@ const formattedDate = new Intl.DateTimeFormat("en", {
       </article>
       <Discussion
         display={Astro.props.commentsDisplay}
+        embedUrl={Astro.props.embedUrl}
         heading="Discussion"
         topicId={Astro.props.topicId}
         topicUrl={Astro.props.topicUrl}

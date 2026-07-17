@@ -6,6 +6,7 @@ import { docsSchema } from "@astrojs/starlight/schema";
 const companionTopicFields = z.object({
   discourseTopicId: z.union([z.string(), z.number()]).optional(),
   discourseTopicUrl: z.string().url().optional(),
+  discussionEmbedUrl: z.string().url().optional(),
   discussionCommentsDisplay: z.enum(["simple", "full", "fullInteractive"]).optional(),
 });
 
@@ -38,6 +39,10 @@ export const collections = {
   }),
   news: defineCollection({
     loader: glob({ base: "./src/content/news", pattern: "**/*.md" }),
+    schema: lanePostSchema,
+  }),
+  comments: defineCollection({
+    loader: glob({ base: "./src/content/comments", pattern: "**/*.md" }),
     schema: lanePostSchema,
   }),
 };
