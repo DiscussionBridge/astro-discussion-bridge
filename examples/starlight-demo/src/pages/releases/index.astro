@@ -1,0 +1,37 @@
+---
+import { getCollection } from "astro:content";
+
+const releases = (await getCollection("releases")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Release Lane | Discussion Bridge for Astro</title>
+  </head>
+  <body>
+    <main>
+      <a href="/">Discussion Bridge for Astro</a>
+      <h1>Release Lane</h1>
+      <p>Starlog-style release notes mapped to a dedicated Discussion Bridge content lane.</p>
+      <ul>
+        {releases.map((entry) => (
+          <li>
+            <a href={`/releases/${entry.id}/`}>{entry.data.title}</a>
+            <span>v{entry.data.versionNumber}</span>
+          </li>
+        ))}
+      </ul>
+    </main>
+  </body>
+</html>
+
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
+  main { width: min(760px, calc(100% - 2rem)); margin: 0 auto; padding-block: 4rem; }
+  li { margin-block: 0.75rem; }
+  span { color: #666; margin-inline-start: 0.5rem; }
+</style>

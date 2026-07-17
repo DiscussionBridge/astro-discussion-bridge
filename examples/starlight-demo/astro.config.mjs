@@ -27,6 +27,32 @@ export default defineConfig({
       siteUrl: "https://astrostarlightdemo.discussionbridge.dev",
       publishOnBuild: {
         enabled: false,
+        lanes: [
+          {
+            name: "docs",
+            docsDir: "src/content/docs",
+            categoryId: 5,
+            tags: ["discussionbridge", "astro", "starlight-demo", "docs"],
+          },
+          {
+            name: "releases",
+            docsDir: "src/content/releases",
+            categoryId: 5,
+            tags: ["discussionbridge", "astro", "starlight-demo", "releases"],
+          },
+          {
+            name: "blog",
+            docsDir: "src/content/blog",
+            categoryId: 5,
+            tags: ["discussionbridge", "astro", "starlight-demo", "blog"],
+          },
+          {
+            name: "news",
+            docsDir: "src/content/news",
+            categoryId: 5,
+            tags: ["discussionbridge", "astro", "starlight-demo", "news"],
+          },
+        ],
       },
     }),
   ],

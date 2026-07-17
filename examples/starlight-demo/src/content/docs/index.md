@@ -15,3 +15,11 @@ This is a demo Starlight site for Discussion Bridge for Astro. It installs `astr
 The discussion section is added by a Starlight `Footer` override, so this page can remain plain Markdown.
 
 This page is now testing visible Astro content updates synced to the Discourse companion summary.
+
+## Content lane demos
+
+The same Astro site also includes non-doc content lanes:
+
+- [Release lane](/releases/)
+- [Blog lane](/blog/)
+- [News lane](/news/)
