@@ -146,6 +146,12 @@ Create topics for pages that do not already have `discourseTopicId`.
 npx astro-discussion-bridge publish-new src/content/docs
 ```
 
+Before any live writes, DiscussionBridge validates managed page titles against common Discourse topic-title rules. By default, titles must be at least 15 characters and must not look like repeated filler text. Use `--title-min-length` when the target Discourse site uses a different minimum, or `--skip-title-validation` only when you intentionally want Discourse to be the source of truth for title rejection.
+
+```sh
+npx astro-discussion-bridge publish-new src/content/docs --title-min-length 10
+```
+
 The older `sync` command is kept as an alias, but `publish-new` is the recommended command because it makes the side effect clear.
 
 ### Sync Existing Topics
@@ -195,6 +201,8 @@ npx astro-discussion-bridge publish-and-sync src/content/docs
 
 Add `--unlist` when newly created or synced demo/test topics should be unlisted. This uses the same API credentials as post creation and first-post sync, but Discourse may require a staff or moderator-level API user for topic visibility and retitling replied topics.
 
+`publish-and-sync` uses the same title preflight as `publish-new`, so short or filler-like titles fail before any Discourse writes happen.
+
 When a topic is created or synced, DiscussionBridge writes source-tracking metadata to frontmatter:
 
 ```yaml
@@ -241,6 +249,7 @@ discussionBridge({
     enabled: true,
     syncExisting: true,
     unlistSyncedTopics: true,
+    titleMinLength: 15,
     docsDir: "src/content/docs",
     categoryId: 12,
     tags: ["docs", "starlight"],
@@ -248,7 +257,7 @@ discussionBridge({
 });
 ```
 
-The build hook is always opt-in. By default, `publishOnBuild.enabled` is `false`, `publishOnBuild.syncExisting` is `false`, and `publishOnBuild.unlistSyncedTopics` is `false`. Only enable `unlistSyncedTopics` when the build-time Discourse API credentials are permitted to unlist managed topics.
+The build hook is always opt-in. By default, `publishOnBuild.enabled` is `false`, `publishOnBuild.syncExisting` is `false`, `publishOnBuild.unlistSyncedTopics` is `false`, and `publishOnBuild.validateTitles` is `true`. Only enable `unlistSyncedTopics` when the build-time Discourse API credentials are permitted to unlist managed topics.
 
 For each Markdown or MDX page that does not already have a topic, `publish-new` or the automatic publish hook writes these fields into frontmatter. Existing `.md` files do not need to be converted to `.mdx` unless you want to place Astro components directly inside the page body:
 

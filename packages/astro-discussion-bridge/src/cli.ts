@@ -14,11 +14,13 @@ const args = parseArgs(process.argv.slice(3));
 const docsDir = path.resolve(args.positionals[0] ?? "src/content/docs");
 const dryRun = args.flags.has("dry-run");
 const unlistSyncedTopics = args.flags.has("unlist");
+const validateTitles = !args.flags.has("skip-title-validation");
 const discourseUrl = args.values.get("discourse-url") ?? process.env.DISCOURSE_URL;
 const siteUrl = args.values.get("site-url") ?? process.env.SITE_URL;
 const apiKey = args.values.get("api-key") ?? process.env.DISCOURSE_API_KEY;
 const apiUsername = args.values.get("api-username") ?? process.env.DISCOURSE_API_USERNAME;
 const categoryId = numberFromValue(args.values.get("category-id") ?? process.env.DISCOURSE_CATEGORY_ID);
+const titleMinLength = numberFromValue(args.values.get("title-min-length") ?? process.env.DISCOURSE_TITLE_MIN_LENGTH);
 const tags = tagsFromValue(args.values.get("tags") ?? process.env.DISCOURSE_TAGS);
 const mode = modeForCommand(command);
 
@@ -57,6 +59,8 @@ const results = await syncDiscourseTopics({
   dryRun,
   mode,
   unlistSyncedTopics,
+  validateTitles,
+  titleMinLength,
 });
 
 for (const result of results) {
@@ -123,8 +127,8 @@ function modeForCommand(command: string): SyncMode {
 function printUsage(error?: string) {
   if (error) console.error(error);
   console.error("Usage:");
-  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--title-min-length N] [--skip-title-validation] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--title-min-length N] [--skip-title-validation] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--title-min-length N] [--skip-title-validation] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
 }

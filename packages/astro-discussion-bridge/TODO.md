@@ -9,9 +9,8 @@
 - Re-run `npm run check` and `npm run build` after any dependency changes.
 ## Publish Validation
 
-- Add preflight validation for Discourse topic titles before live publishing.
-- Warn or fail before creating any topics when a page title may be rejected by Discourse title rules, such as titles shorter than the target instance minimum.
 - Consider a configurable title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
+- Consider reading Discourse title constraints from the target instance when authenticated, while keeping local validation available for dry runs.
 ## Sync Validation
 
 - Expand tests around `sync-existing` and `publish-and-sync` edge cases before widening usage beyond the demo.

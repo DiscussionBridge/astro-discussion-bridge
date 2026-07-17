@@ -16,6 +16,8 @@ export interface SyncDiscourseTopicsOptions {
   dryRun?: boolean;
   mode?: SyncMode;
   unlistSyncedTopics?: boolean;
+  validateTitles?: boolean;
+  titleMinLength?: number;
 }
 
 export interface SyncedPage {
@@ -35,6 +37,7 @@ interface ParsedMarkdown {
 }
 
 const markdownExtensions = new Set([".md", ".mdx"]);
+const defaultTitleMinLength = 15;
 
 export async function syncDiscourseTopics(
   options: SyncDiscourseTopicsOptions,
@@ -42,6 +45,38 @@ export async function syncDiscourseTopics(
   const docsDir = path.resolve(options.docsDir);
   const mode = options.mode ?? "publish-new";
   const files = await findMarkdownFiles(docsDir);
+  const pages = await Promise.all(
+    files.map(async (filePath) => {
+      const source = await fs.readFile(filePath, "utf8");
+      const parsed = parseMarkdown(source);
+      const title = parsed.frontmatter.title || findFirstHeading(parsed.body) || titleFromFile(filePath);
+      const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl });
+      const content = discussionContentForPage(parsed);
+      const sourceHash = hashDiscussionSource({ title, pageUrl, content });
+
+      return {
+        filePath,
+        source,
+        parsed,
+        title,
+        pageUrl,
+        content,
+        sourceHash,
+        existingTopicId: parsed.frontmatter.discourseTopicId,
+        existingTopicUrl: parsed.frontmatter.discourseTopicUrl,
+        previousHash: parsed.frontmatter.discussionSourceHash,
+      };
+    }),
+  );
+
+  if (options.validateTitles !== false) {
+    validateManagedPageTitles({
+      pages,
+      mode,
+      minLength: options.titleMinLength ?? defaultTitleMinLength,
+    });
+  }
+
   const discourse = createDiscourseClient({
     discourseUrl: options.discourseUrl,
     apiKey: options.apiKey,
@@ -49,20 +84,18 @@ export async function syncDiscourseTopics(
   });
   const results: SyncedPage[] = [];
 
-  for (const filePath of files) {
-    const source = await fs.readFile(filePath, "utf8");
-    const parsed = parseMarkdown(source);
-    const title = parsed.frontmatter.title || findFirstHeading(parsed.body) || titleFromFile(filePath);
-    const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl });
-    const content = discussionContentForPage(parsed);
-    const sourceHash = hashDiscussionSource({
+  for (const page of pages) {
+    const {
+      filePath,
+      source,
       title,
       pageUrl,
       content,
-    });
-    const existingTopicId = parsed.frontmatter.discourseTopicId;
-    const existingTopicUrl = parsed.frontmatter.discourseTopicUrl;
-    const previousHash = parsed.frontmatter.discussionSourceHash;
+      sourceHash,
+      existingTopicId,
+      existingTopicUrl,
+      previousHash,
+    } = page;
 
     if (existingTopicId) {
       if (mode === "publish-new") {
@@ -209,6 +242,76 @@ export async function syncDiscourseTopics(
   }
 
   return results;
+}
+
+export interface TopicTitleValidationIssue {
+  title: string;
+  reason: string;
+}
+
+export function validateDiscourseTopicTitle(
+  title: string,
+  options: { minLength?: number } = {},
+): TopicTitleValidationIssue[] {
+  const minLength = options.minLength ?? defaultTitleMinLength;
+  const normalizedTitle = title.trim().replace(/\s+/g, " ");
+  const issues: TopicTitleValidationIssue[] = [];
+
+  if (normalizedTitle.length < minLength) {
+    issues.push({
+      title,
+      reason: `Title is too short for Discourse topic creation; minimum is ${minLength} characters.`,
+    });
+  }
+
+  const words = normalizedTitle.match(/[\p{L}\p{N}]+/gu) ?? [];
+  const repeatedWords = words.filter((word) => {
+    const normalizedWord = word.toLocaleLowerCase();
+    if (normalizedWord.length < 4) return false;
+
+    return new Set([...normalizedWord]).size <= 2;
+  });
+
+  if (words.length > 0 && repeatedWords.length / words.length > 0.5) {
+    issues.push({
+      title,
+      reason: "Title may be rejected by Discourse as unclear because most words repeat the same letters.",
+    });
+  }
+
+  return issues;
+}
+
+function validateManagedPageTitles(input: {
+  pages: Array<{
+    filePath: string;
+    title: string;
+    existingTopicId?: string;
+  }>;
+  mode: SyncMode;
+  minLength: number;
+}) {
+  const issues = input.pages.flatMap((page) => {
+    const managesPage =
+      (input.mode === "publish-new" && !page.existingTopicId) ||
+      (input.mode === "sync-existing" && Boolean(page.existingTopicId)) ||
+      input.mode === "publish-and-sync";
+
+    if (!managesPage) return [];
+
+    return validateDiscourseTopicTitle(page.title, { minLength: input.minLength }).map((issue) => ({
+      ...issue,
+      filePath: page.filePath,
+    }));
+  });
+
+  if (issues.length === 0) return;
+
+  const details = issues
+    .map((issue) => `- ${issue.filePath}: ${issue.reason} Current title: "${issue.title}"`)
+    .join("\n");
+
+  throw new Error(`Discourse topic title preflight failed:\n${details}`);
 }
 
 async function findMarkdownFiles(dir: string): Promise<string[]> {

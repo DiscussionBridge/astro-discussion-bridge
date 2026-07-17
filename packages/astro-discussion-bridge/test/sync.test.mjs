@@ -3,7 +3,68 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { syncDiscourseTopics } from "../dist/sync/index.js";
+import { syncDiscourseTopics, validateDiscourseTopicTitle } from "../dist/sync/index.js";
+
+test("validates titles before publishing to Discourse", () => {
+  assert.deepEqual(validateDiscourseTopicTitle("Discussion Bridge for Astro"), []);
+  assert.match(validateDiscourseTopicTitle("Beta")[0].reason, /too short/);
+  assert.equal(validateDiscourseTopicTitle("aaaa bbbb cccc").some((issue) => /unclear/.test(issue.reason)), true);
+});
+
+test("publish-new title preflight fails before network writes", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-title-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "beta.md");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Beta"',
+        "---",
+        "",
+        "# Beta",
+        "",
+        "Short page title.",
+      ].join("\n"),
+    );
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 21,
+        title: "Beta",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+      createdTopic: {
+        topic_id: 22,
+        topic_slug: "beta",
+      },
+    });
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "publish-new",
+      }),
+      /Discourse topic title preflight failed/,
+    );
+
+    assert.equal(calls.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
 
 test("sync-existing can update topic metadata and unlist when source content is unchanged", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-sync-"));
