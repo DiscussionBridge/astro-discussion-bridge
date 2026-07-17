@@ -14,6 +14,7 @@ declare module "virtual:discussion-bridge/config" {
       minScore: number;
       maxReplies: number;
       showLikes: boolean;
+      refreshOnPageLoad: boolean;
     };
   };
 

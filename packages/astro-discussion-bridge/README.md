@@ -115,7 +115,7 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 
 `Discussion` uses the configured provider. With `provider: "discourse"`, the default `comments.display: "simple"` mode uses Discourse's embeddable comments script. This is the lightweight path for page comments, but Discourse's embed output may omit some topic action detail such as visible like counts.
 
-Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, so it works best when the build or server can reach the Discourse site. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
+Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, then refreshes from Discourse again on page load by default so new replies and like counts can appear without an Astro rebuild. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
 
 Configure the allowed host in Discourse admin under embedding settings, using your Astro/Starlight site hostname.
 
@@ -127,6 +127,9 @@ discussionBridge({
   discourseUrl: "https://forum.example.com",
   comments: {
     display: "simple", // or "full"
+  },
+  replies: {
+    refreshOnPageLoad: true,
   },
 });
 ```

@@ -8,6 +8,7 @@ interface Props {
   maxReplies?: number;
   discourseUrl?: string;
   heading?: string;
+  refreshOnPageLoad?: boolean;
   showLikes?: boolean;
   class?: string;
   topicUrl?: string;
@@ -18,6 +19,7 @@ const minScore = Astro.props.minScore ?? config.replies.minScore;
 const maxReplies = Astro.props.maxReplies ?? config.replies.maxReplies;
 const discourseUrl = Astro.props.discourseUrl ?? config.discourseUrl;
 const heading = Astro.props.heading ?? "Discussion";
+const refreshOnPageLoad = Astro.props.refreshOnPageLoad ?? config.replies.refreshOnPageLoad;
 const showLikes = Astro.props.showLikes ?? config.replies.showLikes;
 const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
 let replies: DiscoursePost[] = [];
@@ -35,35 +37,120 @@ function likeCount(post: DiscoursePost): number {
   const likeAction = post.actions_summary?.find((action) => action.id === 2);
   return post.like_count ?? likeAction?.count ?? 0;
 }
+
+const refreshConfig = topicId
+  ? {
+      discourseUrl,
+      maxReplies,
+      minScore,
+      showLikes,
+      topicId: String(topicId),
+    }
+  : undefined;
 ---
 
-{config.replies.enabled && replies.length > 0 && (
-  <section class:list={["discussion-bridge-replies", Astro.props.class]}>
+{config.replies.enabled && topicId && (
+  <section
+    class:list={["discussion-bridge-replies", Astro.props.class]}
+    data-discussion-bridge-replies
+    data-refresh={refreshOnPageLoad ? "true" : "false"}
+    data-refresh-config={refreshConfig ? JSON.stringify(refreshConfig) : undefined}
+  >
     <div class="discussion-bridge-replies__header">
       <h2>{heading}</h2>
       {topicUrl && <a href={topicUrl}>Open full discussion</a>}
     </div>
-    <ol>
-      {replies.map((reply) => (
-        <li>
-          <article>
-            <header>
-              <strong>{reply.display_username ?? reply.username}</strong>
-              <a href={`${discourseUrl}/t/${reply.topic_slug}/${reply.topic_id}/${reply.post_number}`}>
-                <time datetime={reply.created_at}>{new Date(reply.created_at).toLocaleDateString()}</time>
-              </a>
-            </header>
-            <div set:html={reply.cooked} />
-            {showLikes && likeCount(reply) > 0 && (
-              <p class="discussion-bridge-replies__meta">
-                {likeCount(reply)} {likeCount(reply) === 1 ? "like" : "likes"}
-              </p>
-            )}
-          </article>
-        </li>
-      ))}
+    <ol data-discussion-bridge-replies-list>
+      {replies.length > 0 ? (
+        replies.map((reply) => (
+          <li>
+            <article>
+              <header>
+                <strong>{reply.display_username ?? reply.username}</strong>
+                <a href={`${discourseUrl}/t/${reply.topic_slug}/${reply.topic_id}/${reply.post_number}`}>
+                  <time datetime={reply.created_at}>{new Date(reply.created_at).toLocaleDateString()}</time>
+                </a>
+              </header>
+              <div set:html={reply.cooked} />
+              {showLikes && likeCount(reply) > 0 && (
+                <p class="discussion-bridge-replies__meta">
+                  {likeCount(reply)} {likeCount(reply) === 1 ? "like" : "likes"}
+                </p>
+              )}
+            </article>
+          </li>
+        ))
+      ) : (
+        <li data-discussion-bridge-empty>Loading discussion...</li>
+      )}
     </ol>
   </section>
+)}
+
+{config.replies.enabled && refreshOnPageLoad && topicId && (
+  <script>
+    const containers = document.querySelectorAll("[data-discussion-bridge-replies][data-refresh='true']");
+
+    for (const container of containers) {
+      const configValue = container.getAttribute("data-refresh-config");
+      const list = container.querySelector("[data-discussion-bridge-replies-list]");
+      if (!configValue || !list) continue;
+
+      try {
+        const refreshConfig = JSON.parse(configValue);
+        const topicUrl = `${refreshConfig.discourseUrl}/t/${refreshConfig.topicId}.json`;
+        const response = await fetch(topicUrl, { headers: { Accept: "application/json" } });
+        if (!response.ok) continue;
+
+        const topic = await response.json();
+        const replies = topic.post_stream.posts
+          .filter((post) => post.post_number > 1)
+          .filter((post) => post.score >= refreshConfig.minScore)
+          .slice(0, refreshConfig.maxReplies);
+
+        list.replaceChildren(...replies.map((reply) => renderReply(reply, refreshConfig)));
+      } catch {
+        // Keep the server-rendered fallback if the live refresh is unavailable.
+      }
+    }
+
+    function renderReply(reply, refreshConfig) {
+      const item = document.createElement("li");
+      const article = document.createElement("article");
+      const header = document.createElement("header");
+      const author = document.createElement("strong");
+      const link = document.createElement("a");
+      const time = document.createElement("time");
+      const body = document.createElement("div");
+      const createdAt = new Date(reply.created_at);
+
+      author.textContent = reply.display_username ?? reply.username;
+      time.dateTime = reply.created_at;
+      time.textContent = createdAt.toLocaleDateString();
+      link.href = `${refreshConfig.discourseUrl}/t/${reply.topic_slug}/${reply.topic_id}/${reply.post_number}`;
+      link.append(time);
+      body.innerHTML = reply.cooked;
+
+      header.append(author, link);
+      article.append(header, body);
+
+      const count = likeCount(reply);
+      if (refreshConfig.showLikes && count > 0) {
+        const meta = document.createElement("p");
+        meta.className = "discussion-bridge-replies__meta";
+        meta.textContent = `${count} ${count === 1 ? "like" : "likes"}`;
+        article.append(meta);
+      }
+
+      item.append(article);
+      return item;
+    }
+
+    function likeCount(post) {
+      const likeAction = post.actions_summary?.find((action) => action.id === 2);
+      return post.like_count ?? likeAction?.count ?? 0;
+    }
+  </script>
 )}
 
 <style>

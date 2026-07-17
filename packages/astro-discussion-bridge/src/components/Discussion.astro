@@ -8,6 +8,7 @@ interface Props {
   display?: "simple" | "full";
   embedUrl?: string;
   heading?: string;
+  refreshOnPageLoad?: boolean;
   topicId?: number | string;
   topicUrl?: string;
 }
@@ -19,6 +20,7 @@ const display = Astro.props.display ?? config.comments.display;
   <DiscourseReplies
     class={Astro.props.class}
     heading={Astro.props.heading}
+    refreshOnPageLoad={Astro.props.refreshOnPageLoad}
     topicId={Astro.props.topicId}
     topicUrl={Astro.props.topicUrl}
   />
