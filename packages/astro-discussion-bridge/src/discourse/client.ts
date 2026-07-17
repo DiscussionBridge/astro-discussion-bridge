@@ -13,6 +13,12 @@ export interface CreateTopicInput {
   embedUrl?: string;
 }
 
+export interface CreatePrivateMessageInput {
+  title: string;
+  raw: string;
+  recipients: string[];
+}
+
 export interface CreateTopicResponse {
   id: number;
   name: string;
@@ -148,6 +154,17 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
       return request<CreateTopicResponse>("/posts.json", {
         method: "POST",
         body: JSON.stringify(body),
+      });
+    },
+    createPrivateMessage(input: CreatePrivateMessageInput) {
+      return request<CreateTopicResponse>("/posts.json", {
+        method: "POST",
+        body: JSON.stringify({
+          title: input.title,
+          raw: input.raw,
+          archetype: "private_message",
+          target_recipients: input.recipients.join(","),
+        }),
       });
     },
     topic(topicId: number | string) {

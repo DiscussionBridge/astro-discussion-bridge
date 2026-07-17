@@ -203,6 +203,12 @@ Add `--unlist` when newly created or synced demo/test topics should be unlisted.
 
 `publish-and-sync` uses the same title preflight as `publish-new`, so short or filler-like titles fail before any Discourse writes happen.
 
+Add `--notify-on-failure` to send a best-effort Discourse private message when a publish or sync run fails. This uses Discourse's normal PM notification and email behavior for the configured recipients. The CLI or build output remains the source of truth, because notification can also fail when credentials or network access are broken.
+
+```sh
+npx astro-discussion-bridge publish-and-sync src/content/docs --notify-on-failure --notify-recipients PhilH
+```
+
 When a topic is created or synced, DiscussionBridge writes source-tracking metadata to frontmatter:
 
 ```yaml
@@ -250,6 +256,10 @@ discussionBridge({
     syncExisting: true,
     unlistSyncedTopics: true,
     titleMinLength: 15,
+    notifyOnFailure: {
+      enabled: true,
+      recipients: ["PhilH"],
+    },
     docsDir: "src/content/docs",
     categoryId: 12,
     tags: ["docs", "starlight"],
@@ -257,7 +267,7 @@ discussionBridge({
 });
 ```
 
-The build hook is always opt-in. By default, `publishOnBuild.enabled` is `false`, `publishOnBuild.syncExisting` is `false`, `publishOnBuild.unlistSyncedTopics` is `false`, and `publishOnBuild.validateTitles` is `true`. Only enable `unlistSyncedTopics` when the build-time Discourse API credentials are permitted to unlist managed topics.
+The build hook is always opt-in. By default, `publishOnBuild.enabled` is `false`, `publishOnBuild.syncExisting` is `false`, `publishOnBuild.unlistSyncedTopics` is `false`, `publishOnBuild.validateTitles` is `true`, and failure PMs are disabled. Only enable `unlistSyncedTopics` when the build-time Discourse API credentials are permitted to unlist managed topics.
 
 For each Markdown or MDX page that does not already have a topic, `publish-new` or the automatic publish hook writes these fields into frontmatter. Existing `.md` files do not need to be converted to `.mdx` unless you want to place Astro components directly inside the page body:
 

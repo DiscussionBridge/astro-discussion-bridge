@@ -18,6 +18,13 @@ export interface SyncDiscourseTopicsOptions {
   unlistSyncedTopics?: boolean;
   validateTitles?: boolean;
   titleMinLength?: number;
+  notifyOnFailure?: NotifyOnFailureOptions;
+}
+
+export interface NotifyOnFailureOptions {
+  enabled?: boolean;
+  recipients?: string[];
+  title?: string;
 }
 
 export interface SyncedPage {
@@ -69,22 +76,50 @@ export async function syncDiscourseTopics(
     }),
   );
 
-  if (options.validateTitles !== false) {
-    validateManagedPageTitles({
-      pages,
-      mode,
-      minLength: options.titleMinLength ?? defaultTitleMinLength,
-    });
-  }
-
   const discourse = createDiscourseClient({
     discourseUrl: options.discourseUrl,
     apiKey: options.apiKey,
     apiUsername: options.apiUsername,
   });
+  try {
+    if (options.validateTitles !== false) {
+      validateManagedPageTitles({
+        pages,
+        mode,
+        minLength: options.titleMinLength ?? defaultTitleMinLength,
+      });
+    }
+
+    return await syncParsedDiscourseTopics({
+      ...options,
+      docsDir,
+      mode,
+      pages,
+      discourse,
+    });
+  } catch (error) {
+    await notifySyncFailure({
+      discourse,
+      options: {
+        ...options,
+        docsDir,
+        mode,
+      },
+      error,
+    });
+    throw error;
+  }
+}
+
+async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
+  docsDir: string;
+  mode: SyncMode;
+  pages: ParsedPage[];
+  discourse: ReturnType<typeof createDiscourseClient>;
+}): Promise<SyncedPage[]> {
   const results: SyncedPage[] = [];
 
-  for (const page of pages) {
+  for (const page of input.pages) {
     const {
       filePath,
       source,
@@ -98,7 +133,7 @@ export async function syncDiscourseTopics(
     } = page;
 
     if (existingTopicId) {
-      if (mode === "publish-new") {
+      if (input.mode === "publish-new") {
         results.push({
           filePath,
           title,
@@ -111,7 +146,7 @@ export async function syncDiscourseTopics(
         continue;
       }
 
-      if (options.dryRun) {
+      if (input.dryRun) {
         results.push({
           filePath,
           title,
@@ -125,7 +160,7 @@ export async function syncDiscourseTopics(
       }
 
       const sourceChanged = previousHash !== sourceHash;
-      const topic = await discourse.topic(existingTopicId);
+      const topic = await input.discourse.topic(existingTopicId);
       const firstPost = topic.post_stream.posts.find((post) => post.post_number === 1);
       if (sourceChanged && !firstPost) {
         throw new Error(`Could not find first post for Discourse topic ${existingTopicId}.`);
@@ -133,7 +168,7 @@ export async function syncDiscourseTopics(
       let updated = false;
 
       if (sourceChanged && firstPost) {
-        await discourse.updatePost({
+        await input.discourse.updatePost({
           postId: firstPost.id,
           raw: companionTopicBody({
             title,
@@ -147,17 +182,17 @@ export async function syncDiscourseTopics(
         updated = true;
       }
 
-      if (topic.title !== title || (options.categoryId !== undefined && topic.category_id !== options.categoryId)) {
-        await discourse.updateTopic({
+      if (topic.title !== title || (input.categoryId !== undefined && topic.category_id !== input.categoryId)) {
+        await input.discourse.updateTopic({
           topicId: existingTopicId,
           title,
-          categoryId: options.categoryId,
+          categoryId: input.categoryId,
         });
         updated = true;
       }
 
-      if (options.unlistSyncedTopics && topic.visible !== false) {
-        await discourse.updateTopicStatus({
+      if (input.unlistSyncedTopics && topic.visible !== false) {
+        await input.discourse.updateTopicStatus({
           topicId: existingTopicId,
           status: "visible",
           enabled: false,
@@ -187,7 +222,7 @@ export async function syncDiscourseTopics(
       continue;
     }
 
-    if (mode === "sync-existing") {
+    if (input.mode === "sync-existing") {
       results.push({
         filePath,
         title,
@@ -198,23 +233,23 @@ export async function syncDiscourseTopics(
       continue;
     }
 
-    if (options.dryRun) {
+    if (input.dryRun) {
       results.push({ filePath, title, pageUrl, status: "dry-run-create" });
       continue;
     }
 
     const lastSyncedAt = new Date().toISOString();
-    const topic = await discourse.createTopic({
+    const topic = await input.discourse.createTopic({
       title,
       raw: companionTopicBody({ title, pageUrl, content, lastSyncedAt }),
-      category: options.categoryId,
-      tags: options.tags,
+      category: input.categoryId,
+      tags: input.tags,
       embedUrl: pageUrl,
     });
-    const topicUrl = `${discourse.discourseUrl}/t/${topic.topic_slug}/${topic.topic_id}`;
+    const topicUrl = `${input.discourse.discourseUrl}/t/${topic.topic_slug}/${topic.topic_id}`;
 
-    if (options.unlistSyncedTopics) {
-      await discourse.updateTopicStatus({
+    if (input.unlistSyncedTopics) {
+      await input.discourse.updateTopicStatus({
         topicId: topic.topic_id,
         status: "visible",
         enabled: false,
@@ -242,6 +277,73 @@ export async function syncDiscourseTopics(
   }
 
   return results;
+}
+
+interface ParsedPage {
+  filePath: string;
+  source: string;
+  parsed: ParsedMarkdown;
+  title: string;
+  pageUrl: string;
+  content: string;
+  sourceHash: string;
+  existingTopicId?: string;
+  existingTopicUrl?: string;
+  previousHash?: string;
+}
+
+async function notifySyncFailure(input: {
+  discourse: ReturnType<typeof createDiscourseClient>;
+  options: SyncDiscourseTopicsOptions & { docsDir: string; mode: SyncMode };
+  error: unknown;
+}) {
+  const notification = input.options.notifyOnFailure;
+  if (!notification?.enabled || !notification.recipients?.length) return;
+
+  try {
+    await input.discourse.createPrivateMessage({
+      recipients: notification.recipients,
+      title: notification.title ?? "Discussion Bridge publish failed",
+      raw: syncFailureNotificationBody({
+        docsDir: input.options.docsDir,
+        mode: input.options.mode,
+        siteUrl: input.options.siteUrl,
+        discourseUrl: input.options.discourseUrl,
+        error: input.error,
+      }),
+    });
+  } catch {
+    // Notification is best-effort; preserve the original sync failure.
+  }
+}
+
+function syncFailureNotificationBody(input: {
+  docsDir: string;
+  mode: SyncMode;
+  siteUrl: string;
+  discourseUrl: string;
+  error: unknown;
+}): string {
+  return [
+    "Discussion Bridge could not complete a publish/sync run.",
+    "",
+    `Mode: ${input.mode}`,
+    `Docs directory: ${input.docsDir}`,
+    `Site URL: ${input.siteUrl}`,
+    `Discourse URL: ${input.discourseUrl}`,
+    "",
+    "Error:",
+    "```",
+    errorMessage(input.error),
+    "```",
+    "",
+    "The CLI or build output remains the source of truth for the failed run.",
+  ].join("\n");
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
 }
 
 export interface TopicTitleValidationIssue {

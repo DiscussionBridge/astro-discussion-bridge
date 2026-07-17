@@ -66,6 +66,111 @@ test("publish-new title preflight fails before network writes", async () => {
   }
 });
 
+test("publish failures can notify recipients by Discourse private message", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-notify-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "beta.md");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Beta"',
+        "---",
+        "",
+        "# Beta",
+        "",
+        "Short page title.",
+      ].join("\n"),
+    );
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 21,
+        title: "Beta",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+      createdTopic: {
+        topic_id: 22,
+        topic_slug: "beta",
+      },
+    });
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "publish-new",
+        notifyOnFailure: {
+          enabled: true,
+          recipients: ["PhilH"],
+        },
+      }),
+      /Discourse topic title preflight failed/,
+    );
+
+    const pmCall = calls.find((call) => call.pathname === "/posts.json" && call.body?.archetype === "private_message");
+    assert.equal(pmCall.body.target_recipients, "PhilH");
+    assert.match(pmCall.body.raw, /Discourse topic title preflight failed/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("notification failure does not mask the original publish failure", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-notify-fail-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "beta.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Beta"',
+        "---",
+        "",
+        "# Beta",
+        "",
+        "Short page title.",
+      ].join("\n"),
+    );
+    globalThis.fetch = async () => new Response("PM rejected", { status: 403, statusText: "Forbidden" });
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "publish-new",
+        notifyOnFailure: {
+          enabled: true,
+          recipients: ["PhilH"],
+        },
+      }),
+      /Discourse topic title preflight failed/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("sync-existing can update topic metadata and unlist when source content is unchanged", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-sync-"));
   const docsDir = path.join(dir, "docs");
@@ -249,6 +354,29 @@ function mockDiscourseFetch(calls, { topic, createdTopic }) {
 
     if (method === "PUT" && parsed.pathname === "/t/21/status.json") {
       return jsonResponse({ success: "OK" });
+    }
+
+    if (method === "POST" && parsed.pathname === "/posts.json" && body.archetype === "private_message") {
+      return jsonResponse({
+        id: 301,
+        name: "",
+        username: "test-user",
+        avatar_template: "",
+        created_at: new Date(0).toISOString(),
+        cooked: "",
+        post_number: 1,
+        post_type: 1,
+        updated_at: new Date(0).toISOString(),
+        reply_count: 0,
+        reply_to_post_number: null,
+        quote_count: 0,
+        incoming_link_count: 0,
+        reads: 0,
+        readers_count: 0,
+        score: 0,
+        topic_id: 30,
+        topic_slug: "discussion-bridge-publish-failed",
+      });
     }
 
     if (method === "POST" && parsed.pathname === "/posts.json") {

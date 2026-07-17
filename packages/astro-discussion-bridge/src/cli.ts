@@ -15,6 +15,7 @@ const docsDir = path.resolve(args.positionals[0] ?? "src/content/docs");
 const dryRun = args.flags.has("dry-run");
 const unlistSyncedTopics = args.flags.has("unlist");
 const validateTitles = !args.flags.has("skip-title-validation");
+const notifyOnFailure = args.flags.has("notify-on-failure");
 const discourseUrl = args.values.get("discourse-url") ?? process.env.DISCOURSE_URL;
 const siteUrl = args.values.get("site-url") ?? process.env.SITE_URL;
 const apiKey = args.values.get("api-key") ?? process.env.DISCOURSE_API_KEY;
@@ -22,6 +23,7 @@ const apiUsername = args.values.get("api-username") ?? process.env.DISCOURSE_API
 const categoryId = numberFromValue(args.values.get("category-id") ?? process.env.DISCOURSE_CATEGORY_ID);
 const titleMinLength = numberFromValue(args.values.get("title-min-length") ?? process.env.DISCOURSE_TITLE_MIN_LENGTH);
 const tags = tagsFromValue(args.values.get("tags") ?? process.env.DISCOURSE_TAGS);
+const notifyRecipients = csvFromValue(args.values.get("notify-recipients") ?? process.env.DISCOURSE_NOTIFY_RECIPIENTS);
 const mode = modeForCommand(command);
 
 const missing = [
@@ -61,6 +63,10 @@ const results = await syncDiscourseTopics({
   unlistSyncedTopics,
   validateTitles,
   titleMinLength,
+  notifyOnFailure: {
+    enabled: notifyOnFailure,
+    recipients: notifyRecipients,
+  },
 });
 
 for (const result of results) {
@@ -113,9 +119,13 @@ function numberFromValue(value: string | undefined): number | undefined {
 }
 
 function tagsFromValue(value: string | undefined): string[] | undefined {
+  return csvFromValue(value);
+}
+
+function csvFromValue(value: string | undefined): string[] | undefined {
   if (!value) return undefined;
 
-  return value.split(",").map((tag) => tag.trim()).filter(Boolean);
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
 function modeForCommand(command: string): SyncMode {
@@ -127,8 +137,8 @@ function modeForCommand(command: string): SyncMode {
 function printUsage(error?: string) {
   if (error) console.error(error);
   console.error("Usage:");
-  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--title-min-length N] [--skip-title-validation] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--title-min-length N] [--skip-title-validation] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--title-min-length N] [--skip-title-validation] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--discourse-url URL] [--site-url URL]");
 }

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
-import { syncDiscourseTopics } from "./sync/index.js";
+import { syncDiscourseTopics, type NotifyOnFailureOptions } from "./sync/index.js";
 
 type DiscussionBridgeIntegration = {
   name: string;
@@ -44,6 +44,7 @@ export interface DiscussionBridgeOptions {
     unlistSyncedTopics?: boolean;
     validateTitles?: boolean;
     titleMinLength?: number;
+    notifyOnFailure?: NotifyOnFailureOptions;
     docsDir?: string;
     apiKey?: string;
     apiUsername?: string;
@@ -77,6 +78,7 @@ interface ResolvedOptions extends PublicOptions {
     unlistSyncedTopics: boolean;
     validateTitles: boolean;
     titleMinLength?: number;
+    notifyOnFailure?: NotifyOnFailureOptions;
     docsDir: string;
     apiKey?: string;
     apiUsername?: string;
@@ -137,6 +139,7 @@ export default function discussionBridge(
           unlistSyncedTopics: resolvedOptions.publishOnBuild.unlistSyncedTopics,
           validateTitles: resolvedOptions.publishOnBuild.validateTitles,
           titleMinLength: resolvedOptions.publishOnBuild.titleMinLength,
+          notifyOnFailure: resolvedOptions.publishOnBuild.notifyOnFailure,
         });
         const created = results.filter((result) => result.status === "created").length;
         const updated = results.filter((result) => result.status === "updated").length;
@@ -188,6 +191,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
       unlistSyncedTopics: options.publishOnBuild?.unlistSyncedTopics ?? false,
       validateTitles: options.publishOnBuild?.validateTitles ?? true,
       titleMinLength: options.publishOnBuild?.titleMinLength,
+      notifyOnFailure: options.publishOnBuild?.notifyOnFailure,
       docsDir: options.publishOnBuild?.docsDir ?? defaultDocsDirForPreset(preset),
       apiKey: options.publishOnBuild?.apiKey,
       apiUsername: options.publishOnBuild?.apiUsername,
