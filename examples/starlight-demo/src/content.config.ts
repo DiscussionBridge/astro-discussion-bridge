@@ -6,7 +6,7 @@ import { docsSchema } from "@astrojs/starlight/schema";
 const companionTopicFields = z.object({
   discourseTopicId: z.union([z.string(), z.number()]).optional(),
   discourseTopicUrl: z.string().url().optional(),
-  discussionCommentsDisplay: z.enum(["simple", "full"]).optional(),
+  discussionCommentsDisplay: z.enum(["simple", "full", "fullInteractive"]).optional(),
 });
 
 const lanePostSchema = companionTopicFields.extend({

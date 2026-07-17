@@ -5,7 +5,7 @@ import DiscourseReplies from "./DiscourseReplies.astro";
 
 interface Props {
   class?: string;
-  display?: "simple" | "full";
+  display?: "simple" | "full" | "fullInteractive";
   embedUrl?: string;
   heading?: string;
   refreshOnPageLoad?: boolean;
@@ -28,6 +28,7 @@ const display = Astro.props.display ?? config.comments.display;
   <DiscourseDiscussion
     class={Astro.props.class}
     embedUrl={Astro.props.embedUrl}
+    fullApp={display === "fullInteractive"}
     heading={Astro.props.heading}
     topicUrl={Astro.props.topicUrl}
   />

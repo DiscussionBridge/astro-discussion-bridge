@@ -17,7 +17,7 @@ type DiscussionBridgeIntegration = {
 };
 
 export type DiscussionBridgeProvider = "discourse";
-export type DiscussionBridgeCommentsDisplay = "simple" | "full";
+export type DiscussionBridgeCommentsDisplay = "simple" | "full" | "fullInteractive";
 export type DiscussionBridgePreset =
   | "astro"
   | "astro-content"
@@ -33,6 +33,7 @@ export interface DiscussionBridgeOptions {
   comments?: {
     enabled?: boolean;
     display?: DiscussionBridgeCommentsDisplay;
+    embedHeight?: string;
     className?: string;
   };
   replies?: {
@@ -76,6 +77,7 @@ interface PublicOptions {
   comments: {
     enabled: boolean;
     display: DiscussionBridgeCommentsDisplay;
+    embedHeight: string;
     className?: string;
   };
   replies: {
@@ -184,6 +186,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
     comments: {
       enabled: options.comments?.enabled ?? true,
       display: options.comments?.display ?? "simple",
+      embedHeight: options.comments?.embedHeight ?? "800px",
       className: options.comments?.className,
     },
     replies: {

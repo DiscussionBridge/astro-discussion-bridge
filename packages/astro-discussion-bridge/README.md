@@ -117,6 +117,8 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 
 Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, then refreshes from Discourse again on page load by default so new replies and like counts can appear without an Astro rebuild. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
 
+Use `comments.display: "fullInteractive"` when you want Discourse's native full app embed inside the page. This keeps logged-in reply, like, quote, and other interaction inside Discourse's iframe instead of reimplementing user actions in Astro. The target Discourse site must support and enable full app embeds in its embedding settings.
+
 Configure the allowed host in Discourse admin under embedding settings, using your Astro/Starlight site hostname.
 
 `DiscourseDiscussion.astro` is also exported for provider-specific usage, and `DiscourseComments.astro` remains as a compatibility alias.
@@ -126,7 +128,8 @@ discussionBridge({
   provider: "discourse",
   discourseUrl: "https://forum.example.com",
   comments: {
-    display: "simple", // or "full"
+    display: "simple", // simple | full | fullInteractive
+    embedHeight: "800px",
   },
   replies: {
     refreshOnPageLoad: true,
@@ -332,7 +335,7 @@ discussionNotifyRecipients: "PhilH,OpsBot"
 Supported per-page overrides:
 
 - `discussionCategoryId`: Discourse category ID for this page's companion topic.
-- `discussionCommentsDisplay`: `simple` for the Discourse embed or `full` for bridge-rendered replies with like counts.
+- `discussionCommentsDisplay`: `simple` for the Discourse embed, `full` for bridge-rendered replies with like counts, or `fullInteractive` for Discourse's full app embed.
 - `discussionTags`: comma-separated tags used when creating this page's companion topic.
 - `discussionUnlisted`: `true` hides this page's companion topic from category discovery after create/sync.
 - `discussionListed`: `true` opts this page back into category discovery when a lane default is unlisted.

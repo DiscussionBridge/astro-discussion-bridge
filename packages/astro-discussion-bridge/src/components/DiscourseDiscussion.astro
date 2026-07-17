@@ -4,12 +4,15 @@ import config from "virtual:discussion-bridge/config";
 interface Props {
   class?: string;
   embedUrl?: string;
+  fullApp?: boolean;
   heading?: string;
   topicUrl?: string;
 }
 
 const discourseUrl = `${config.discourseUrl}/`;
 const embedUrl = Astro.props.embedUrl ?? Astro.url.href;
+const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteractive";
+const embedHeight = config.comments.embedHeight;
 const heading = Astro.props.heading ?? "Comments";
 const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
 ---
@@ -25,10 +28,11 @@ const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopic
 )}
 
 {config.comments.enabled && (
-  <script define:vars={{ discourseUrl, embedUrl }}>
+  <script define:vars={{ discourseUrl, embedUrl, fullApp, embedHeight }}>
     window.DiscourseEmbed = {
       discourseUrl,
       discourseEmbedUrl: embedUrl,
+      ...(fullApp ? { fullApp: true, embedHeight } : {}),
     };
 
     const script = document.createElement("script");

@@ -6,7 +6,8 @@ declare module "virtual:discussion-bridge/config" {
     siteUrl?: string;
     comments: {
       enabled: boolean;
-      display: "simple" | "full";
+      display: "simple" | "full" | "fullInteractive";
+      embedHeight: string;
       className?: string;
     };
     replies: {
