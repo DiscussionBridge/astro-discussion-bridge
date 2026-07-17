@@ -43,6 +43,7 @@ const refreshConfig = topicId
       discourseUrl,
       maxReplies,
       minScore,
+      refreshEndpoint: config.replies.refreshEndpoint,
       showLikes,
       topicId: String(topicId),
     }
@@ -98,7 +99,9 @@ const refreshConfig = topicId
 
       try {
         const refreshConfig = JSON.parse(configValue);
-        const topicUrl = `${refreshConfig.discourseUrl}/t/${refreshConfig.topicId}.json`;
+        const topicUrl = refreshConfig.refreshEndpoint
+          ? refreshConfig.refreshEndpoint.replace("{topicId}", encodeURIComponent(refreshConfig.topicId))
+          : `${refreshConfig.discourseUrl}/t/${refreshConfig.topicId}.json`;
         const response = await fetch(topicUrl, { headers: { Accept: "application/json" } });
         if (!response.ok) continue;
 

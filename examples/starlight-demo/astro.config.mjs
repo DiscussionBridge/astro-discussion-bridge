@@ -25,6 +25,9 @@ export default defineConfig({
       preset: "starlight",
       discourseUrl: "https://forum.discussionbridge.dev",
       siteUrl: "https://astrostarlightdemo.discussionbridge.dev",
+      replies: {
+        refreshEndpoint: "/api/discourse/topics/{topicId}.json",
+      },
       publishOnBuild: {
         enabled: false,
         lanes: [

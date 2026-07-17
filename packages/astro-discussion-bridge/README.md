@@ -130,9 +130,13 @@ discussionBridge({
   },
   replies: {
     refreshOnPageLoad: true,
+    // Use a same-origin proxy when the Discourse site does not allow browser CORS.
+    refreshEndpoint: "/api/discourse/topics/{topicId}.json",
   },
 });
 ```
+
+Without `refreshEndpoint`, the browser refresh reads directly from `https://forum.example.com/t/{topicId}.json`. That requires the Discourse site to allow browser CORS from the Astro site. Static deployments can avoid CORS by adding a same-origin proxy route and pointing `refreshEndpoint` at it.
 
 ### Optional static reply excerpts
 

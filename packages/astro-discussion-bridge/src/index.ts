@@ -39,6 +39,7 @@ export interface DiscussionBridgeOptions {
     enabled?: boolean;
     minScore?: number;
     maxReplies?: number;
+    refreshEndpoint?: string;
     showLikes?: boolean;
     refreshOnPageLoad?: boolean;
   };
@@ -81,6 +82,7 @@ interface PublicOptions {
     enabled: boolean;
     minScore: number;
     maxReplies: number;
+    refreshEndpoint?: string;
     showLikes: boolean;
     refreshOnPageLoad: boolean;
   };
@@ -188,6 +190,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
       enabled: options.replies?.enabled ?? true,
       minScore: options.replies?.minScore ?? 0,
       maxReplies: options.replies?.maxReplies ?? 5,
+      refreshEndpoint: options.replies?.refreshEndpoint,
       showLikes: options.replies?.showLikes ?? true,
       refreshOnPageLoad: options.replies?.refreshOnPageLoad ?? true,
     },
