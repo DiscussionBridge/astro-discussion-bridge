@@ -3,8 +3,8 @@ title: "Discussion Bridge for Astro: Starlight Demo"
 discourseTopicId: 21
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/discussionbridge-starlight-demo/21"
 
-discussionSourceHash: "e416f16af7fca203e52c5ec00f17321ced5fa96710fea86e45780f11b4f60115"
-discussionLastSyncedAt: "2026-07-16T19:20:34.127Z"
+discussionSourceHash: "6b80811fbc10448005b04d6462292b28d2e881ed5b53684935048665d9652f12"
+discussionLastSyncedAt: "2026-07-17T15:44:45.769Z"
 
 ---
 

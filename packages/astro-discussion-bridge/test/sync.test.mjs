@@ -398,6 +398,44 @@ test("frontmatter can override lane category, tags, visibility, and failure reci
   }
 });
 
+test("routeBase maps content lane files to their public URL prefix", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-route-base-"));
+  const docsDir = path.join(dir, "src", "content", "releases");
+  const filePath = path.join(docsDir, "2_1.md");
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro 2.1 Release Lane Demo"',
+        "---",
+        "",
+        "# Release Lane",
+        "",
+        "Release content.",
+      ].join("\n"),
+    );
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      routeBase: "releases",
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "",
+      apiUsername: "",
+      categoryId: 5,
+      mode: "publish-new",
+      dryRun: true,
+    });
+
+    assert.equal(results[0].pageUrl, "https://docs.example.com/releases/2_1/");
+  } finally {
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("frontmatter failure recipients receive page-specific publish errors", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-page-notify-"));
   const docsDir = path.join(dir, "docs");

@@ -8,6 +8,7 @@ export type SyncMode = "publish-new" | "sync-existing" | "publish-and-sync";
 export interface SyncDiscourseTopicsOptions {
   docsDir: string;
   siteUrl: string;
+  routeBase?: string;
   discourseUrl: string;
   apiKey: string;
   apiUsername: string;
@@ -58,7 +59,12 @@ export async function syncDiscourseTopics(
       const source = await fs.readFile(filePath, "utf8");
       const parsed = parseMarkdown(source);
       const title = parsed.frontmatter.title || findFirstHeading(parsed.body) || titleFromFile(filePath);
-      const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl });
+      const pageUrl = pageUrlForFile({
+        docsDir,
+        filePath,
+        siteUrl: options.siteUrl,
+        routeBase: options.routeBase,
+      });
       const content = discussionContentForPage(parsed);
       const sourceHash = hashDiscussionSource({ title, pageUrl, content });
       const pageOptions = discussionOptionsForPage(parsed.frontmatter, options);
@@ -568,15 +574,26 @@ function titleFromFile(filePath: string): string {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function pageUrlForFile(input: { docsDir: string; filePath: string; siteUrl: string }): string {
+function pageUrlForFile(input: {
+  docsDir: string;
+  filePath: string;
+  siteUrl: string;
+  routeBase?: string;
+}): string {
   const relative = path.relative(input.docsDir, input.filePath).replace(/\\/g, "/");
   const withoutExtension = relative.replace(/\.(md|mdx)$/i, "");
   const slug = withoutExtension.endsWith("/index")
     ? withoutExtension.slice(0, -"/index".length)
     : withoutExtension;
-  const pathname = slug ? `${slug}/` : "";
+  const routeBase = normalizeRouteBase(input.routeBase);
+  const pathname = [routeBase, slug].filter(Boolean).join("/");
 
-  return `${input.siteUrl.replace(/\/+$/, "")}/${pathname}`;
+  return `${input.siteUrl.replace(/\/+$/, "")}/${pathname ? `${pathname}/` : ""}`;
+}
+
+function normalizeRouteBase(value: string | undefined): string {
+  if (!value) return "";
+  return value.trim().replace(/^\/+|\/+$/g, "");
 }
 
 function discussionContentForPage(parsed: ParsedMarkdown): string {

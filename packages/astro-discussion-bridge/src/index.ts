@@ -44,6 +44,7 @@ export interface DiscussionBridgeOptions {
 export interface PublishOnBuildLaneOptions {
   name?: string;
   docsDir: string;
+  routeBase?: string;
   syncExisting?: boolean;
   unlistSyncedTopics?: boolean;
   validateTitles?: boolean;
@@ -90,6 +91,7 @@ interface ResolvedOptions extends PublicOptions {
 interface ResolvedPublishLane {
   name: string;
   docsDir: string;
+  routeBase?: string;
   syncExisting: boolean;
   unlistSyncedTopics: boolean;
   validateTitles: boolean;
@@ -203,6 +205,7 @@ function resolvePublishLanes(input: {
   return configuredLanes.map((lane, index) => ({
     name: lane.name ?? (configuredLanes.length === 1 ? "default" : `lane-${index + 1}`),
     docsDir: lane.docsDir,
+    routeBase: lane.routeBase,
     syncExisting: lane.syncExisting ?? defaults?.syncExisting ?? false,
     unlistSyncedTopics: lane.unlistSyncedTopics ?? defaults?.unlistSyncedTopics ?? false,
     validateTitles: lane.validateTitles ?? defaults?.validateTitles ?? true,
@@ -231,6 +234,7 @@ async function publishLane(input: {
 
   const results = await syncDiscourseTopics({
     docsDir,
+    routeBase: input.lane.routeBase,
     siteUrl: input.siteUrl,
     discourseUrl: input.discourseUrl,
     apiKey: input.apiKey,

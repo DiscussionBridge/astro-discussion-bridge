@@ -11,6 +11,7 @@
 
 - Consider a configurable title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
 - Consider reading Discourse title constraints from the target instance when authenticated, while keeping local validation available for dry runs.
+- Handle Discourse `Embed url has already been taken` by detecting or reconciling the existing topic when Discourse embedding created it before CLI publishing.
 ## Sync Validation
 
 - Expand tests around `sync-existing` and `publish-and-sync` edge cases before widening usage beyond the demo.

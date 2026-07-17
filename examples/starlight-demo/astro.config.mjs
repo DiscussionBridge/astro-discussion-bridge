@@ -37,18 +37,21 @@ export default defineConfig({
           {
             name: "releases",
             docsDir: "src/content/releases",
+            routeBase: "releases",
             categoryId: 5,
             tags: ["discussionbridge", "astro", "starlight-demo", "releases"],
           },
           {
             name: "blog",
             docsDir: "src/content/blog",
+            routeBase: "blog",
             categoryId: 5,
             tags: ["discussionbridge", "astro", "starlight-demo", "blog"],
           },
           {
             name: "news",
             docsDir: "src/content/news",
+            routeBase: "news",
             categoryId: 5,
             tags: ["discussionbridge", "astro", "starlight-demo", "news"],
           },

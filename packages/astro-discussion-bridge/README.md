@@ -287,6 +287,7 @@ discussionBridge({
       {
         name: "releases",
         docsDir: "src/content/releases",
+        routeBase: "releases",
         categoryId: 18,
         tags: ["releases", "starlog"],
       },
@@ -296,6 +297,8 @@ discussionBridge({
 ```
 
 Pages can override the lane defaults when a single release, post, or doc belongs somewhere else in Discourse.
+
+Use `routeBase` when the source directory does not publish at the site root. For example, `docsDir: "src/content/releases"` with `routeBase: "releases"` maps `src/content/releases/2_1.md` to `https://docs.example.com/releases/2_1/`.
 
 ```yaml
 ---

@@ -65,6 +65,12 @@ Develop in public with a visible path from local preview to a live Cloudflare de
   - Topic 21 first post synced, but its topic title remained unchanged through the topic update API after replies existed.
   - Promoting `discussbridge-bot` to moderator allowed `sync-existing --unlist` to unlist topics 20 and 21.
   - Keep `--unlist` opt-in, and use a granular key tied to a staff/moderator-capable user before enabling unlisting in automation.
+- 2026-07-17: Content lane demo deployed and tested with docs, releases, blog, and news routes.
+  - Blog lane created topic 27.
+  - News lane created topic 28.
+  - Release lane was already claimed by Discourse embedding as topic 24, so `publish-and-sync` received `Embed url has already been taken`.
+  - Linking `src/content/releases/2_1.md` to topic 24 and running `sync-existing --route-base releases` reconciled the topic.
+  - Product note: embedded Discourse topics can exist before CLI publishing. Future tooling should detect or reconcile existing `embed_url` ownership where the Discourse API allows it.
 
 ## Notes
 
