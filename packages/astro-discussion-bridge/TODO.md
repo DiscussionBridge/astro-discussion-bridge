@@ -25,13 +25,22 @@
 - Keep Starlight optional so Astro core sites are not forced to install it.
 ## Internal Demo Matrix
 
+- Add content lane support so one Astro/Starlight site can map docs, blog, news, changelog, or other source paths to different Discourse categories and tags.
+- Support route-level lane defaults with frontmatter overrides for category, tags, listed/unlisted preference, and notifications.
 - Demo multiple Astro sites connected to the same Discourse instance.
 - Verify Discourse external host/embed settings with more than one Astro hostname.
 - Test topic creation so pages from different Astro sites do not collide or create confusing duplicate topics.
 - Document recommended namespace strategy: `forum.discussionbridge.dev`, category `Alpha`, and tags such as `discussionbridge`, `starlight-demo`, and `cloudflare-demo`.
 - Confirm `embed_url` maps each Astro page to the correct companion topic across hosts.
+## Optional Discourse Plugin
+
+- Start a design note for an optional Discourse plugin as the Layer 3 control plane.
+- Keep the API-only bridge useful without a plugin; the plugin should enhance, not replace, the package.
+- Explore bridge-aware admin settings, content lane management, source mappings, duplicate detection, richer native notifications, health/status endpoints, and operations topics/categories.
+- Design the plugin surface so Astro, Statamic, and future adapters can use the same Discourse-side concepts.
 ## Future Frameworks and Platforms
 
 - Prioritize future framework integrations for Discourse.
+- Use Discussion Bridge for Statamic as the next parallel naming/integration lane when that work begins.
 - Research future Discourse integrations for Next.js, Nuxt, SvelteKit, Hugo/static sites, and Cloudflare Workers.
 - Design metadata so Discourse-specific fields can coexist with generic discussion fields without breaking existing Discourse users.

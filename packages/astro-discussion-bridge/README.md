@@ -73,6 +73,28 @@ Other presets are reserved for broader Astro use cases:
 
 The discussion engine is Discourse. The `provider: "discourse"` field remains explicit so configuration is clear, but the roadmap is focused on framework and platform integrations for Discourse.
 
+## Product Model
+
+Discussion Bridge is designed to be generous without making implementation labor free.
+
+- Tier 1 is the API-only bridge: free package, public docs, community support, and paid hand-holding or implementation help when teams need it.
+- Tier 2 is the optional Discourse-side power layer: the same support model, with deeper Discourse configuration, operations visibility, and managed integration behavior.
+
+The API-only path should stay useful on its own. A future Discourse plugin should enhance it rather than replace it.
+
+## Content Lanes
+
+A content lane is a source content collection or path mapped to Discourse behavior.
+
+For example, one Astro or Starlight site might publish:
+
+- docs to a documentation category
+- blog posts to a blog discussion category
+- news posts to a news or announcements category
+- changelog entries to a releases category
+
+Lane configuration should eventually support route-level defaults plus frontmatter overrides. A lane may define its source directory, Discourse category, tags, publish/sync behavior, listed or unlisted preference, notification recipients, and later title templates. In the API-only tier, lanes are configuration and frontmatter. In the optional plugin tier, lanes can become visible and manageable inside the Discourse control plane.
+
 ## Add Discussion to Starlight
 
 Create a Starlight override component such as `src/components/PageFrame.astro`. This keeps existing `.md` docs working because the discussion component is added by the Starlight layout, not inside each content file.
@@ -319,6 +341,8 @@ DiscussionBridge is Discourse-first. The main expansion path is framework and pl
 - Astro content sites
 - Cloudflare Workers/Wrangler deployment
 - Potential future integrations for frameworks such as Next.js, Nuxt, SvelteKit, or static site generators
+
+An optional Discourse plugin is a likely Layer 3 control plane. It can provide bridge-aware admin settings, source mappings, health/status endpoints, duplicate detection, richer notifications, and a native operations surface for Astro, Statamic, and future adapters.
 
 
 
