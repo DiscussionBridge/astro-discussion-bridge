@@ -28,7 +28,7 @@ Develop in public with a visible path from local preview to a live Cloudflare de
    - Use tags for product and demo details, for example `discussionbridge`, `astro`, `starlight-demo`, and `cloudflare-demo`.
    - Current API key is global for the `discussbridge-bot` user.
    - Longer term, replace it with a granular key that can create topics/posts in Alpha, read existing topics/posts, update the managed first post for linked companion topics, update topic metadata, and unlist demo/test topics.
-   - Topic visibility and retitling replied topics require a Discourse user with enough topic-management authority; the current `discussbridge-bot` key can sync first posts but is blocked from unlisting topics.
+   - Topic visibility and retitling replied topics require a Discourse user with enough topic-management authority.
    - Enable embedding for localhost preview, `astrodemo.discussionbridge.dev`, and `astrostarlightdemo.discussionbridge.dev`.
    - Pre-integration backup checkpoint: `discussion-bridge-forum-2026-07-16-140054-v20260715090434.tar.gz`.
 
@@ -61,8 +61,9 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - 2026-07-16: Naming pass aligned the demo with the Discussion Bridge product-family strategy.
   - Astro lane name: Discussion Bridge for Astro.
   - Topic 20 title updated through the bot key because the topic has no replies.
-  - Topic 21 first post synced, but the topic title remained unchanged because Discourse did not allow the bot user to retitle a replied topic.
-  - `sync-existing --unlist` reached Discourse topic visibility management and was rejected with `403 Forbidden`; promote the bot or use a granular key tied to a staff/moderator-capable user before enabling unlisting in automation.
+  - Topic 21 first post synced, but its topic title remained unchanged through the topic update API after replies existed.
+  - Promoting `discussbridge-bot` to moderator allowed `sync-existing --unlist` to unlist topics 20 and 21.
+  - Keep `--unlist` opt-in, and use a granular key tied to a staff/moderator-capable user before enabling unlisting in automation.
 
 ## Notes
 

@@ -78,19 +78,6 @@ export async function syncDiscourseTopics(
         continue;
       }
 
-      if (previousHash === sourceHash) {
-        results.push({
-          filePath,
-          title,
-          pageUrl,
-          topicId: Number(existingTopicId),
-          topicUrl: existingTopicUrl,
-          status: "unchanged",
-          reason: "source hash unchanged",
-        });
-        continue;
-      }
-
       if (options.dryRun) {
         results.push({
           filePath,
@@ -98,50 +85,62 @@ export async function syncDiscourseTopics(
           pageUrl,
           topicId: Number(existingTopicId),
           topicUrl: existingTopicUrl,
-          status: "dry-run-update",
+          status: previousHash === sourceHash ? "unchanged" : "dry-run-update",
+          reason: previousHash === sourceHash ? "source hash unchanged" : undefined,
         });
         continue;
       }
 
+      const sourceChanged = previousHash !== sourceHash;
       const topic = await discourse.topic(existingTopicId);
       const firstPost = topic.post_stream.posts.find((post) => post.post_number === 1);
-      if (!firstPost) {
+      if (sourceChanged && !firstPost) {
         throw new Error(`Could not find first post for Discourse topic ${existingTopicId}.`);
       }
+      let updated = false;
 
-      await discourse.updatePost({
-        postId: firstPost.id,
-        raw: companionTopicBody({
+      if (sourceChanged && firstPost) {
+        await discourse.updatePost({
+          postId: firstPost.id,
+          raw: companionTopicBody({
+            title,
+            pageUrl,
+            content,
+            lastSyncedAt: new Date().toISOString(),
+          }),
+          editReason: "Sync DiscussionBridge companion summary from Astro source",
+          bypassBump: true,
+        });
+        updated = true;
+      }
+
+      if (topic.title !== title || (options.categoryId !== undefined && topic.category_id !== options.categoryId)) {
+        await discourse.updateTopic({
+          topicId: existingTopicId,
           title,
-          pageUrl,
-          content,
-          lastSyncedAt: new Date().toISOString(),
-        }),
-        editReason: "Sync DiscussionBridge companion summary from Astro source",
-        bypassBump: true,
-      });
+          categoryId: options.categoryId,
+        });
+        updated = true;
+      }
 
-      await discourse.updateTopic({
-        topicId: existingTopicId,
-        title,
-        categoryId: options.categoryId,
-      });
-
-      if (options.unlistSyncedTopics) {
+      if (options.unlistSyncedTopics && topic.visible !== false) {
         await discourse.updateTopicStatus({
           topicId: existingTopicId,
           status: "visible",
           enabled: false,
         });
+        updated = true;
       }
 
-      await fs.writeFile(
-        filePath,
-        updateFrontmatter(source, {
-          discussionSourceHash: sourceHash,
-          discussionLastSyncedAt: new Date().toISOString(),
-        }),
-      );
+      if (sourceChanged) {
+        await fs.writeFile(
+          filePath,
+          updateFrontmatter(source, {
+            discussionSourceHash: sourceHash,
+            discussionLastSyncedAt: new Date().toISOString(),
+          }),
+        );
+      }
 
       results.push({
         filePath,
@@ -149,7 +148,8 @@ export async function syncDiscourseTopics(
         pageUrl,
         topicId: Number(existingTopicId),
         topicUrl: existingTopicUrl,
-        status: "updated",
+        status: updated ? "updated" : "unchanged",
+        reason: updated ? undefined : "source hash and topic metadata unchanged",
       });
       continue;
     }

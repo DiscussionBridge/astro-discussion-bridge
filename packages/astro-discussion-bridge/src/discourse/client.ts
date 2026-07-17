@@ -38,6 +38,8 @@ export interface TopicResponse {
   id: number;
   title: string;
   fancy_title: string;
+  category_id?: number;
+  visible?: boolean;
   posts_count: number;
   created_at: string;
   post_stream: {
