@@ -93,7 +93,7 @@ For example, one Astro or Starlight site might publish:
 - news posts to a news or announcements category
 - changelog entries to a releases category
 
-The build hook supports route-level lane defaults today. A lane may define its source directory, Discourse category, tags, publish/sync behavior, listed or unlisted preference, notification recipients, and title validation settings. Frontmatter overrides are a future layer for exceptions inside a lane. In the API-only tier, lanes are configuration and frontmatter. In the optional plugin tier, lanes can become visible and manageable inside the Discourse control plane.
+The build hook supports route-level lane defaults today. A lane may define its source directory, Discourse category, tags, publish/sync behavior, listed or unlisted preference, notification recipients, and title validation settings. Individual pages can override the lane's category, tags, listed/unlisted preference, and failure-notification recipients in frontmatter. In the API-only tier, lanes are configuration and frontmatter. In the optional plugin tier, lanes can become visible and manageable inside the Discourse control plane.
 
 Astro's Starlog release-notes example is a useful model: release posts live in a dedicated `src/content/releases` collection, which can map cleanly to a release-notes Discourse category.
 
@@ -294,6 +294,26 @@ discussionBridge({
   },
 });
 ```
+
+Pages can override the lane defaults when a single release, post, or doc belongs somewhere else in Discourse.
+
+```yaml
+---
+title: "LaunchLight 1.0 Release Notes"
+discussionCategoryId: 18
+discussionTags: "releases, launchlight"
+discussionUnlisted: false
+discussionNotifyRecipients: "PhilH,OpsBot"
+---
+```
+
+Supported per-page overrides:
+
+- `discussionCategoryId`: Discourse category ID for this page's companion topic.
+- `discussionTags`: comma-separated tags used when creating this page's companion topic.
+- `discussionUnlisted`: `true` hides this page's companion topic from category discovery after create/sync.
+- `discussionListed`: `true` opts this page back into category discovery when a lane default is unlisted.
+- `discussionNotifyRecipients`: comma-separated Discourse usernames to PM if publishing or syncing this page fails.
 
 To also sync existing first posts during `astro build`, opt in explicitly with `syncExisting: true`.
 

@@ -45,6 +45,7 @@ interface ParsedMarkdown {
 
 const markdownExtensions = new Set([".md", ".mdx"]);
 const defaultTitleMinLength = 15;
+const notifiedErrors = new WeakSet<object>();
 
 export async function syncDiscourseTopics(
   options: SyncDiscourseTopicsOptions,
@@ -60,6 +61,7 @@ export async function syncDiscourseTopics(
       const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl });
       const content = discussionContentForPage(parsed);
       const sourceHash = hashDiscussionSource({ title, pageUrl, content });
+      const pageOptions = discussionOptionsForPage(parsed.frontmatter, options);
 
       return {
         filePath,
@@ -72,6 +74,10 @@ export async function syncDiscourseTopics(
         existingTopicId: parsed.frontmatter.discourseTopicId,
         existingTopicUrl: parsed.frontmatter.discourseTopicUrl,
         previousHash: parsed.frontmatter.discussionSourceHash,
+        categoryId: pageOptions.categoryId,
+        tags: pageOptions.tags,
+        visible: pageOptions.visible,
+        notifyOnFailure: pageOptions.notifyOnFailure,
       };
     }),
   );
@@ -120,160 +126,173 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
   const results: SyncedPage[] = [];
 
   for (const page of input.pages) {
-    const {
-      filePath,
-      source,
-      title,
-      pageUrl,
-      content,
-      sourceHash,
-      existingTopicId,
-      existingTopicUrl,
-      previousHash,
-    } = page;
+    try {
+      const {
+        filePath,
+        source,
+        title,
+        pageUrl,
+        content,
+        sourceHash,
+        existingTopicId,
+        existingTopicUrl,
+        previousHash,
+      } = page;
 
-    if (existingTopicId) {
-      if (input.mode === "publish-new") {
+      if (existingTopicId) {
+        if (input.mode === "publish-new") {
+          results.push({
+            filePath,
+            title,
+            pageUrl,
+            topicId: Number(existingTopicId),
+            topicUrl: existingTopicUrl,
+            status: "skipped",
+            reason: "already linked",
+          });
+          continue;
+        }
+
+        if (input.dryRun) {
+          results.push({
+            filePath,
+            title,
+            pageUrl,
+            topicId: Number(existingTopicId),
+            topicUrl: existingTopicUrl,
+            status: previousHash === sourceHash ? "unchanged" : "dry-run-update",
+            reason: previousHash === sourceHash ? "source hash unchanged" : undefined,
+          });
+          continue;
+        }
+
+        const sourceChanged = previousHash !== sourceHash;
+        const topic = await input.discourse.topic(existingTopicId);
+        const firstPost = topic.post_stream.posts.find((post) => post.post_number === 1);
+        if (sourceChanged && !firstPost) {
+          throw new Error(`Could not find first post for Discourse topic ${existingTopicId}.`);
+        }
+        let updated = false;
+
+        if (sourceChanged && firstPost) {
+          await input.discourse.updatePost({
+            postId: firstPost.id,
+            raw: companionTopicBody({
+              title,
+              pageUrl,
+              content,
+              lastSyncedAt: new Date().toISOString(),
+            }),
+            editReason: "Sync DiscussionBridge companion summary from Astro source",
+            bypassBump: true,
+          });
+          updated = true;
+        }
+
+        if (topic.title !== title || (page.categoryId !== undefined && topic.category_id !== page.categoryId)) {
+          await input.discourse.updateTopic({
+            topicId: existingTopicId,
+            title,
+            categoryId: page.categoryId,
+          });
+          updated = true;
+        }
+
+        if (page.visible !== undefined && topic.visible !== page.visible) {
+          await input.discourse.updateTopicStatus({
+            topicId: existingTopicId,
+            status: "visible",
+            enabled: page.visible,
+          });
+          updated = true;
+        }
+
+        if (sourceChanged) {
+          await fs.writeFile(
+            filePath,
+            updateFrontmatter(source, {
+              discussionSourceHash: sourceHash,
+              discussionLastSyncedAt: new Date().toISOString(),
+            }),
+          );
+        }
+
         results.push({
           filePath,
           title,
           pageUrl,
           topicId: Number(existingTopicId),
           topicUrl: existingTopicUrl,
+          status: updated ? "updated" : "unchanged",
+          reason: updated ? undefined : "source hash and topic metadata unchanged",
+        });
+        continue;
+      }
+
+      if (input.mode === "sync-existing") {
+        results.push({
+          filePath,
+          title,
+          pageUrl,
           status: "skipped",
-          reason: "already linked",
+          reason: "not linked",
         });
         continue;
       }
 
       if (input.dryRun) {
-        results.push({
-          filePath,
-          title,
-          pageUrl,
-          topicId: Number(existingTopicId),
-          topicUrl: existingTopicUrl,
-          status: previousHash === sourceHash ? "unchanged" : "dry-run-update",
-          reason: previousHash === sourceHash ? "source hash unchanged" : undefined,
-        });
+        results.push({ filePath, title, pageUrl, status: "dry-run-create" });
         continue;
       }
 
-      const sourceChanged = previousHash !== sourceHash;
-      const topic = await input.discourse.topic(existingTopicId);
-      const firstPost = topic.post_stream.posts.find((post) => post.post_number === 1);
-      if (sourceChanged && !firstPost) {
-        throw new Error(`Could not find first post for Discourse topic ${existingTopicId}.`);
-      }
-      let updated = false;
+      const lastSyncedAt = new Date().toISOString();
+      const topic = await input.discourse.createTopic({
+        title,
+        raw: companionTopicBody({ title, pageUrl, content, lastSyncedAt }),
+        category: page.categoryId,
+        tags: page.tags,
+        embedUrl: pageUrl,
+      });
+      const topicUrl = `${input.discourse.discourseUrl}/t/${topic.topic_slug}/${topic.topic_id}`;
 
-      if (sourceChanged && firstPost) {
-        await input.discourse.updatePost({
-          postId: firstPost.id,
-          raw: companionTopicBody({
-            title,
-            pageUrl,
-            content,
-            lastSyncedAt: new Date().toISOString(),
-          }),
-          editReason: "Sync DiscussionBridge companion summary from Astro source",
-          bypassBump: true,
-        });
-        updated = true;
-      }
-
-      if (topic.title !== title || (input.categoryId !== undefined && topic.category_id !== input.categoryId)) {
-        await input.discourse.updateTopic({
-          topicId: existingTopicId,
-          title,
-          categoryId: input.categoryId,
-        });
-        updated = true;
-      }
-
-      if (input.unlistSyncedTopics && topic.visible !== false) {
+      if (page.visible === false) {
         await input.discourse.updateTopicStatus({
-          topicId: existingTopicId,
+          topicId: topic.topic_id,
           status: "visible",
           enabled: false,
         });
-        updated = true;
       }
 
-      if (sourceChanged) {
-        await fs.writeFile(
-          filePath,
-          updateFrontmatter(source, {
-            discussionSourceHash: sourceHash,
-            discussionLastSyncedAt: new Date().toISOString(),
-          }),
-        );
-      }
+      await fs.writeFile(
+        filePath,
+        updateFrontmatter(source, {
+          discourseTopicId: String(topic.topic_id),
+          discourseTopicUrl: topicUrl,
+          discussionSourceHash: sourceHash,
+          discussionLastSyncedAt: lastSyncedAt,
+        }),
+      );
 
       results.push({
         filePath,
         title,
         pageUrl,
-        topicId: Number(existingTopicId),
-        topicUrl: existingTopicUrl,
-        status: updated ? "updated" : "unchanged",
-        reason: updated ? undefined : "source hash and topic metadata unchanged",
-      });
-      continue;
-    }
-
-    if (input.mode === "sync-existing") {
-      results.push({
-        filePath,
-        title,
-        pageUrl,
-        status: "skipped",
-        reason: "not linked",
-      });
-      continue;
-    }
-
-    if (input.dryRun) {
-      results.push({ filePath, title, pageUrl, status: "dry-run-create" });
-      continue;
-    }
-
-    const lastSyncedAt = new Date().toISOString();
-    const topic = await input.discourse.createTopic({
-      title,
-      raw: companionTopicBody({ title, pageUrl, content, lastSyncedAt }),
-      category: input.categoryId,
-      tags: input.tags,
-      embedUrl: pageUrl,
-    });
-    const topicUrl = `${input.discourse.discourseUrl}/t/${topic.topic_slug}/${topic.topic_id}`;
-
-    if (input.unlistSyncedTopics) {
-      await input.discourse.updateTopicStatus({
         topicId: topic.topic_id,
-        status: "visible",
-        enabled: false,
+        topicUrl,
+        status: "created",
       });
+    } catch (error) {
+      await notifySyncFailure({
+        discourse: input.discourse,
+        options: {
+          ...input,
+          notifyOnFailure: page.notifyOnFailure,
+        },
+        page,
+        error,
+      });
+      throw error;
     }
-
-    await fs.writeFile(
-      filePath,
-      updateFrontmatter(source, {
-        discourseTopicId: String(topic.topic_id),
-        discourseTopicUrl: topicUrl,
-        discussionSourceHash: sourceHash,
-        discussionLastSyncedAt: lastSyncedAt,
-      }),
-    );
-
-    results.push({
-      filePath,
-      title,
-      pageUrl,
-      topicId: topic.topic_id,
-      topicUrl,
-      status: "created",
-    });
   }
 
   return results;
@@ -290,15 +309,24 @@ interface ParsedPage {
   existingTopicId?: string;
   existingTopicUrl?: string;
   previousHash?: string;
+  categoryId?: number;
+  tags?: string[];
+  visible?: boolean;
+  notifyOnFailure?: NotifyOnFailureOptions;
 }
 
 async function notifySyncFailure(input: {
   discourse: ReturnType<typeof createDiscourseClient>;
   options: SyncDiscourseTopicsOptions & { docsDir: string; mode: SyncMode };
+  page?: Pick<ParsedPage, "filePath" | "pageUrl" | "title">;
   error: unknown;
 }) {
   const notification = input.options.notifyOnFailure;
   if (!notification?.enabled || !notification.recipients?.length) return;
+  if (typeof input.error === "object" && input.error !== null) {
+    if (notifiedErrors.has(input.error)) return;
+    notifiedErrors.add(input.error);
+  }
 
   try {
     await input.discourse.createPrivateMessage({
@@ -309,6 +337,7 @@ async function notifySyncFailure(input: {
         mode: input.options.mode,
         siteUrl: input.options.siteUrl,
         discourseUrl: input.options.discourseUrl,
+        page: input.page,
         error: input.error,
       }),
     });
@@ -322,6 +351,7 @@ function syncFailureNotificationBody(input: {
   mode: SyncMode;
   siteUrl: string;
   discourseUrl: string;
+  page?: Pick<ParsedPage, "filePath" | "pageUrl" | "title">;
   error: unknown;
 }): string {
   return [
@@ -331,6 +361,15 @@ function syncFailureNotificationBody(input: {
     `Docs directory: ${input.docsDir}`,
     `Site URL: ${input.siteUrl}`,
     `Discourse URL: ${input.discourseUrl}`,
+    ...(input.page
+      ? [
+          "",
+          "Page:",
+          `- File: ${input.page.filePath}`,
+          `- Title: ${input.page.title}`,
+          `- URL: ${input.page.pageUrl}`,
+        ]
+      : []),
     "",
     "Error:",
     "```",
@@ -546,6 +585,74 @@ function discussionContentForPage(parsed: ParsedMarkdown): string {
   const content = parsed.body.trim();
   if (!content) return "See the linked Astro page for the current source content.";
   return content;
+}
+
+function discussionOptionsForPage(
+  frontmatter: Record<string, string>,
+  defaults: SyncDiscourseTopicsOptions,
+): {
+  categoryId?: number;
+  tags?: string[];
+  visible?: boolean;
+  notifyOnFailure?: NotifyOnFailureOptions;
+} {
+  return {
+    categoryId: numberFromFrontmatter(frontmatter.discussionCategoryId) ?? defaults.categoryId,
+    tags: csvFromFrontmatter(frontmatter.discussionTags) ?? defaults.tags,
+    visible: visibleFromFrontmatter(frontmatter, defaults),
+    notifyOnFailure: notifyOnFailureForPage(frontmatter, defaults.notifyOnFailure),
+  };
+}
+
+function visibleFromFrontmatter(
+  frontmatter: Record<string, string>,
+  defaults: SyncDiscourseTopicsOptions,
+): boolean | undefined {
+  const listed = booleanFromFrontmatter(frontmatter.discussionListed);
+  if (listed !== undefined) return listed;
+
+  const unlisted = booleanFromFrontmatter(frontmatter.discussionUnlisted);
+  if (unlisted !== undefined) return !unlisted;
+
+  if (defaults.unlistSyncedTopics) return false;
+  return undefined;
+}
+
+function notifyOnFailureForPage(
+  frontmatter: Record<string, string>,
+  defaults: NotifyOnFailureOptions | undefined,
+): NotifyOnFailureOptions | undefined {
+  const recipients = csvFromFrontmatter(frontmatter.discussionNotifyRecipients);
+  if (!recipients) return defaults;
+
+  return {
+    ...defaults,
+    enabled: true,
+    recipients,
+  };
+}
+
+function numberFromFrontmatter(value: string | undefined): number | undefined {
+  if (!value) return undefined;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function csvFromFrontmatter(value: string | undefined): string[] | undefined {
+  if (!value) return undefined;
+
+  const values = value.split(",").map((item) => item.trim()).filter(Boolean);
+  return values.length ? values : undefined;
+}
+
+function booleanFromFrontmatter(value: string | undefined): boolean | undefined {
+  if (!value) return undefined;
+
+  const normalized = value.trim().toLowerCase();
+  if (["true", "yes", "1", "on"].includes(normalized)) return true;
+  if (["false", "no", "0", "off"].includes(normalized)) return false;
+  return undefined;
 }
 
 function hashDiscussionSource(input: { title: string; pageUrl: string; content: string }): string {

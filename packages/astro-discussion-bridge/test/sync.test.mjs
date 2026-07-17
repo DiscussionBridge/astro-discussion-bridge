@@ -333,6 +333,153 @@ test("publish-and-sync updates linked pages and creates missing companion topics
   }
 });
 
+test("frontmatter can override lane category, tags, visibility, and failure recipients", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-overrides-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "release.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Release Lane"',
+        "discussionCategoryId: 18",
+        'discussionTags: "releases, launchlight"',
+        "discussionUnlisted: true",
+        'discussionNotifyRecipients: "PhilH,OpsBot"',
+        "---",
+        "",
+        "# Release Lane",
+        "",
+        "A release-lane page can choose its own Discourse behavior.",
+      ].join("\n"),
+    );
+
+    const calls = [];
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      createdTopic: {
+        topic_id: 22,
+        topic_slug: "discussion-bridge-for-astro-release-lane",
+      },
+    });
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      tags: ["docs"],
+      mode: "publish-new",
+      notifyOnFailure: {
+        enabled: false,
+        recipients: ["DefaultUser"],
+      },
+    });
+
+    assert.equal(results[0].status, "created");
+
+    const createCall = calls.find((call) => call.pathname === "/posts.json" && call.method === "POST");
+    assert.equal(createCall.body.category, 18);
+    assert.deepEqual(createCall.body.tags, ["releases", "launchlight"]);
+
+    const visibilityCall = calls.find((call) => call.pathname === "/t/22/status.json" && call.method === "PUT");
+    assert.equal(visibilityCall.body.enabled, "false");
+
+    const syncedSource = await readFile(filePath, "utf8");
+    assert.match(syncedSource, /discourseTopicId: 22/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("frontmatter failure recipients receive page-specific publish errors", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-page-notify-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "release.md");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Release Lane Failure"',
+        'discussionNotifyRecipients: "PhilH,OpsBot"',
+        "---",
+        "",
+        "# Release Lane Failure",
+        "",
+        "This page will trigger a mocked Discourse publish failure.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async (url, init = {}) => {
+      const parsed = new URL(url);
+      const method = init.method ?? "GET";
+      const body = init.body ? JSON.parse(String(init.body)) : undefined;
+      calls.push({ pathname: parsed.pathname, method, body });
+
+      if (method === "POST" && parsed.pathname === "/posts.json" && body.archetype === "private_message") {
+        return jsonResponse({
+          id: 301,
+          name: "",
+          username: "test-user",
+          avatar_template: "",
+          created_at: new Date(0).toISOString(),
+          cooked: "",
+          post_number: 1,
+          post_type: 1,
+          updated_at: new Date(0).toISOString(),
+          reply_count: 0,
+          reply_to_post_number: null,
+          quote_count: 0,
+          incoming_link_count: 0,
+          reads: 0,
+          readers_count: 0,
+          score: 0,
+          topic_id: 30,
+          topic_slug: "discussion-bridge-publish-failed",
+        });
+      }
+
+      return new Response("Create failed", { status: 422, statusText: "Unprocessable Entity" });
+    };
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "publish-new",
+        notifyOnFailure: {
+          enabled: true,
+          recipients: ["DefaultUser"],
+        },
+      }),
+      /Discourse request failed: 422/,
+    );
+
+    const pmCalls = calls.filter((call) => call.pathname === "/posts.json" && call.body?.archetype === "private_message");
+    assert.equal(pmCalls.length, 1);
+    assert.equal(pmCalls[0].body.target_recipients, "PhilH,OpsBot");
+    assert.match(pmCalls[0].body.raw, /Release Lane Failure/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 function mockDiscourseFetch(calls, { topic, createdTopic }) {
   return async (url, init = {}) => {
     const parsed = new URL(url);
@@ -352,7 +499,7 @@ function mockDiscourseFetch(calls, { topic, createdTopic }) {
       return jsonResponse({ basic_topic: { id: 21, title: body.topic.title } });
     }
 
-    if (method === "PUT" && parsed.pathname === "/t/21/status.json") {
+    if (method === "PUT" && /^\/t\/\d+\/status\.json$/.test(parsed.pathname)) {
       return jsonResponse({ success: "OK" });
     }
 
