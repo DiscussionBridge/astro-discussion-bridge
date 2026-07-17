@@ -23,3 +23,4 @@ The same Astro site also includes non-doc content lanes:
 - [Release lane](/releases/)
 - [Blog lane](/blog/)
 - [News lane](/news/)
+- [Comments mode demos](/comments/)

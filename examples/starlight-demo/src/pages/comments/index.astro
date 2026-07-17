@@ -15,6 +15,11 @@ const posts = (await getCollection("comments")).sort(
   <body>
     <main>
       <a href="/">Discussion Bridge for Astro</a>
+      <nav aria-label="Content lanes">
+        <a href="/releases/">Releases</a>
+        <a href="/blog/">Blog</a>
+        <a href="/news/">News</a>
+      </nav>
       <h1>Comments Mode Demos</h1>
       <p>Side-by-side routes for testing simple, full, and fullInteractive comment rendering.</p>
       <ul>
@@ -29,5 +34,6 @@ const posts = (await getCollection("comments")).sort(
 <style>
   body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
   main { width: min(760px, calc(100% - 2rem)); margin: 0 auto; padding-block: 4rem; }
+  nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1rem 2rem; }
   li { margin-block: 0.75rem; }
 </style>

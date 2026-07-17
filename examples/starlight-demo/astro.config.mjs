@@ -16,6 +16,7 @@ export default defineConfig({
           items: [
             { label: "Starlight Demo", slug: "" },
             { label: "Plain Markdown Demo", slug: "existing-md-page" },
+            { label: "Comments Mode Demos", link: "/comments/" },
           ],
         },
       ],
