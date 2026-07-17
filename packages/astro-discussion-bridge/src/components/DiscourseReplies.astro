@@ -38,6 +38,10 @@ function likeCount(post: DiscoursePost): number {
   return post.like_count ?? likeAction?.count ?? 0;
 }
 
+function replyUrl(post: DiscoursePost): string {
+  return `${discourseUrl}/t/${post.topic_slug}/${post.topic_id}/${post.post_number}`;
+}
+
 const refreshConfig = topicId
   ? {
       discourseUrl,
@@ -66,16 +70,17 @@ const refreshConfig = topicId
         replies.map((reply) => (
           <li>
             <article>
-              <header>
-                <strong>{reply.display_username ?? reply.username}</strong>
-                <a href={`${discourseUrl}/t/${reply.topic_slug}/${reply.topic_id}/${reply.post_number}`}>
+              <header class="discussion-bridge-reply__header">
+                <strong class="discussion-bridge-reply__author">{reply.display_username ?? reply.username}</strong>
+                <a class="discussion-bridge-reply__permalink" href={replyUrl(reply)}>
                   <time datetime={reply.created_at}>{new Date(reply.created_at).toLocaleDateString()}</time>
                 </a>
               </header>
-              <div set:html={reply.cooked} />
+              <div class="discussion-bridge-reply__body" set:html={reply.cooked} />
               {showLikes && likeCount(reply) > 0 && (
                 <p class="discussion-bridge-replies__meta">
-                  {likeCount(reply)} {likeCount(reply) === 1 ? "like" : "likes"}
+                  <span aria-hidden="true">♡</span>
+                  <span>{likeCount(reply)}</span>
                 </p>
               )}
             </article>
@@ -127,11 +132,15 @@ const refreshConfig = topicId
       const body = document.createElement("div");
       const createdAt = new Date(reply.created_at);
 
+      header.className = "discussion-bridge-reply__header";
+      author.className = "discussion-bridge-reply__author";
       author.textContent = reply.display_username ?? reply.username;
       time.dateTime = reply.created_at;
       time.textContent = createdAt.toLocaleDateString();
+      link.className = "discussion-bridge-reply__permalink";
       link.href = `${refreshConfig.discourseUrl}/t/${reply.topic_slug}/${reply.topic_id}/${reply.post_number}`;
       link.append(time);
+      body.className = "discussion-bridge-reply__body";
       body.innerHTML = reply.cooked;
 
       header.append(author, link);
@@ -140,8 +149,13 @@ const refreshConfig = topicId
       const count = likeCount(reply);
       if (refreshConfig.showLikes && count > 0) {
         const meta = document.createElement("p");
+        const icon = document.createElement("span");
+        const value = document.createElement("span");
         meta.className = "discussion-bridge-replies__meta";
-        meta.textContent = `${count} ${count === 1 ? "like" : "likes"}`;
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "♡";
+        value.textContent = String(count);
+        meta.append(icon, value);
         article.append(meta);
       }
 
@@ -183,29 +197,58 @@ const refreshConfig = topicId
 
   .discussion-bridge-replies ol {
     display: grid;
-    gap: 1rem;
+    gap: 0.875rem;
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
   .discussion-bridge-replies article {
+    margin: 0;
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 8px;
-    padding: 1rem;
+    padding: 1rem 1.125rem;
   }
 
-  .discussion-bridge-replies header {
+  .discussion-bridge-reply__header {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: space-between;
-    margin-block-end: 0.75rem;
+    align-items: baseline;
+    gap: 0.35rem 0.75rem;
+    margin-block-end: 0.625rem;
+    line-height: 1.3;
+  }
+
+  .discussion-bridge-reply__author {
+    color: inherit;
+    font-size: 1rem;
+  }
+
+  .discussion-bridge-reply__permalink {
+    color: #62665d;
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+
+  .discussion-bridge-reply__permalink:hover {
+    text-decoration: underline;
+  }
+
+  .discussion-bridge-reply__body > :first-child {
+    margin-block-start: 0;
+  }
+
+  .discussion-bridge-reply__body > :last-child {
+    margin-block-end: 0;
   }
 
   .discussion-bridge-replies__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     margin-block: 0.75rem 0;
     color: #62665d;
+    line-height: 1;
   }
 </style>
 
