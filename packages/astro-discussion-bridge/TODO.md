@@ -14,7 +14,7 @@
 - Consider a configurable title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
 ## Sync Validation
 
-- Add tests around `sync-existing` and `publish-and-sync` before widening usage beyond the demo.
+- Expand tests around `sync-existing` and `publish-and-sync` edge cases before widening usage beyond the demo.
 - Add stronger MDX summary extraction for component-heavy pages.
 - Consider a user-configurable summary source, such as `discussionSummary` frontmatter.
 ## Upgrade Process
