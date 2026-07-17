@@ -1,17 +1,32 @@
 ---
+import config from "virtual:discussion-bridge/config";
 import DiscourseDiscussion from "./DiscourseDiscussion.astro";
+import DiscourseReplies from "./DiscourseReplies.astro";
 
 interface Props {
   class?: string;
+  display?: "simple" | "full";
   embedUrl?: string;
   heading?: string;
+  topicId?: number | string;
   topicUrl?: string;
 }
+
+const display = Astro.props.display ?? config.comments.display;
 ---
 
-<DiscourseDiscussion
-  class={Astro.props.class}
-  embedUrl={Astro.props.embedUrl}
-  heading={Astro.props.heading}
-  topicUrl={Astro.props.topicUrl}
-/>
+{display === "full" ? (
+  <DiscourseReplies
+    class={Astro.props.class}
+    heading={Astro.props.heading}
+    topicId={Astro.props.topicId}
+    topicUrl={Astro.props.topicUrl}
+  />
+) : (
+  <DiscourseDiscussion
+    class={Astro.props.class}
+    embedUrl={Astro.props.embedUrl}
+    heading={Astro.props.heading}
+    topicUrl={Astro.props.topicUrl}
+  />
+)}

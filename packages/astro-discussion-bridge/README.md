@@ -113,11 +113,23 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 </Default>
 ```
 
-`Discussion` uses the configured provider. With `provider: "discourse"`, it uses Discourse's embeddable comments script, which loads the Discourse-hosted discussion experience into the Astro page. This is the recommended path because logged-in Discourse users can interact with the discussion in-place, including replies and likes when the target Discourse site allows it.
+`Discussion` uses the configured provider. With `provider: "discourse"`, the default `comments.display: "simple"` mode uses Discourse's embeddable comments script. This is the lightweight path for page comments, but Discourse's embed output may omit some topic action detail such as visible like counts.
+
+Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, so it works best when the build or server can reach the Discourse site. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
 
 Configure the allowed host in Discourse admin under embedding settings, using your Astro/Starlight site hostname.
 
 `DiscourseDiscussion.astro` is also exported for provider-specific usage, and `DiscourseComments.astro` remains as a compatibility alias.
+
+```js
+discussionBridge({
+  provider: "discourse",
+  discourseUrl: "https://forum.example.com",
+  comments: {
+    display: "simple", // or "full"
+  },
+});
+```
 
 ### Optional static reply excerpts
 
@@ -313,6 +325,7 @@ discussionNotifyRecipients: "PhilH,OpsBot"
 Supported per-page overrides:
 
 - `discussionCategoryId`: Discourse category ID for this page's companion topic.
+- `discussionCommentsDisplay`: `simple` for the Discourse embed or `full` for bridge-rendered replies with like counts.
 - `discussionTags`: comma-separated tags used when creating this page's companion topic.
 - `discussionUnlisted`: `true` hides this page's companion topic from category discovery after create/sync.
 - `discussionListed`: `true` opts this page back into category discovery when a lane default is unlisted.

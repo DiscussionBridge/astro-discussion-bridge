@@ -94,6 +94,8 @@ export interface DiscoursePost {
   reads: number;
   readers_count: number;
   score: number;
+  like_count?: number;
+  actions_summary?: DiscoursePostActionSummary[];
   yours?: boolean;
   topic_id: number;
   topic_slug: string;
@@ -111,6 +113,13 @@ export interface DiscoursePost {
   user_title: string | null;
   trust_level?: number;
   user_id?: number;
+}
+
+export interface DiscoursePostActionSummary {
+  id: number;
+  count?: number;
+  acted?: boolean;
+  can_act?: boolean;
 }
 
 export function createDiscourseClient(options: DiscourseClientOptions) {

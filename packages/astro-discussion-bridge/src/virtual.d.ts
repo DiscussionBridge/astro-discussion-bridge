@@ -6,12 +6,14 @@ declare module "virtual:discussion-bridge/config" {
     siteUrl?: string;
     comments: {
       enabled: boolean;
+      display: "simple" | "full";
       className?: string;
     };
     replies: {
       enabled: boolean;
       minScore: number;
       maxReplies: number;
+      showLikes: boolean;
     };
   };
 

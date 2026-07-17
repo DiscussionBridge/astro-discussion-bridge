@@ -17,6 +17,7 @@ type DiscussionBridgeIntegration = {
 };
 
 export type DiscussionBridgeProvider = "discourse";
+export type DiscussionBridgeCommentsDisplay = "simple" | "full";
 export type DiscussionBridgePreset =
   | "astro"
   | "astro-content"
@@ -31,12 +32,14 @@ export interface DiscussionBridgeOptions {
   siteUrl?: string;
   comments?: {
     enabled?: boolean;
+    display?: DiscussionBridgeCommentsDisplay;
     className?: string;
   };
   replies?: {
     enabled?: boolean;
     minScore?: number;
     maxReplies?: number;
+    showLikes?: boolean;
   };
   publishOnBuild?: PublishOnBuildOptions;
 }
@@ -70,12 +73,14 @@ interface PublicOptions {
   siteUrl?: string;
   comments: {
     enabled: boolean;
+    display: DiscussionBridgeCommentsDisplay;
     className?: string;
   };
   replies: {
     enabled: boolean;
     minScore: number;
     maxReplies: number;
+    showLikes: boolean;
   };
 }
 
@@ -174,12 +179,14 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
     siteUrl: options.siteUrl ? normalizeBaseUrl(options.siteUrl) : undefined,
     comments: {
       enabled: options.comments?.enabled ?? true,
+      display: options.comments?.display ?? "simple",
       className: options.comments?.className,
     },
     replies: {
       enabled: options.replies?.enabled ?? true,
       minScore: options.replies?.minScore ?? 0,
       maxReplies: options.replies?.maxReplies ?? 5,
+      showLikes: options.replies?.showLikes ?? true,
     },
     publishOnBuild: {
       enabled: options.publishOnBuild?.enabled ?? false,

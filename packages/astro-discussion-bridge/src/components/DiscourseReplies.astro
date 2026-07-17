@@ -7,13 +7,19 @@ interface Props {
   minScore?: number;
   maxReplies?: number;
   discourseUrl?: string;
+  heading?: string;
+  showLikes?: boolean;
   class?: string;
+  topicUrl?: string;
 }
 
 const topicId = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
 const minScore = Astro.props.minScore ?? config.replies.minScore;
 const maxReplies = Astro.props.maxReplies ?? config.replies.maxReplies;
 const discourseUrl = Astro.props.discourseUrl ?? config.discourseUrl;
+const heading = Astro.props.heading ?? "Discussion";
+const showLikes = Astro.props.showLikes ?? config.replies.showLikes;
+const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
 let replies: DiscoursePost[] = [];
 
 if (config.replies.enabled && topicId) {
@@ -24,11 +30,19 @@ if (config.replies.enabled && topicId) {
     .filter((post) => post.score >= minScore)
     .slice(0, maxReplies);
 }
+
+function likeCount(post: DiscoursePost): number {
+  const likeAction = post.actions_summary?.find((action) => action.id === 2);
+  return post.like_count ?? likeAction?.count ?? 0;
+}
 ---
 
 {config.replies.enabled && replies.length > 0 && (
   <section class:list={["discussion-bridge-replies", Astro.props.class]}>
-    <h2>Discussion</h2>
+    <div class="discussion-bridge-replies__header">
+      <h2>{heading}</h2>
+      {topicUrl && <a href={topicUrl}>Open full discussion</a>}
+    </div>
     <ol>
       {replies.map((reply) => (
         <li>
@@ -40,11 +54,69 @@ if (config.replies.enabled && topicId) {
               </a>
             </header>
             <div set:html={reply.cooked} />
+            {showLikes && likeCount(reply) > 0 && (
+              <p class="discussion-bridge-replies__meta">
+                {likeCount(reply)} {likeCount(reply) === 1 ? "like" : "likes"}
+              </p>
+            )}
           </article>
         </li>
       ))}
     </ol>
   </section>
 )}
+
+<style>
+  .discussion-bridge-replies {
+    margin-block-start: 3rem;
+    border-block-start: 1px solid var(--sl-color-gray-5);
+    padding-block-start: 2rem;
+  }
+
+  .discussion-bridge-replies__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-end: 1rem;
+  }
+
+  .discussion-bridge-replies__header h2 {
+    margin: 0;
+    font-size: var(--sl-text-h3);
+  }
+
+  .discussion-bridge-replies__header a,
+  .discussion-bridge-replies__meta {
+    font-size: var(--sl-text-sm);
+  }
+
+  .discussion-bridge-replies ol {
+    display: grid;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .discussion-bridge-replies article {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .discussion-bridge-replies header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+    margin-block-end: 0.75rem;
+  }
+
+  .discussion-bridge-replies__meta {
+    margin-block: 0.75rem 0;
+    color: #62665d;
+  }
+</style>
 
 

@@ -2,10 +2,12 @@
 import Discussion from "astro-discussion-bridge/Discussion.astro";
 
 interface Props {
+  commentsDisplay?: "simple" | "full";
   date: Date;
   description: string;
   laneLabel: string;
   title: string;
+  topicId?: number | string;
   topicUrl?: string;
 }
 
@@ -39,7 +41,12 @@ const formattedDate = new Intl.DateTimeFormat("en", {
       <article>
         <slot />
       </article>
-      <Discussion heading="Discussion" topicUrl={Astro.props.topicUrl} />
+      <Discussion
+        display={Astro.props.commentsDisplay}
+        heading="Discussion"
+        topicId={Astro.props.topicId}
+        topicUrl={Astro.props.topicUrl}
+      />
     </main>
   </body>
 </html>
