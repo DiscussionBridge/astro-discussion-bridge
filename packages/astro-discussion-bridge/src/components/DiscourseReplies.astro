@@ -42,6 +42,22 @@ function replyUrl(post: DiscoursePost): string {
   return `${discourseUrl}/t/${post.topic_slug}/${post.topic_id}/${post.post_number}`;
 }
 
+function avatarUrl(post: DiscoursePost): string | undefined {
+  if (!post.avatar_template) return undefined;
+  const template = post.avatar_template.replace("{size}", "48");
+  if (/^https?:\/\//.test(template)) return template;
+  return `${discourseUrl}${template.startsWith("/") ? "" : "/"}${template}`;
+}
+
+function cookedHtml(post: DiscoursePost): string {
+  return absolutizeDiscourseLinks(post.cooked, discourseUrl);
+}
+
+function absolutizeDiscourseLinks(html: string, baseUrl: string): string {
+  const normalizedBase = baseUrl.replace(/\/+$/, "");
+  return html.replace(/\s(href|src)="\/(?!\/)([^"]*)"/g, ` $1="${normalizedBase}/$2"`);
+}
+
 const refreshConfig = topicId
   ? {
       discourseUrl,
@@ -70,15 +86,25 @@ const refreshConfig = topicId
         replies.map((reply) => (
           <li>
             <article>
-              <header class="discussion-bridge-reply__header">
-                <strong class="discussion-bridge-reply__author">{reply.display_username ?? reply.username}</strong>
-                <a class="discussion-bridge-reply__permalink" href={replyUrl(reply)}>
-                  <time datetime={reply.created_at}>{new Date(reply.created_at).toLocaleDateString()}</time>
-                </a>
-              </header>
-              <div class="discussion-bridge-reply__body" set:html={reply.cooked} />
+              <div class="discussion-bridge-reply__avatar" aria-hidden="true">
+                {avatarUrl(reply) ? (
+                  <img src={avatarUrl(reply)} alt="" loading="lazy" />
+                ) : (
+                  <span>{(reply.display_username ?? reply.username).slice(0, 1).toUpperCase()}</span>
+                )}
+              </div>
+              <div class="discussion-bridge-reply__content">
+                <header class="discussion-bridge-reply__header">
+                  <strong class="discussion-bridge-reply__author">{reply.display_username ?? reply.username}</strong>
+                  <span aria-hidden="true">·</span>
+                  <a class="discussion-bridge-reply__permalink" href={replyUrl(reply)}>
+                    <time datetime={reply.created_at}>{new Date(reply.created_at).toLocaleDateString()}</time>
+                  </a>
+                </header>
+                <div class="discussion-bridge-reply__body" set:html={cookedHtml(reply)} />
+              </div>
               {showLikes && likeCount(reply) > 0 && (
-                <p class="discussion-bridge-replies__meta">
+                <p class="discussion-bridge-reply__actions" aria-label={`${likeCount(reply)} likes`}>
                   <span aria-hidden="true">♡</span>
                   <span>{likeCount(reply)}</span>
                 </p>
@@ -125,33 +151,60 @@ const refreshConfig = topicId
     function renderReply(reply, refreshConfig) {
       const item = document.createElement("li");
       const article = document.createElement("article");
+      const avatar = document.createElement("div");
+      const content = document.createElement("div");
       const header = document.createElement("header");
       const author = document.createElement("strong");
+      const separator = document.createElement("span");
       const link = document.createElement("a");
       const time = document.createElement("time");
       const body = document.createElement("div");
       const createdAt = new Date(reply.created_at);
+      const avatarTemplate = reply.avatar_template?.replace("{size}", "48");
+      const avatarUrl = avatarTemplate
+        ? (/^https?:\/\//.test(avatarTemplate)
+            ? avatarTemplate
+            : `${refreshConfig.discourseUrl}${avatarTemplate.startsWith("/") ? "" : "/"}${avatarTemplate}`)
+        : undefined;
 
+      avatar.className = "discussion-bridge-reply__avatar";
+      avatar.setAttribute("aria-hidden", "true");
+      if (avatarUrl) {
+        const image = document.createElement("img");
+        image.src = avatarUrl;
+        image.alt = "";
+        image.loading = "lazy";
+        avatar.append(image);
+      } else {
+        const fallback = document.createElement("span");
+        fallback.textContent = (reply.display_username ?? reply.username).slice(0, 1).toUpperCase();
+        avatar.append(fallback);
+      }
+      content.className = "discussion-bridge-reply__content";
       header.className = "discussion-bridge-reply__header";
       author.className = "discussion-bridge-reply__author";
       author.textContent = reply.display_username ?? reply.username;
+      separator.setAttribute("aria-hidden", "true");
+      separator.textContent = "·";
       time.dateTime = reply.created_at;
       time.textContent = createdAt.toLocaleDateString();
       link.className = "discussion-bridge-reply__permalink";
       link.href = `${refreshConfig.discourseUrl}/t/${reply.topic_slug}/${reply.topic_id}/${reply.post_number}`;
       link.append(time);
       body.className = "discussion-bridge-reply__body";
-      body.innerHTML = reply.cooked;
+      body.innerHTML = absolutizeDiscourseLinks(reply.cooked, refreshConfig.discourseUrl);
 
-      header.append(author, link);
-      article.append(header, body);
+      header.append(author, separator, link);
+      content.append(header, body);
+      article.append(avatar, content);
 
       const count = likeCount(reply);
       if (refreshConfig.showLikes && count > 0) {
         const meta = document.createElement("p");
         const icon = document.createElement("span");
         const value = document.createElement("span");
-        meta.className = "discussion-bridge-replies__meta";
+        meta.className = "discussion-bridge-reply__actions";
+        meta.setAttribute("aria-label", `${count} likes`);
         icon.setAttribute("aria-hidden", "true");
         icon.textContent = "♡";
         value.textContent = String(count);
@@ -167,10 +220,15 @@ const refreshConfig = topicId
       const likeAction = post.actions_summary?.find((action) => action.id === 2);
       return post.like_count ?? likeAction?.count ?? 0;
     }
+
+    function absolutizeDiscourseLinks(html, baseUrl) {
+      const normalizedBase = baseUrl.replace(/\/+$/, "");
+      return html.replace(/\s(href|src)="\/(?!\/)([^"]*)"/g, ` $1="${normalizedBase}/$2"`);
+    }
   </script>
 )}
 
-<style>
+<style is:global>
   .discussion-bridge-replies {
     margin-block-start: 3rem;
     border-block-start: 1px solid var(--sl-color-gray-5);
@@ -191,31 +249,62 @@ const refreshConfig = topicId
   }
 
   .discussion-bridge-replies__header a,
-  .discussion-bridge-replies__meta {
+  .discussion-bridge-reply__actions {
     font-size: var(--sl-text-sm);
   }
 
   .discussion-bridge-replies ol {
     display: grid;
-    gap: 0.875rem;
+    gap: 0;
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
   .discussion-bridge-replies article {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    column-gap: 0.875rem;
     margin: 0;
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 8px;
-    padding: 1rem 1.125rem;
+    border-block-start: 1px solid var(--sl-color-gray-5);
+    padding: 1.125rem 0;
+  }
+
+  .discussion-bridge-replies li:first-child article {
+    border-block-start: 0;
+    padding-block-start: 0;
+  }
+
+  .discussion-bridge-reply__avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #e5e0d6;
+    color: #232421;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .discussion-bridge-reply__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .discussion-bridge-reply__content {
+    min-width: 0;
   }
 
   .discussion-bridge-reply__header {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.35rem 0.75rem;
-    margin-block-end: 0.625rem;
+    gap: 0.35rem;
+    margin-block-end: 0.375rem;
     line-height: 1.3;
   }
 
@@ -234,6 +323,10 @@ const refreshConfig = topicId
     text-decoration: underline;
   }
 
+  .discussion-bridge-reply__body {
+    overflow-wrap: anywhere;
+  }
+
   .discussion-bridge-reply__body > :first-child {
     margin-block-start: 0;
   }
@@ -242,13 +335,30 @@ const refreshConfig = topicId
     margin-block-end: 0;
   }
 
-  .discussion-bridge-replies__meta {
+  .discussion-bridge-reply__actions {
+    grid-column: 2;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    margin-block: 0.75rem 0;
+    width: max-content;
+    margin-block: 0.625rem 0;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    padding: 0.2rem 0.5rem;
     color: #62665d;
     line-height: 1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .discussion-bridge-reply__avatar {
+      background: #3c4142;
+      color: #f1eee8;
+    }
+
+    .discussion-bridge-reply__permalink,
+    .discussion-bridge-reply__actions {
+      color: #b7b0a4;
+    }
   }
 </style>
 
