@@ -38,22 +38,29 @@ export interface DiscussionBridgeOptions {
     minScore?: number;
     maxReplies?: number;
   };
-  publishOnBuild?: {
-    enabled?: boolean;
-    syncExisting?: boolean;
-    unlistSyncedTopics?: boolean;
-    validateTitles?: boolean;
-    titleMinLength?: number;
-    notifyOnFailure?: NotifyOnFailureOptions;
-    docsDir?: string;
-    apiKey?: string;
-    apiUsername?: string;
-    categoryId?: number;
-    tags?: string[];
-    dryRun?: boolean;
-  };
+  publishOnBuild?: PublishOnBuildOptions;
 }
 
+export interface PublishOnBuildLaneOptions {
+  name?: string;
+  docsDir: string;
+  syncExisting?: boolean;
+  unlistSyncedTopics?: boolean;
+  validateTitles?: boolean;
+  titleMinLength?: number;
+  notifyOnFailure?: NotifyOnFailureOptions;
+  categoryId?: number;
+  tags?: string[];
+  dryRun?: boolean;
+}
+
+export interface PublishOnBuildOptions extends Omit<PublishOnBuildLaneOptions, "docsDir"> {
+  enabled?: boolean;
+  docsDir?: string;
+  apiKey?: string;
+  apiUsername?: string;
+  lanes?: PublishOnBuildLaneOptions[];
+}
 
 interface PublicOptions {
   provider: DiscussionBridgeProvider;
@@ -74,18 +81,23 @@ interface PublicOptions {
 interface ResolvedOptions extends PublicOptions {
   publishOnBuild: {
     enabled: boolean;
-    syncExisting: boolean;
-    unlistSyncedTopics: boolean;
-    validateTitles: boolean;
-    titleMinLength?: number;
-    notifyOnFailure?: NotifyOnFailureOptions;
-    docsDir: string;
     apiKey?: string;
     apiUsername?: string;
-    categoryId?: number;
-    tags?: string[];
-    dryRun: boolean;
+    lanes: ResolvedPublishLane[];
   };
+}
+
+interface ResolvedPublishLane {
+  name: string;
+  docsDir: string;
+  syncExisting: boolean;
+  unlistSyncedTopics: boolean;
+  validateTitles: boolean;
+  titleMinLength?: number;
+  notifyOnFailure?: NotifyOnFailureOptions;
+  categoryId?: number;
+  tags?: string[];
+  dryRun: boolean;
 }
 
 const virtualModuleId = "virtual:discussion-bridge/config";
@@ -114,8 +126,6 @@ export default function discussionBridge(
         const siteUrl = resolvedOptions.siteUrl ?? process.env.SITE_URL;
         const apiKey = resolvedOptions.publishOnBuild.apiKey ?? process.env.DISCOURSE_API_KEY;
         const apiUsername = resolvedOptions.publishOnBuild.apiUsername ?? process.env.DISCOURSE_API_USERNAME;
-        const categoryId = resolvedOptions.publishOnBuild.categoryId ?? numberFromEnv("DISCOURSE_CATEGORY_ID");
-        const tags = resolvedOptions.publishOnBuild.tags ?? tagsFromEnv("DISCOURSE_TAGS");
 
         if (!siteUrl || !apiKey || !apiUsername) {
           throw new Error(
@@ -123,33 +133,17 @@ export default function discussionBridge(
           );
         }
 
-        const docsDir = path.resolve(projectRoot, resolvedOptions.publishOnBuild.docsDir);
-        logger.info(`Publishing missing discussion companion topics from ${docsDir}`);
-
-        const results = await syncDiscourseTopics({
-          docsDir,
-          siteUrl,
-          discourseUrl: resolvedOptions.discourseUrl,
-          apiKey,
-          apiUsername,
-          categoryId,
-          tags,
-          dryRun: resolvedOptions.publishOnBuild.dryRun,
-          mode: resolvedOptions.publishOnBuild.syncExisting ? "publish-and-sync" : "publish-new",
-          unlistSyncedTopics: resolvedOptions.publishOnBuild.unlistSyncedTopics,
-          validateTitles: resolvedOptions.publishOnBuild.validateTitles,
-          titleMinLength: resolvedOptions.publishOnBuild.titleMinLength,
-          notifyOnFailure: resolvedOptions.publishOnBuild.notifyOnFailure,
-        });
-        const created = results.filter((result) => result.status === "created").length;
-        const updated = results.filter((result) => result.status === "updated").length;
-        const skipped = results.filter((result) => result.status === "skipped").length;
-        const unchanged = results.filter((result) => result.status === "unchanged").length;
-        const dryRun = results.filter((result) => result.status.startsWith("dry-run")).length;
-
-        logger.info(
-          `DiscussionBridge topic publish complete: ${created} created, ${updated} updated, ${skipped} skipped, ${unchanged} unchanged, ${dryRun} dry-run.`,
-        );
+        for (const lane of resolvedOptions.publishOnBuild.lanes) {
+          await publishLane({
+            lane,
+            projectRoot,
+            siteUrl,
+            discourseUrl: resolvedOptions.discourseUrl,
+            apiKey,
+            apiUsername,
+            logger,
+          });
+        }
       },
     },
   };
@@ -187,19 +181,78 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
     },
     publishOnBuild: {
       enabled: options.publishOnBuild?.enabled ?? false,
-      syncExisting: options.publishOnBuild?.syncExisting ?? false,
-      unlistSyncedTopics: options.publishOnBuild?.unlistSyncedTopics ?? false,
-      validateTitles: options.publishOnBuild?.validateTitles ?? true,
-      titleMinLength: options.publishOnBuild?.titleMinLength,
-      notifyOnFailure: options.publishOnBuild?.notifyOnFailure,
-      docsDir: options.publishOnBuild?.docsDir ?? defaultDocsDirForPreset(preset),
       apiKey: options.publishOnBuild?.apiKey,
       apiUsername: options.publishOnBuild?.apiUsername,
-      categoryId: options.publishOnBuild?.categoryId,
-      tags: options.publishOnBuild?.tags,
-      dryRun: options.publishOnBuild?.dryRun ?? false,
+      lanes: resolvePublishLanes({
+        preset,
+        publishOnBuild: options.publishOnBuild,
+      }),
     },
   };
+}
+
+function resolvePublishLanes(input: {
+  preset: DiscussionBridgePreset;
+  publishOnBuild?: PublishOnBuildOptions;
+}): ResolvedPublishLane[] {
+  const defaults = input.publishOnBuild;
+  const configuredLanes = defaults?.lanes?.length
+    ? defaults.lanes
+    : [{ docsDir: defaults?.docsDir ?? defaultDocsDirForPreset(input.preset) }];
+
+  return configuredLanes.map((lane, index) => ({
+    name: lane.name ?? (configuredLanes.length === 1 ? "default" : `lane-${index + 1}`),
+    docsDir: lane.docsDir,
+    syncExisting: lane.syncExisting ?? defaults?.syncExisting ?? false,
+    unlistSyncedTopics: lane.unlistSyncedTopics ?? defaults?.unlistSyncedTopics ?? false,
+    validateTitles: lane.validateTitles ?? defaults?.validateTitles ?? true,
+    titleMinLength: lane.titleMinLength ?? defaults?.titleMinLength,
+    notifyOnFailure: lane.notifyOnFailure ?? defaults?.notifyOnFailure,
+    categoryId: lane.categoryId ?? defaults?.categoryId,
+    tags: lane.tags ?? defaults?.tags,
+    dryRun: lane.dryRun ?? defaults?.dryRun ?? false,
+  }));
+}
+
+async function publishLane(input: {
+  lane: ResolvedPublishLane;
+  projectRoot: string;
+  siteUrl: string;
+  discourseUrl: string;
+  apiKey: string;
+  apiUsername: string;
+  logger: { info: (message: string) => void };
+}) {
+  const categoryId = input.lane.categoryId ?? numberFromEnv("DISCOURSE_CATEGORY_ID");
+  const tags = input.lane.tags ?? tagsFromEnv("DISCOURSE_TAGS");
+  const docsDir = path.resolve(input.projectRoot, input.lane.docsDir);
+
+  input.logger.info(`Publishing discussion companion topics for lane "${input.lane.name}" from ${docsDir}`);
+
+  const results = await syncDiscourseTopics({
+    docsDir,
+    siteUrl: input.siteUrl,
+    discourseUrl: input.discourseUrl,
+    apiKey: input.apiKey,
+    apiUsername: input.apiUsername,
+    categoryId,
+    tags,
+    dryRun: input.lane.dryRun,
+    mode: input.lane.syncExisting ? "publish-and-sync" : "publish-new",
+    unlistSyncedTopics: input.lane.unlistSyncedTopics,
+    validateTitles: input.lane.validateTitles,
+    titleMinLength: input.lane.titleMinLength,
+    notifyOnFailure: input.lane.notifyOnFailure,
+  });
+  const created = results.filter((result) => result.status === "created").length;
+  const updated = results.filter((result) => result.status === "updated").length;
+  const skipped = results.filter((result) => result.status === "skipped").length;
+  const unchanged = results.filter((result) => result.status === "unchanged").length;
+  const dryRun = results.filter((result) => result.status.startsWith("dry-run")).length;
+
+  input.logger.info(
+    `DiscussionBridge lane "${input.lane.name}" complete: ${created} created, ${updated} updated, ${skipped} skipped, ${unchanged} unchanged, ${dryRun} dry-run.`,
+  );
 }
 
 function defaultDocsDirForPreset(preset: DiscussionBridgePreset): string {

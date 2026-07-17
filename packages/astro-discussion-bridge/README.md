@@ -93,7 +93,9 @@ For example, one Astro or Starlight site might publish:
 - news posts to a news or announcements category
 - changelog entries to a releases category
 
-Lane configuration should eventually support route-level defaults plus frontmatter overrides. A lane may define its source directory, Discourse category, tags, publish/sync behavior, listed or unlisted preference, notification recipients, and later title templates. In the API-only tier, lanes are configuration and frontmatter. In the optional plugin tier, lanes can become visible and manageable inside the Discourse control plane.
+The build hook supports route-level lane defaults today. A lane may define its source directory, Discourse category, tags, publish/sync behavior, listed or unlisted preference, notification recipients, and title validation settings. Frontmatter overrides are a future layer for exceptions inside a lane. In the API-only tier, lanes are configuration and frontmatter. In the optional plugin tier, lanes can become visible and manageable inside the Discourse control plane.
+
+Astro's Starlog release-notes example is a useful model: release posts live in a dedicated `src/content/releases` collection, which can map cleanly to a release-notes Discourse category.
 
 ## Add Discussion to Starlight
 
@@ -263,6 +265,35 @@ discussionBridge({
 ```
 
 With this option enabled, creating a new doc and running `astro build` will create the missing Discourse topic and write the topic metadata into that doc's frontmatter. Pages that already have `discourseTopicId` are skipped.
+
+Use `publishOnBuild.lanes` when one Astro site has multiple content lanes that should publish to different Discourse categories or tags.
+
+```js
+// astro.config.mjs
+discussionBridge({
+  provider: "discourse",
+  preset: "starlight",
+  discourseUrl: "https://forum.example.com",
+  siteUrl: "https://docs.example.com",
+  publishOnBuild: {
+    enabled: true,
+    lanes: [
+      {
+        name: "docs",
+        docsDir: "src/content/docs",
+        categoryId: 12,
+        tags: ["docs"],
+      },
+      {
+        name: "releases",
+        docsDir: "src/content/releases",
+        categoryId: 18,
+        tags: ["releases", "starlog"],
+      },
+    ],
+  },
+});
+```
 
 To also sync existing first posts during `astro build`, opt in explicitly with `syncExisting: true`.
 

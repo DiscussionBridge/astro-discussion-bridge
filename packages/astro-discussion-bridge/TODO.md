@@ -25,8 +25,9 @@
 - Keep Starlight optional so Astro core sites are not forced to install it.
 ## Internal Demo Matrix
 
-- Add content lane support so one Astro/Starlight site can map docs, blog, news, changelog, or other source paths to different Discourse categories and tags.
-- Support route-level lane defaults with frontmatter overrides for category, tags, listed/unlisted preference, and notifications.
+- Add frontmatter overrides for category, tags, listed/unlisted preference, and notifications inside content lanes.
+- Add a Starlog-style release lane demo using `src/content/releases`.
+- Test one Astro/Starlight site mapping docs, releases, blog, news, changelog, or other source paths to different Discourse categories and tags.
 - Demo multiple Astro sites connected to the same Discourse instance.
 - Verify Discourse external host/embed settings with more than one Astro hostname.
 - Test topic creation so pages from different Astro sites do not collide or create confusing duplicate topics.

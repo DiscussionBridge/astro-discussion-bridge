@@ -42,6 +42,7 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - The built Cloudflare demo page loads the native Discourse discussion UI.
 - Logged-in Discourse users can interact with replies and likes in the embedded UI.
 - Multiple Astro hosts can connect to `forum.discussionbridge.dev` without topic collisions, using the Discussion Bridge for Astro category plus tags/URLs for namespacing.
+- One Astro/Starlight site can publish multiple content lanes, such as docs and Starlog-style releases, to different Discourse categories or tags.
 - Demo/test companion topics can be unlisted to keep category discovery clean while preserving direct links and embeds.
 - Topic title/category metadata sync is part of the managed companion-topic path, subject to Discourse permissions.
 
