@@ -253,6 +253,12 @@ Update linked companion topics whose source hash has changed.
 npx astro-discussion-bridge sync-existing src/content/docs
 ```
 
+Use `--force` when the source content is unchanged but you still need to rewrite the managed first post, such as after changing the companion topic template.
+
+```sh
+npx astro-discussion-bridge sync-existing src/content/docs --force
+```
+
 `sync-existing` does not create missing topics. Pages without `discourseTopicId` are skipped.
 
 Use `--unlist` for demo/test companion topics that should keep direct links and embeds working without appearing in category discovery. The configured Discourse API user must be allowed to change topic visibility; on typical Discourse installs that means a staff or moderator-level user. Retitling replied topics can require the same level of authority.
@@ -268,10 +274,11 @@ Treat first-post maintenance as a repeatable test, especially after changing the
 1. Confirm the project is using the expected `astro-discussion-bridge` package build.
 2. Run `sync-existing` with `--dry-run` for one lane.
 3. Review whether pages report `dry-run-update`, `unchanged`, or `skipped`.
-4. Run the same command without `--dry-run` only after the preview looks right.
-5. Verify the Discourse first post starts with the article link, includes the reader-facing page content or summary, and no longer shows old implementation labels.
-6. Verify the Astro page and comments still render.
-7. Repeat for each lane.
+4. Add `--force` when the maintenance intent is to rewrite first posts even if page source hashes are unchanged.
+5. Run the same command without `--dry-run` only after the preview looks right.
+6. Verify the Discourse first post starts with the article link, includes the reader-facing page content or summary, and no longer shows old implementation labels.
+7. Verify the Astro page and comments still render.
+8. Repeat for each lane.
 
 Example blog-lane maintenance pass:
 
@@ -282,6 +289,7 @@ npx astro-discussion-bridge sync-existing src/content/blog \
   --site-url https://docs.example.com \
   --category-id 5 \
   --tags discussionbridge,blog \
+  --force \
   --dry-run
 
 npx astro-discussion-bridge sync-existing src/content/blog \
@@ -289,7 +297,8 @@ npx astro-discussion-bridge sync-existing src/content/blog \
   --discourse-url https://forum.example.com \
   --site-url https://docs.example.com \
   --category-id 5 \
-  --tags discussionbridge,blog
+  --tags discussionbridge,blog \
+  --force
 ```
 
 ### Publish and Sync

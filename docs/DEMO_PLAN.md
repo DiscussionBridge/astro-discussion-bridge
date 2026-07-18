@@ -60,7 +60,7 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 
 ## Maintenance Test Process
 
-Use maintenance syncs as explicit tests, not one-off commands. Before syncing existing live topics, confirm the local demo package is current by checking the installed CLI output or searching the installed package for the expected companion-body text. Then run a lane dry run, inspect the output, run the live sync, and verify both Discourse and Astro.
+Use maintenance syncs as explicit tests, not one-off commands. Before syncing existing live topics, confirm the local demo package is current by checking the installed CLI output or searching the installed package for the expected companion-body text. Then run a lane dry run, inspect the output, run the live sync, and verify both Discourse and Astro. Use `--force` when the maintenance intent is to rewrite first posts even though page source hashes are unchanged, such as after changing the companion topic template.
 
 Blog lane smoke test:
 
@@ -71,6 +71,7 @@ npx astro-discussion-bridge sync-existing src/content/blog `
   --site-url https://astrostarlightdemo.discussionbridge.dev `
   --category-id 5 `
   --tags discussionbridge,starlight-demo,blog `
+  --force `
   --dry-run
 ```
 

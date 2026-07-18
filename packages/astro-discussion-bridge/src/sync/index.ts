@@ -17,6 +17,7 @@ export interface SyncDiscourseTopicsOptions {
   tags?: string[];
   dryRun?: boolean;
   mode?: SyncMode;
+  forceSync?: boolean;
   unlistSyncedTopics?: boolean;
   validateTitles?: boolean;
   titleMinLength?: number;
@@ -181,6 +182,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         }
 
         if (input.dryRun) {
+          const wouldUpdate = input.forceSync || previousHash !== sourceHash;
           results.push({
             filePath,
             title,
@@ -188,13 +190,15 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
             targetName: resultTargetName,
             topicId: Number(existingTopicId),
             topicUrl: existingTopicUrl,
-            status: previousHash === sourceHash ? "unchanged" : "dry-run-update",
-            reason: previousHash === sourceHash ? "source hash unchanged" : undefined,
+            status: wouldUpdate ? "dry-run-update" : "unchanged",
+            reason: wouldUpdate
+              ? (input.forceSync && previousHash === sourceHash ? "force sync requested" : undefined)
+              : "source hash unchanged",
           });
           continue;
         }
 
-        const sourceChanged = previousHash !== sourceHash;
+        const sourceChanged = input.forceSync || previousHash !== sourceHash;
         const topic = await input.discourse.topic(existingTopicId);
         const firstPost = topic.post_stream.posts.find((post) => post.post_number === 1);
         if (sourceChanged && !firstPost) {

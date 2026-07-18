@@ -14,6 +14,7 @@ if (!validCommands.has(command)) {
 const args = parseArgs(process.argv.slice(3));
 const docsDir = path.resolve(args.positionals[0] ?? "src/content/docs");
 const dryRun = args.flags.has("dry-run");
+const forceSync = args.flags.has("force");
 const unlistSyncedTopics = args.flags.has("unlist");
 const validateTitles = !args.flags.has("skip-title-validation");
 const notifyOnFailure = args.flags.has("notify-on-failure");
@@ -104,6 +105,7 @@ const results = await syncDiscourseTopics({
   tags,
   dryRun,
   mode,
+  forceSync,
   unlistSyncedTopics,
   validateTitles,
   titleMinLength,
@@ -189,8 +191,8 @@ function printUsage(error?: string) {
   if (error) console.error(error);
   console.error("Usage:");
   console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [--topic-id ID[,ID]] [--dry-run] [--overwrite] [--target NAME] [--route-base PATH] [--comments-display simple|full|fullInteractive] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--discourse-url URL] [--site-url URL]");
 }

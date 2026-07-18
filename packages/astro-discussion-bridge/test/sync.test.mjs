@@ -254,6 +254,99 @@ test("sync-existing can update topic metadata and unlist when source content is 
   }
 });
 
+test("sync-existing force updates the managed first post even when source hash is unchanged", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-force-sync-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Force Sync"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/force-sync/21"',
+        "---",
+        "",
+        "# Force Sync",
+        "",
+        "The source body is stable but the companion template changed.",
+      ].join("\n"),
+    );
+
+    const seedCalls = [];
+    globalThis.fetch = mockDiscourseFetch(seedCalls, {
+      topic: {
+        id: 21,
+        title: "Discussion Bridge for Astro: Force Sync",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+    });
+
+    await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+    });
+    const syncedSource = await readFile(filePath, "utf8");
+
+    const dryRunResults = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+      dryRun: true,
+      forceSync: true,
+    });
+    assert.equal(dryRunResults[0].status, "dry-run-update");
+    assert.equal(dryRunResults[0].reason, "force sync requested");
+
+    const forceCalls = [];
+    globalThis.fetch = mockDiscourseFetch(forceCalls, {
+      topic: {
+        id: 21,
+        title: "Discussion Bridge for Astro: Force Sync",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+    });
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+      forceSync: true,
+    });
+
+    assert.equal(results[0].status, "updated");
+    const updateCall = forceCalls.find((call) => call.pathname === "/posts/101.json" && call.method === "PUT");
+    assert.ok(updateCall);
+    assert.match(updateCall.body.post.raw, /^\[Discussion Bridge for Astro: Force Sync\]/);
+    assert.doesNotMatch(updateCall.body.post.raw, /Source content:/);
+    assert.notEqual(await readFile(filePath, "utf8"), syncedSource);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("publish-and-sync updates linked pages and creates missing companion topics", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-publish-sync-"));
   const docsDir = path.join(dir, "docs");
