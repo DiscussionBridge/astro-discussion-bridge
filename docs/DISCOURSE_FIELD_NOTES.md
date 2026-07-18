@@ -73,6 +73,8 @@ This is a living list of Discourse issues, feature needs, wishlist items, shortc
 - Tier 1 should document a practical two-key model:
   - granular or restricted publishing key for normal runtime sync where possible
   - broader diagnostics key for setup checks and reconciliation when granular scopes are insufficient
+- Use the two-key model when granular diagnostics/read scopes are available or confirmed.
+- Current fallback: global/admin-capable diagnostics key for setup checks; granular publishing key where it can perform create/update/tag/read actions.
 - `check-discourse` is important because it turns hidden forum configuration into visible setup feedback before publishing.
 - Existing-topic reconciliation is necessary in the real world because Discourse embeds can create topics before CLI publishing runs.
 - The bridge should keep failing clearly when it cannot prove the owning topic. Guessing would be worse than stopping.

@@ -28,6 +28,8 @@ Develop in public with a visible path from local preview to a live Cloudflare de
    - Use tags for product and demo details, for example `discussionbridge`, `astro`, `starlight-demo`, and `cloudflare-demo`.
    - Current key set includes global publishing, global diagnostics, and granular publishing candidate keys for the `discussbridge-bot` user.
    - Longer term, retire the global publishing key after the granular publishing key proves it can create topics/posts in Alpha, read existing topics/posts, update the managed first post for linked companion topics, update topic metadata/tags, and unlist demo/test topics.
+   - Use the two-key model when granular diagnostics/read scopes are available or confirmed: granular publishing key for normal sync, diagnostics key for setup checks.
+   - Current fallback: global/admin-capable diagnostics key for setup checks; granular publishing key where it can perform create/update/tag/read actions.
    - Use `check-discourse` as the read-only lane readiness check before live publishing. It reads `/site/settings.json` for client-visible authoring limits, `/site.json` for user-specific tag capabilities such as `can_tag_topics` and `can_create_tag`, `/categories.json` for the configured category, and `/tags.json` for requested tag inventory. Current granular publishing key returns `403` for some site-level endpoints, so diagnostics may need a global key or explicit configured limits.
    - Topic visibility and retitling replied topics require a Discourse user with enough topic-management authority.
    - Enable embedding for localhost preview, `astrodemo.discussionbridge.dev`, and `astrostarlightdemo.discussionbridge.dev`.

@@ -12,6 +12,7 @@
 - Consider a configurable title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
 - Consider reading Discourse title constraints from the target instance when authenticated, while keeping local validation available for dry runs.
 - Confirm the minimal Discourse granular scopes needed for existing-topic collision reconciliation. Live testing showed the current granular publishing key can hit create collisions but cannot read `/embed/info` or exact URL search, while the global publishing key can reconcile topic 24.
+- When Discourse granular diagnostics/read scopes are available or confirmed, document and test the two-key model: granular publishing key for normal sync plus diagnostics key for setup checks. Until then, keep the fallback explicit: global/admin-capable diagnostics key for setup checks; granular publishing key where it can perform create/update/tag/read actions.
 ## Sync Validation
 
 - Expand tests around `sync-existing` and `publish-and-sync` edge cases before widening usage beyond the demo.
