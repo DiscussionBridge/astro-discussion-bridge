@@ -739,11 +739,11 @@ function companionTopicBody(input: {
   lastSyncedAt: string;
 }): string {
   return [
-    `[${input.title}](${input.pageUrl})`,
-    "",
     input.content,
     "",
     "---",
+    "",
+    `[Read the source article](${input.pageUrl})`,
     "",
     "Use this thread for comments, corrections, and follow-up questions.",
     "",

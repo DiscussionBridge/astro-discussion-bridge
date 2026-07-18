@@ -338,7 +338,8 @@ test("sync-existing force updates the managed first post even when source hash i
     assert.equal(results[0].status, "updated");
     const updateCall = forceCalls.find((call) => call.pathname === "/posts/101.json" && call.method === "PUT");
     assert.ok(updateCall);
-    assert.match(updateCall.body.post.raw, /^\[Discussion Bridge for Astro: Force Sync\]/);
+    assert.match(updateCall.body.post.raw, /^# Force Sync/);
+    assert.match(updateCall.body.post.raw, /\[Read the source article\]\(https:\/\/docs\.example\.com\/index\/\)/);
     assert.doesNotMatch(updateCall.body.post.raw, /Source content:/);
     assert.notEqual(await readFile(filePath, "utf8"), syncedSource);
   } finally {
@@ -480,7 +481,8 @@ test("frontmatter can override lane category, tags, visibility, and failure reci
     const createCall = calls.find((call) => call.pathname === "/posts.json" && call.method === "POST");
     assert.equal(createCall.body.category, 18);
     assert.deepEqual(createCall.body.tags, ["releases", "launchlight"]);
-    assert.match(createCall.body.raw, /^\[Discussion Bridge for Astro: Release Lane\]\(https:\/\/docs\.example\.com\/release\/\)/);
+    assert.match(createCall.body.raw, /^# Release Lane/);
+    assert.match(createCall.body.raw, /\[Read the source article\]\(https:\/\/docs\.example\.com\/release\/\)/);
     assert.doesNotMatch(createCall.body.raw, /This is a companion discussion topic for/);
     assert.doesNotMatch(createCall.body.raw, /Source content:/);
     assert.match(createCall.body.raw, /Use this thread for comments, corrections, and follow-up questions\./);

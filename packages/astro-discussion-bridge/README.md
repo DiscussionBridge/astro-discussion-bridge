@@ -276,7 +276,7 @@ Treat first-post maintenance as a repeatable test, especially after changing the
 3. Review whether pages report `dry-run-update`, `unchanged`, or `skipped`.
 4. Add `--force` when the maintenance intent is to rewrite first posts even if page source hashes are unchanged.
 5. Run the same command without `--dry-run` only after the preview looks right.
-6. Verify the Discourse first post starts with the article link, includes the reader-facing page content or summary, and no longer shows old implementation labels.
+6. Verify the Discourse first post starts with the reader-facing page content or summary, includes a source article link near the bottom, and no longer shows old implementation labels.
 7. Verify the Astro page and comments still render.
 8. Repeat for each lane.
 
