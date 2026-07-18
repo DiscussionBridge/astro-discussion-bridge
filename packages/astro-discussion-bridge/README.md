@@ -122,6 +122,18 @@ Use `comments.display: "fullInteractive"` when you want Discourse's native full 
 
 Configure the allowed host in Discourse admin under embedding settings, using your Astro/Starlight site hostname.
 
+Recommended Discourse embedding settings for `fullInteractive`:
+
+- `Embed full app`: yes. This is required for Discourse to load the full application in the embedded comments iframe.
+- `Embed full app signin flow`: yes when the Astro site and Discourse forum are same-site, such as `docs.example.com` and `forum.example.com`. For unrelated domains, only enable it when Discourse `Same site cookies` is set to `None`.
+- `Suppress third party analytics in embed`: yes when the Astro host page already owns analytics pageviews.
+- `Embed support markdown`: yes, so embedded replies support useful technical formatting.
+- `Embed set canonical URL`: yes when Astro is the canonical publication surface and Discourse is the companion discussion.
+- `Embed unlisted`: yes for companion-topic/comment-first sites where topics should stay out of category discovery until someone replies. Leave it off when Discourse categories should behave like public feeds.
+- `Embed any origin`: no. Prefer explicit embeddable hosts.
+- `Embed topics list`: no unless you are intentionally building topic-list widgets.
+- `Allowed embed selectors`: empty/default unless you are using Discourse's native page-scraping embed flow and need to target a specific page region.
+
 `DiscourseDiscussion.astro` is also exported for provider-specific usage, and `DiscourseComments.astro` remains as a compatibility alias.
 
 ```js

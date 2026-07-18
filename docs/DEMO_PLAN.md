@@ -75,6 +75,12 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 ## Notes
 
 Coding Horror is useful as a public reference, but it cannot be used for embedded localhost testing because its Discourse instance does not authorize our local/demo host.
+
+When testing `fullInteractive`, confirm Discourse admin has `Embed full app` enabled. If the Astro page sends `fullApp: true` but Discourse still serves the legacy embed comments view, links may open Discourse directly instead of behaving like the full embedded app. For the current demo, use these Discourse embedding settings: full app yes, full app sign-in flow yes, suppress third-party analytics in embed yes, support markdown yes, set canonical URL yes, unlisted yes, any origin no, topics list no, and allowed embed selectors empty/default.
+
+`fullInteractive` uses Discourse's own fixed composer/sign-in surface inside the iframe. In the current Astro demo, the article is short enough that the comments iframe is fully visible in the viewport, so the logged-in editor or logged-out sign-in button is immediately visible at the bottom of the embed. Compare against the Discourse blog full-app embed reference, where enough article content pushes the comment section lower on the page and the composer is not seen until the reader reaches the comments area. Add a longer article-body test page before judging whether composer placement needs theme or sizing work.
+
+After browser-heavy inspection, local Astro builds can hit Node out-of-memory failures from workstation memory pressure. Close extra browser tabs and retry the build before treating the failure as a code defect.
 ## Domain Strategy
 
 - `discussionbridge.dev` is the primary product/docs domain.
