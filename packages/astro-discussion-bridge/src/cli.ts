@@ -15,6 +15,7 @@ if (!validCommands.has(command)) {
 const args = parseArgs(process.argv.slice(3));
 const docsDir = path.resolve(args.positionals[0] ?? "src/content/docs");
 const dryRun = args.flags.has("dry-run");
+const showDetails = args.flags.has("details") || args.flags.has("verbose");
 const forceSync = args.flags.has("force");
 const unlistSyncedTopics = args.flags.has("unlist");
 const validateTitles = !args.flags.has("skip-title-validation");
@@ -205,6 +206,7 @@ for (const result of results) {
   const topic = result.topicUrl ? ` -> ${result.topicUrl}` : "";
   const reason = result.reason ? ` (${result.reason})` : "";
   console.log(`${result.status}: ${result.filePath}${topic}${reason}`);
+  if (showDetails) printSyncResultDetails(result);
 }
 
 const created = results.filter((result) => result.status === "created").length;
@@ -290,6 +292,20 @@ function printLimit(label: string, value: boolean | number | undefined) {
   console.log(`- ${label}: ${value === undefined ? "unknown" : String(value)}`);
 }
 
+function printSyncResultDetails(result: {
+  title: string;
+  pageUrl: string;
+  targetName?: string;
+  topicId?: number;
+  reason?: string;
+}) {
+  console.log(`  title: ${result.title}`);
+  console.log(`  page URL: ${result.pageUrl}`);
+  if (result.targetName) console.log(`  target: ${result.targetName}`);
+  if (result.topicId !== undefined) console.log(`  topic ID: ${result.topicId}`);
+  if (result.reason) console.log(`  reason: ${result.reason}`);
+}
+
 function oneLine(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
@@ -297,9 +313,9 @@ function oneLine(value: string): string {
 function printUsage(error?: string) {
   if (error) console.error(error);
   console.error("Usage:");
-  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--details] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--details] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--details] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [--topic-id ID[,ID]] [--dry-run] [--overwrite] [--target NAME] [--route-base PATH] [--comments-display simple|full|fullInteractive] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge check-discourse [--category-id ID] [--tags TAG[,TAG]] [--page-url URL] [--diagnostics-api-key KEY] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--discourse-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--discourse-url URL] [--site-url URL]");

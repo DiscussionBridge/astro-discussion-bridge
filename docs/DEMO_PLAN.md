@@ -61,7 +61,7 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 
 ## Maintenance Test Process
 
-Use maintenance syncs as explicit tests, not one-off commands. Before syncing existing live topics, confirm the local demo package is current by checking the installed CLI output or searching the installed package for the expected companion-body text. Then run a lane dry run, inspect the output and reason text, run the live sync, and verify both Discourse and Astro. Use `--force` when the maintenance intent is to rewrite first posts even though page source hashes are unchanged, such as after changing the companion topic template.
+Use maintenance syncs as explicit tests, not one-off commands. Before syncing existing live topics, confirm the local demo package is current by checking the installed CLI output or searching the installed package for the expected companion-body text. Then run a lane dry run with `--details`, inspect the computed title, page URL, topic ID, output status, and reason text, run the live sync, and verify both Discourse and Astro. Use `--force` when the maintenance intent is to rewrite first posts even though page source hashes are unchanged, such as after changing the companion topic template.
 
 When testing live deployed Astro behavior, run sync from the same content tree that Cloudflare deploys. For `astrostarlightdemo.discussionbridge.dev`, that source is `C:\CodeProjects\CodeWorksLabs\discussionbridge.dev\examples\starlight-demo`. Use `C:\CodeProjects\CodeWorksLabs\astro-discussion-bridge\examples\starlight-demo` for package and local CLI development only.
 
@@ -75,7 +75,8 @@ npx astro-discussion-bridge sync-existing src/content/blog `
   --category-id 5 `
   --tags discussionbridge,starlight-demo,blog `
   --force `
-  --dry-run
+  --dry-run `
+  --details
 ```
 
 If the dry run is correct, rerun the same command without `--dry-run`. The live CLI output should identify whether it rewrote the first post, updated topic metadata, updated topic tags, changed listing status, or found unchanged metadata. Verify the Discourse first post starts with reader-facing content, includes a source article link near the bottom, and does not show implementation labels such as `This is a companion discussion topic for:` or `Source content:`.

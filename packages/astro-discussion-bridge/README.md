@@ -232,10 +232,10 @@ For early testing a global key works, but production usage should prefer the nar
 
 Run `publish-new` from the Astro project root when you are ready to create missing companion topics.
 
-Preview without creating topics or editing files.
+Preview without creating topics or editing files. Add `--details` when you want to see the computed page URL, title, target, topic ID, and skip/update reason for each page.
 
 ```sh
-npx astro-discussion-bridge publish-new src/content/docs --dry-run
+npx astro-discussion-bridge publish-new src/content/docs --dry-run --details
 ```
 
 Create topics for pages that do not already have `discourseTopicId`.
@@ -285,10 +285,10 @@ The command reads `/site/settings.json` for client-visible authoring limits, `/s
 
 `sync-existing` updates the managed first post for pages that already have `discourseTopicId`. Astro remains the source of truth for the page, while Discourse keeps the companion discussion thread and a reader-facing copy or summary of the current page.
 
-Preview without editing Discourse or files.
+Preview without editing Discourse or files. Add `--details` when validating lane configuration, route bases, title changes, or topic linkage.
 
 ```sh
-npx astro-discussion-bridge sync-existing src/content/docs --dry-run
+npx astro-discussion-bridge sync-existing src/content/docs --dry-run --details
 ```
 
 Update linked companion topics whose source hash has changed.
@@ -316,8 +316,8 @@ npx astro-discussion-bridge sync-existing src/content/docs --unlist
 Treat first-post maintenance as a repeatable test, especially after changing the companion topic template or lane configuration:
 
 1. Confirm the project is using the expected `astro-discussion-bridge` package build.
-2. Run `sync-existing` with `--dry-run` for one lane.
-3. Review whether pages report `dry-run-update`, `unchanged`, or `skipped`, including the reason text.
+2. Run `sync-existing` with `--dry-run --details` for one lane.
+3. Review whether pages report `dry-run-update`, `unchanged`, or `skipped`, including the computed title, page URL, target, topic ID, and reason text.
 4. Add `--force` when the maintenance intent is to rewrite first posts even if page source hashes are unchanged.
 5. Run the same command without `--dry-run` only after the preview looks right.
 6. For dry runs, review whether the CLI reports source hash changes, force sync requests, skipped files, or unchanged files.
@@ -336,7 +336,8 @@ npx astro-discussion-bridge sync-existing src/content/blog \
   --category-id 5 \
   --tags discussionbridge,blog \
   --force \
-  --dry-run
+  --dry-run \
+  --details
 
 npx astro-discussion-bridge sync-existing src/content/blog \
   --route-base blog \
@@ -356,10 +357,10 @@ npx astro-discussion-bridge sync-existing src/content/blog \
 - skip unchanged pages
 - leave replies untouched
 
-Preview the full workflow first.
+Preview the full workflow first. Use `--details` when the run is part of a setup or maintenance test.
 
 ```sh
-npx astro-discussion-bridge publish-and-sync src/content/docs --dry-run
+npx astro-discussion-bridge publish-and-sync src/content/docs --dry-run --details
 ```
 
 Then run it intentionally when the dry run looks correct.
