@@ -116,6 +116,27 @@ The build hook supports route-level lane defaults today. A lane may define its s
 
 Astro's Starlog release-notes example is a useful model: release posts live in a dedicated `src/content/releases` collection, which can map cleanly to a release-notes Discourse category.
 
+## Discussion-Safe Companion Content
+
+DiscussionBridge syncs Discourse-compatible companion content, not the full Astro rendering pipeline. Astro can be rich, custom, and deeply designed. The companion body sent to Discourse should be discussion-safe Markdown: content that renders well in Discourse, invites replies, and survives quoting, moderation, email digests, search, and long-term forum use.
+
+Works well by default:
+
+- headings, paragraphs, emphasis, links, blockquotes, and lists
+- inline code and fenced code blocks
+- Markdown tables when the target Discourse site supports them
+- external image URLs
+- plain video links when Discourse Onebox supports the host
+
+Works with matching Discourse setup:
+
+- Mermaid, when Discourse has Mermaid support enabled
+- LaTeX or math notation, when Discourse has math support enabled
+- embeds or iframes, when Discourse Onebox or embed settings allow them
+- local Astro images, when converted to absolute public URLs or uploaded to Discourse
+
+Use `discussionSummary` when an Astro page uses Starlight directives, Astro components, MDX JSX, imported local assets, custom cards, tabs, interactive widgets, client-side charts, or other syntax that Discourse should not be expected to render. A curated summary keeps Discourse useful without flattening the Astro page into lowest-common-denominator content.
+
 ## Add Discussion to Starlight
 
 Create a Starlight override component such as `src/components/PageFrame.astro`. This keeps existing `.md` docs working because the discussion component is added by the Starlight layout, not inside each content file.

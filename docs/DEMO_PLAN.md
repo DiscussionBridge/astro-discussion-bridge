@@ -62,6 +62,8 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 
 Use maintenance syncs as explicit tests, not one-off commands. Before syncing existing live topics, confirm the local demo package is current by checking the installed CLI output or searching the installed package for the expected companion-body text. Then run a lane dry run, inspect the output and reason text, run the live sync, and verify both Discourse and Astro. Use `--force` when the maintenance intent is to rewrite first posts even though page source hashes are unchanged, such as after changing the companion topic template.
 
+When testing live deployed Astro behavior, run sync from the same content tree that Cloudflare deploys. For `astrostarlightdemo.discussionbridge.dev`, that source is `C:\CodeProjects\CodeWorksLabs\discussionbridge.dev\examples\starlight-demo`. Use `C:\CodeProjects\CodeWorksLabs\astro-discussion-bridge\examples\starlight-demo` for package and local CLI development only.
+
 Blog lane smoke test:
 
 ```powershell
