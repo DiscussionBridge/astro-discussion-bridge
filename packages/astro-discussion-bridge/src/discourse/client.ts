@@ -45,6 +45,13 @@ export interface DiscourseTagListItem {
   count?: number;
 }
 
+export interface EmbedInfoResponse {
+  topic_id?: number;
+  post_id?: number;
+  topic_slug?: string;
+  comment_count?: number;
+}
+
 export interface CreateTopicInput {
   title: string;
   raw: string;
@@ -270,6 +277,10 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     },
     tags() {
       return request<TagsResponse>("/tags.json");
+    },
+    embedInfo(embedUrl: string) {
+      const search = new URLSearchParams({ embed_url: embedUrl });
+      return request<EmbedInfoResponse>(`/embed/info?${search.toString()}`);
     },
     updateTopic(input: UpdateTopicInput) {
       return request<UpdateTopicResponse>(`/t/-/${input.topicId}.json`, {

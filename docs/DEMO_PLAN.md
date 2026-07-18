@@ -106,7 +106,7 @@ Because the demo runs behind Cloudflare/CDN caching, include cache state in main
   - News lane created topic 28.
   - Release lane was already claimed by Discourse embedding as topic 24, so `publish-and-sync` received `Embed url has already been taken`.
   - Linking `src/content/releases/2_1.md` to topic 24 and running `sync-existing --route-base releases` reconciled the topic.
-  - Product note: embedded Discourse topics can exist before CLI publishing. Future tooling should detect or reconcile existing `embed_url` ownership where the Discourse API allows it.
+  - Product note: embedded Discourse topics can exist before CLI publishing. The package now reconciles Discourse's `Embed url has already been taken` response through `/embed/info?embed_url=...`; next live test should confirm that path against topic 24 or a fresh embed-created topic.
 
 ## Notes
 

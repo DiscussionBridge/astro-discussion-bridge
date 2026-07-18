@@ -351,14 +351,75 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
       }
 
       const lastSyncedAt = new Date().toISOString();
-      const topic = await input.discourse.createTopic({
-        title,
-        raw: companionTopicBody({ title, pageUrl, content, lastSyncedAt }),
-        category: page.categoryId,
-        tags: page.tags,
-        embedUrl: pageUrl,
-      });
-      const topicUrl = `${input.discourse.discourseUrl}/t/${topic.topic_slug}/${topic.topic_id}`;
+      let topic: Awaited<ReturnType<typeof input.discourse.createTopic>>;
+      let reconciledEmbed = false;
+      try {
+        topic = await input.discourse.createTopic({
+          title,
+          raw: companionTopicBody({ title, pageUrl, content, lastSyncedAt }),
+          category: page.categoryId,
+          tags: page.tags,
+          embedUrl: pageUrl,
+        });
+      } catch (error) {
+        if (!isEmbedUrlTakenError(error)) throw error;
+
+        const embedInfo = await input.discourse.embedInfo(pageUrl);
+        if (!embedInfo.topic_id) {
+          throw new Error(
+            `Discourse says the embed URL is already taken, but /embed/info did not return a topic_id for ${pageUrl}. ${errorMessage(error)}`,
+          );
+        }
+
+        const existingTopic = await input.discourse.topic(embedInfo.topic_id);
+        const firstPost = existingTopic.post_stream.posts.find((post) => post.post_number === 1);
+        if (!firstPost) {
+          throw new Error(`Could not find first post for Discourse topic ${embedInfo.topic_id}.`);
+        }
+
+        await input.discourse.updatePost({
+          postId: firstPost.id,
+          raw: companionTopicBody({ title, pageUrl, content, lastSyncedAt }),
+          editReason: "Reconcile DiscussionBridge companion summary from existing Discourse embed topic",
+          bypassBump: true,
+        });
+
+        const titleNeedsUpdate = existingTopic.title !== title;
+        const categoryNeedsUpdate = page.categoryId !== undefined && existingTopic.category_id !== page.categoryId;
+        const tagsNeedUpdate = page.tags !== undefined && !sameTags(page.tags, tagNamesFromTopic(existingTopic.tags));
+        if (titleNeedsUpdate || categoryNeedsUpdate || tagsNeedUpdate) {
+          await input.discourse.updateTopic({
+            topicId: embedInfo.topic_id,
+            ...(titleNeedsUpdate ? { title } : {}),
+            ...(categoryNeedsUpdate ? { categoryId: page.categoryId } : {}),
+            ...(tagsNeedUpdate ? { tags: page.tags } : {}),
+          });
+        }
+
+        topic = {
+          id: firstPost.id,
+          name: firstPost.name,
+          username: firstPost.username,
+          avatar_template: firstPost.avatar_template,
+          created_at: firstPost.created_at,
+          cooked: firstPost.cooked,
+          post_number: firstPost.post_number,
+          post_type: firstPost.post_type,
+          updated_at: firstPost.updated_at,
+          reply_count: firstPost.reply_count,
+          reply_to_post_number: firstPost.reply_to_post_number,
+          quote_count: firstPost.quote_count,
+          incoming_link_count: firstPost.incoming_link_count,
+          reads: firstPost.reads,
+          readers_count: firstPost.readers_count,
+          score: firstPost.score,
+          topic_id: embedInfo.topic_id,
+          topic_slug: embedInfo.topic_slug ?? existingTopic.slug ?? "",
+        };
+        reconciledEmbed = true;
+      }
+      const topicUrl = canonicalTopicUrl(input.discourse.discourseUrl, topic.topic_id, topic.topic_slug)
+        ?? `${input.discourse.discourseUrl}/t/${topic.topic_id}`;
 
       if (page.visible === false) {
         await input.discourse.updateTopicStatus({
@@ -386,7 +447,8 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         targetName: resultTargetName,
         topicId: topic.topic_id,
         topicUrl,
-        status: "created",
+        status: reconciledEmbed ? "updated" : "created",
+        reason: reconciledEmbed ? "reconciled existing embedded topic" : undefined,
       });
     } catch (error) {
       await notifySyncFailure({
@@ -491,6 +553,10 @@ function syncFailureNotificationBody(input: {
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
+}
+
+function isEmbedUrlTakenError(error: unknown): boolean {
+  return /Embed url has already been taken/i.test(errorMessage(error));
 }
 
 export interface TopicTitleValidationIssue {

@@ -865,6 +865,143 @@ test("publish-and-sync updates linked pages and creates missing companion topics
   }
 });
 
+test("publish-new reconciles an existing Discourse embed topic when embed URL is already taken", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-embed-reconcile-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "release.md");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Release Lane Reconcile"',
+        "---",
+        "",
+        "# Release Lane Reconcile",
+        "",
+        "This page was first seen by Discourse embedding before the CLI published it.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async (url, init = {}) => {
+      const parsed = new URL(url);
+      const method = init.method ?? "GET";
+      const body = init.body ? JSON.parse(String(init.body)) : undefined;
+      calls.push({ pathname: parsed.pathname, search: parsed.search, method, body });
+
+      if (method === "POST" && parsed.pathname === "/posts.json") {
+        return new Response(JSON.stringify({
+          action: "create_post",
+          errors: ["Embed url has already been taken"],
+        }), {
+          status: 422,
+          statusText: "Unprocessable Entity",
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (method === "GET" && parsed.pathname === "/embed/info") {
+        assert.equal(
+          parsed.searchParams.get("embed_url"),
+          "https://docs.example.com/releases/release/",
+        );
+        return jsonResponse({
+          topic_id: 24,
+          post_id: 501,
+          topic_slug: "discussion-bridge-for-astro-release-lane-reconcile",
+          comment_count: 0,
+        });
+      }
+
+      if (method === "GET" && parsed.pathname === "/t/24.json") {
+        return jsonResponse({
+          id: 24,
+          title: "Old Embedded Title",
+          slug: "old-embedded-title",
+          category_id: 1,
+          visible: true,
+          tags: [{ name: "old-tag" }],
+          post_stream: {
+            posts: [{
+              id: 501,
+              name: "",
+              username: "discussbridge-bot",
+              avatar_template: "",
+              created_at: new Date(0).toISOString(),
+              cooked: "",
+              post_number: 1,
+              post_type: 1,
+              updated_at: new Date(0).toISOString(),
+              reply_count: 0,
+              reply_to_post_number: null,
+              quote_count: 0,
+              incoming_link_count: 0,
+              reads: 0,
+              readers_count: 0,
+              score: 0,
+              topic_id: 24,
+              topic_slug: "old-embedded-title",
+            }],
+          },
+        });
+      }
+
+      if (method === "PUT" && parsed.pathname === "/posts/501.json") {
+        assert.match(body.post.raw, /This page was first seen by Discourse embedding/);
+        assert.match(body.post.raw, /Read the source article/);
+        return jsonResponse({ post: { id: 501, post_number: 1 } });
+      }
+
+      if (method === "PUT" && parsed.pathname === "/t/-/24.json") {
+        assert.equal(body.title, "Discussion Bridge for Astro: Release Lane Reconcile");
+        assert.equal(body.category_id, 5);
+        assert.deepEqual(body.tags, [{ name: "discussionbridge" }, { name: "releases" }]);
+        return jsonResponse({
+          basic_topic: {
+            id: 24,
+            title: body.title,
+            slug: "discussion-bridge-for-astro-release-lane-reconcile",
+            category_id: body.category_id,
+          },
+          tags: body.tags,
+        });
+      }
+
+      return new Response(`Unexpected request: ${method} ${parsed.pathname}`, { status: 500 });
+    };
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      routeBase: "releases",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      tags: ["discussionbridge", "releases"],
+      mode: "publish-new",
+    });
+
+    assert.equal(results[0].status, "updated");
+    assert.equal(results[0].topicId, 24);
+    assert.equal(results[0].reason, "reconciled existing embedded topic");
+    assert.equal(calls.some((call) => call.pathname === "/embed/info"), true);
+    assert.equal(calls.some((call) => call.pathname === "/posts/501.json" && call.method === "PUT"), true);
+
+    const syncedSource = await readFile(filePath, "utf8");
+    assert.match(syncedSource, /discourseTopicId: 24/);
+    assert.match(syncedSource, /discourseTopicUrl: "https:\/\/forum\.example\.com\/t\/discussion-bridge-for-astro-release-lane-reconcile\/24"/);
+    assert.match(syncedSource, /discussionSourceHash: "[a-f0-9]{64}"/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("frontmatter can override lane category, tags, visibility, and failure recipients", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-overrides-"));
   const docsDir = path.join(dir, "docs");
