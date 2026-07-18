@@ -10,6 +10,7 @@ Good fits:
 - Discourse field notes from real integration testing.
 - Cloudflare deployment notes.
 - Product notes that explain the public shape of the integration.
+- Product build/launch checklists that track Alpha readiness and roadmap progress.
 - Contribution and support process docs.
 - Public roadmap items.
 
