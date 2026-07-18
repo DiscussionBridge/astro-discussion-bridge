@@ -223,16 +223,25 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
   const fetcher = options.fetch ?? fetch;
 
   async function request<T>(pathname: string, init: RequestInit = {}): Promise<T> {
-    const response = await fetcher(new URL(pathname, discourseUrl), {
-      ...init,
-      headers: {
-        Accept: "application/json",
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...(options.apiKey ? { "Api-Key": options.apiKey } : {}),
-        ...(options.apiUsername ? { "Api-Username": options.apiUsername } : {}),
-        ...init.headers,
-      },
-    });
+    const url = new URL(pathname, discourseUrl);
+    const method = init.method ?? "GET";
+    let response: Response;
+    try {
+      response = await fetcher(url, {
+        ...init,
+        headers: {
+          Accept: "application/json",
+          ...(init.body ? { "Content-Type": "application/json" } : {}),
+          ...(options.apiKey ? { "Api-Key": options.apiKey } : {}),
+          ...(options.apiUsername ? { "Api-Username": options.apiUsername } : {}),
+          ...init.headers,
+        },
+      });
+    } catch (error) {
+      throw new Error(
+        `Discourse request failed: network error during ${method} ${url.href}. ${errorMessage(error)}`,
+      );
+    }
 
     if (!response.ok) {
       const body = await response.text().catch(() => "");
@@ -331,6 +340,11 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     },
     request,
   };
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
 }
 
 function normalizeBaseUrl(value: string): string {

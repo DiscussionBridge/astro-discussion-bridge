@@ -23,14 +23,19 @@ const refreshOnPageLoad = Astro.props.refreshOnPageLoad ?? config.replies.refres
 const showLikes = Astro.props.showLikes ?? config.replies.showLikes;
 const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
 let replies: DiscoursePost[] = [];
+let repliesUnavailable = false;
 
 if (config.replies.enabled && topicId) {
   const discourse = createDiscourseClient({ discourseUrl });
-  const topic = await discourse.topic(topicId);
-  replies = topic.post_stream.posts
-    .filter((post) => post.post_number > 1)
-    .filter((post) => post.score >= minScore)
-    .slice(0, maxReplies);
+  try {
+    const topic = await discourse.topic(topicId);
+    replies = topic.post_stream.posts
+      .filter((post) => post.post_number > 1)
+      .filter((post) => post.score >= minScore)
+      .slice(0, maxReplies);
+  } catch {
+    repliesUnavailable = true;
+  }
 }
 
 function likeCount(post: DiscoursePost): number {
@@ -196,6 +201,11 @@ const refreshConfig = topicId
             </article>
           </li>
         ))
+      ) : repliesUnavailable ? (
+        <li data-discussion-bridge-unavailable>
+          The discussion is temporarily unavailable.
+          {topicUrl && <a href={topicUrl}>Open the full discussion</a>}
+        </li>
       ) : (
         <li data-discussion-bridge-empty>Loading discussion...</li>
       )}
@@ -435,6 +445,17 @@ const refreshConfig = topicId
   .discussion-bridge-replies li:first-child article {
     border-block-start: 0;
     padding-block-start: 0;
+  }
+
+  .discussion-bridge-replies [data-discussion-bridge-unavailable],
+  .discussion-bridge-replies [data-discussion-bridge-empty] {
+    border-block-start: 1px solid var(--sl-color-gray-5);
+    color: #62665d;
+    padding: 1rem 0;
+  }
+
+  .discussion-bridge-replies [data-discussion-bridge-unavailable] a {
+    margin-inline-start: 0.35rem;
   }
 
   .discussion-bridge-reply__avatar {

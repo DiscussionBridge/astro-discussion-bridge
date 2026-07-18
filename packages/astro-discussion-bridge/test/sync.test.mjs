@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { checkDiscourse } from "../dist/check-discourse.js";
+import { createDiscourseClient } from "../dist/discourse/client.js";
 import { importExistingDiscourseTopics } from "../dist/import-existing.js";
 import { syncDiscourseTopics, validateDiscourseTopicTitle } from "../dist/sync/index.js";
 
@@ -252,6 +253,20 @@ test("check-discourse falls back to configured limits when site settings are una
   }
 });
 
+test("Discourse client reports network failures with method and endpoint", async () => {
+  const discourse = createDiscourseClient({
+    discourseUrl: "https://forum.example.com",
+    fetch: async () => {
+      throw new TypeError("fetch failed");
+    },
+  });
+
+  await assert.rejects(
+    discourse.topic(21),
+    /Discourse request failed: network error during GET https:\/\/forum\.example\.com\/t\/21\.json\. fetch failed/,
+  );
+});
+
 test("publish-new title preflight fails before network writes", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-title-"));
   const docsDir = path.join(dir, "docs");
@@ -301,6 +316,49 @@ test("publish-new title preflight fails before network writes", async () => {
     );
 
     assert.equal(calls.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("publish-new reports Discourse offline failures clearly", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-publish-offline-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "offline.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Offline Publish"',
+        "---",
+        "",
+        "# Offline Publish",
+        "",
+        "The forum is unavailable during publishing.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async () => {
+      throw new TypeError("fetch failed");
+    };
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "publish-new",
+      }),
+      /Discourse request failed: network error during POST https:\/\/forum\.example\.com\/posts\.json\. fetch failed/,
+    );
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });

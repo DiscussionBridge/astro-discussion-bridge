@@ -56,7 +56,7 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - Discourse topic title changes after publish: Astro rendering should keep working because `discourseTopicId` is durable. Stored topic URLs may become cosmetically stale, but Discourse should redirect old slugs for the same topic ID.
 - Discourse first post deleted: sync should fail clearly with a managed-first-post missing error. Do not silently create replacement content.
 - Discourse topic deleted: render and sync paths should fail or degrade clearly for the linked page. Any repair/recreate command should be explicit, not automatic.
-- Discourse instance offline: `simple` and `fullInteractive` should still render host-page markup; `full` server-rendered replies, page-load refresh, and publish/sync commands should fail or degrade visibly without breaking the article shell.
+- Discourse instance offline: `simple` and `fullInteractive` should still render host-page markup; `full` server-rendered replies show a temporary unavailable state without breaking the article shell; page-load refresh remains best-effort; publish/sync commands fail with a clear network error.
 - Active discussion target mismatch: pages marked with `discussionTarget` should be skipped unless the active target matches, preventing accidental sync to the wrong Discourse instance.
 - Missing active discussion target: pages marked with `discussionTarget` should tell the user which `--target` to rerun with.
 - Same Astro site with multiple future Discourse targets: keep as a compatibility test for future namespaced targets, not current Tier 1 behavior.
