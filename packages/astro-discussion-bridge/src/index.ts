@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
-import { syncDiscourseTopics, type NotifyOnFailureOptions } from "./sync/index.js";
+import { syncDiscourseTopics, type DiscoursePreflightLimits, type NotifyOnFailureOptions } from "./sync/index.js";
 
 type DiscussionBridgeIntegration = {
   name: string;
@@ -57,6 +57,7 @@ export interface PublishOnBuildLaneOptions {
   unlistSyncedTopics?: boolean;
   validateTitles?: boolean;
   titleMinLength?: number;
+  preflightLimits?: DiscoursePreflightLimits;
   notifyOnFailure?: NotifyOnFailureOptions;
   categoryId?: number;
   tags?: string[];
@@ -111,6 +112,7 @@ interface ResolvedPublishLane {
   unlistSyncedTopics: boolean;
   validateTitles: boolean;
   titleMinLength?: number;
+  preflightLimits?: DiscoursePreflightLimits;
   notifyOnFailure?: NotifyOnFailureOptions;
   categoryId?: number;
   tags?: string[];
@@ -168,8 +170,10 @@ export default function discussionBridge(
 }
 
 export { createDiscourseClient } from "./discourse/client.js";
+export { checkDiscourse } from "./check-discourse.js";
 export { syncDiscourseTopics } from "./sync/index.js";
-export type { SyncDiscourseTopicsOptions, SyncedPage } from "./sync/index.js";
+export type { CheckDiscourseOptions, CheckDiscourseResult } from "./check-discourse.js";
+export type { DiscoursePreflightLimits, SyncDiscourseTopicsOptions, SyncedPage } from "./sync/index.js";
 
 function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
   if (!options.discourseUrl) {
@@ -233,6 +237,7 @@ function resolvePublishLanes(input: {
     unlistSyncedTopics: lane.unlistSyncedTopics ?? defaults?.unlistSyncedTopics ?? false,
     validateTitles: lane.validateTitles ?? defaults?.validateTitles ?? true,
     titleMinLength: lane.titleMinLength ?? defaults?.titleMinLength,
+    preflightLimits: lane.preflightLimits ?? defaults?.preflightLimits,
     notifyOnFailure: lane.notifyOnFailure ?? defaults?.notifyOnFailure,
     categoryId: lane.categoryId ?? defaults?.categoryId,
     tags: lane.tags ?? defaults?.tags,
@@ -271,6 +276,7 @@ async function publishLane(input: {
     unlistSyncedTopics: input.lane.unlistSyncedTopics,
     validateTitles: input.lane.validateTitles,
     titleMinLength: input.lane.titleMinLength,
+    preflightLimits: input.lane.preflightLimits,
     notifyOnFailure: input.lane.notifyOnFailure,
   });
   const created = results.filter((result) => result.status === "created").length;

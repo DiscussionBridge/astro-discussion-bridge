@@ -250,13 +250,32 @@ Use `--target` when the page should be assigned to a named discussion target.
 npx astro-discussion-bridge publish-new src/content/docs --target community
 ```
 
-Before any live writes, DiscussionBridge validates managed page titles against common Discourse topic-title rules. By default, titles must be at least 15 characters and must not look like repeated filler text. Use `--title-min-length` when the target Discourse site uses a different minimum, or `--skip-title-validation` only when you intentionally want Discourse to be the source of truth for title rejection.
+Before any live writes, DiscussionBridge validates managed pages against common Discourse authoring rules. By default, titles must be at least 15 characters and must not look like repeated filler text. Add explicit limits when you want the bridge to fail before Discourse rejects a title, companion body, or tag set.
 
 ```sh
-npx astro-discussion-bridge publish-new src/content/docs --title-min-length 10
+npx astro-discussion-bridge publish-new src/content/docs \
+  --title-min-length 10 \
+  --max-topic-title-length 255 \
+  --max-post-length 32000 \
+  --max-tags-per-topic 5 \
+  --max-tag-length 20
 ```
 
+The same values can be supplied with `DISCOURSE_TITLE_MIN_LENGTH`, `DISCOURSE_MAX_TOPIC_TITLE_LENGTH`, `DISCOURSE_MAX_POST_LENGTH`, `DISCOURSE_MAX_TAGS_PER_TOPIC`, and `DISCOURSE_MAX_TAG_LENGTH`.
+
 The older `sync` command is kept as an alias, but `publish-new` is the recommended command because it makes the side effect clear.
+
+### Check Discourse
+
+Use `check-discourse` to inspect the target forum before wiring a lane into live publishing.
+
+```sh
+npx astro-discussion-bridge check-discourse \
+  --discourse-url https://forum.example.com \
+  --tags discussionbridge,blog
+```
+
+The command reads `/site/settings.json` for client-visible authoring limits and `/site.json` for user-specific tag capabilities. It uses `DISCOURSE_DIAGNOSTICS_API_KEY` or `--diagnostics-api-key` when present; otherwise it uses the normal publishing key. A global key can usually read these endpoints. Some granular keys may receive `403` for site-level endpoints; in that case, pass explicit limits with CLI flags or environment variables and reserve a broader diagnostics key for setup checks.
 
 ### Sync Existing Topics
 
@@ -347,7 +366,7 @@ npx astro-discussion-bridge publish-and-sync src/content/docs
 
 Add `--unlist` when newly created or synced demo/test topics should be unlisted. This uses the same API credentials as post creation and first-post sync, but Discourse may require a staff or moderator-level API user for topic visibility and retitling replied topics.
 
-`publish-and-sync` uses the same title preflight as `publish-new`, so short or filler-like titles fail before any Discourse writes happen.
+`publish-and-sync` uses the same preflight as `publish-new`, so known title, body, and tag problems fail before any Discourse writes happen.
 
 Add `--notify-on-failure` to send a best-effort Discourse private message when a publish or sync run fails. This uses Discourse's normal PM notification and email behavior for the configured recipients. The CLI or build output remains the source of truth, because notification can also fail when credentials or network access are broken.
 
@@ -364,7 +383,7 @@ discussionSourceHash: "..."
 discussionLastSyncedAt: "2026-07-16T00:00:00.000Z"
 ```
 
-By default, DiscussionBridge syncs the full Markdown or MDX body into the managed first post and lets Discourse enforce its own post limits. Add `discussionSummary` frontmatter when a page should use a curated companion summary instead of the full source body.
+By default, DiscussionBridge syncs the full Markdown or MDX body into the managed first post. Add `discussionSummary` frontmatter when a page should use a curated companion summary instead of the full source body. Configure `maxPostLength` or `DISCOURSE_MAX_POST_LENGTH` when you want local preflight to catch overlong companion bodies before Discourse rejects them.
 
 ### Import Existing Topics
 
@@ -486,6 +505,12 @@ discussionBridge({
     syncExisting: true,
     unlistSyncedTopics: true,
     titleMinLength: 15,
+    preflightLimits: {
+      maxTopicTitleLength: 255,
+      maxPostLength: 32000,
+      maxTagsPerTopic: 5,
+      maxTagLength: 20,
+    },
     notifyOnFailure: {
       enabled: true,
       recipients: ["PhilH"],

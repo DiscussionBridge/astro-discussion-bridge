@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { checkDiscourse } from "../dist/check-discourse.js";
 import { importExistingDiscourseTopics } from "../dist/import-existing.js";
 import { syncDiscourseTopics, validateDiscourseTopicTitle } from "../dist/sync/index.js";
 
@@ -10,6 +11,92 @@ test("validates titles before publishing to Discourse", () => {
   assert.deepEqual(validateDiscourseTopicTitle("Discussion Bridge for Astro"), []);
   assert.match(validateDiscourseTopicTitle("Beta")[0].reason, /too short/);
   assert.equal(validateDiscourseTopicTitle("aaaa bbbb cccc").some((issue) => /unclear/.test(issue.reason)), true);
+});
+
+test("check-discourse discovers client settings and tag capabilities", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    globalThis.fetch = async (url, init = {}) => {
+      const parsed = new URL(url);
+      calls.push({ pathname: parsed.pathname, headers: init.headers });
+
+      if (parsed.pathname === "/site/settings.json") {
+        return jsonResponse({
+          min_topic_title_length: 15,
+          max_topic_title_length: 255,
+          min_first_post_length: 20,
+          min_post_length: 20,
+          max_post_length: 32000,
+          max_tags_per_topic: 5,
+          max_tag_length: 20,
+          tagging_enabled: true,
+        });
+      }
+
+      if (parsed.pathname === "/site.json") {
+        return jsonResponse({
+          can_tag_topics: true,
+          can_create_tag: true,
+        });
+      }
+
+      return new Response(`Unexpected request: ${parsed.pathname}`, { status: 500 });
+    };
+
+    const result = await checkDiscourse({
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      tags: ["discussionbridge", "blog"],
+    });
+
+    assert.equal(result.settingsAvailable, true);
+    assert.equal(result.capabilitiesAvailable, true);
+    assert.equal(result.limits.maxPostLength, 32000);
+    assert.equal(result.limits.maxTagsPerTopic, 5);
+    assert.equal(result.tagCapabilities.canTagTopics, true);
+    assert.deepEqual(result.tagIssues, []);
+    assert.equal(calls.some((call) => call.pathname === "/site/settings.json"), true);
+    assert.equal(calls.some((call) => call.pathname === "/site.json"), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("check-discourse falls back to configured limits when site settings are unavailable", async () => {
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const parsed = new URL(url);
+      if (parsed.pathname === "/site/settings.json" || parsed.pathname === "/site.json") {
+        return new Response("Forbidden", { status: 403, statusText: "Forbidden" });
+      }
+      return new Response(`Unexpected request: ${parsed.pathname}`, { status: 500 });
+    };
+
+    const result = await checkDiscourse({
+      discourseUrl: "https://forum.example.com",
+      configuredLimits: {
+        maxTagsPerTopic: 1,
+        maxTagLength: 5,
+      },
+      tags: ["discussionbridge", "blog"],
+    });
+
+    assert.equal(result.settingsAvailable, false);
+    assert.match(result.settingsError, /403/);
+    assert.equal(result.capabilitiesAvailable, false);
+    assert.equal(result.limits.maxTagsPerTopic, 1);
+    assert.equal(result.limits.maxTagLength, 5);
+    assert.equal(result.tagIssues.length, 2);
+    assert.match(result.tagIssues.join("\n"), /Too many tags/);
+    assert.match(result.tagIssues.join("\n"), /discussionbridge/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test("publish-new title preflight fails before network writes", async () => {
@@ -57,7 +144,7 @@ test("publish-new title preflight fails before network writes", async () => {
         categoryId: 5,
         mode: "publish-new",
       }),
-      /Discourse topic title preflight failed/,
+      /Discourse preflight failed/,
     );
 
     assert.equal(calls.length, 0);
@@ -116,12 +203,12 @@ test("publish failures can notify recipients by Discourse private message", asyn
           recipients: ["PhilH"],
         },
       }),
-      /Discourse topic title preflight failed/,
+      /Discourse preflight failed/,
     );
 
     const pmCall = calls.find((call) => call.pathname === "/posts.json" && call.body?.archetype === "private_message");
     assert.equal(pmCall.body.target_recipients, "PhilH");
-    assert.match(pmCall.body.raw, /Discourse topic title preflight failed/);
+    assert.match(pmCall.body.raw, /Discourse preflight failed/);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });
@@ -164,8 +251,77 @@ test("notification failure does not mask the original publish failure", async ()
           recipients: ["PhilH"],
         },
       }),
-      /Discourse topic title preflight failed/,
+      /Discourse preflight failed/,
     );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("preflight validates configured title, body, and tag limits before network writes", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-limits-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "limits.md");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: This Title Is Too Long"',
+        'discussionTags: "discussionbridge, starlight-demo, blog, excessive-tag"',
+        "---",
+        "",
+        "# Discussion Bridge for Astro: This Title Is Too Long",
+        "",
+        "This body deliberately exceeds the configured test limit.",
+      ].join("\n"),
+    );
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 21,
+        title: "Discussion Bridge for Astro: This Title Is Too Long",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+      createdTopic: {
+        topic_id: 22,
+        topic_slug: "limits",
+      },
+    });
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "publish-new",
+        preflightLimits: {
+          maxTopicTitleLength: 32,
+          maxPostLength: 20,
+          maxTagsPerTopic: 3,
+          maxTagLength: 12,
+        },
+      }),
+      (error) => {
+        assert.match(error.message, /Title is too long/);
+        assert.match(error.message, /Companion post body is too long/);
+        assert.match(error.message, /Too many tags/);
+        assert.match(error.message, /Tag "discussionbridge" is too long/);
+        assert.match(error.message, /Tag "starlight-demo" is too long/);
+        return true;
+      },
+    );
+
+    assert.equal(calls.length, 0);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });

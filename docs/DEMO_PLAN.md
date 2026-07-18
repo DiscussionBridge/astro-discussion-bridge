@@ -26,8 +26,9 @@ Develop in public with a visible path from local preview to a live Cloudflare de
    - Use the public `Discussion Bridge for Astro` category at `https://forum.discussionbridge.dev/c/alpha/5` for test/demo topics.
    - Use Discourse category ID `5` for `publish-new` tests.
    - Use tags for product and demo details, for example `discussionbridge`, `astro`, `starlight-demo`, and `cloudflare-demo`.
-   - Current API key is global for the `discussbridge-bot` user.
-   - Longer term, replace it with a granular key that can create topics/posts in Alpha, read existing topics/posts, update the managed first post for linked companion topics, update topic metadata, and unlist demo/test topics.
+   - Current key set includes global publishing, global diagnostics, and granular publishing candidate keys for the `discussbridge-bot` user.
+   - Longer term, retire the global publishing key after the granular publishing key proves it can create topics/posts in Alpha, read existing topics/posts, update the managed first post for linked companion topics, update topic metadata/tags, and unlist demo/test topics.
+   - Use `/site/settings.json` for client-visible authoring limits and `/site.json` for user-specific tag capabilities such as `can_tag_topics` and `can_create_tag`. Current granular publishing key returns `403` for those site-level endpoints, so diagnostics may need a global key or explicit configured limits.
    - Topic visibility and retitling replied topics require a Discourse user with enough topic-management authority.
    - Enable embedding for localhost preview, `astrodemo.discussionbridge.dev`, and `astrostarlightdemo.discussionbridge.dev`.
    - Pre-integration backup checkpoint: `discussion-bridge-forum-2026-07-16-140054-v20260715090434.tar.gz`.

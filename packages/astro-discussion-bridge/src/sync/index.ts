@@ -21,7 +21,16 @@ export interface SyncDiscourseTopicsOptions {
   unlistSyncedTopics?: boolean;
   validateTitles?: boolean;
   titleMinLength?: number;
+  preflightLimits?: DiscoursePreflightLimits;
   notifyOnFailure?: NotifyOnFailureOptions;
+}
+
+export interface DiscoursePreflightLimits {
+  minTopicTitleLength?: number;
+  maxTopicTitleLength?: number;
+  maxPostLength?: number;
+  maxTagsPerTopic?: number;
+  maxTagLength?: number;
 }
 
 export interface NotifyOnFailureOptions {
@@ -99,11 +108,17 @@ export async function syncDiscourseTopics(
   });
   try {
     if (options.validateTitles !== false) {
-      validateManagedPageTitles({
+      validateManagedPages({
         pages,
         mode,
         targetName: options.targetName,
-        minLength: options.titleMinLength ?? defaultTitleMinLength,
+        limits: {
+          minTopicTitleLength: options.titleMinLength ?? options.preflightLimits?.minTopicTitleLength ?? defaultTitleMinLength,
+          maxTopicTitleLength: options.preflightLimits?.maxTopicTitleLength,
+          maxPostLength: options.preflightLimits?.maxPostLength,
+          maxTagsPerTopic: options.preflightLimits?.maxTagsPerTopic,
+          maxTagLength: options.preflightLimits?.maxTagLength,
+        },
       });
     }
 
@@ -485,9 +500,10 @@ export interface TopicTitleValidationIssue {
 
 export function validateDiscourseTopicTitle(
   title: string,
-  options: { minLength?: number } = {},
+  options: { minLength?: number; maxLength?: number } = {},
 ): TopicTitleValidationIssue[] {
   const minLength = options.minLength ?? defaultTitleMinLength;
+  const maxLength = options.maxLength;
   const normalizedTitle = title.trim().replace(/\s+/g, " ");
   const issues: TopicTitleValidationIssue[] = [];
 
@@ -495,6 +511,13 @@ export function validateDiscourseTopicTitle(
     issues.push({
       title,
       reason: `Title is too short for Discourse topic creation; minimum is ${minLength} characters.`,
+    });
+  }
+
+  if (maxLength !== undefined && normalizedTitle.length > maxLength) {
+    issues.push({
+      title,
+      reason: `Title is too long for Discourse topic creation; maximum is ${maxLength} characters.`,
     });
   }
 
@@ -516,16 +539,18 @@ export function validateDiscourseTopicTitle(
   return issues;
 }
 
-function validateManagedPageTitles(input: {
+function validateManagedPages(input: {
   pages: Array<{
     filePath: string;
     title: string;
+    content: string;
+    tags?: string[];
     targetName?: string;
     existingTopicId?: string;
   }>;
   mode: SyncMode;
   targetName?: string;
-  minLength: number;
+  limits: Required<Pick<DiscoursePreflightLimits, "minTopicTitleLength">> & DiscoursePreflightLimits;
 }) {
   const issues = input.pages.flatMap((page) => {
     if (!discussionTargetStatus(page.targetName, input.targetName).matches) return [];
@@ -537,19 +562,54 @@ function validateManagedPageTitles(input: {
 
     if (!managesPage) return [];
 
-    return validateDiscourseTopicTitle(page.title, { minLength: input.minLength }).map((issue) => ({
+    const titleIssues = validateDiscourseTopicTitle(page.title, {
+      minLength: input.limits.minTopicTitleLength,
+      maxLength: input.limits.maxTopicTitleLength,
+    }).map((issue) => ({
       ...issue,
       filePath: page.filePath,
     }));
+
+    const pageIssues: Array<{ filePath: string; reason: string }> = [...titleIssues];
+
+    if (input.limits.maxPostLength !== undefined && page.content.length > input.limits.maxPostLength) {
+      pageIssues.push({
+        filePath: page.filePath,
+        reason: `Companion post body is too long for Discourse; maximum is ${input.limits.maxPostLength} characters. Current body is ${page.content.length} characters.`,
+      });
+    }
+
+    if (input.limits.maxTagsPerTopic !== undefined && page.tags && normalizeTags(page.tags).length > input.limits.maxTagsPerTopic) {
+      pageIssues.push({
+        filePath: page.filePath,
+        reason: `Too many tags for Discourse topic; maximum is ${input.limits.maxTagsPerTopic}. Current tags: ${formatTags(page.tags)}.`,
+      });
+    }
+
+    if (input.limits.maxTagLength !== undefined && page.tags) {
+      for (const tag of normalizeTags(page.tags)) {
+        if (tag.length > input.limits.maxTagLength) {
+          pageIssues.push({
+            filePath: page.filePath,
+            reason: `Tag "${tag}" is too long for Discourse; maximum is ${input.limits.maxTagLength} characters.`,
+          });
+        }
+      }
+    }
+
+    return pageIssues;
   });
 
   if (issues.length === 0) return;
 
   const details = issues
-    .map((issue) => `- ${issue.filePath}: ${issue.reason} Current title: "${issue.title}"`)
+    .map((issue) => {
+      const title = "title" in issue ? ` Current title: "${issue.title}"` : "";
+      return `- ${issue.filePath}: ${issue.reason}${title}`;
+    })
     .join("\n");
 
-  throw new Error(`Discourse topic title preflight failed:\n${details}`);
+  throw new Error(`Discourse preflight failed:\n${details}`);
 }
 
 function discussionTargetStatus(

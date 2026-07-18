@@ -5,6 +5,22 @@ export interface DiscourseClientOptions {
   fetch?: typeof fetch;
 }
 
+export interface SiteSettingsResponse {
+  min_topic_title_length?: number;
+  max_topic_title_length?: number;
+  min_first_post_length?: number;
+  min_post_length?: number;
+  max_post_length?: number;
+  max_tags_per_topic?: number;
+  max_tag_length?: number;
+  tagging_enabled?: boolean;
+}
+
+export interface SiteInfoResponse {
+  can_tag_topics?: boolean;
+  can_create_tag?: boolean;
+}
+
 export interface CreateTopicInput {
   title: string;
   raw: string;
@@ -218,6 +234,12 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     },
     post(postId: number | string) {
       return request<DiscoursePost>(`/posts/${postId}.json`);
+    },
+    siteSettings() {
+      return request<SiteSettingsResponse>("/site/settings.json");
+    },
+    siteInfo() {
+      return request<SiteInfoResponse>("/site.json");
     },
     updateTopic(input: UpdateTopicInput) {
       return request<UpdateTopicResponse>(`/t/-/${input.topicId}.json`, {
