@@ -192,7 +192,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
             topicUrl: existingTopicUrl,
             status: wouldUpdate ? "dry-run-update" : "unchanged",
             reason: wouldUpdate
-              ? (input.forceSync && previousHash === sourceHash ? "force sync requested" : undefined)
+              ? (input.forceSync && previousHash === sourceHash ? "force sync requested" : "source hash changed")
               : "source hash unchanged",
           });
           continue;
@@ -205,6 +205,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           throw new Error(`Could not find first post for Discourse topic ${existingTopicId}.`);
         }
         let updated = false;
+        const updateReasons: string[] = [];
 
         if (sourceChanged && firstPost) {
           await input.discourse.updatePost({
@@ -219,15 +220,25 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
             bypassBump: true,
           });
           updated = true;
+          updateReasons.push(
+            input.forceSync && previousHash === sourceHash ? "first post rewritten by force sync" : "first post rewritten",
+          );
         }
 
         if (topic.title !== title || (page.categoryId !== undefined && topic.category_id !== page.categoryId)) {
-          await input.discourse.updateTopic({
-            topicId: existingTopicId,
-            title,
-            categoryId: page.categoryId,
-          });
+          try {
+            await input.discourse.updateTopic({
+              topicId: existingTopicId,
+              title,
+              categoryId: page.categoryId,
+            });
+          } catch (error) {
+            throw new Error(
+              `Topic metadata update failed for Discourse topic ${existingTopicId}. The first post may already have been updated. ${errorMessage(error)}`,
+            );
+          }
           updated = true;
+          updateReasons.push("topic metadata update requested");
         }
 
         if (page.visible !== undefined && topic.visible !== page.visible) {
@@ -237,6 +248,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
             enabled: page.visible,
           });
           updated = true;
+          updateReasons.push(page.visible ? "topic listed" : "topic unlisted");
         }
 
         if (sourceChanged) {
@@ -257,7 +269,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           topicId: Number(existingTopicId),
           topicUrl: existingTopicUrl,
           status: updated ? "updated" : "unchanged",
-          reason: updated ? undefined : "source hash and topic metadata unchanged",
+          reason: updated ? updateReasons.join("; ") : "source hash and topic metadata unchanged",
         });
         continue;
       }

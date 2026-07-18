@@ -117,7 +117,8 @@ const results = await syncDiscourseTopics({
 
 for (const result of results) {
   const topic = result.topicUrl ? ` -> ${result.topicUrl}` : "";
-  console.log(`${result.status}: ${result.filePath}${topic}`);
+  const reason = result.reason ? ` (${result.reason})` : "";
+  console.log(`${result.status}: ${result.filePath}${topic}${reason}`);
 }
 
 const created = results.filter((result) => result.status === "created").length;

@@ -244,6 +244,7 @@ test("sync-existing can update topic metadata and unlist when source content is 
     });
 
     assert.equal(results[0].status, "updated");
+    assert.equal(results[0].reason, "topic metadata update requested; topic unlisted");
     assert.equal(secondCalls.some((call) => call.pathname === "/posts/101.json"), false);
     assert.equal(secondCalls.some((call) => call.pathname === "/t/-/21.json" && call.method === "PUT"), true);
     assert.equal(secondCalls.some((call) => call.pathname === "/t/21/status.json" && call.method === "PUT"), true);
@@ -336,6 +337,7 @@ test("sync-existing force updates the managed first post even when source hash i
     });
 
     assert.equal(results[0].status, "updated");
+    assert.equal(results[0].reason, "first post rewritten by force sync");
     const updateCall = forceCalls.find((call) => call.pathname === "/posts/101.json" && call.method === "PUT");
     assert.ok(updateCall);
     assert.match(updateCall.body.post.raw, /^# Force Sync/);
@@ -344,6 +346,47 @@ test("sync-existing force updates the managed first post even when source hash i
     assert.notEqual(await readFile(filePath, "utf8"), syncedSource);
   } finally {
     globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("sync-existing dry run reports source hash changes", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "adb-dry-run-reason-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Changed Title"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/old-title/21"',
+        'discussionSourceHash: "old-hash"',
+        "---",
+        "",
+        "# Changed Title",
+        "",
+        "The source body changed.",
+      ].join("\n"),
+    );
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+      dryRun: true,
+    });
+
+    assert.equal(results[0].status, "dry-run-update");
+    assert.equal(results[0].reason, "source hash changed");
+  } finally {
     await rm(dir, { force: true, recursive: true });
   }
 });
