@@ -78,6 +78,8 @@ The discussion engine is Discourse. The `provider: "discourse"` field remains ex
 
 Discussion Bridge is designed to be generous without making implementation labor free.
 
+The bridge works because the publication and the conversation keep their own strengths. Astro keeps pages fast, structured, versioned, and pleasant to read. Discourse keeps identity, trust levels, notifications, moderation, quoting, reactions, and the long-running social context that makes a community useful after the original page has shipped. When the comments are not decoration, Discourse becomes the living edge of the page.
+
 - Tier 1 is the API-only bridge: free package, public docs, community support, and paid hand-holding or implementation help when teams need it.
 - Tier 2 is the optional Discourse-side power layer: the same support model, with deeper Discourse configuration, operations visibility, and managed integration behavior.
 
