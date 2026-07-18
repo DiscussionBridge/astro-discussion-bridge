@@ -58,6 +58,24 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - Missing active discussion target: pages marked with `discussionTarget` should tell the user which `--target` to rerun with.
 - Same Astro site with multiple future Discourse targets: keep as a compatibility test for future namespaced targets, not current Tier 1 behavior.
 
+## Maintenance Test Process
+
+Use maintenance syncs as explicit tests, not one-off commands. Before syncing existing live topics, confirm the local demo package is current by checking the installed CLI output or searching the installed package for the expected companion-body text. Then run a lane dry run, inspect the output, run the live sync, and verify both Discourse and Astro.
+
+Blog lane smoke test:
+
+```powershell
+npx astro-discussion-bridge sync-existing src/content/blog `
+  --route-base blog `
+  --discourse-url https://forum.discussionbridge.dev `
+  --site-url https://astrostarlightdemo.discussionbridge.dev `
+  --category-id 5 `
+  --tags discussionbridge,starlight-demo,blog `
+  --dry-run
+```
+
+If the dry run is correct, rerun the same command without `--dry-run`. Verify the Discourse first post starts with the article link, includes reader-facing content, and does not show implementation labels such as `This is a companion discussion topic for:` or `Source content:`.
+
 ## Live Publish Checkpoints
 
 - 2026-07-16: Starlight demo published companion topics to the public Discussion Bridge for Astro category.

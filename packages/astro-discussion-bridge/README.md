@@ -261,6 +261,37 @@ Use `--unlist` for demo/test companion topics that should keep direct links and 
 npx astro-discussion-bridge sync-existing src/content/docs --unlist
 ```
 
+### Maintenance Sync Process
+
+Treat first-post maintenance as a repeatable test, especially after changing the companion topic template or lane configuration:
+
+1. Confirm the project is using the expected `astro-discussion-bridge` package build.
+2. Run `sync-existing` with `--dry-run` for one lane.
+3. Review whether pages report `dry-run-update`, `unchanged`, or `skipped`.
+4. Run the same command without `--dry-run` only after the preview looks right.
+5. Verify the Discourse first post starts with the article link, includes the reader-facing page content or summary, and no longer shows old implementation labels.
+6. Verify the Astro page and comments still render.
+7. Repeat for each lane.
+
+Example blog-lane maintenance pass:
+
+```sh
+npx astro-discussion-bridge sync-existing src/content/blog \
+  --route-base blog \
+  --discourse-url https://forum.example.com \
+  --site-url https://docs.example.com \
+  --category-id 5 \
+  --tags discussionbridge,blog \
+  --dry-run
+
+npx astro-discussion-bridge sync-existing src/content/blog \
+  --route-base blog \
+  --discourse-url https://forum.example.com \
+  --site-url https://docs.example.com \
+  --category-id 5 \
+  --tags discussionbridge,blog
+```
+
 ### Publish and Sync
 
 `publish-and-sync` is the explicit full workflow:
