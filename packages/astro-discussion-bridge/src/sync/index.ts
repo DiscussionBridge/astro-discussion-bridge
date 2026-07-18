@@ -214,10 +214,19 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         }
 
         const sourceChanged = input.forceSync || previousHash !== sourceHash;
-        const topic = await input.discourse.topic(existingTopicId);
+        let topic: Awaited<ReturnType<typeof input.discourse.topic>>;
+        try {
+          topic = await input.discourse.topic(existingTopicId);
+        } catch (error) {
+          throw new Error(
+            `Could not read linked Discourse topic ${existingTopicId} for ${pageUrl}. The topic may have been deleted, moved behind permissions, or the API user may not be allowed to read it. ${errorMessage(error)}`,
+          );
+        }
         const firstPost = topic.post_stream.posts.find((post) => post.post_number === 1);
         if (sourceChanged && !firstPost) {
-          throw new Error(`Could not find first post for Discourse topic ${existingTopicId}.`);
+          throw new Error(
+            `Could not find first post for linked Discourse topic ${existingTopicId} for ${pageUrl}. The topic may need manual repair before DiscussionBridge can sync it.`,
+          );
         }
         let updated = false;
         const updateReasons: string[] = [];

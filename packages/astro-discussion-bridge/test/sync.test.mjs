@@ -684,6 +684,117 @@ test("sync-existing force updates the managed first post even when source hash i
   }
 });
 
+test("sync-existing reports a clear recovery error when a linked topic cannot be read", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-missing-topic-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Missing Linked Topic"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/missing-linked-topic/21"',
+        'discussionSourceHash: "old-hash"',
+        "---",
+        "",
+        "# Missing Linked Topic",
+        "",
+        "The Astro source changed, but the linked Discourse topic is gone.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async (url, init = {}) => {
+      const parsed = new URL(url);
+      const method = init.method ?? "GET";
+
+      if (method === "GET" && parsed.pathname === "/t/21.json") {
+        return new Response("Not found", { status: 404, statusText: "Not Found" });
+      }
+
+      return new Response(`Unexpected request: ${method} ${parsed.pathname}`, { status: 500 });
+    };
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "sync-existing",
+      }),
+      (error) => {
+        assert.match(error.message, /Could not read linked Discourse topic 21/);
+        assert.match(error.message, /may have been deleted/);
+        assert.match(error.message, /https:\/\/docs\.example\.com\/index\//);
+        assert.match(error.message, /404 Not Found/);
+        return true;
+      },
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("sync-existing reports a clear recovery error when a linked topic has no first post", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-missing-first-post-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Missing First Post"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/missing-first-post/21"',
+        'discussionSourceHash: "old-hash"',
+        "---",
+        "",
+        "# Missing First Post",
+        "",
+        "The Astro source changed, but the linked Discourse topic has no editable first post.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Discussion Bridge for Astro: Missing First Post",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 102, post_number: 2 }] },
+      },
+    });
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "sync-existing",
+      }),
+      /Could not find first post for linked Discourse topic 21.*manual repair/s,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("sync-existing fails when Discourse accepts a topic title update without changing it", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-title-noop-"));
   const docsDir = path.join(dir, "docs");
