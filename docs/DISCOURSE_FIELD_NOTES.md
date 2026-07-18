@@ -25,7 +25,7 @@ This is a living list of Discourse issues, feature needs, wishlist items, shortc
 ## Issues And Shortcomings Found
 
 - Granular API keys may be able to publish/update topics but still fail on site-level or discovery endpoints needed for diagnostics and reconciliation.
-- Current granular publishing key could not read `/site/settings.json`, `/site.json`, `/embed/info`, or exact URL search.
+- Current granular publishing key could read `/categories.json` and `/tags.json`, but could not read `/site/settings.json`, `/site.json`, `/embed/info`, or exact URL search.
 - `/embed/info?embed_url=...` can return `404` even when Discourse topic creation rejects the same URL as already taken.
 - Existing-topic collisions may surface as `Embed url has already been taken` or `Title has already been used`, depending on Discourse validation order.
 - A topic created by Discourse embedding before CLI publishing can block `publish-new` unless the bridge can reconcile the existing topic.
@@ -43,6 +43,7 @@ This is a living list of Discourse issues, feature needs, wishlist items, shortc
   - tag lookup
   - embed URL ownership lookup
   - exact URL search or equivalent reconciliation lookup
+- `check-discourse --page-url URL` now probes reconciliation readiness directly by checking `/embed/info` and exact URL search with the configured key.
 - Clear Discourse-side documentation for which endpoints are accessible to granular keys and which scopes unlock them.
 - A bridge-friendly diagnostics story that does not require making the runtime publishing key global/admin if the site operator wants least privilege.
 - Better machine-readable distinction between duplicate title collisions and embed URL ownership collisions.
@@ -83,7 +84,8 @@ This is a living list of Discourse issues, feature needs, wishlist items, shortc
 - `/embed/info?embed_url=https://astrostarlightdemo.discussionbridge.dev/releases/2_1/` returned `404` on the live forum.
 - Exact URL search found topic 24 for `https://astrostarlightdemo.discussionbridge.dev/releases/2_1/`.
 - Global publishing key successfully reconciled topic 24.
-- Granular publishing key failed reconciliation because it could not read `/embed/info` or search.
+- Granular publishing key failed reconciliation because it could not read `/embed/info` or search, even though it could read categories and tags.
+- `check-discourse --page-url https://astrostarlightdemo.discussionbridge.dev/releases/2_1/` now reports the same distinction directly: global key resolves topic 24 by search fallback; current granular publishing key reports reconciliation lookup as unavailable.
 - Topic 27 proved live title/tag/first-post sync behavior for the blog lane.
 - Full-app embed behavior required Discourse settings:
   - `Embed full app`: yes

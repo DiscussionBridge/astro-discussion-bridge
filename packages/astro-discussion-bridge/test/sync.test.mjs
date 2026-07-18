@@ -61,6 +61,24 @@ test("check-discourse discovers client settings and tag capabilities", async () 
         });
       }
 
+      if (parsed.pathname === "/embed/info") {
+        assert.equal(parsed.searchParams.get("embed_url"), "https://docs.example.com/blog/content-lanes/");
+        return jsonResponse({
+          topic_id: 27,
+          topic_slug: "content-lanes-with-full-comments-in-discussion-bridge-for-astro",
+        });
+      }
+
+      if (parsed.pathname === "/search/query") {
+        return jsonResponse({
+          topics: [{
+            id: 27,
+            slug: "content-lanes-with-full-comments-in-discussion-bridge-for-astro",
+          }],
+          posts: [{ id: 101, topic_id: 27 }],
+        });
+      }
+
       return new Response(`Unexpected request: ${parsed.pathname}`, { status: 500 });
     };
 
@@ -70,6 +88,7 @@ test("check-discourse discovers client settings and tag capabilities", async () 
       apiUsername: "test-user",
       categoryId: 5,
       tags: ["discussionbridge", "blog"],
+      pageUrl: "https://docs.example.com/blog/content-lanes/",
     });
 
     assert.equal(result.settingsAvailable, true);
@@ -84,10 +103,56 @@ test("check-discourse discovers client settings and tag capabilities", async () 
     ]);
     assert.deepEqual(result.tagIssues, []);
     assert.deepEqual(result.setupIssues, []);
+    assert.equal(result.reconciliation.topicId, 27);
+    assert.equal(result.reconciliation.method, "embed-info");
     assert.equal(calls.some((call) => call.pathname === "/site/settings.json"), true);
     assert.equal(calls.some((call) => call.pathname === "/site.json"), true);
     assert.equal(calls.some((call) => call.pathname === "/categories.json"), true);
     assert.equal(calls.some((call) => call.pathname === "/tags.json"), true);
+    assert.equal(calls.some((call) => call.pathname === "/embed/info"), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("check-discourse can diagnose reconciliation through search fallback", async () => {
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const parsed = new URL(url);
+
+      if (parsed.pathname === "/site/settings.json") return jsonResponse({});
+      if (parsed.pathname === "/site.json") return jsonResponse({});
+      if (parsed.pathname === "/categories.json") return jsonResponse({});
+      if (parsed.pathname === "/tags.json") return jsonResponse({});
+
+      if (parsed.pathname === "/embed/info") {
+        return new Response("Not found", { status: 404, statusText: "Not Found" });
+      }
+
+      if (parsed.pathname === "/search/query") {
+        assert.equal(parsed.searchParams.get("term"), "https://docs.example.com/releases/2_1/");
+        return jsonResponse({
+          topics: [{ id: 24, slug: "release-lane-demo" }],
+          posts: [{ id: 31, topic_id: 24 }],
+        });
+      }
+
+      return new Response(`Unexpected request: ${parsed.pathname}`, { status: 500 });
+    };
+
+    const result = await checkDiscourse({
+      discourseUrl: "https://forum.example.com",
+      pageUrl: "https://docs.example.com/releases/2_1/",
+    });
+
+    assert.equal(result.reconciliation.embedInfoAvailable, false);
+    assert.match(result.reconciliation.embedInfoError, /404/);
+    assert.equal(result.reconciliation.searchAvailable, true);
+    assert.equal(result.reconciliation.topicId, 24);
+    assert.equal(result.reconciliation.method, "search");
+    assert.deepEqual(result.reconciliation.candidateTopicIds, [24]);
   } finally {
     globalThis.fetch = originalFetch;
   }

@@ -30,6 +30,7 @@ const categoryId = numberFromValue(args.values.get("category-id") ?? process.env
 const titleMinLength = numberFromValue(args.values.get("title-min-length") ?? process.env.DISCOURSE_TITLE_MIN_LENGTH);
 const preflightLimits = preflightLimitsFromArgs(args.values);
 const tags = tagsFromValue(args.values.get("tags") ?? process.env.DISCOURSE_TAGS);
+const pageUrl = args.values.get("page-url") ?? process.env.DISCUSSION_PAGE_URL;
 const notifyRecipients = csvFromValue(args.values.get("notify-recipients") ?? process.env.DISCOURSE_NOTIFY_RECIPIENTS);
 const mode = modeForCommand(command);
 const topics = [
@@ -61,6 +62,7 @@ if (command === "check-discourse") {
     apiUsername,
     categoryId,
     tags,
+    pageUrl,
     configuredLimits: preflightLimits,
   });
 
@@ -116,6 +118,20 @@ if (command === "check-discourse") {
   if (result.setupWarnings.length) {
     console.log("Setup warnings:");
     for (const warning of result.setupWarnings) console.log(`- ${warning}`);
+  }
+  if (result.reconciliation) {
+    console.log("Reconciliation lookup:");
+    console.log(`- page URL: ${result.reconciliation.pageUrl}`);
+    console.log(`- embed info: ${result.reconciliation.embedInfoAvailable ? "available" : "unavailable"}`);
+    if (result.reconciliation.embedInfoError) console.log(`- embed info error: ${oneLine(result.reconciliation.embedInfoError)}`);
+    console.log(`- search: ${result.reconciliation.searchAvailable ? "available" : "unavailable"}`);
+    if (result.reconciliation.searchError) console.log(`- search error: ${oneLine(result.reconciliation.searchError)}`);
+    console.log(`- owning topic: ${result.reconciliation.topicId ?? "unknown"}`);
+    if (result.reconciliation.topicSlug) console.log(`- owning topic slug: ${result.reconciliation.topicSlug}`);
+    console.log(`- lookup method: ${result.reconciliation.method ?? "none"}`);
+    if (result.reconciliation.candidateTopicIds.length) {
+      console.log(`- candidate topics: ${result.reconciliation.candidateTopicIds.join(", ")}`);
+    }
   }
   process.exit(result.tagIssues.length || result.setupIssues.length ? 1 : 0);
 }
@@ -285,6 +301,6 @@ function printUsage(error?: string) {
   console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [--topic-id ID[,ID]] [--dry-run] [--overwrite] [--target NAME] [--route-base PATH] [--comments-display simple|full|fullInteractive] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge check-discourse [--category-id ID] [--tags TAG[,TAG]] [--diagnostics-api-key KEY] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--discourse-url URL]");
+  console.error("  astro-discussion-bridge check-discourse [--category-id ID] [--tags TAG[,TAG]] [--page-url URL] [--diagnostics-api-key KEY] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--discourse-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--discourse-url URL] [--site-url URL]");
 }

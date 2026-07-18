@@ -7,6 +7,7 @@ export interface CheckDiscourseOptions {
   apiUsername?: string;
   categoryId?: number;
   tags?: string[];
+  pageUrl?: string;
   configuredLimits?: DiscoursePreflightLimits;
 }
 
@@ -42,6 +43,17 @@ export interface CheckDiscourseResult {
   setupIssues: string[];
   setupWarnings: string[];
   tagIssues: string[];
+  reconciliation?: {
+    pageUrl: string;
+    embedInfoAvailable: boolean;
+    embedInfoError?: string;
+    searchAvailable: boolean;
+    searchError?: string;
+    topicId?: number;
+    topicSlug?: string;
+    method?: "embed-info" | "search";
+    candidateTopicIds: number[];
+  };
 }
 
 export async function checkDiscourse(options: CheckDiscourseOptions): Promise<CheckDiscourseResult> {
@@ -63,6 +75,7 @@ export async function checkDiscourse(options: CheckDiscourseOptions): Promise<Ch
   let tagsAvailable = false;
   let tagsError: string | undefined;
   let knownTags: KnownTag[] | undefined;
+  let reconciliation: CheckDiscourseResult["reconciliation"];
 
   try {
     const settings = await discourse.siteSettings();
@@ -117,6 +130,10 @@ export async function checkDiscourse(options: CheckDiscourseOptions): Promise<Ch
     tagsError = errorMessage(error);
   }
 
+  if (options.pageUrl) {
+    reconciliation = await checkReconciliationLookup(discourse, options.pageUrl);
+  }
+
   const normalizedTags = normalizeTags(options.tags ?? []);
   const requestedTags = normalizedTags.map((tag) => {
     const knownTag = knownTags?.find((candidate) => candidate.name === tag);
@@ -165,6 +182,70 @@ export async function checkDiscourse(options: CheckDiscourseOptions): Promise<Ch
     setupIssues,
     setupWarnings,
     tagIssues,
+    reconciliation,
+  };
+}
+
+async function checkReconciliationLookup(
+  discourse: ReturnType<typeof createDiscourseClient>,
+  pageUrl: string,
+): Promise<NonNullable<CheckDiscourseResult["reconciliation"]>> {
+  let embedInfoAvailable = false;
+  let embedInfoError: string | undefined;
+  let searchAvailable = false;
+  let searchError: string | undefined;
+  let topicId: number | undefined;
+  let topicSlug: string | undefined;
+  let method: "embed-info" | "search" | undefined;
+  const candidateTopicIds = new Set<number>();
+
+  try {
+    const embedInfo = await discourse.embedInfo(pageUrl);
+    embedInfoAvailable = true;
+    if (embedInfo.topic_id) {
+      topicId = embedInfo.topic_id;
+      topicSlug = embedInfo.topic_slug;
+      method = "embed-info";
+      candidateTopicIds.add(embedInfo.topic_id);
+    }
+  } catch (error) {
+    embedInfoError = errorMessage(error);
+  }
+
+  try {
+    const search = await discourse.search(pageUrl);
+    searchAvailable = true;
+
+    const topicSlugById = new Map<number, string | undefined>();
+    for (const topic of search.topics ?? []) {
+      candidateTopicIds.add(topic.id);
+      topicSlugById.set(topic.id, topic.slug);
+    }
+
+    for (const post of search.posts ?? []) {
+      candidateTopicIds.add(post.topic_id);
+    }
+
+    if (topicId === undefined && candidateTopicIds.size === 1) {
+      const [matchedTopicId] = candidateTopicIds;
+      topicId = matchedTopicId;
+      topicSlug = topicSlugById.get(matchedTopicId);
+      method = "search";
+    }
+  } catch (error) {
+    searchError = errorMessage(error);
+  }
+
+  return {
+    pageUrl,
+    embedInfoAvailable,
+    embedInfoError,
+    searchAvailable,
+    searchError,
+    topicId,
+    topicSlug,
+    method,
+    candidateTopicIds: [...candidateTopicIds].sort((left, right) => left - right),
   };
 }
 
