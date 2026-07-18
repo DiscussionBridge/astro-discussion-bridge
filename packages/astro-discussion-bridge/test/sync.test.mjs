@@ -865,7 +865,7 @@ test("publish-and-sync updates linked pages and creates missing companion topics
   }
 });
 
-test("publish-new reconciles an existing Discourse embed topic when embed URL is already taken", async () => {
+test("publish-new reconciles an existing Discourse embed topic when embed info is unavailable", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-embed-reconcile-"));
   const docsDir = path.join(dir, "docs");
   const filePath = path.join(docsDir, "release.md");
@@ -896,7 +896,7 @@ test("publish-new reconciles an existing Discourse embed topic when embed URL is
       if (method === "POST" && parsed.pathname === "/posts.json") {
         return new Response(JSON.stringify({
           action: "create_post",
-          errors: ["Embed url has already been taken"],
+          errors: ["Title has already been used"],
         }), {
           status: 422,
           statusText: "Unprocessable Entity",
@@ -909,11 +909,21 @@ test("publish-new reconciles an existing Discourse embed topic when embed URL is
           parsed.searchParams.get("embed_url"),
           "https://docs.example.com/releases/release/",
         );
+        return new Response("Not found", { status: 404, statusText: "Not Found" });
+      }
+
+      if (method === "GET" && parsed.pathname === "/search/query") {
+        assert.equal(
+          parsed.searchParams.get("term"),
+          "https://docs.example.com/releases/release/",
+        );
         return jsonResponse({
-          topic_id: 24,
-          post_id: 501,
-          topic_slug: "discussion-bridge-for-astro-release-lane-reconcile",
-          comment_count: 0,
+          topics: [{
+            id: 24,
+            title: "Discussion Bridge for Astro: Release Lane Reconcile",
+            slug: "discussion-bridge-for-astro-release-lane-reconcile",
+          }],
+          posts: [{ id: 501, topic_id: 24 }],
         });
       }
 
@@ -990,6 +1000,7 @@ test("publish-new reconciles an existing Discourse embed topic when embed URL is
     assert.equal(results[0].topicId, 24);
     assert.equal(results[0].reason, "reconciled existing embedded topic");
     assert.equal(calls.some((call) => call.pathname === "/embed/info"), true);
+    assert.equal(calls.some((call) => call.pathname === "/search/query"), true);
     assert.equal(calls.some((call) => call.pathname === "/posts/501.json" && call.method === "PUT"), true);
 
     const syncedSource = await readFile(filePath, "utf8");

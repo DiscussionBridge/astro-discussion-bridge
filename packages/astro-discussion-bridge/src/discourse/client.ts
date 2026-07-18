@@ -52,6 +52,18 @@ export interface EmbedInfoResponse {
   comment_count?: number;
 }
 
+export interface SearchResponse {
+  topics?: Array<{
+    id: number;
+    title?: string;
+    slug?: string;
+  }>;
+  posts?: Array<{
+    id: number;
+    topic_id: number;
+  }>;
+}
+
 export interface CreateTopicInput {
   title: string;
   raw: string;
@@ -281,6 +293,10 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     embedInfo(embedUrl: string) {
       const search = new URLSearchParams({ embed_url: embedUrl });
       return request<EmbedInfoResponse>(`/embed/info?${search.toString()}`);
+    },
+    search(term: string) {
+      const search = new URLSearchParams({ term });
+      return request<SearchResponse>(`/search/query?${search.toString()}`);
     },
     updateTopic(input: UpdateTopicInput) {
       return request<UpdateTopicResponse>(`/t/-/${input.topicId}.json`, {

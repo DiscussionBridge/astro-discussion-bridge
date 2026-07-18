@@ -371,7 +371,7 @@ Add `--unlist` when newly created or synced demo/test topics should be unlisted.
 
 `publish-and-sync` uses the same preflight as `publish-new`, so known title, body, and tag problems fail before any Discourse writes happen.
 
-If Discourse embedding already created a topic for the page URL, `publish-new` and `publish-and-sync` reconcile that existing embedded topic instead of creating a duplicate. The bridge detects Discourse's `Embed url has already been taken` response, reads `/embed/info?embed_url=...`, updates the existing first post and topic metadata, and writes `discourseTopicId`/`discourseTopicUrl` frontmatter back to the Astro source file.
+If Discourse embedding already created a topic for the page URL, `publish-new` and `publish-and-sync` reconcile that existing embedded topic instead of creating a duplicate. The bridge detects Discourse's existing-topic collision responses, reads `/embed/info?embed_url=...`, falls back to exact URL search when embed info is unavailable, updates the existing first post and topic metadata, and writes `discourseTopicId`/`discourseTopicUrl` frontmatter back to the Astro source file. Granular publishing keys need enough read/search permission for that lookup; otherwise use the broader diagnostics key for setup and keep the page linked with `discourseTopicId`.
 
 Add `--notify-on-failure` to send a best-effort Discourse private message when a publish or sync run fails. This uses Discourse's normal PM notification and email behavior for the configured recipients. The CLI or build output remains the source of truth, because notification can also fail when credentials or network access are broken.
 

@@ -11,7 +11,7 @@
 
 - Consider a configurable title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
 - Consider reading Discourse title constraints from the target instance when authenticated, while keeping local validation available for dry runs.
-- Add live coverage for Discourse `Embed url has already been taken` reconciliation against `forum.discussionbridge.dev` after the package is installed into the deployed demo source tree.
+- Confirm the minimal Discourse granular scopes needed for existing-topic collision reconciliation. Live testing showed the current granular publishing key can hit create collisions but cannot read `/embed/info` or exact URL search, while the global publishing key can reconcile topic 24.
 ## Sync Validation
 
 - Expand tests around `sync-existing` and `publish-and-sync` edge cases before widening usage beyond the demo.

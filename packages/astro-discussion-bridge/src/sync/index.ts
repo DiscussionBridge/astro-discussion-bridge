@@ -362,19 +362,20 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           embedUrl: pageUrl,
         });
       } catch (error) {
-        if (!isEmbedUrlTakenError(error)) throw error;
+        if (!isRecoverableExistingTopicCreateError(error)) throw error;
 
-        const embedInfo = await input.discourse.embedInfo(pageUrl);
-        if (!embedInfo.topic_id) {
+        const embedInfo = await findExistingTopicForEmbedUrl(input.discourse, pageUrl);
+        if (!embedInfo.topicId) {
+          const details = embedInfo.reason ? ` ${embedInfo.reason}` : "";
           throw new Error(
-            `Discourse says the embed URL is already taken, but /embed/info did not return a topic_id for ${pageUrl}. ${errorMessage(error)}`,
+            `Discourse rejected topic creation as an existing-topic collision, but DiscussionBridge could not identify the owning topic for ${pageUrl}.${details} ${errorMessage(error)}`,
           );
         }
 
-        const existingTopic = await input.discourse.topic(embedInfo.topic_id);
+        const existingTopic = await input.discourse.topic(embedInfo.topicId);
         const firstPost = existingTopic.post_stream.posts.find((post) => post.post_number === 1);
         if (!firstPost) {
-          throw new Error(`Could not find first post for Discourse topic ${embedInfo.topic_id}.`);
+          throw new Error(`Could not find first post for Discourse topic ${embedInfo.topicId}.`);
         }
 
         await input.discourse.updatePost({
@@ -389,7 +390,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         const tagsNeedUpdate = page.tags !== undefined && !sameTags(page.tags, tagNamesFromTopic(existingTopic.tags));
         if (titleNeedsUpdate || categoryNeedsUpdate || tagsNeedUpdate) {
           await input.discourse.updateTopic({
-            topicId: embedInfo.topic_id,
+            topicId: embedInfo.topicId,
             ...(titleNeedsUpdate ? { title } : {}),
             ...(categoryNeedsUpdate ? { categoryId: page.categoryId } : {}),
             ...(tagsNeedUpdate ? { tags: page.tags } : {}),
@@ -413,8 +414,8 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           reads: firstPost.reads,
           readers_count: firstPost.readers_count,
           score: firstPost.score,
-          topic_id: embedInfo.topic_id,
-          topic_slug: embedInfo.topic_slug ?? existingTopic.slug ?? "",
+          topic_id: embedInfo.topicId,
+          topic_slug: embedInfo.topicSlug ?? existingTopic.slug ?? "",
         };
         reconciledEmbed = true;
       }
@@ -555,8 +556,58 @@ function errorMessage(error: unknown): string {
   return String(error);
 }
 
-function isEmbedUrlTakenError(error: unknown): boolean {
-  return /Embed url has already been taken/i.test(errorMessage(error));
+function isRecoverableExistingTopicCreateError(error: unknown): boolean {
+  const message = errorMessage(error);
+  return /Embed url has already been taken/i.test(message) || /Title has already been used/i.test(message);
+}
+
+async function findExistingTopicForEmbedUrl(
+  discourse: ReturnType<typeof createDiscourseClient>,
+  pageUrl: string,
+): Promise<{ topicId?: number; topicSlug?: string; reason?: string }> {
+  try {
+    const embedInfo = await discourse.embedInfo(pageUrl);
+    if (embedInfo.topic_id) {
+      return {
+        topicId: embedInfo.topic_id,
+        topicSlug: embedInfo.topic_slug,
+      };
+    }
+  } catch {
+    // Some Discourse instances return 404 for /embed/info even when topic creation reports the embed URL is taken.
+  }
+
+  try {
+    const search = await discourse.search(pageUrl);
+    const topicIds = new Set<number>();
+    const topicSlugById = new Map<number, string | undefined>();
+
+    for (const topic of search.topics ?? []) {
+      topicIds.add(topic.id);
+      topicSlugById.set(topic.id, topic.slug);
+    }
+
+    for (const post of search.posts ?? []) {
+      topicIds.add(post.topic_id);
+    }
+
+    if (topicIds.size === 1) {
+      const [topicId] = topicIds;
+      return {
+        topicId,
+        topicSlug: topicSlugById.get(topicId),
+        reason: "/embed/info was unavailable; matched by exact URL search.",
+      };
+    }
+
+    if (topicIds.size > 1) {
+      return { reason: `Exact URL search returned multiple candidate topics: ${[...topicIds].join(", ")}.` };
+    }
+  } catch (error) {
+    return { reason: `Exact URL search also failed: ${errorMessage(error)}.` };
+  }
+
+  return { reason: "/embed/info was unavailable and exact URL search found no candidate topics." };
 }
 
 export interface TopicTitleValidationIssue {
