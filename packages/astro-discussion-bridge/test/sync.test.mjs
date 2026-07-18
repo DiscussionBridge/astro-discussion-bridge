@@ -228,6 +228,10 @@ test("sync-existing can update topic metadata and unlist when source content is 
         title: "Old Topic Title",
         category_id: 4,
         visible: true,
+        tags: [
+          { id: 1, name: "discussionbridge", slug: "discussionbridge" },
+          { id: 2, name: "old-tag", slug: "old-tag" },
+        ],
         post_stream: { posts: [{ id: 101, post_number: 1 }] },
       },
       updatedTopic: {
@@ -237,6 +241,10 @@ test("sync-existing can update topic metadata and unlist when source content is 
           category_id: 5,
           slug: "discussion-bridge-for-astro-starlight-demo",
         },
+        tags: [
+          { id: 1, name: "discussionbridge", slug: "discussionbridge" },
+          { id: 3, name: "astro", slug: "astro" },
+        ],
       },
     });
 
@@ -247,15 +255,18 @@ test("sync-existing can update topic metadata and unlist when source content is 
       apiKey: "test-key",
       apiUsername: "test-user",
       categoryId: 5,
+      tags: ["discussionbridge", "astro"],
       mode: "sync-existing",
       unlistSyncedTopics: true,
     });
 
     assert.equal(results[0].status, "updated");
-    assert.equal(results[0].reason, "topic metadata updated; topic unlisted; topic URL refreshed");
+    assert.equal(results[0].reason, "topic metadata updated; topic tags updated; topic unlisted; topic URL refreshed");
     assert.equal(results[0].topicUrl, "https://forum.example.com/t/discussion-bridge-for-astro-starlight-demo/21");
     assert.equal(secondCalls.some((call) => call.pathname === "/posts/101.json"), false);
-    assert.equal(secondCalls.some((call) => call.pathname === "/t/-/21.json" && call.method === "PUT"), true);
+    const topicUpdateCall = secondCalls.find((call) => call.pathname === "/t/-/21.json" && call.method === "PUT");
+    assert.ok(topicUpdateCall);
+    assert.deepEqual(topicUpdateCall.body.tags, [{ name: "discussionbridge" }, { name: "astro" }]);
     assert.equal(secondCalls.some((call) => call.pathname === "/t/21/status.json" && call.method === "PUT"), true);
     const refreshedSource = await readFile(filePath, "utf8");
     assert.notEqual(refreshedSource, syncedSource);
@@ -422,6 +433,69 @@ test("sync-existing fails when Discourse accepts a topic title update without ch
   }
 });
 
+test("sync-existing fails when Discourse accepts a tag update without changing tags", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-tag-noop-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Tag Drift Test"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/tag-drift-test/21"',
+        'discussionSourceHash: "old-hash"',
+        "---",
+        "",
+        "# Discussion Bridge for Astro: Tag Drift Test",
+        "",
+        "Stable content.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Discussion Bridge for Astro: Tag Drift Test",
+        category_id: 5,
+        visible: true,
+        tags: [{ id: 1, name: "old-tag", slug: "old-tag" }],
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+      updatedTopic: {
+        basic_topic: {
+          id: 21,
+          title: "Discussion Bridge for Astro: Tag Drift Test",
+          category_id: 5,
+          slug: "tag-drift-test",
+        },
+        tags: [{ id: 1, name: "old-tag", slug: "old-tag" }],
+      },
+    });
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        tags: ["discussionbridge", "blog"],
+        mode: "sync-existing",
+      }),
+      /Topic tags update was accepted by Discourse but did not change topic 21/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("sync-existing dry run reports source hash changes", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "adb-dry-run-reason-"));
   const docsDir = path.join(dir, "docs");
@@ -506,6 +580,10 @@ test("publish-and-sync updates linked pages and creates missing companion topics
         title: "Discussion Bridge for Astro: Existing Page",
         category_id: 5,
         visible: false,
+        tags: [
+          { id: 1, name: "discussionbridge", slug: "discussionbridge" },
+          { id: 2, name: "astro", slug: "astro" },
+        ],
         post_stream: { posts: [{ id: 101, post_number: 1 }] },
       },
       createdTopic: {

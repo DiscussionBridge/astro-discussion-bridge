@@ -45,7 +45,7 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - One Astro/Starlight site can publish multiple content lanes, such as docs and Starlog-style releases, to different Discourse categories or tags.
 - Future compatibility test: one canonical Astro site connected to multiple Discourse instances, such as a central advocacy or industry organization publishing source material while linking discussion into chapter, regional, public, private, or member-specific forums. Current Tier 1 work should stay scoped to one Discourse target per page, but avoid hard-coding names or helper APIs in ways that would block a later namespaced target model.
 - Demo/test companion topics can be unlisted to keep category discovery clean while preserving direct links and embeds.
-- Topic title/category metadata sync is part of the managed companion-topic path, subject to Discourse permissions.
+- Topic title/category/tag metadata sync is part of the managed companion-topic path, subject to Discourse permissions.
 
 ## Bridge Contract Test Matrix
 
@@ -75,7 +75,7 @@ npx astro-discussion-bridge sync-existing src/content/blog `
   --dry-run
 ```
 
-If the dry run is correct, rerun the same command without `--dry-run`. The live CLI output should identify whether it rewrote the first post, updated topic metadata, changed listing status, or found unchanged metadata. Verify the Discourse first post starts with reader-facing content, includes a source article link near the bottom, and does not show implementation labels such as `This is a companion discussion topic for:` or `Source content:`.
+If the dry run is correct, rerun the same command without `--dry-run`. The live CLI output should identify whether it rewrote the first post, updated topic metadata, updated topic tags, changed listing status, or found unchanged metadata. Verify the Discourse first post starts with reader-facing content, includes a source article link near the bottom, and does not show implementation labels such as `This is a companion discussion topic for:` or `Source content:`.
 
 Because the demo runs behind Cloudflare/CDN caching, include cache state in maintenance verification. If Discourse or Astro still appears to show stale content after a confirmed live sync or deployment, clear the relevant Cloudflare cache or test with a cache-bypassing request before treating the sync as failed.
 

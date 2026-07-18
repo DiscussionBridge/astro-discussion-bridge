@@ -48,6 +48,7 @@ export interface TopicResponse {
   slug?: string;
   category_id?: number;
   visible?: boolean;
+  tags?: DiscourseTag[];
   posts_count: number;
   created_at: string;
   post_stream: {
@@ -71,6 +72,7 @@ export interface UpdateTopicInput {
   topicId: number | string;
   title?: string;
   categoryId?: number;
+  tags?: string[];
 }
 
 export interface UpdateTopicResponse {
@@ -82,6 +84,7 @@ export interface UpdateTopicResponse {
     posts_count?: number;
     category_id?: number;
   };
+  tags?: DiscourseTag[];
 }
 
 export interface UpdateTopicStatusInput {
@@ -150,6 +153,12 @@ export interface DiscoursePostReaction {
   count: number;
 }
 
+export interface DiscourseTag {
+  id?: number;
+  name: string;
+  slug?: string;
+}
+
 export function createDiscourseClient(options: DiscourseClientOptions) {
   const discourseUrl = normalizeBaseUrl(options.discourseUrl);
   const fetcher = options.fetch ?? fetch;
@@ -216,6 +225,7 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
         body: JSON.stringify({
           ...(input.title ? { title: input.title } : {}),
           ...(input.categoryId ? { category_id: input.categoryId } : {}),
+          ...(input.tags ? { tags: input.tags.map((name) => ({ name })) } : {}),
         }),
       });
     },

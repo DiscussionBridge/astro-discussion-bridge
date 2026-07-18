@@ -208,6 +208,9 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         const updateReasons: string[] = [];
         const frontmatterUpdates: Record<string, string> = {};
         let latestTopicUrl = canonicalTopicUrl(input.discourse.discourseUrl, existingTopicId, topic.slug) ?? existingTopicUrl;
+        const titleNeedsUpdate = topic.title !== title;
+        const categoryNeedsUpdate = page.categoryId !== undefined && topic.category_id !== page.categoryId;
+        const tagsNeedUpdate = page.tags !== undefined && !sameTags(page.tags, tagNamesFromTopic(topic.tags));
 
         if (sourceChanged && firstPost) {
           await input.discourse.updatePost({
@@ -227,33 +230,36 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           );
         }
 
-        if (topic.title !== title || (page.categoryId !== undefined && topic.category_id !== page.categoryId)) {
+        if (titleNeedsUpdate || categoryNeedsUpdate || tagsNeedUpdate) {
           let updatedTopicTitle: string | undefined;
           let updatedTopicCategoryId: number | undefined;
           let updatedTopicSlug: string | undefined;
+          let updatedTopicTags: string[] | undefined;
           try {
             const updatedTopic = await input.discourse.updateTopic({
               topicId: existingTopicId,
-              title,
-              categoryId: page.categoryId,
+              ...(titleNeedsUpdate ? { title } : {}),
+              ...(categoryNeedsUpdate ? { categoryId: page.categoryId } : {}),
+              ...(tagsNeedUpdate ? { tags: page.tags } : {}),
             });
             updatedTopicTitle = updatedTopic.basic_topic.title;
             updatedTopicCategoryId = updatedTopic.basic_topic.category_id;
             updatedTopicSlug = updatedTopic.basic_topic.slug;
+            updatedTopicTags = tagNamesFromTopic(updatedTopic.tags);
           } catch (error) {
             throw new Error(
               `Topic metadata update failed for Discourse topic ${existingTopicId}. The first post may already have been updated. ${errorMessage(error)}`,
             );
           }
 
-          if (topic.title !== title && updatedTopicTitle !== title) {
+          if (titleNeedsUpdate && updatedTopicTitle !== title) {
             throw new Error(
               `Topic title update was accepted by Discourse but did not change topic ${existingTopicId}. Expected "${title}", got "${updatedTopicTitle ?? topic.title}".`,
             );
           }
 
           if (
-            page.categoryId !== undefined &&
+            categoryNeedsUpdate &&
             updatedTopicCategoryId !== undefined &&
             updatedTopicCategoryId !== page.categoryId
           ) {
@@ -262,8 +268,15 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
             );
           }
 
+          if (tagsNeedUpdate && updatedTopicTags !== undefined && !sameTags(page.tags ?? [], updatedTopicTags)) {
+            throw new Error(
+              `Topic tags update was accepted by Discourse but did not change topic ${existingTopicId}. Expected ${formatTags(page.tags ?? [])}, got ${formatTags(updatedTopicTags)}.`,
+            );
+          }
+
           updated = true;
-          updateReasons.push("topic metadata updated");
+          if (titleNeedsUpdate || categoryNeedsUpdate) updateReasons.push("topic metadata updated");
+          if (tagsNeedUpdate) updateReasons.push("topic tags updated");
           latestTopicUrl = canonicalTopicUrl(input.discourse.discourseUrl, existingTopicId, updatedTopicSlug) ?? latestTopicUrl;
         }
 
@@ -797,4 +810,23 @@ function companionTopicBody(input: {
 function canonicalTopicUrl(discourseUrl: string, topicId: number | string, slug?: string): string | undefined {
   if (!slug) return undefined;
   return `${discourseUrl}/t/${slug}/${topicId}`;
+}
+
+function tagNamesFromTopic(tags: Array<{ name?: string; slug?: string }> | undefined): string[] {
+  return tags?.map((tag) => tag.name ?? tag.slug).filter((tag): tag is string => Boolean(tag)) ?? [];
+}
+
+function sameTags(left: string[], right: string[]): boolean {
+  const normalizedLeft = normalizeTags(left);
+  const normalizedRight = normalizeTags(right);
+  if (normalizedLeft.length !== normalizedRight.length) return false;
+  return normalizedLeft.every((tag, index) => tag === normalizedRight[index]);
+}
+
+function normalizeTags(tags: string[]): string[] {
+  return [...new Set(tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean))].sort();
+}
+
+function formatTags(tags: string[]): string {
+  return `[${normalizeTags(tags).join(", ")}]`;
 }

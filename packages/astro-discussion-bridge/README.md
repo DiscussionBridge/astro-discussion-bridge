@@ -277,7 +277,7 @@ Treat first-post maintenance as a repeatable test, especially after changing the
 4. Add `--force` when the maintenance intent is to rewrite first posts even if page source hashes are unchanged.
 5. Run the same command without `--dry-run` only after the preview looks right.
 6. For dry runs, review whether the CLI reports source hash changes, force sync requests, skipped files, or unchanged files.
-7. For live syncs, review whether the CLI reports first-post rewrites, topic metadata updates, listing changes, or unchanged metadata.
+7. For live syncs, review whether the CLI reports first-post rewrites, topic metadata updates, topic tag updates, listing changes, or unchanged metadata.
 8. Verify the Discourse first post starts with the reader-facing page content or summary, includes a source article link near the bottom, and no longer shows old implementation labels.
 9. Verify the Astro page and comments still render.
 10. Repeat for each lane.
@@ -446,7 +446,7 @@ Supported per-page overrides:
 
 - `discussionCategoryId`: Discourse category ID for this page's companion topic.
 - `discussionCommentsDisplay`: `simple` for the Discourse embed, `full` for bridge-rendered replies with like counts, or `fullInteractive` for Discourse's full app embed.
-- `discussionTags`: comma-separated tags used when creating this page's companion topic.
+- `discussionTags`: comma-separated tags used for this page's companion topic. When tags are configured for a page or lane, existing-topic sync reconciles the Discourse topic tags to match. When tags are omitted, DiscussionBridge leaves existing Discourse tags alone.
 - `discussionUnlisted`: `true` hides this page's companion topic from category discovery after create/sync.
 - `discussionListed`: `true` opts this page back into category discovery when a lane default is unlisted.
 - `discussionNotifyRecipients`: comma-separated Discourse usernames to PM if publishing or syncing this page fails.
