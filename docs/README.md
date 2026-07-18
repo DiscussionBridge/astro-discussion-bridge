@@ -8,6 +8,7 @@ Good fits:
 - Architecture notes.
 - Discourse setup notes.
 - Cloudflare deployment notes.
+- Product notes that explain the public shape of the integration.
 - Contribution and support process docs.
 - Public roadmap items.
 
