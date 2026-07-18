@@ -85,6 +85,22 @@ The bridge works because the publication and the conversation keep their own str
 
 The API-only path should stay useful on its own. A future Discourse plugin should enhance it rather than replace it.
 
+### Discussion targets
+
+Current Tier 1 usage manages one Discourse target topic per Astro page. Use `--target NAME`, `DISCUSSION_TARGET`, or `activeTarget` when you want that single target to be named explicitly, such as `community`, `members`, or `regional`.
+
+When a target is active, DiscussionBridge writes the target label into frontmatter:
+
+```yaml
+discussionTarget: "community"
+discourseTopicId: 1234
+discourseTopicUrl: "https://forum.example.com/t/topic-slug/1234"
+```
+
+Later publish/sync runs only manage a targeted page when the active target matches. If a page says `discussionTarget: "community"` and you run with `--target regional`, the page is skipped instead of being synced to the wrong forum. If you omit `--target`, targeted pages are also skipped with a message telling you which target to use.
+
+This is intentionally not full multi-Discourse support yet. It preserves the future path toward namespaced `discussionTargets` while keeping today's frontmatter and commands simple.
+
 ## Content Lanes
 
 A content lane is a source content collection or path mapped to Discourse behavior.
@@ -207,6 +223,12 @@ Create topics for pages that do not already have `discourseTopicId`.
 npx astro-discussion-bridge publish-new src/content/docs
 ```
 
+Use `--target` when the page should be assigned to a named discussion target.
+
+```sh
+npx astro-discussion-bridge publish-new src/content/docs --target community
+```
+
 Before any live writes, DiscussionBridge validates managed page titles against common Discourse topic-title rules. By default, titles must be at least 15 characters and must not look like repeated filler text. Use `--title-min-length` when the target Discourse site uses a different minimum, or `--skip-title-validation` only when you intentionally want Discourse to be the source of truth for title rejection.
 
 ```sh
@@ -292,6 +314,7 @@ npx astro-discussion-bridge import-existing src/content/blog \
   --topic https://forum.example.com/t/existing-topic/123 \
   --site-url https://docs.example.com \
   --discourse-url https://forum.example.com \
+  --target community \
   --dry-run
 ```
 
@@ -320,6 +343,7 @@ discussionBridge({
   preset: "starlight",
   discourseUrl: "https://forum.example.com",
   siteUrl: "https://docs.example.com",
+  activeTarget: "community",
   publishOnBuild: {
     enabled: true,
     docsDir: "src/content/docs",
@@ -351,6 +375,7 @@ discussionBridge({
       },
       {
         name: "releases",
+        targetName: "community",
         docsDir: "src/content/releases",
         routeBase: "releases",
         categoryId: 18,

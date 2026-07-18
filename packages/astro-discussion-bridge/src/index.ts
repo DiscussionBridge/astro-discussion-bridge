@@ -30,6 +30,7 @@ export interface DiscussionBridgeOptions {
   preset?: DiscussionBridgePreset;
   discourseUrl: string;
   siteUrl?: string;
+  activeTarget?: string;
   comments?: {
     enabled?: boolean;
     display?: DiscussionBridgeCommentsDisplay;
@@ -51,6 +52,7 @@ export interface PublishOnBuildLaneOptions {
   name?: string;
   docsDir: string;
   routeBase?: string;
+  targetName?: string;
   syncExisting?: boolean;
   unlistSyncedTopics?: boolean;
   validateTitles?: boolean;
@@ -74,6 +76,7 @@ interface PublicOptions {
   preset: DiscussionBridgePreset;
   discourseUrl: string;
   siteUrl?: string;
+  activeTarget?: string;
   comments: {
     enabled: boolean;
     display: DiscussionBridgeCommentsDisplay;
@@ -103,6 +106,7 @@ interface ResolvedPublishLane {
   name: string;
   docsDir: string;
   routeBase?: string;
+  targetName?: string;
   syncExisting: boolean;
   unlistSyncedTopics: boolean;
   validateTitles: boolean;
@@ -152,6 +156,7 @@ export default function discussionBridge(
             projectRoot,
             siteUrl,
             discourseUrl: resolvedOptions.discourseUrl,
+            activeTarget: resolvedOptions.activeTarget ?? process.env.DISCUSSION_TARGET,
             apiKey,
             apiUsername,
             logger,
@@ -183,6 +188,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
     preset,
     discourseUrl: normalizeBaseUrl(options.discourseUrl),
     siteUrl: options.siteUrl ? normalizeBaseUrl(options.siteUrl) : undefined,
+    activeTarget: options.activeTarget,
     comments: {
       enabled: options.comments?.enabled ?? true,
       display: options.comments?.display ?? "simple",
@@ -222,6 +228,7 @@ function resolvePublishLanes(input: {
     name: lane.name ?? (configuredLanes.length === 1 ? "default" : `lane-${index + 1}`),
     docsDir: lane.docsDir,
     routeBase: lane.routeBase,
+    targetName: lane.targetName ?? defaults?.targetName,
     syncExisting: lane.syncExisting ?? defaults?.syncExisting ?? false,
     unlistSyncedTopics: lane.unlistSyncedTopics ?? defaults?.unlistSyncedTopics ?? false,
     validateTitles: lane.validateTitles ?? defaults?.validateTitles ?? true,
@@ -238,6 +245,7 @@ async function publishLane(input: {
   projectRoot: string;
   siteUrl: string;
   discourseUrl: string;
+  activeTarget?: string;
   apiKey: string;
   apiUsername: string;
   logger: { info: (message: string) => void };
@@ -251,6 +259,7 @@ async function publishLane(input: {
   const results = await syncDiscourseTopics({
     docsDir,
     routeBase: input.lane.routeBase,
+    targetName: input.lane.targetName ?? input.activeTarget,
     siteUrl: input.siteUrl,
     discourseUrl: input.discourseUrl,
     apiKey: input.apiKey,
@@ -286,6 +295,7 @@ function toPublicOptions(options: ResolvedOptions): PublicOptions {
     preset: options.preset,
     discourseUrl: options.discourseUrl,
     siteUrl: options.siteUrl,
+    activeTarget: options.activeTarget,
     comments: options.comments,
     replies: options.replies,
   };

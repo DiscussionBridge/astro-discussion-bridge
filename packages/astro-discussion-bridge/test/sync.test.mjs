@@ -399,6 +399,127 @@ test("frontmatter can override lane category, tags, visibility, and failure reci
   }
 });
 
+test("publish-new can label a page with an active discussion target", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-target-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "targeted.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Targeted Page"',
+        "---",
+        "",
+        "# Targeted Page",
+        "",
+        "This page is linked to one named discussion target.",
+      ].join("\n"),
+    );
+
+    const calls = [];
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      createdTopic: {
+        topic_id: 22,
+        topic_slug: "discussion-bridge-for-astro-targeted-page",
+      },
+    });
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      targetName: "community",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "publish-new",
+    });
+
+    assert.equal(results[0].targetName, "community");
+    assert.equal(results[0].status, "created");
+
+    const syncedSource = await readFile(filePath, "utf8");
+    assert.match(syncedSource, /discussionTarget: "community"/);
+    assert.match(syncedSource, /discourseTopicId: 22/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("sync skips pages assigned to a different discussion target", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-target-skip-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "targeted.md");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Targeted Page"',
+        'discussionTarget: "community"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/targeted-page/21"',
+        "---",
+        "",
+        "# Targeted Page",
+        "",
+        "This page belongs to the community target.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 21,
+        title: "Discussion Bridge for Astro: Targeted Page",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+    });
+
+    const wrongTarget = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      targetName: "regional",
+      discourseUrl: "https://regional.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+    });
+
+    assert.equal(wrongTarget[0].status, "skipped");
+    assert.match(wrongTarget[0].reason, /not active target "regional"/);
+    assert.equal(calls.length, 0);
+
+    const missingTarget = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+    });
+
+    assert.equal(missingTarget[0].status, "skipped");
+    assert.match(missingTarget[0].reason, /rerun with --target community/);
+    assert.equal(calls.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("routeBase maps content lane files to their public URL prefix", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-route-base-"));
   const docsDir = path.join(dir, "src", "content", "releases");
@@ -494,6 +615,59 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
     assert.match(source, /discussionCommentsDisplay: "full"/);
     assert.match(source, /discussionSourceHash: "[a-f0-9]{64}"/);
     assert.match(source, /# Imported Body/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing can label imported frontmatter with a discussion target", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-target-"));
+  const docsDir = path.join(dir, "blog");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Imported Target Topic",
+        category_id: 5,
+        visible: true,
+        post_stream: {
+          posts: [
+            {
+              id: 101,
+              post_number: 1,
+              topic_id: 21,
+              topic_slug: "imported-target-topic",
+              cooked: "<p>Imported target body.</p>",
+            },
+          ],
+        },
+      },
+      post: {
+        id: 101,
+        post_number: 1,
+        topic_id: 21,
+        topic_slug: "imported-target-topic",
+        raw: "Imported target body.",
+        cooked: "<p>Imported target body.</p>",
+      },
+    });
+
+    await importExistingDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      targetName: "community",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+    });
+
+    const source = await readFile(path.join(docsDir, "imported-target-topic.md"), "utf8");
+    assert.match(source, /discussionTarget: "community"/);
+    assert.match(source, /discourseTopicId: 21/);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });

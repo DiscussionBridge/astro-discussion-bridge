@@ -9,6 +9,7 @@ export interface SyncDiscourseTopicsOptions {
   docsDir: string;
   siteUrl: string;
   routeBase?: string;
+  targetName?: string;
   discourseUrl: string;
   apiKey: string;
   apiUsername: string;
@@ -32,6 +33,7 @@ export interface SyncedPage {
   filePath: string;
   title: string;
   pageUrl: string;
+  targetName?: string;
   topicId?: number;
   topicUrl?: string;
   status: "created" | "updated" | "skipped" | "unchanged" | "dry-run-create" | "dry-run-update";
@@ -77,6 +79,7 @@ export async function syncDiscourseTopics(
         pageUrl,
         content,
         sourceHash,
+        targetName: parsed.frontmatter.discussionTarget,
         existingTopicId: parsed.frontmatter.discourseTopicId,
         existingTopicUrl: parsed.frontmatter.discourseTopicUrl,
         previousHash: parsed.frontmatter.discussionSourceHash,
@@ -98,6 +101,7 @@ export async function syncDiscourseTopics(
       validateManagedPageTitles({
         pages,
         mode,
+        targetName: options.targetName,
         minLength: options.titleMinLength ?? defaultTitleMinLength,
       });
     }
@@ -144,6 +148,22 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         existingTopicUrl,
         previousHash,
       } = page;
+      const targetStatus = discussionTargetStatus(page.targetName, input.targetName);
+      const resultTargetName = page.targetName ?? input.targetName;
+
+      if (!targetStatus.matches) {
+        results.push({
+          filePath,
+          title,
+          pageUrl,
+          targetName: resultTargetName,
+          topicId: existingTopicId ? Number(existingTopicId) : undefined,
+          topicUrl: existingTopicUrl,
+          status: "skipped",
+          reason: targetStatus.reason,
+        });
+        continue;
+      }
 
       if (existingTopicId) {
         if (input.mode === "publish-new") {
@@ -151,6 +171,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
             filePath,
             title,
             pageUrl,
+            targetName: resultTargetName,
             topicId: Number(existingTopicId),
             topicUrl: existingTopicUrl,
             status: "skipped",
@@ -164,6 +185,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
             filePath,
             title,
             pageUrl,
+            targetName: resultTargetName,
             topicId: Number(existingTopicId),
             topicUrl: existingTopicUrl,
             status: previousHash === sourceHash ? "unchanged" : "dry-run-update",
@@ -227,6 +249,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           filePath,
           title,
           pageUrl,
+          targetName: resultTargetName,
           topicId: Number(existingTopicId),
           topicUrl: existingTopicUrl,
           status: updated ? "updated" : "unchanged",
@@ -240,6 +263,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           filePath,
           title,
           pageUrl,
+          targetName: resultTargetName,
           status: "skipped",
           reason: "not linked",
         });
@@ -247,7 +271,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
       }
 
       if (input.dryRun) {
-        results.push({ filePath, title, pageUrl, status: "dry-run-create" });
+        results.push({ filePath, title, pageUrl, targetName: resultTargetName, status: "dry-run-create" });
         continue;
       }
 
@@ -272,6 +296,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
       await fs.writeFile(
         filePath,
         updateFrontmatter(source, {
+          ...(input.targetName ? { discussionTarget: input.targetName } : {}),
           discourseTopicId: String(topic.topic_id),
           discourseTopicUrl: topicUrl,
           discussionSourceHash: sourceHash,
@@ -283,6 +308,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         filePath,
         title,
         pageUrl,
+        targetName: resultTargetName,
         topicId: topic.topic_id,
         topicUrl,
         status: "created",
@@ -312,6 +338,7 @@ interface ParsedPage {
   pageUrl: string;
   content: string;
   sourceHash: string;
+  targetName?: string;
   existingTopicId?: string;
   existingTopicUrl?: string;
   previousHash?: string;
@@ -433,12 +460,16 @@ function validateManagedPageTitles(input: {
   pages: Array<{
     filePath: string;
     title: string;
+    targetName?: string;
     existingTopicId?: string;
   }>;
   mode: SyncMode;
+  targetName?: string;
   minLength: number;
 }) {
   const issues = input.pages.flatMap((page) => {
+    if (!discussionTargetStatus(page.targetName, input.targetName).matches) return [];
+
     const managesPage =
       (input.mode === "publish-new" && !page.existingTopicId) ||
       (input.mode === "sync-existing" && Boolean(page.existingTopicId)) ||
@@ -459,6 +490,25 @@ function validateManagedPageTitles(input: {
     .join("\n");
 
   throw new Error(`Discourse topic title preflight failed:\n${details}`);
+}
+
+function discussionTargetStatus(
+  pageTargetName: string | undefined,
+  activeTargetName: string | undefined,
+): { matches: true } | { matches: false; reason: string } {
+  if (!pageTargetName) return { matches: true };
+  if (!activeTargetName) {
+    return {
+      matches: false,
+      reason: `page is assigned to discussion target "${pageTargetName}"; rerun with --target ${pageTargetName}`,
+    };
+  }
+  if (pageTargetName === activeTargetName) return { matches: true };
+
+  return {
+    matches: false,
+    reason: `page is assigned to discussion target "${pageTargetName}", not active target "${activeTargetName}"`,
+  };
 }
 
 async function findMarkdownFiles(dir: string): Promise<string[]> {

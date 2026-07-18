@@ -20,6 +20,7 @@ const notifyOnFailure = args.flags.has("notify-on-failure");
 const discourseUrl = args.values.get("discourse-url") ?? process.env.DISCOURSE_URL;
 const siteUrl = args.values.get("site-url") ?? process.env.SITE_URL;
 const routeBase = args.values.get("route-base");
+const targetName = args.values.get("target") ?? process.env.DISCUSSION_TARGET;
 const apiKey = args.values.get("api-key") ?? process.env.DISCOURSE_API_KEY;
 const apiUsername = args.values.get("api-username") ?? process.env.DISCOURSE_API_USERNAME;
 const categoryId = numberFromValue(args.values.get("category-id") ?? process.env.DISCOURSE_CATEGORY_ID);
@@ -70,6 +71,7 @@ if (command === "import-existing") {
     docsDir,
     siteUrl: siteUrl!,
     routeBase,
+    targetName,
     discourseUrl: discourseUrl!,
     apiKey: apiKey ?? "",
     apiUsername: apiUsername ?? "",
@@ -94,6 +96,7 @@ const results = await syncDiscourseTopics({
   docsDir,
   siteUrl: siteUrl!,
   routeBase,
+  targetName,
   discourseUrl: discourseUrl!,
   apiKey: apiKey ?? "",
   apiUsername: apiUsername ?? "",
@@ -185,9 +188,9 @@ function modeForCommand(command: string): SyncMode {
 function printUsage(error?: string) {
   if (error) console.error(error);
   console.error("Usage:");
-  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [--topic-id ID[,ID]] [--dry-run] [--overwrite] [--route-base PATH] [--comments-display simple|full|fullInteractive] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--route-base PATH] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [--topic-id ID[,ID]] [--dry-run] [--overwrite] [--target NAME] [--route-base PATH] [--comments-display simple|full|fullInteractive] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--discourse-url URL] [--site-url URL]");
 }

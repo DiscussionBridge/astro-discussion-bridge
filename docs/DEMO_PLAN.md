@@ -47,6 +47,17 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - Demo/test companion topics can be unlisted to keep category discovery clean while preserving direct links and embeds.
 - Topic title/category metadata sync is part of the managed companion-topic path, subject to Discourse permissions.
 
+## Bridge Contract Test Matrix
+
+- Astro title changes after publish: `sync-existing` should update the managed first post content; topic-title updates may require moderator/staff authority once a topic has replies.
+- Discourse topic title changes after publish: Astro rendering should keep working because `discourseTopicId` is durable. Stored topic URLs may become cosmetically stale, but Discourse should redirect old slugs for the same topic ID.
+- Discourse first post deleted: sync should fail clearly with a managed-first-post missing error. Do not silently create replacement content.
+- Discourse topic deleted: render and sync paths should fail or degrade clearly for the linked page. Any repair/recreate command should be explicit, not automatic.
+- Discourse instance offline: `simple` and `fullInteractive` should still render host-page markup; `full` server-rendered replies, page-load refresh, and publish/sync commands should fail or degrade visibly without breaking the article shell.
+- Active discussion target mismatch: pages marked with `discussionTarget` should be skipped unless the active target matches, preventing accidental sync to the wrong Discourse instance.
+- Missing active discussion target: pages marked with `discussionTarget` should tell the user which `--target` to rerun with.
+- Same Astro site with multiple future Discourse targets: keep as a compatibility test for future namespaced targets, not current Tier 1 behavior.
+
 ## Live Publish Checkpoints
 
 - 2026-07-16: Starlight demo published companion topics to the public Discussion Bridge for Astro category.

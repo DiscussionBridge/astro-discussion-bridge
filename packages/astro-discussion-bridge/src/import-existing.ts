@@ -7,6 +7,7 @@ export interface ImportExistingDiscourseTopicsOptions {
   docsDir: string;
   discourseUrl: string;
   siteUrl: string;
+  targetName?: string;
   apiKey: string;
   apiUsername: string;
   topics: string[];
@@ -85,6 +86,7 @@ export async function importExistingDiscourseTopics(
       filePath,
       markdownForImportedTopic({
         title: topic.title,
+        targetName: options.targetName,
         topicId: topic.id,
         topicUrl,
         sourceHash,
@@ -179,6 +181,7 @@ function decodeHtmlEntities(value: string): string {
 
 function markdownForImportedTopic(input: {
   title: string;
+  targetName?: string;
   topicId: number;
   topicUrl: string;
   sourceHash: string;
@@ -188,6 +191,7 @@ function markdownForImportedTopic(input: {
 }): string {
   const frontmatter: Record<string, string> = {
     title: input.title,
+    ...(input.targetName ? { discussionTarget: input.targetName } : {}),
     discourseTopicId: String(input.topicId),
     discourseTopicUrl: input.topicUrl,
     discussionSourceHash: input.sourceHash,
