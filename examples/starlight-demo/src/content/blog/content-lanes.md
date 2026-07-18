@@ -1,12 +1,12 @@
 ---
-title: "Using Content Lanes With Discussion Bridge for Astro"
+title: "Content Lanes With Full Comments in Discussion Bridge for Astro"
 description: "A blog-style post showing how editorial content can have its own discussion mapping."
 date: "2026-07-17"
 discourseTopicId: 27
-discourseTopicUrl: "https://forum.discussionbridge.dev/t/using-content-lanes-with-discussion-bridge-for-astro/27"
+discourseTopicUrl: "https://forum.discussionbridge.dev/t/content-lanes-with-full-comments-in-discussion-bridge-for-astro/27"
 discussionCommentsDisplay: "full"
-discussionSourceHash: "adba814ce9a2d5d1e46d7a8ffef9d13fab072afddff4746f945a482f033823ec"
-discussionLastSyncedAt: "2026-07-17T15:44:48.633Z"
+discussionSourceHash: "2a09b59b33244bfa8c79fa6b1995d549cddbb5135d282fc0c7d031606eae457d"
+discussionLastSyncedAt: "2026-07-18T04:58:55.134Z"
 
 ---
 

@@ -230,6 +230,14 @@ test("sync-existing can update topic metadata and unlist when source content is 
         visible: true,
         post_stream: { posts: [{ id: 101, post_number: 1 }] },
       },
+      updatedTopic: {
+        basic_topic: {
+          id: 21,
+          title: "Discussion Bridge for Astro: Starlight Demo",
+          category_id: 5,
+          slug: "discussion-bridge-for-astro-starlight-demo",
+        },
+      },
     });
 
     const results = await syncDiscourseTopics({
@@ -244,11 +252,17 @@ test("sync-existing can update topic metadata and unlist when source content is 
     });
 
     assert.equal(results[0].status, "updated");
-    assert.equal(results[0].reason, "topic metadata update requested; topic unlisted");
+    assert.equal(results[0].reason, "topic metadata updated; topic unlisted; topic URL refreshed");
+    assert.equal(results[0].topicUrl, "https://forum.example.com/t/discussion-bridge-for-astro-starlight-demo/21");
     assert.equal(secondCalls.some((call) => call.pathname === "/posts/101.json"), false);
     assert.equal(secondCalls.some((call) => call.pathname === "/t/-/21.json" && call.method === "PUT"), true);
     assert.equal(secondCalls.some((call) => call.pathname === "/t/21/status.json" && call.method === "PUT"), true);
-    assert.equal(await readFile(filePath, "utf8"), syncedSource);
+    const refreshedSource = await readFile(filePath, "utf8");
+    assert.notEqual(refreshedSource, syncedSource);
+    assert.match(
+      refreshedSource,
+      /discourseTopicUrl: "https:\/\/forum\.example\.com\/t\/discussion-bridge-for-astro-starlight-demo\/21"/,
+    );
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });
@@ -344,6 +358,64 @@ test("sync-existing force updates the managed first post even when source hash i
     assert.match(updateCall.body.post.raw, /\[Read the source article\]\(https:\/\/docs\.example\.com\/index\/\)/);
     assert.doesNotMatch(updateCall.body.post.raw, /Source content:/);
     assert.notEqual(await readFile(filePath, "utf8"), syncedSource);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("sync-existing fails when Discourse accepts a topic title update without changing it", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-title-noop-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "New Topic Title That Should Stick"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/old-topic-title/21"',
+        'discussionSourceHash: "old-hash"',
+        "---",
+        "",
+        "# New Topic Title That Should Stick",
+        "",
+        "Stable content.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Old Topic Title",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+      updatedTopic: {
+        basic_topic: {
+          id: 21,
+          title: "Old Topic Title",
+        },
+      },
+    });
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "sync-existing",
+      }),
+      /Topic title update was accepted by Discourse but did not change topic 21/,
+    );
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });
@@ -965,7 +1037,7 @@ test("frontmatter failure recipients receive page-specific publish errors", asyn
   }
 });
 
-function mockDiscourseFetch(calls, { topic, createdTopic, post }) {
+function mockDiscourseFetch(calls, { topic, createdTopic, post, updatedTopic }) {
   return async (url, init = {}) => {
     const parsed = new URL(url);
     const method = init.method ?? "GET";
@@ -985,7 +1057,7 @@ function mockDiscourseFetch(calls, { topic, createdTopic, post }) {
     }
 
     if (method === "PUT" && parsed.pathname === "/t/-/21.json") {
-      return jsonResponse({ basic_topic: { id: 21, title: body.topic.title } });
+      return jsonResponse(updatedTopic ?? { basic_topic: { id: 21, title: body.title, category_id: body.category_id } });
     }
 
     if (method === "PUT" && /^\/t\/\d+\/status\.json$/.test(parsed.pathname)) {

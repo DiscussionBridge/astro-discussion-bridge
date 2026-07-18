@@ -277,7 +277,7 @@ Treat first-post maintenance as a repeatable test, especially after changing the
 4. Add `--force` when the maintenance intent is to rewrite first posts even if page source hashes are unchanged.
 5. Run the same command without `--dry-run` only after the preview looks right.
 6. For dry runs, review whether the CLI reports source hash changes, force sync requests, skipped files, or unchanged files.
-7. For live syncs, review whether the CLI reports first-post rewrites, topic metadata update requests, listing changes, or unchanged metadata.
+7. For live syncs, review whether the CLI reports first-post rewrites, topic metadata updates, listing changes, or unchanged metadata.
 8. Verify the Discourse first post starts with the reader-facing page content or summary, includes a source article link near the bottom, and no longer shows old implementation labels.
 9. Verify the Astro page and comments still render.
 10. Repeat for each lane.

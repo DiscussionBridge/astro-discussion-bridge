@@ -206,6 +206,8 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         }
         let updated = false;
         const updateReasons: string[] = [];
+        const frontmatterUpdates: Record<string, string> = {};
+        let latestTopicUrl = canonicalTopicUrl(input.discourse.discourseUrl, existingTopicId, topic.slug) ?? existingTopicUrl;
 
         if (sourceChanged && firstPost) {
           await input.discourse.updatePost({
@@ -226,19 +228,43 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         }
 
         if (topic.title !== title || (page.categoryId !== undefined && topic.category_id !== page.categoryId)) {
+          let updatedTopicTitle: string | undefined;
+          let updatedTopicCategoryId: number | undefined;
+          let updatedTopicSlug: string | undefined;
           try {
-            await input.discourse.updateTopic({
+            const updatedTopic = await input.discourse.updateTopic({
               topicId: existingTopicId,
               title,
               categoryId: page.categoryId,
             });
+            updatedTopicTitle = updatedTopic.basic_topic.title;
+            updatedTopicCategoryId = updatedTopic.basic_topic.category_id;
+            updatedTopicSlug = updatedTopic.basic_topic.slug;
           } catch (error) {
             throw new Error(
               `Topic metadata update failed for Discourse topic ${existingTopicId}. The first post may already have been updated. ${errorMessage(error)}`,
             );
           }
+
+          if (topic.title !== title && updatedTopicTitle !== title) {
+            throw new Error(
+              `Topic title update was accepted by Discourse but did not change topic ${existingTopicId}. Expected "${title}", got "${updatedTopicTitle ?? topic.title}".`,
+            );
+          }
+
+          if (
+            page.categoryId !== undefined &&
+            updatedTopicCategoryId !== undefined &&
+            updatedTopicCategoryId !== page.categoryId
+          ) {
+            throw new Error(
+              `Topic category update was accepted by Discourse but did not change topic ${existingTopicId}. Expected ${page.categoryId}, got ${updatedTopicCategoryId}.`,
+            );
+          }
+
           updated = true;
-          updateReasons.push("topic metadata update requested");
+          updateReasons.push("topic metadata updated");
+          latestTopicUrl = canonicalTopicUrl(input.discourse.discourseUrl, existingTopicId, updatedTopicSlug) ?? latestTopicUrl;
         }
 
         if (page.visible !== undefined && topic.visible !== page.visible) {
@@ -251,14 +277,19 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           updateReasons.push(page.visible ? "topic listed" : "topic unlisted");
         }
 
+        if (latestTopicUrl && existingTopicUrl !== latestTopicUrl) {
+          frontmatterUpdates.discourseTopicUrl = latestTopicUrl;
+          updated = true;
+          updateReasons.push("topic URL refreshed");
+        }
+
         if (sourceChanged) {
-          await fs.writeFile(
-            filePath,
-            updateFrontmatter(source, {
-              discussionSourceHash: sourceHash,
-              discussionLastSyncedAt: new Date().toISOString(),
-            }),
-          );
+          frontmatterUpdates.discussionSourceHash = sourceHash;
+          frontmatterUpdates.discussionLastSyncedAt = new Date().toISOString();
+        }
+
+        if (Object.keys(frontmatterUpdates).length) {
+          await fs.writeFile(filePath, updateFrontmatter(source, frontmatterUpdates));
         }
 
         results.push({
@@ -267,7 +298,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           pageUrl,
           targetName: resultTargetName,
           topicId: Number(existingTopicId),
-          topicUrl: existingTopicUrl,
+          topicUrl: latestTopicUrl,
           status: updated ? "updated" : "unchanged",
           reason: updated ? updateReasons.join("; ") : "source hash and topic metadata unchanged",
         });
@@ -761,4 +792,9 @@ function companionTopicBody(input: {
     "",
     `Last synced from Astro: ${input.lastSyncedAt}`,
   ].join("\n");
+}
+
+function canonicalTopicUrl(discourseUrl: string, topicId: number | string, slug?: string): string | undefined {
+  if (!slug) return undefined;
+  return `${discourseUrl}/t/${slug}/${topicId}`;
 }

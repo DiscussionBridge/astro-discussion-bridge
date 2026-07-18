@@ -45,6 +45,7 @@ export interface TopicResponse {
   id: number;
   title: string;
   fancy_title: string;
+  slug?: string;
   category_id?: number;
   visible?: boolean;
   posts_count: number;
@@ -70,6 +71,17 @@ export interface UpdateTopicInput {
   topicId: number | string;
   title?: string;
   categoryId?: number;
+}
+
+export interface UpdateTopicResponse {
+  basic_topic: {
+    id: number;
+    title: string;
+    fancy_title?: string;
+    slug?: string;
+    posts_count?: number;
+    category_id?: number;
+  };
 }
 
 export interface UpdateTopicStatusInput {
@@ -199,13 +211,11 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
       return request<DiscoursePost>(`/posts/${postId}.json`);
     },
     updateTopic(input: UpdateTopicInput) {
-      return request<TopicResponse>(`/t/-/${input.topicId}.json`, {
+      return request<UpdateTopicResponse>(`/t/-/${input.topicId}.json`, {
         method: "PUT",
         body: JSON.stringify({
-          topic: {
-            ...(input.title ? { title: input.title } : {}),
-            ...(input.categoryId ? { category_id: input.categoryId } : {}),
-          },
+          ...(input.title ? { title: input.title } : {}),
+          ...(input.categoryId ? { category_id: input.categoryId } : {}),
         }),
       });
     },
