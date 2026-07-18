@@ -10,7 +10,7 @@ discussionLastSyncedAt: "2026-07-17T15:44:45.769Z"
 
 # Discussion Bridge for Astro: Starlight Demo
 
-This is a demo Starlight site for Discussion Bridge for Astro. It installs `astro-discussion-bridge` from a local package tarball.
+This is a demo Starlight site for Discussion Bridge for Astro. It installs `astro-discussion-bridge` from the local package directory for package development.
 
 The discussion section is added by a Starlight `Footer` override, so this page can remain plain Markdown.
 
