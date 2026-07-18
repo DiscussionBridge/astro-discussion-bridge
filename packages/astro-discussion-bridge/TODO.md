@@ -16,8 +16,8 @@
 ## Sync Validation
 
 - Expand tests around `sync-existing` and `publish-and-sync` edge cases before widening usage beyond the demo.
-- Add bridge-contract tests for Astro title changes, Discourse topic title changes, Discourse offline behavior, and active discussion target mismatch handling.
-- Covered: linked Discourse topic missing/unreadable and linked topic with no first post now produce explicit recovery-facing sync errors.
+- Add bridge-contract tests for Discourse offline behavior.
+- Covered: Astro title changes, Discourse topic title drift, active discussion target mismatch handling, linked Discourse topic missing/unreadable, and linked topic with no first post.
 - Add stronger MDX summary extraction for component-heavy pages.
 - Consider a user-configurable summary source, such as `discussionSummary` frontmatter.
 ## Upgrade Process

@@ -684,6 +684,168 @@ test("sync-existing force updates the managed first post even when source hash i
   }
 });
 
+test("sync-existing treats an Astro title change as source-of-truth drift", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-astro-title-drift-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Updated Title"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/original-title/21"',
+        'discussionSourceHash: "old-hash"',
+        "---",
+        "",
+        "The source body did not need a heading to make the title drift matter.",
+      ].join("\n"),
+    );
+
+    const calls = [];
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 21,
+        title: "Discussion Bridge for Astro: Original Title",
+        slug: "original-title",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+      updatedTopic: {
+        basic_topic: {
+          id: 21,
+          title: "Discussion Bridge for Astro: Updated Title",
+          category_id: 5,
+          slug: "updated-title",
+        },
+      },
+    });
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+    });
+
+    assert.equal(results[0].status, "updated");
+    assert.equal(results[0].reason, "first post rewritten; topic metadata updated; topic URL refreshed");
+
+    const postUpdateCall = calls.find((call) => call.pathname === "/posts/101.json" && call.method === "PUT");
+    assert.ok(postUpdateCall);
+    assert.match(postUpdateCall.body.post.raw, /The source body did not need a heading/);
+
+    const topicUpdateCall = calls.find((call) => call.pathname === "/t/-/21.json" && call.method === "PUT");
+    assert.equal(topicUpdateCall.body.title, "Discussion Bridge for Astro: Updated Title");
+
+    const syncedSource = await readFile(filePath, "utf8");
+    assert.match(syncedSource, /discourseTopicUrl: "https:\/\/forum\.example\.com\/t\/updated-title\/21"/);
+    assert.match(syncedSource, /discussionSourceHash: "[a-f0-9]{64}"/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("sync-existing corrects manual Discourse topic title drift by topic ID", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-discourse-title-drift-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Discussion Bridge for Astro: Canonical Astro Title"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/old-title/21"',
+        "---",
+        "",
+        "# Canonical Astro Title",
+        "",
+        "Stable source content.",
+      ].join("\n"),
+    );
+
+    const seedCalls = [];
+    globalThis.fetch = mockDiscourseFetch(seedCalls, {
+      topic: {
+        id: 21,
+        title: "Discussion Bridge for Astro: Canonical Astro Title",
+        slug: "canonical-astro-title",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+    });
+
+    await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+    });
+
+    const afterSeed = await readFile(filePath, "utf8");
+    const driftCalls = [];
+    globalThis.fetch = mockDiscourseFetch(driftCalls, {
+      topic: {
+        id: 21,
+        title: "Manual Discourse Title Drift",
+        slug: "manual-discourse-title-drift",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+      updatedTopic: {
+        basic_topic: {
+          id: 21,
+          title: "Discussion Bridge for Astro: Canonical Astro Title",
+          category_id: 5,
+          slug: "canonical-astro-title",
+        },
+      },
+    });
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+    });
+
+    assert.equal(results[0].status, "updated");
+    assert.equal(results[0].reason, "topic metadata updated");
+    assert.equal(results[0].topicId, 21);
+    assert.equal(results[0].topicUrl, "https://forum.example.com/t/canonical-astro-title/21");
+    assert.equal(driftCalls.some((call) => call.pathname === "/posts/101.json" && call.method === "PUT"), false);
+
+    const topicUpdateCall = driftCalls.find((call) => call.pathname === "/t/-/21.json" && call.method === "PUT");
+    assert.equal(topicUpdateCall.body.title, "Discussion Bridge for Astro: Canonical Astro Title");
+    assert.equal(await readFile(filePath, "utf8"), afterSeed);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("sync-existing reports a clear recovery error when a linked topic cannot be read", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-missing-topic-"));
   const docsDir = path.join(dir, "docs");
