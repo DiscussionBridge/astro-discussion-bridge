@@ -43,6 +43,7 @@ Develop in public with a visible path from local preview to a live Cloudflare de
 - Logged-in Discourse users can interact with replies and likes in the embedded UI.
 - Multiple Astro hosts can connect to `forum.discussionbridge.dev` without topic collisions, using the Discussion Bridge for Astro category plus tags/URLs for namespacing.
 - One Astro/Starlight site can publish multiple content lanes, such as docs and Starlog-style releases, to different Discourse categories or tags.
+- Future compatibility test: one canonical Astro site connected to multiple Discourse instances, such as a central advocacy or industry organization publishing source material while linking discussion into chapter, regional, public, private, or member-specific forums. Current Tier 1 work should stay scoped to one Discourse target per page, but avoid hard-coding names or helper APIs in ways that would block a later namespaced target model.
 - Demo/test companion topics can be unlisted to keep category discovery clean while preserving direct links and embeds.
 - Topic title/category metadata sync is part of the managed companion-topic path, subject to Discourse permissions.
 

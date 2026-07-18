@@ -29,6 +29,8 @@
 - Add a Starlog-style release lane demo using `src/content/releases`.
 - Test one Astro/Starlight site mapping docs, releases, blog, news, changelog, or other source paths to different Discourse categories and tags.
 - Demo multiple Astro sites connected to the same Discourse instance.
+- Define, but do not fully implement yet, the future shape for one Astro site connected to multiple Discourse instances. Use cases include public plus private communities, regional/language forums, internal staff plus public user forums, and central advocacy or industry organizations pushing canonical content into chapter or regional discussion communities.
+- Preserve the future multi-Discourse path while building current Tier 1 work: avoid hard-coding single-forum assumptions into helper names, lane concepts, docs language, or sync internals where a neutral `discussion target` concept would fit. Current frontmatter still assumes one target topic per page; multi-Discourse should use an intentional namespaced data model later, not an ad hoc widening now.
 - Verify Discourse external host/embed settings with more than one Astro hostname.
 - Test topic creation so pages from different Astro sites do not collide or create confusing duplicate topics.
 - Document recommended namespace strategy: `forum.discussionbridge.dev`, category `Alpha`, and tags such as `discussionbridge`, `starlight-demo`, and `cloudflare-demo`.
