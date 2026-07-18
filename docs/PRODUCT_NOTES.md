@@ -26,3 +26,9 @@ Static sites are excellent at clarity, speed, ownership, and presentation. Disco
 ## Operating Principle
 
 WebSynergetics finds the durable system by doing the useful work.
+
+For Discussion Bridge, the durable product loop is:
+
+publish -> sync -> diagnose -> maintain -> recover -> document
+
+Every feature should make that loop more usable, understandable, and recoverable. The product is not only topic creation; it is the operating system around linked publishing and community discussion.
