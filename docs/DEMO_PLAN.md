@@ -77,6 +77,8 @@ npx astro-discussion-bridge sync-existing src/content/blog `
 
 If the dry run is correct, rerun the same command without `--dry-run`. Verify the Discourse first post starts with the article link, includes reader-facing content, and does not show implementation labels such as `This is a companion discussion topic for:` or `Source content:`.
 
+Because the demo runs behind Cloudflare/CDN caching, include cache state in maintenance verification. If Discourse or Astro still appears to show stale content after a confirmed live sync or deployment, clear the relevant Cloudflare cache or test with a cache-bypassing request before treating the sync as failed.
+
 ## Live Publish Checkpoints
 
 - 2026-07-16: Starlight demo published companion topics to the public Discussion Bridge for Astro category.
