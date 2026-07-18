@@ -239,7 +239,7 @@ The older `sync` command is kept as an alias, but `publish-new` is the recommend
 
 ### Sync Existing Topics
 
-`sync-existing` updates the managed first post for pages that already have `discourseTopicId`. Astro remains the source of truth for the page, while Discourse keeps the companion discussion thread and a current source-content block.
+`sync-existing` updates the managed first post for pages that already have `discourseTopicId`. Astro remains the source of truth for the page, while Discourse keeps the companion discussion thread and a reader-facing copy or summary of the current page.
 
 Preview without editing Discourse or files.
 

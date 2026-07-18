@@ -387,6 +387,10 @@ test("frontmatter can override lane category, tags, visibility, and failure reci
     const createCall = calls.find((call) => call.pathname === "/posts.json" && call.method === "POST");
     assert.equal(createCall.body.category, 18);
     assert.deepEqual(createCall.body.tags, ["releases", "launchlight"]);
+    assert.match(createCall.body.raw, /^\[Discussion Bridge for Astro: Release Lane\]\(https:\/\/docs\.example\.com\/release\/\)/);
+    assert.doesNotMatch(createCall.body.raw, /This is a companion discussion topic for/);
+    assert.doesNotMatch(createCall.body.raw, /Source content:/);
+    assert.match(createCall.body.raw, /Use this thread for comments, corrections, and follow-up questions\./);
 
     const visibilityCall = calls.find((call) => call.pathname === "/t/22/status.json" && call.method === "PUT");
     assert.equal(visibilityCall.body.enabled, "false");

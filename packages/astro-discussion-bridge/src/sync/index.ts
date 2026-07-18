@@ -735,15 +735,14 @@ function companionTopicBody(input: {
   lastSyncedAt: string;
 }): string {
   return [
-    "This is a companion discussion topic for:",
-    "",
     `[${input.title}](${input.pageUrl})`,
     "",
-    "Source content:",
     input.content,
     "",
-    `Last synced from Astro: ${input.lastSyncedAt}`,
+    "---",
     "",
     "Use this thread for comments, corrections, and follow-up questions.",
+    "",
+    `Last synced from Astro: ${input.lastSyncedAt}`,
   ].join("\n");
 }
