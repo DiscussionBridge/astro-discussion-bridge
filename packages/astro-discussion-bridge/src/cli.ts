@@ -59,6 +59,7 @@ if (command === "check-discourse") {
     discourseUrl: discourseUrl!,
     apiKey: diagnosticsApiKey ?? apiKey,
     apiUsername,
+    categoryId,
     tags,
     configuredLimits: preflightLimits,
   });
@@ -80,8 +81,25 @@ if (command === "check-discourse") {
   console.log("Tag capabilities:");
   printLimit("can tag topics", result.tagCapabilities.canTagTopics);
   printLimit("can create tag", result.tagCapabilities.canCreateTag);
+  if (categoryId !== undefined) {
+    console.log("Category:");
+    if (result.category) {
+      console.log(`- ${result.category.id}: ${result.category.name}${result.category.slug ? ` (${result.category.slug})` : ""}`);
+      printLimit("read restricted", result.category.readRestricted);
+    } else {
+      console.log(`- ${categoryId}: unknown`);
+    }
+  }
   if (tags?.length) {
     console.log(`Requested tags: ${tags.join(", ")}`);
+    if (result.requestedTags.length) {
+      console.log("Tag inventory:");
+      for (const tag of result.requestedTags) {
+        const exists = tag.exists === undefined ? "unknown" : tag.exists ? "exists" : "missing";
+        const count = tag.count === undefined ? "" : ` (${tag.count})`;
+        console.log(`- ${tag.name}: ${exists}${count}`);
+      }
+    }
     if (result.tagIssues.length) {
       console.log("Tag issues:");
       for (const issue of result.tagIssues) console.log(`- ${issue}`);
@@ -89,7 +107,17 @@ if (command === "check-discourse") {
       console.log("Tag issues: none");
     }
   }
-  process.exit(result.tagIssues.length ? 1 : 0);
+  if (result.setupIssues.length) {
+    console.log("Setup issues:");
+    for (const issue of result.setupIssues) console.log(`- ${issue}`);
+  } else {
+    console.log("Setup issues: none");
+  }
+  if (result.setupWarnings.length) {
+    console.log("Setup warnings:");
+    for (const warning of result.setupWarnings) console.log(`- ${warning}`);
+  }
+  process.exit(result.tagIssues.length || result.setupIssues.length ? 1 : 0);
 }
 
 if (mode === "publish-new" && !dryRun) {
@@ -257,6 +285,6 @@ function printUsage(error?: string) {
   console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
   console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [--topic-id ID[,ID]] [--dry-run] [--overwrite] [--target NAME] [--route-base PATH] [--comments-display simple|full|fullInteractive] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge check-discourse [--tags TAG[,TAG]] [--diagnostics-api-key KEY] [--discourse-url URL]");
+  console.error("  astro-discussion-bridge check-discourse [--category-id ID] [--tags TAG[,TAG]] [--diagnostics-api-key KEY] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--discourse-url URL]");
   console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--discourse-url URL] [--site-url URL]");
 }

@@ -272,10 +272,13 @@ Use `check-discourse` to inspect the target forum before wiring a lane into live
 ```sh
 npx astro-discussion-bridge check-discourse \
   --discourse-url https://forum.example.com \
+  --category-id 5 \
   --tags discussionbridge,blog
 ```
 
-The command reads `/site/settings.json` for client-visible authoring limits and `/site.json` for user-specific tag capabilities. It uses `DISCOURSE_DIAGNOSTICS_API_KEY` or `--diagnostics-api-key` when present; otherwise it uses the normal publishing key. A global key can usually read these endpoints. Some granular keys may receive `403` for site-level endpoints; in that case, pass explicit limits with CLI flags or environment variables and reserve a broader diagnostics key for setup checks.
+The command reads `/site/settings.json` for client-visible authoring limits, `/site.json` for user-specific tag capabilities, `/categories.json` to verify the configured lane category, and `/tags.json` to check whether requested tags already exist. It uses `DISCOURSE_DIAGNOSTICS_API_KEY` or `--diagnostics-api-key` when present; otherwise it uses the normal publishing key. A global key can usually read these endpoints. Some granular keys may receive `403` for site-level endpoints; in that case, pass explicit limits with CLI flags or environment variables and reserve a broader diagnostics key for setup checks.
+
+`check-discourse` is read-only. It reports setup issues when known configuration cannot work, such as a missing category, tags requested while tagging is disabled, an API user that cannot tag topics, or missing tags when the API user cannot create tags. When a granular key cannot inspect enough forum metadata, the command reports setup warnings instead of pretending it knows.
 
 ### Sync Existing Topics
 

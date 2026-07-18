@@ -21,6 +21,30 @@ export interface SiteInfoResponse {
   can_create_tag?: boolean;
 }
 
+export interface CategoriesResponse {
+  category_list?: {
+    categories?: DiscourseCategory[];
+  };
+}
+
+export interface DiscourseCategory {
+  id: number;
+  name: string;
+  slug?: string;
+  read_restricted?: boolean;
+}
+
+export interface TagsResponse {
+  tags?: DiscourseTagListItem[];
+}
+
+export interface DiscourseTagListItem {
+  id?: number;
+  name?: string;
+  text?: string;
+  count?: number;
+}
+
 export interface CreateTopicInput {
   title: string;
   raw: string;
@@ -240,6 +264,12 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     },
     siteInfo() {
       return request<SiteInfoResponse>("/site.json");
+    },
+    categories() {
+      return request<CategoriesResponse>("/categories.json");
+    },
+    tags() {
+      return request<TagsResponse>("/tags.json");
     },
     updateTopic(input: UpdateTopicInput) {
       return request<UpdateTopicResponse>(`/t/-/${input.topicId}.json`, {

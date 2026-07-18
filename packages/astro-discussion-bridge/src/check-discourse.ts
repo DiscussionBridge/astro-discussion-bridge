@@ -5,6 +5,7 @@ export interface CheckDiscourseOptions {
   discourseUrl: string;
   apiKey?: string;
   apiUsername?: string;
+  categoryId?: number;
   tags?: string[];
   configuredLimits?: DiscoursePreflightLimits;
 }
@@ -23,6 +24,23 @@ export interface CheckDiscourseResult {
     canTagTopics?: boolean;
     canCreateTag?: boolean;
   };
+  categoriesAvailable: boolean;
+  categoriesError?: string;
+  category?: {
+    id: number;
+    name: string;
+    slug?: string;
+    readRestricted?: boolean;
+  };
+  tagsAvailable: boolean;
+  tagsError?: string;
+  requestedTags: Array<{
+    name: string;
+    exists?: boolean;
+    count?: number;
+  }>;
+  setupIssues: string[];
+  setupWarnings: string[];
   tagIssues: string[];
 }
 
@@ -39,6 +57,12 @@ export async function checkDiscourse(options: CheckDiscourseOptions): Promise<Ch
   let settingsError: string | undefined;
   let capabilitiesAvailable = false;
   let capabilitiesError: string | undefined;
+  let categoriesAvailable = false;
+  let categoriesError: string | undefined;
+  let category: CheckDiscourseResult["category"];
+  let tagsAvailable = false;
+  let tagsError: string | undefined;
+  let knownTags: KnownTag[] | undefined;
 
   try {
     const settings = await discourse.siteSettings();
@@ -64,7 +88,66 @@ export async function checkDiscourse(options: CheckDiscourseOptions): Promise<Ch
     capabilitiesError = errorMessage(error);
   }
 
-  const tagIssues = validateTags(options.tags ?? [], limits);
+  try {
+    const categories = await discourse.categories();
+    categoriesAvailable = true;
+    if (options.categoryId !== undefined) {
+      const match = categories.category_list?.categories?.find((candidate) => candidate.id === options.categoryId);
+      if (match) {
+        category = {
+          id: match.id,
+          name: match.name,
+          slug: match.slug,
+          readRestricted: match.read_restricted,
+        };
+      }
+    }
+  } catch (error) {
+    categoriesError = errorMessage(error);
+  }
+
+  try {
+    const response = await discourse.tags();
+    tagsAvailable = true;
+    knownTags = response.tags?.map((tag) => ({
+      name: (tag.name ?? tag.text ?? "").trim().toLowerCase(),
+      count: tag.count,
+    })).filter((tag) => Boolean(tag.name));
+  } catch (error) {
+    tagsError = errorMessage(error);
+  }
+
+  const normalizedTags = normalizeTags(options.tags ?? []);
+  const requestedTags = normalizedTags.map((tag) => {
+    const knownTag = knownTags?.find((candidate) => candidate.name === tag);
+    return {
+      name: tag,
+      exists: knownTags ? Boolean(knownTag) : undefined,
+      count: knownTag?.count,
+    };
+  });
+  const setupIssues = validateSetup({
+    categoryId: options.categoryId,
+    category,
+    categoriesAvailable,
+    tags: normalizedTags,
+    requestedTags,
+    limits,
+    tagCapabilities,
+  });
+  const setupWarnings = setupWarningsFor({
+    categoryId: options.categoryId,
+    categoriesAvailable,
+    categoriesError,
+    tags: normalizedTags,
+    tagsAvailable,
+    tagsError,
+    settingsAvailable,
+    settingsError,
+    capabilitiesAvailable,
+    capabilitiesError,
+  });
+  const tagIssues = validateTags(normalizedTags, limits);
 
   return {
     settingsAvailable,
@@ -73,20 +156,27 @@ export async function checkDiscourse(options: CheckDiscourseOptions): Promise<Ch
     capabilitiesError,
     limits,
     tagCapabilities,
+    categoriesAvailable,
+    categoriesError,
+    category,
+    tagsAvailable,
+    tagsError,
+    requestedTags,
+    setupIssues,
+    setupWarnings,
     tagIssues,
   };
 }
 
 function validateTags(tags: string[], limits: CheckDiscourseResult["limits"]): string[] {
   const issues: string[] = [];
-  const normalizedTags = [...new Set(tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean))];
 
-  if (limits.maxTagsPerTopic !== undefined && normalizedTags.length > limits.maxTagsPerTopic) {
-    issues.push(`Too many tags: ${normalizedTags.length}; maximum is ${limits.maxTagsPerTopic}.`);
+  if (limits.maxTagsPerTopic !== undefined && tags.length > limits.maxTagsPerTopic) {
+    issues.push(`Too many tags: ${tags.length}; maximum is ${limits.maxTagsPerTopic}.`);
   }
 
   if (limits.maxTagLength !== undefined) {
-    for (const tag of normalizedTags) {
+    for (const tag of tags) {
       if (tag.length > limits.maxTagLength) {
         issues.push(`Tag "${tag}" is too long: ${tag.length}; maximum is ${limits.maxTagLength}.`);
       }
@@ -94,6 +184,83 @@ function validateTags(tags: string[], limits: CheckDiscourseResult["limits"]): s
   }
 
   return issues;
+}
+
+function validateSetup(input: {
+  categoryId?: number;
+  category?: CheckDiscourseResult["category"];
+  categoriesAvailable: boolean;
+  tags: string[];
+  requestedTags: CheckDiscourseResult["requestedTags"];
+  limits: CheckDiscourseResult["limits"];
+  tagCapabilities: CheckDiscourseResult["tagCapabilities"];
+}): string[] {
+  const issues: string[] = [];
+
+  if (input.categoryId !== undefined && input.categoriesAvailable && !input.category) {
+    issues.push(`Category ${input.categoryId} was not found.`);
+  }
+
+  if (input.tags.length && input.limits.taggingEnabled === false) {
+    issues.push("Tagging is disabled, but tags were requested.");
+  }
+
+  if (input.tags.length && input.tagCapabilities.canTagTopics === false) {
+    issues.push("The API user cannot tag topics.");
+  }
+
+  const missingTags = input.requestedTags.filter((tag) => tag.exists === false).map((tag) => tag.name);
+  if (missingTags.length && input.tagCapabilities.canCreateTag === false) {
+    issues.push(`Requested tags do not exist and the API user cannot create tags: ${missingTags.join(", ")}.`);
+  }
+
+  return issues;
+}
+
+function setupWarningsFor(input: {
+  categoryId?: number;
+  categoriesAvailable: boolean;
+  categoriesError?: string;
+  tags: string[];
+  tagsAvailable: boolean;
+  tagsError?: string;
+  settingsAvailable: boolean;
+  settingsError?: string;
+  capabilitiesAvailable: boolean;
+  capabilitiesError?: string;
+}): string[] {
+  const warnings: string[] = [];
+
+  if (!input.settingsAvailable) {
+    warnings.push(`Could not read client-visible site settings${input.settingsError ? `: ${oneLine(input.settingsError)}` : ""}.`);
+  }
+
+  if (!input.capabilitiesAvailable) {
+    warnings.push(`Could not read user-specific site capabilities${input.capabilitiesError ? `: ${oneLine(input.capabilitiesError)}` : ""}.`);
+  }
+
+  if (input.categoryId !== undefined && !input.categoriesAvailable) {
+    warnings.push(`Could not verify category ${input.categoryId}${input.categoriesError ? `: ${oneLine(input.categoriesError)}` : ""}.`);
+  }
+
+  if (input.tags.length && !input.tagsAvailable) {
+    warnings.push(`Could not list existing tags${input.tagsError ? `: ${oneLine(input.tagsError)}` : ""}.`);
+  }
+
+  return warnings;
+}
+
+function normalizeTags(tags: string[]): string[] {
+  return [...new Set(tags.map((tag) => tag.trim().toLowerCase()).filter(Boolean))].sort();
+}
+
+function oneLine(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+interface KnownTag {
+  name: string;
+  count?: number;
 }
 
 function errorMessage(error: unknown): string {

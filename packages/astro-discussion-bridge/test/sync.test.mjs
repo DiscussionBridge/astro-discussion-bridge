@@ -42,6 +42,25 @@ test("check-discourse discovers client settings and tag capabilities", async () 
         });
       }
 
+      if (parsed.pathname === "/categories.json") {
+        return jsonResponse({
+          category_list: {
+            categories: [
+              { id: 5, name: "Discussion Bridge for Astro", slug: "discussion-bridge-for-astro", read_restricted: false },
+            ],
+          },
+        });
+      }
+
+      if (parsed.pathname === "/tags.json") {
+        return jsonResponse({
+          tags: [
+            { id: 1, name: "discussionbridge", count: 2 },
+            { id: 2, text: "blog", count: 1 },
+          ],
+        });
+      }
+
       return new Response(`Unexpected request: ${parsed.pathname}`, { status: 500 });
     };
 
@@ -49,6 +68,7 @@ test("check-discourse discovers client settings and tag capabilities", async () 
       discourseUrl: "https://forum.example.com",
       apiKey: "test-key",
       apiUsername: "test-user",
+      categoryId: 5,
       tags: ["discussionbridge", "blog"],
     });
 
@@ -57,9 +77,74 @@ test("check-discourse discovers client settings and tag capabilities", async () 
     assert.equal(result.limits.maxPostLength, 32000);
     assert.equal(result.limits.maxTagsPerTopic, 5);
     assert.equal(result.tagCapabilities.canTagTopics, true);
+    assert.equal(result.category.name, "Discussion Bridge for Astro");
+    assert.deepEqual(result.requestedTags.map((tag) => [tag.name, tag.exists]), [
+      ["blog", true],
+      ["discussionbridge", true],
+    ]);
     assert.deepEqual(result.tagIssues, []);
+    assert.deepEqual(result.setupIssues, []);
     assert.equal(calls.some((call) => call.pathname === "/site/settings.json"), true);
     assert.equal(calls.some((call) => call.pathname === "/site.json"), true);
+    assert.equal(calls.some((call) => call.pathname === "/categories.json"), true);
+    assert.equal(calls.some((call) => call.pathname === "/tags.json"), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("check-discourse reports category and tag setup issues", async () => {
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const parsed = new URL(url);
+
+      if (parsed.pathname === "/site/settings.json") {
+        return jsonResponse({
+          tagging_enabled: true,
+          max_tags_per_topic: 5,
+          max_tag_length: 20,
+        });
+      }
+
+      if (parsed.pathname === "/site.json") {
+        return jsonResponse({
+          can_tag_topics: true,
+          can_create_tag: false,
+        });
+      }
+
+      if (parsed.pathname === "/categories.json") {
+        return jsonResponse({
+          category_list: {
+            categories: [{ id: 5, name: "Discussion Bridge for Astro" }],
+          },
+        });
+      }
+
+      if (parsed.pathname === "/tags.json") {
+        return jsonResponse({
+          tags: [{ name: "discussionbridge", count: 2 }],
+        });
+      }
+
+      return new Response(`Unexpected request: ${parsed.pathname}`, { status: 500 });
+    };
+
+    const result = await checkDiscourse({
+      discourseUrl: "https://forum.example.com",
+      categoryId: 9,
+      tags: ["discussionbridge", "release-lane"],
+    });
+
+    assert.equal(result.category, undefined);
+    assert.deepEqual(result.requestedTags.map((tag) => [tag.name, tag.exists]), [
+      ["discussionbridge", true],
+      ["release-lane", false],
+    ]);
+    assert.match(result.setupIssues.join("\n"), /Category 9 was not found/);
+    assert.match(result.setupIssues.join("\n"), /release-lane/);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -72,6 +157,9 @@ test("check-discourse falls back to configured limits when site settings are una
     globalThis.fetch = async (url) => {
       const parsed = new URL(url);
       if (parsed.pathname === "/site/settings.json" || parsed.pathname === "/site.json") {
+        return new Response("Forbidden", { status: 403, statusText: "Forbidden" });
+      }
+      if (parsed.pathname === "/categories.json" || parsed.pathname === "/tags.json") {
         return new Response("Forbidden", { status: 403, statusText: "Forbidden" });
       }
       return new Response(`Unexpected request: ${parsed.pathname}`, { status: 500 });
