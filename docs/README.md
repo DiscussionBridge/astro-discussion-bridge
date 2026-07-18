@@ -7,6 +7,7 @@ Good fits:
 - Demo plans.
 - Architecture notes.
 - Discourse setup notes.
+- Discourse field notes from real integration testing.
 - Cloudflare deployment notes.
 - Product notes that explain the public shape of the integration.
 - Contribution and support process docs.
