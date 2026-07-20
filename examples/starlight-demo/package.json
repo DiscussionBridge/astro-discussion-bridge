@@ -7,9 +7,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "publish-new:dry-run": "astro-discussion-bridge publish-new src/content/docs --dry-run --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlightdemo.discussionbridge.dev --category-id 5 --tags discussionbridge,astro,starlight-demo",
-    "sync-existing:dry-run": "astro-discussion-bridge sync-existing src/content/docs --dry-run --unlist --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlightdemo.discussionbridge.dev --category-id 5 --tags discussionbridge,astro,starlight-demo",
-    "publish-and-sync:dry-run": "astro-discussion-bridge publish-and-sync src/content/docs --dry-run --unlist --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlightdemo.discussionbridge.dev --category-id 5 --tags discussionbridge,astro,starlight-demo"
+    "publish-new:dry-run": "astro-discussion-bridge publish-new src/content/docs --dry-run --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlight.demo.discussionbridge.dev --category-id 5 --tags discussionbridge,astro,starlight-demo",
+    "sync-existing:dry-run": "astro-discussion-bridge sync-existing src/content/docs --dry-run --unlist --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlight.demo.discussionbridge.dev --category-id 5 --tags discussionbridge,astro,starlight-demo",
+    "publish-and-sync:dry-run": "astro-discussion-bridge publish-and-sync src/content/docs --dry-run --unlist --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlight.demo.discussionbridge.dev --category-id 5 --tags discussionbridge,astro,starlight-demo"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.2",

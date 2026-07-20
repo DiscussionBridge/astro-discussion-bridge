@@ -26,9 +26,25 @@ DiscussionBridge is intended to support that same relationship for Astro: publis
 npm install astro-discussion-bridge
 ```
 
+## Alpha Docs
+
+Start with the public Alpha docs when wiring a real site:
+
+- [Alpha Setup Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/ALPHA_SETUP.md)
+- [Key Management Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/KEY_MANAGEMENT.md)
+- [Support And Feedback](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/SUPPORT_AND_FEEDBACK.md)
+- [Comments Display Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/COMMENTS_DISPLAY.md)
+- [Content Lanes Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/CONTENT_LANES.md)
+- [Discussion-Safe Markdown Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/DISCUSSION_SAFE_MARKDOWN.md)
+- [Troubleshooting Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/TROUBLESHOOTING.md)
+- [Attribution, Ownership, And Licensing](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/ATTRIBUTION_OWNERSHIP_LICENSE.md)
+- [Build/Launch Checklists](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/BUILD_LAUNCH_CHECKLISTS.md)
+
+Built by Phil Henry / WebSynergetics with AI-assisted development. DiscussionBridge is independent and is not affiliated with, sponsored by, endorsed by, or officially connected to Astro, Starlight, Discourse, Ghost, WordPress, Coding Horror, or the Astro Starlog example.
+
 ## Configure Astro
 
-DiscussionBridge is Discourse-first and framework-aware. This package is the Astro integration. Use `preset: "starlight"` for Starlight's docs structure, or omit it for a more general Astro content setup.
+DiscussionBridge is Discourse-first and framework-aware. This package is the Astro integration. Use `preset: "starlight"` for Starlight documentation sites, or `preset: "astro"` for broader Astro content sites.
 
 ```js
 // astro.config.mjs
@@ -63,14 +79,16 @@ export default defineConfig({
 
 ## Presets
 
-`preset: "starlight"` uses `src/content/docs` as the default publish directory and documents the Starlight layout override flow.
+`preset: "starlight"` uses `src/content/docs` as the default publish directory and keeps the Starlight path focused on Starlight conventions.
 
-Other presets are reserved for broader Astro use cases:
+`preset: "astro"` uses `src/content` as the default publish directory for broader Astro content sites.
 
-- `astro`
-- `astro-content`
-- `mdx-inline`
-- `cloudflare-worker`
+The package stays broad, but the presets keep configuration intent clear:
+
+- `starlight`: first-class Starlight docs support, conservative defaults, explicit bridge fields
+- `astro`: broader Astro content support, with room for future optional content-tag mapping and template-specific patterns
+
+Future behavior, such as mapping Astro/template `tags` to Discourse topic tags, should be explicit and configurable rather than hidden behind magic defaults.
 
 The discussion engine is Discourse. The `provider: "discourse"` field remains explicit so configuration is clear, but the roadmap is focused on framework and platform integrations for Discourse.
 

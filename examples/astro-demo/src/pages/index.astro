@@ -1,0 +1,60 @@
+---
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("blog");
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Astro Discussion Bridge Demo</title>
+    <meta name="description" content="Plain Astro demo for Discussion Bridge." />
+  </head>
+  <body>
+    <main>
+      <p>Plain Astro</p>
+      <h1>Astro Discussion Bridge Demo</h1>
+      <p>
+        A small non-Starlight Astro site proving Discussion Bridge can live in a regular Astro
+        layout and content collection.
+      </p>
+      <ul>
+        {posts.map((post) => <li><a href={`/blog/${post.id}/`}>{post.data.title}</a></li>)}
+      </ul>
+    </main>
+  </body>
+</html>
+
+<style>
+  body {
+    margin: 0;
+    background: #fbfaf7;
+    color: #232421;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.65;
+  }
+
+  main {
+    width: min(760px, calc(100% - 2rem));
+    margin: 0 auto;
+    padding-block: 5rem;
+  }
+
+  p:first-child {
+    color: #62665d;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.25rem, 5vw, 4rem);
+    line-height: 1.05;
+  }
+
+  a {
+    color: #245f73;
+  }
+</style>

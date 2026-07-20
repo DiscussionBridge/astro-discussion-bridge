@@ -17,6 +17,6 @@ build/
 # Logs and local scratch
 *.log
 tmp/
+.tmp/npm-cache/
 .DS_Store
 Thumbs.db
-

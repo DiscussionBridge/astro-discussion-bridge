@@ -4,13 +4,19 @@ import { checkDiscourse } from "./check-discourse.js";
 import { importExistingDiscourseTopics } from "./import-existing.js";
 import { syncDiscourseTopics, type DiscoursePreflightLimits, type SyncMode } from "./sync/index.js";
 
-const command = process.argv[2] ?? "help";
-const validCommands = new Set(["sync", "publish-new", "sync-existing", "publish-and-sync", "import-existing", "check-discourse"]);
+main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});
 
-if (!validCommands.has(command)) {
-  printUsage(command === "help" ? undefined : `Unknown command: ${command}`);
-  process.exit(command === "help" ? 0 : 1);
-}
+async function main() {
+  const command = process.argv[2] ?? "help";
+  const validCommands = new Set(["sync", "publish-new", "sync-existing", "publish-and-sync", "import-existing", "check-discourse"]);
+
+  if (!validCommands.has(command)) {
+    printUsage(command === "help" ? undefined : `Unknown command: ${command}`);
+    process.exit(command === "help" ? 0 : 1);
+  }
 
 const args = parseArgs(process.argv.slice(3));
 const docsDir = path.resolve(args.positionals[0] ?? "src/content/docs");
@@ -215,6 +221,7 @@ const skipped = results.filter((result) => result.status === "skipped").length;
 const unchanged = results.filter((result) => result.status === "unchanged").length;
 const previewed = results.filter((result) => result.status.startsWith("dry-run")).length;
 console.log(`Done: ${created} created, ${updated} updated, ${skipped} skipped, ${unchanged} unchanged, ${previewed} dry-run.`);
+}
 
 function parseArgs(rawArgs: string[]) {
   const values = new Map<string, string>();

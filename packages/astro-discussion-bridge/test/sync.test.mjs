@@ -539,6 +539,130 @@ test("preflight validates configured title, body, and tag limits before network 
   }
 });
 
+test("preflight rejects duplicate managed topic IDs in one sync run", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-duplicate-topic-"));
+  const docsDir = path.join(dir, "docs");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      path.join(docsDir, "simple.md"),
+      [
+        "---",
+        'title: "Simple Comments Mode"',
+        "discourseTopicId: 27",
+        'discourseTopicUrl: "https://forum.example.com/t/content-lanes/27"',
+        "---",
+        "",
+        "Simple mode renders Discourse comments.",
+      ].join("\n"),
+    );
+    await writeFile(
+      path.join(docsDir, "full.md"),
+      [
+        "---",
+        'title: "Full Comments Mode"',
+        "discourseTopicId: 27",
+        'discourseTopicUrl: "https://forum.example.com/t/content-lanes/27"',
+        "---",
+        "",
+        "Full mode renders Discourse replies.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async (...args) => {
+      calls.push(args);
+      throw new Error("unexpected network call");
+    };
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        categoryId: 5,
+        mode: "sync-existing",
+      }),
+      (error) => {
+        assert.equal(error.message.match(/Multiple managed pages in this run use the same Discourse topic ID \(27\)/g)?.length, 1);
+        assert.match(error.message, /simple\.md/);
+        assert.match(error.message, /full\.md/);
+        return true;
+      },
+    );
+
+    assert.equal(calls.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("discussionSync false makes linked display pages non-managing", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-display-only-"));
+  const docsDir = path.join(dir, "docs");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      path.join(docsDir, "managed.md"),
+      [
+        "---",
+        'title: "Managed Comments Mode"',
+        "discourseTopicId: 27",
+        'discourseTopicUrl: "https://forum.example.com/t/content-lanes/27"',
+        "---",
+        "",
+        "This page owns the companion summary.",
+      ].join("\n"),
+    );
+    await writeFile(
+      path.join(docsDir, "display-only.md"),
+      [
+        "---",
+        'title: "Display Only Comments Mode"',
+        "discourseTopicId: 27",
+        'discourseTopicUrl: "https://forum.example.com/t/content-lanes/27"',
+        "discussionSync: false",
+        "---",
+        "",
+        "This page renders the same discussion without managing it.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async (...args) => {
+      calls.push(args);
+      throw new Error("unexpected network call");
+    };
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+      dryRun: true,
+    });
+
+    assert.equal(calls.length, 0);
+    assert.equal(results.length, 2);
+    assert.equal(results.find((result) => result.filePath.endsWith("managed.md"))?.status, "dry-run-update");
+    assert.equal(results.find((result) => result.filePath.endsWith("display-only.md"))?.status, "skipped");
+    assert.equal(results.find((result) => result.filePath.endsWith("display-only.md"))?.reason, "discussionSync is false");
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("sync-existing can update topic metadata and unlist when source content is unchanged", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-sync-"));
   const docsDir = path.join(dir, "docs");
@@ -734,6 +858,8 @@ test("sync-existing force updates the managed first post even when source hash i
     assert.ok(updateCall);
     assert.match(updateCall.body.post.raw, /^# Force Sync/);
     assert.match(updateCall.body.post.raw, /\[Read the source article\]\(https:\/\/docs\.example\.com\/index\/\)/);
+    assert.match(updateCall.body.post.raw, /Last synced from Astro: /);
+    assert.doesNotMatch(updateCall.body.post.raw, /Last synced from Astro: \d{4}-\d{2}-\d{2}T/);
     assert.doesNotMatch(updateCall.body.post.raw, /Source content:/);
     assert.notEqual(await readFile(filePath, "utf8"), syncedSource);
   } finally {

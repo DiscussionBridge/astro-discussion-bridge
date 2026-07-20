@@ -1,7 +1,7 @@
 declare module "virtual:discussion-bridge/config" {
   const config: {
     provider: "discourse";
-    preset: "astro" | "astro-content" | "starlight" | "mdx-inline" | "cloudflare-worker";
+    preset: "astro" | "starlight";
     discourseUrl: string;
     siteUrl?: string;
     comments: {

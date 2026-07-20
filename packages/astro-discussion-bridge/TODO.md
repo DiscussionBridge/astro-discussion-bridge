@@ -15,6 +15,10 @@ Goal: make Tier 1 excellent enough that a real Astro/Starlight user can install 
 - Keep local preflight validation available for dry runs and unauthenticated checks.
 - Confirm title/body/tag preflight messages are friendly enough for non-package authors.
 - Confirm generated first-post body is reader-facing and does not expose implementation labels.
+- Finalize the public feedback and support channels users should rely on for Alpha. `docs/SUPPORT_AND_FEEDBACK.md` is drafted, but the exact live channels still need to be chosen and wired into README, package metadata, demo pages, and release notes.
+- Decide where product docs live before Alpha: `docs.discussionbridge.dev` or `discussionbridge.dev/docs`.
+- Make `discussionbridge.dev` live in a credible public form before showing Alpha outside the working circle.
+- Added proper attribution, ownership, and licensing notes to docs where appropriate as an Alpha gate item. Treat this as a once-and-done pass unless ownership, dependencies, copied examples, or source material changes.
 
 ### Sync
 
@@ -22,6 +26,7 @@ Goal: make Tier 1 excellent enough that a real Astro/Starlight user can install 
 - Covered: Astro title changes, Discourse topic title drift, active discussion target mismatch handling, linked Discourse topic missing/unreadable, linked topic with no first post, Discourse client network failures, and publish-new offline failures.
 - Add stronger MDX summary extraction for component-heavy pages.
 - Keep `discussionSummary` as the supported curated summary override and document when to use it.
+- Document and test the distinction between Astro/template content tags and Discourse `discussionTags`.
 - Verify tag/category/title/listing sync behavior with current live bot keys one more time before Alpha.
 
 ### Diagnose
@@ -31,6 +36,7 @@ Goal: make Tier 1 excellent enough that a real Astro/Starlight user can install 
 - Until then, keep the fallback explicit: global/admin-capable diagnostics key for setup checks; granular publishing key where it can perform create/update/tag/read actions.
 - Consider reading Discourse title/body/tag constraints from the target instance in `check-discourse`, while keeping explicit CLI/env limits for dry runs and restricted keys.
 - Add `check-discourse` examples for global diagnostics key, granular publishing key, and explicit configured limits.
+- Investigate whether a Discourse admin/bot API key can post or send messages as another Discourse user, what endpoint/scope enables it if supported, and whether that behavior is appropriate for Discussion Bridge. Potential future use case: one trusted configuration/control-plane bot publishing notices or dashboard/admin messages across multiple users, sites, channels, or client forums in a multisite/agency setup. Possible future config shape: `postAs: "username"` in site/lane config or `discussionPostAs: "username"` in frontmatter. If supported, CLI/check output should make the operating key user and effective posting user explicit.
 
 ### Maintain
 
@@ -50,12 +56,14 @@ Goal: make Tier 1 excellent enough that a real Astro/Starlight user can install 
 
 ### Document
 
-- Add a concise Alpha setup guide: Discourse settings, bot user, keys, Astro install, category/tags, first dry run, first publish, first sync.
-- Add a key-management guide: current fallback, future two-key model, key storage, key rotation, and why build logs must not reveal secrets.
-- Add a comments-display guide covering `simple`, `full`, and `fullInteractive`.
-- Add a content-lanes guide for docs, releases, blog, news, and future Starlog-style release notes.
-- Add a discussion-safe Markdown guide for Astro content that will also render acceptably in Discourse.
-- Add troubleshooting entries for title validation, body length, tag limits, duplicate embed URLs, stale Cloudflare cache, missing topic, missing first post, and Discourse offline.
+- Added a concise Alpha setup guide: Discourse settings, bot user, keys, Astro install, category/tags, first dry run, first publish, first sync.
+- Added a key-management guide: current fallback, future two-key model, key storage, key rotation, and why build logs must not reveal secrets.
+- Added a comments-display guide covering `simple`, `full`, and `fullInteractive`.
+- Added a content-lanes guide for docs, releases, blog, news, and future Starlog-style release notes.
+- Added a discussion-safe Markdown guide for Astro content that will also render acceptably in Discourse.
+- Added troubleshooting entries for title validation, body length, tag limits, duplicate embed URLs, stale Cloudflare cache, missing topic, missing first post, and Discourse offline.
+- Finalize the support and feedback guide after the exact live channels are chosen.
+- Completed one-time Alpha attribution/ownership/licensing pass across public docs.
 
 ## Alpha Demo Matrix
 
@@ -73,6 +81,7 @@ Goal: make Tier 1 excellent enough that a real Astro/Starlight user can install 
   - `Embed any origin`: no unless specifically needed
   - `Embed topics list`: no unless specifically needed
 - Verify `forum.discussionbridge.dev` category, tags, and permissions match the docs.
+- Test with Cloudflare CDN in place on Discourse and document that the bridge works with a CDN-backed forum.
 - Verify topic creation so pages from different Astro hosts do not collide or create confusing duplicate topics.
 - Confirm `embed_url` maps each Astro page to the correct companion topic across hosts.
 
@@ -85,6 +94,7 @@ Goal: make Tier 1 excellent enough that a real Astro/Starlight user can install 
 - Keep Starlight optional so Astro core sites are not forced to install it.
 - Before any Alpha tag/release, run package tests, local demo build, dry-run CLI checks, and at least one live smoke sync.
 - Decide whether Alpha should publish to npm, GitHub releases only, or stay repo-installable until package docs are polished.
+- Confirm every release page, README, package metadata, and demo page points to the same support and feedback channels.
 
 ## Product Roadmap
 
@@ -92,8 +102,11 @@ Goal: make Tier 1 excellent enough that a real Astro/Starlight user can install 
 
 - Keep Tier 1 generous and usable without a Discourse plugin.
 - Support one Discourse target per page for Alpha.
+- Keep one package, `astro-discussion-bridge`, with clear presets: `preset: "starlight"` for Starlight documentation sites and `preset: "astro"` for broader Astro content sites.
+- Keep the Starlight preset focused on Starlight conventions unless there is a strong product reason to do otherwise.
 - Preserve future multi-Discourse compatibility by avoiding hard-coded single-forum assumptions in names, helper APIs, and docs language where `discussion target` fits.
 - Keep multiple content lanes first-class through config and frontmatter.
+- Consider optional mapping from Astro/template content tags to Discourse topic tags. Keep it opt-in so a site's editorial taxonomy is not automatically forced into its forum taxonomy.
 
 ### Tier 2: Assisted Setup And Services
 
@@ -105,6 +118,7 @@ Goal: make Tier 1 excellent enough that a real Astro/Starlight user can install 
 - Start a design note for an optional Discourse plugin as the Discourse-side control plane.
 - Keep the API-only bridge useful without a plugin; the plugin should enhance, not replace, the package.
 - Explore bridge-aware admin settings, content lane management, source mappings, duplicate detection, richer native notifications, health/status endpoints, and operations topics/categories.
+- Explore whether the plugin/control-plane model should support trusted posting, notifications, or admin dashboard messages on behalf of configured users. Treat impersonation/delegated posting as high-trust and audit-sensitive, not a casual publishing default.
 - Design the plugin surface so Astro, Statamic, and future adapters can use the same Discourse-side concepts.
 
 ## Future Frameworks And Platforms

@@ -8,6 +8,7 @@ const companionTopicFields = z.object({
   discourseTopicUrl: z.string().url().optional(),
   discussionEmbedUrl: z.string().url().optional(),
   discussionCommentsDisplay: z.enum(["simple", "full", "fullInteractive"]).optional(),
+  discussionSync: z.boolean().optional(),
 });
 
 const lanePostSchema = companionTopicFields.extend({

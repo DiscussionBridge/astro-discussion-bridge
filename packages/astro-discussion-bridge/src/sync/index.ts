@@ -89,6 +89,7 @@ export async function syncDiscourseTopics(
         pageUrl,
         content,
         sourceHash,
+        syncEnabled: booleanFromFrontmatter(parsed.frontmatter.discussionSync) !== false,
         targetName: parsed.frontmatter.discussionTarget,
         existingTopicId: parsed.frontmatter.discourseTopicId,
         existingTopicUrl: parsed.frontmatter.discourseTopicUrl,
@@ -166,6 +167,20 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
       } = page;
       const targetStatus = discussionTargetStatus(page.targetName, input.targetName);
       const resultTargetName = page.targetName ?? input.targetName;
+
+      if (!page.syncEnabled) {
+        results.push({
+          filePath,
+          title,
+          pageUrl,
+          targetName: resultTargetName,
+          topicId: existingTopicId ? Number(existingTopicId) : undefined,
+          topicUrl: existingTopicUrl,
+          status: "skipped",
+          reason: "discussionSync is false",
+        });
+        continue;
+      }
 
       if (!targetStatus.matches) {
         results.push({
@@ -485,6 +500,7 @@ interface ParsedPage {
   pageUrl: string;
   content: string;
   sourceHash: string;
+  syncEnabled: boolean;
   targetName?: string;
   existingTopicId?: string;
   existingTopicUrl?: string;
@@ -669,7 +685,9 @@ function validateManagedPages(input: {
   pages: Array<{
     filePath: string;
     title: string;
+    pageUrl: string;
     content: string;
+    syncEnabled?: boolean;
     tags?: string[];
     targetName?: string;
     existingTopicId?: string;
@@ -679,6 +697,7 @@ function validateManagedPages(input: {
   limits: Required<Pick<DiscoursePreflightLimits, "minTopicTitleLength">> & DiscoursePreflightLimits;
 }) {
   const issues = input.pages.flatMap((page) => {
+    if (page.syncEnabled === false) return [];
     if (!discussionTargetStatus(page.targetName, input.targetName).matches) return [];
 
     const managesPage =
@@ -725,6 +744,7 @@ function validateManagedPages(input: {
 
     return pageIssues;
   });
+  issues.push(...duplicateManagedPageIssues(input));
 
   if (issues.length === 0) return;
 
@@ -736,6 +756,71 @@ function validateManagedPages(input: {
     .join("\n");
 
   throw new Error(`Discourse preflight failed:\n${details}`);
+}
+
+function duplicateManagedPageIssues(input: {
+  pages: Array<{
+    filePath: string;
+    pageUrl: string;
+    syncEnabled?: boolean;
+    targetName?: string;
+    existingTopicId?: string;
+  }>;
+  mode: SyncMode;
+  targetName?: string;
+}): Array<{ filePath: string; reason: string }> {
+  const managedPages = input.pages.filter((page) => {
+    if (page.syncEnabled === false) return false;
+    if (!discussionTargetStatus(page.targetName, input.targetName).matches) return false;
+
+    return (
+      (input.mode === "publish-new" && !page.existingTopicId) ||
+      (input.mode === "sync-existing" && Boolean(page.existingTopicId)) ||
+      input.mode === "publish-and-sync"
+    );
+  });
+
+  return [
+    ...duplicateValueIssues({
+      pages: managedPages,
+      valueForPage: (page) => (page.existingTopicId ? `topic:${Number(page.existingTopicId)}` : undefined),
+      label: "Discourse topic ID",
+    }),
+    ...duplicateValueIssues({
+      pages: managedPages,
+      valueForPage: (page) => `page URL:${page.pageUrl}`,
+      label: "page URL",
+    }),
+  ];
+}
+
+function duplicateValueIssues<TPage extends { filePath: string }>(input: {
+  pages: TPage[];
+  valueForPage: (page: TPage) => string | undefined;
+  label: string;
+}): Array<{ filePath: string; reason: string }> {
+  const pagesByValue = new Map<string, string[]>();
+  for (const page of input.pages) {
+    const value = input.valueForPage(page);
+    if (!value) continue;
+
+    const files = pagesByValue.get(value) ?? [];
+    files.push(page.filePath);
+    pagesByValue.set(value, files);
+  }
+
+  const issues: Array<{ filePath: string; reason: string }> = [];
+  for (const [rawValue, files] of pagesByValue) {
+    if (files.length < 2) continue;
+
+    const value = rawValue.replace(/^[^:]+:/, "");
+    issues.push({
+      filePath: files[0],
+      reason: `Multiple managed pages in this run use the same ${input.label} (${value}). Run separate lanes, remove duplicate frontmatter, or make only one page manage that Discourse companion. Files: ${files.join(", ")}.`,
+    });
+  }
+
+  return issues;
 }
 
 function discussionTargetStatus(
@@ -989,8 +1074,18 @@ function companionTopicBody(input: {
     "",
     "Use this thread for comments, corrections, and follow-up questions.",
     "",
-    `Last synced from Astro: ${input.lastSyncedAt}`,
+    `Last synced from Astro: ${formatReaderDate(input.lastSyncedAt)}`,
   ].join("\n");
+}
+
+function formatReaderDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(date);
 }
 
 function canonicalTopicUrl(discourseUrl: string, topicId: number | string, slug?: string): string | undefined {

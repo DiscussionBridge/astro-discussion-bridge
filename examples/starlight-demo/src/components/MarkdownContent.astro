@@ -1,0 +1,13 @@
+---
+import DefaultMarkdownContent from "@astrojs/starlight/components/MarkdownContent.astro";
+import Discussion from "astro-discussion-bridge/Discussion.astro";
+
+const entry = Astro.locals.starlightRoute.entry;
+const topicId = entry.data.discourseTopicId;
+const topicUrl = entry.data.discussionUrl ?? entry.data.discourseTopicUrl;
+---
+
+<DefaultMarkdownContent>
+  <slot />
+</DefaultMarkdownContent>
+{topicUrl && <Discussion topicId={topicId} topicUrl={topicUrl} />}

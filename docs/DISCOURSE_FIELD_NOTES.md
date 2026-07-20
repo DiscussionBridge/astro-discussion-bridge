@@ -5,7 +5,8 @@ This is a living list of Discourse issues, feature needs, wishlist items, shortc
 ## Real-World Test Context
 
 - Forum: `https://forum.discussionbridge.dev`
-- Astro/Starlight demo: `https://astrostarlightdemo.discussionbridge.dev`
+- Astro demo target: `https://astro.demo.discussionbridge.dev`
+- Astro/Starlight demo target: `https://astrostarlight.demo.discussionbridge.dev`
 - Primary category: `Discussion Bridge for Astro`, category ID `5`
 - Bot user: `discussbridge-bot`
 - Current key model under test:

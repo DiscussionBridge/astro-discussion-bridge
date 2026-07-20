@@ -2,10 +2,11 @@
 title: "Full Interactive Comments Mode"
 description: "A demo route for Discourse's full app iframe embed."
 date: "2026-07-17"
-discourseTopicId: 27
-discourseTopicUrl: "https://forum.discussionbridge.dev/t/using-content-lanes-with-discussion-bridge-for-astro/27"
-discussionEmbedUrl: "https://astrostarlightdemo.discussionbridge.dev/blog/content-lanes/"
+discourseTopicId: 33
+discourseTopicUrl: "https://forum.discussionbridge.dev/t/full-comments-mode/33"
+discussionEmbedUrl: "https://astrostarlight.demo.discussionbridge.dev/comments/full/"
 discussionCommentsDisplay: "fullInteractive"
+discussionSync: false
 ---
 
 ## Full interactive mode
@@ -15,6 +16,8 @@ This page uses `discussionCommentsDisplay: "fullInteractive"`.
 It hands the embedded area back to Discourse as a full app iframe. When Discourse embedding allows it, logged-in users can use Discourse-native interactions such as reply, like, quote, and moderation flows inside the embedded experience.
 
 This demo intentionally points at the same live test topic as the other comments-mode pages so only the rendering mode changes.
+
+This comparison page displays the shared demo discussion without managing the Discourse companion topic.
 
 For product teams, the appeal of this mode is that the publication and the conversation can keep their own strengths. Astro keeps the article fast, structured, versioned, and pleasant to read. Discourse keeps identity, trust levels, notifications, moderation, quoting, reactions, and the long-running social context that makes a community useful after the original page has shipped.
 

@@ -18,12 +18,7 @@ type DiscussionBridgeIntegration = {
 
 export type DiscussionBridgeProvider = "discourse";
 export type DiscussionBridgeCommentsDisplay = "simple" | "full" | "fullInteractive";
-export type DiscussionBridgePreset =
-  | "astro"
-  | "astro-content"
-  | "starlight"
-  | "mdx-inline"
-  | "cloudflare-worker";
+export type DiscussionBridgePreset = "astro" | "starlight";
 
 export interface DiscussionBridgeOptions {
   provider?: DiscussionBridgeProvider;
