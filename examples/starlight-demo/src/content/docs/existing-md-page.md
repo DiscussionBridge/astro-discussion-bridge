@@ -13,4 +13,4 @@ discussionLastSyncedAt: "2026-07-16T19:20:33.442Z"
 
 This page is intentionally `.md`, not `.mdx`.
 
-The global Starlight footer override renders the DiscussionBridge component after the document content.
+The Starlight `MarkdownContent` override renders the Discussion Bridge component after the document content.
