@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "npm --prefix ../../packages/astro-discussion-bridge clean-install --progress=false && npm --prefix ../../packages/astro-discussion-bridge run build",
     "build": "astro build",
     "preview": "astro preview",
     "publish-new:dry-run": "astro-discussion-bridge publish-new src/content/docs --dry-run --discourse-url https://forum.discussionbridge.dev --site-url https://astrostarlight.demo.discussionbridge.dev --category-id 5 --tags discussionbridge,astro,starlight-demo",
