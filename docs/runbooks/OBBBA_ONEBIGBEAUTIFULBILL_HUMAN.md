@@ -1,6 +1,6 @@
 # OBBBA Human Runbook: onebigbeautifulbill.us and forum.repealobbba.org
 
-Status: Alpha package integration verified locally; live verification remains  
+Status: existing proof-page package migration and live fullInteractive interaction verified; fresh-import Alpha gate open
 Environment: current live proof lane plus local canonical source  
 Last verified from workspace facts: 2026-07-21  
 Companion: [OBBBA Machine Runbook](./OBBBA_ONEBIGBEAUTIFULBILL_MACHINE.md)
@@ -186,6 +186,11 @@ discussion beginning below the article body.
 **Video placeholder:** signed-out page load followed by Discourse sign-in and a
 test reply on the approved test topic/account.
 
+The existing proof-page signed-in reply item is complete. The approved browser session
+created post `12`, containing `Test post after Discussion Bridge update`, at
+`https://forum.repealobbba.org/t/434/12`. Topic `434` now has 12 posts. The test
+account identifier is intentionally omitted from this runbook.
+
 ## 8. Current Key Model
 
 The Discourse bot user is `obbba-bot`. The settled key model is:
@@ -274,7 +279,8 @@ Live deployment evidence:
 - The canonical proof page returns HTTP 200 and contains the package signature:
   topic `434`, `fullApp=true`, the correct forum and fallback URLs, and the hero
   image. The legacy `data-topic-id` renderer is absent.
-- Topic `434` remains visible, open, unarchived, and has 11 posts.
+- Topic `434` remains visible, open, unarchived, and has 12 posts. A signed-in
+  reply was created and verified after deployment.
 - `publishOnBuild` remains false; deployment performed no publish, sync, or
   import write.
 
@@ -304,7 +310,7 @@ not invent or relocate that boundary in this runbook.
 
 ### Deferred Demo And Credit Work
 
-After the current OBBBA deploy gate, add one or two clearly labeled demo/credit
+After the broader fresh-import OBBBA gate is approved, add one or two clearly labeled demo/credit
 pages on `onebigbeautifulbill.us` whose companion topics live on
 `forum.discussionbridge.dev`. Each page must select that target explicitly.
 Production OBBBA pages and source content remain on `forum.repealobbba.org`.
@@ -326,6 +332,23 @@ For the exact OBBBA release candidate:
 
 No OBBBA release ships because code alone is complete.
 
+### Broader Alpha Gate Still Open
+
+The completed milestone is **existing proof-page package migration and live
+fullInteractive interaction verified**. It does not close the full OBBBA
+Discourse-to-Astro Alpha gate.
+
+Fresh topics and pages must still prove:
+
+- [ ] Import with no hero and no pruning.
+- [ ] Hero placement only, including required alt text.
+- [ ] Prune rules only.
+- [ ] Hero placement plus prune rules, including required alt text.
+- [ ] Each generated page has `discussionSourceMode: discourse-imported`,
+      `discussionSync: false`, and the correct topic ID and URL.
+- [ ] Each approved proof builds, deploys, renders live, and displays comments.
+- [ ] No proof accidentally writes imported Astro content back to Discourse.
+
 ## 13. Current Open Inputs
 
 - [ ] Confirm the Discourse category ID for the proof lane.
@@ -336,4 +359,6 @@ No OBBBA release ships because code alone is complete.
       for the release candidate.
 - [ ] Confirm Cloudflare ownership/account boundary.
 - [x] Verify live canonical proof page and Worker deployment signature.
+- [x] Verify a signed-in browser-session reply against topic `434`.
+- [ ] Complete the fresh import/hero/prune proof matrix above.
 - [ ] Complete Manual Boss review and approve or replace visual placeholders.

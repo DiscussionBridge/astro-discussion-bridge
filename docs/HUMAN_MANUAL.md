@@ -280,6 +280,17 @@ For `full`, configure a same-origin `refreshEndpoint` when browser CORS does not
 allow direct topic JSON reads. For `fullInteractive`, enable Discourse's full-app
 embed settings and test both signed-in and signed-out users.
 
+To close a live signed-in interaction item, create one clearly labeled test
+reply through the browser, then verify its public post URL, content marker, and
+updated topic count. Recheck the Astro page's topic/full-app signature afterward.
+Record the evidence without publishing private account identifiers.
+
+An existing-page interaction result does not prove a fresh-import workflow.
+Before closing an import gate, separately test: no hero/no prune, hero only with
+alt text, prune only, and hero plus prune. For every case, verify generated
+source-mode guards, preserved topic linkage, build/deploy/live rendering,
+comments, and no accidental writeback.
+
 For an existing topic, pass its topic ID through the complete component path.
 The native embed should configure `{ topicId }` when it is present and fall back
 to `{ discourseEmbedUrl: embedUrl }` only when there is no explicit topic ID.

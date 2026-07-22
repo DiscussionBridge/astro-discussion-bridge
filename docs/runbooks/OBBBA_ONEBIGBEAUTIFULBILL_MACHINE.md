@@ -1,6 +1,6 @@
 # OBBBA Machine Runbook: onebigbeautifulbill.us and forum.repealobbba.org
 
-Status: Alpha package integration verified locally; live bridge writes remain blocked  
+Status: existing proof-page package migration and live fullInteractive interaction verified; fresh-import Alpha gate open
 Last verified from workspace facts: 2026-07-21  
 Companion: [OBBBA Human Runbook](./OBBBA_ONEBIGBEAUTIFULBILL_HUMAN.md)
 
@@ -280,7 +280,7 @@ topic_434:
   public: true
   closed: false
   category_id: 18
-  post_count: 11
+  post_count: 12
   first_post_editable: true
 ```
 
@@ -388,9 +388,20 @@ verification:
     visible: true
     open: true
     archived: false
-    post_count: 11
+    post_count: 12
+    signed_in_reply_test:
+      result: pass
+      post_number: 12
+      direct_url: https://forum.repealobbba.org/t/434/12
+      content_marker: Test post after Discussion Bridge update
+      account_identifier_recorded: false
+  existing_proof_page_interaction_item: pass_signed_in_reply
+  post_interaction_embed_check:
+    topic_id: 434
+    full_app: true
+    legacy_data_topic_id_renderer: absent
   discourse_diagnostics: pass_setup_issues_none
-  topic_434_read_check: pass_public_open_category_18_posts_11_editable
+  topic_434_read_check: pass_public_open_category_18_posts_12_editable
   page_url_reconciliation: no_owner_found_not_required_with_explicit_topic_id
   secret_review: pass_no_values_recorded
   publish_on_build: false
@@ -402,6 +413,39 @@ verification:
     - starter content cleanup
   deployment_commits_absorbed_preserved_changes: false
 ```
+
+Broader OBBBA Discourse-to-Astro Alpha gate:
+
+```yaml
+fresh_import_gate:
+  status: open
+  proofs_required:
+    - name: fresh_topic_no_hero_no_prune
+      hero: false
+      prune_rules: false
+    - name: fresh_topic_hero_only
+      hero: true
+      hero_alt_text: required
+      prune_rules: false
+    - name: fresh_topic_prune_only
+      hero: false
+      prune_rules: true
+    - name: fresh_topic_hero_and_prune
+      hero: true
+      hero_alt_text: required
+      prune_rules: true
+  every_proof_must_verify:
+    - generated discussionSourceMode=discourse-imported
+    - generated discussionSync=false
+    - topic ID and URL preserved
+    - build passes
+    - deploy passes
+    - live page renders
+    - approved comments mode works
+    - no accidental writeback
+```
+
+Do not infer completion of this broader gate from the existing topic-434 page.
 
 ## 10. Known Failures And Recovery
 
@@ -429,7 +473,7 @@ failures:
 
 ## 11. Release Evidence
 
-Deferred topology/credit inputs; these do not alter the current deploy gate:
+Deferred topology/credit inputs; these do not alter the open fresh-import gate:
 
 ```yaml
 post_gate_demo:

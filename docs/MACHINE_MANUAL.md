@@ -419,6 +419,44 @@ full: build/render fetch works, browser refresh works, unavailable state works
 fullInteractive: logged-out load, logged-in reply/like/quote, mobile height/CSP
 ```
 
+For a live signed-in interaction item, record sanitized evidence:
+
+```yaml
+topic_id: expected topic
+post_number: created test post number
+direct_post_url: public verification URL
+content_marker: non-sensitive test text
+post_count_after: observed count
+astro_embed_signature_after:
+  topic_id: expected topic
+  full_app: true
+  retired_renderer: absent
+private_account_identifier: omit
+```
+
+Creating the reply is an intentional browser-session action, not a package
+publish/sync/import operation. Verify the forum result read-only afterward.
+
+Fresh-import gate matrix:
+
+```yaml
+cases:
+  - { hero: false, prune: false }
+  - { hero: true, prune: false, alt_text: required }
+  - { hero: false, prune: true }
+  - { hero: true, prune: true, alt_text: required }
+per_case_assertions:
+  - discussionSourceMode == discourse-imported
+  - discussionSync == false
+  - topic ID and URL preserved
+  - build/deploy/live render pass
+  - comments pass
+  - no writeback
+```
+
+Do not use an existing-page migration or signed-in interaction result as a
+substitute for this matrix.
+
 Component propagation invariant:
 
 ```text
