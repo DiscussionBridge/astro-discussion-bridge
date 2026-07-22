@@ -69,7 +69,7 @@ C:\CodeProjects\Projects\OBBBA\sites\onebigbeautifulbill.us\astro
 The current site uses Astro 7, Starlight, Mermaid, the Cloudflare adapter, OG
 image generation, and `astro-discussion-bridge`. The Alpha integration uses the
 unique packed artifact
-`vendor/astro-discussion-bridge-0.1.0-alpha-9ed59065.tgz`; it is not the final
+`vendor/astro-discussion-bridge-0.1.0-alpha-729d85f-ad0bdf0b.tgz`; it is not the final
 release distribution.
 
 > **Stop if:** work is pointed at the `legacy-source` directory, a copied deploy
@@ -230,8 +230,7 @@ Bridge Boss completed the local package migration without a Discourse write:
 3. The proof page imports the package `Discussion.astro` component.
 4. All source-mode, topic, manually-pruned content, image, alt text, and comments
    settings were preserved.
-5. The package regression suite passed 35/35, including CRLF guard and
-   write-side line-ending preservation tests.
+5. The package regression suite passed 38/38 with Code Boss final PASS.
 6. The deployment-shaped OBBBA build passed.
 7. Generated HTML contains topic ID `434`, `fullApp=true`, the correct forum
    URL, and the correct fallback topic URL.
@@ -249,6 +248,18 @@ frontmatter parsing and did not write to Discourse.
 The next pass is live behavior verification, resolution of the remaining Ops
 inputs, Code Boss review of the exact candidate, and replacement of the packed
 Alpha artifact with the approved GitHub release asset at release time.
+
+The imported-page integration now uses a Starlight `MarkdownContent` page-boundary
+override plus an extended `docsSchema`, so custom bridge frontmatter survives and
+every imported Markdown page receives its discussion. Do not add a second
+per-page `<Discussion>` component; the old explicit 10101 instance was removed
+to prevent duplication.
+
+Section 10103/topic 751 proves hero-only import using
+`../../../assets/obbbanotso.png` and alt text `One Big (not so) Beautiful Bill
+over the U.S. Capitol`. Its normalized imported body exactly matches the
+Discourse raw body. Sections 10101, 10102, and 10103 each build with exactly one
+correct `fullInteractive` discussion.
 
 The Discourse category ID and required topic tags for this proof lane are not
 yet recorded in the durable source reviewed for this runbook. They must be
@@ -340,8 +351,8 @@ Discourse-to-Astro Alpha gate.
 
 Fresh topics and pages must still prove:
 
-- [ ] Import with no hero and no pruning.
-- [ ] Hero placement only, including required alt text.
+- [x] Section 10102/topic 747: import with no hero and no pruning.
+- [x] Section 10103/topic 751: hero placement only, with required alt text.
 - [ ] Prune rules only.
 - [ ] Hero placement plus prune rules, including required alt text.
 - [ ] Each generated page has `discussionSourceMode: discourse-imported`,

@@ -58,10 +58,11 @@ guard:
 discussionSync: false
 ```
 
-The named source modes currently express operating policy; the CLI write guard
-is `discussionSync: false`. `import-existing` does not add that guard
-automatically in the current Alpha implementation. Add it immediately after a
-live import and review it before running any directory-wide sync command.
+The named source modes express operating policy, and the CLI write guard is
+`discussionSync: false`. The reviewed Alpha import path generates
+`discussionSourceMode: discourse-imported`, boolean `discussionSync: false`, and
+preserves the topic ID and URL. Review those fields after every import before
+running any directory-wide sync command.
 
 Promotion means a human explicitly decides Astro will become the source of
 truth, reviews the page and linked topic, and removes the guard. Editing an
@@ -268,6 +269,24 @@ replacement is intentional and recoverable.
 > **Stop if:** a dry run shows an unexpected page URL, topic ID, target,
 > category, managing page, overwrite, or writeback-eligible imported page.
 
+To place a hero image at the start of an imported page:
+
+```sh
+npx astro-discussion-bridge import-existing src/content/docs \
+  --topic https://forum.example.com/t/example-topic/123 \
+  --hero-image "../../../assets/example hero.png" \
+  --hero-alt "Descriptive alternative text" \
+  --dry-run
+```
+
+`--hero-image` and `--hero-alt` are a required pair. Alt text must contain
+meaningful non-whitespace text. The generated Markdown places one angle-wrapped
+leading image before the unchanged raw topic body; internal path spaces and
+escaped alt text are supported.
+
+> **Stop if:** only one hero option is present, alt text is empty/whitespace, or
+> the hero insertion changes the normalized Discourse body.
+
 ### Build And Preview An Import Queue
 
 Import discovery/queue is required for Alpha. Use either:
@@ -282,6 +301,10 @@ Import discovery/queue is required for Alpha. Use either:
 After category selection, optional filters may narrow tags, created-date range,
 open/closed status, and result limit. Operators may request oldest-first or
 newest-first ordering, but both use `created_at`.
+
+For numbered collections whose created dates are unreliable, Alpha may use
+natural topic-title/name ordering (for example, Section 10102 before 10103).
+This never permits ordering by latest activity.
 
 Always preview the candidate list before importing and exclude topics already
 represented by imported Astro pages.

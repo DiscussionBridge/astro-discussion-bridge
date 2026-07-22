@@ -43,7 +43,9 @@ proof_lane:
 current_integration:
   package_installed: true
   package_version: 0.1.0
-  alpha_artifact: vendor/astro-discussion-bridge-0.1.0-alpha-9ed59065.tgz
+  alpha_artifact: vendor/astro-discussion-bridge-0.1.0-alpha-729d85f-ad0bdf0b.tgz
+  alpha_artifact_sha256: ad0bdf0bf181389b4f6677cee7170e4c57d9c6293b6a91d282a0537bd35f10fa
+  package_commit: 729d85f
   page_component: astro-discussion-bridge/Discussion.astro
   previous_comments_component: src/components/DiscourseComments.astro
   previous_comments_api_route: src/pages/api/discourse-comments.json.ts
@@ -104,7 +106,7 @@ with optional `fullApp` and `embedHeight`.
 package_manager: npm
 install_command: npm ci
 build_command: npm run build
-package_reference: file:vendor/astro-discussion-bridge-0.1.0-alpha-9ed59065.tgz
+package_reference: file:vendor/astro-discussion-bridge-0.1.0-alpha-729d85f-ad0bdf0b.tgz
 astro_site: https://onebigbeautifulbill.us
 wrangler:
   compatibility_date: '2026-06-30'
@@ -321,7 +323,7 @@ refresh operation without an explicit design.
 ```yaml
 migration:
   target_package: astro-discussion-bridge
-  package_version_or_build: 0.1.0-alpha-9ed59065 packed reviewed artifact
+  package_version_or_build: 0.1.0-alpha-729d85f-ad0bdf0b packed reviewed artifact
   preserve:
     - discussionSourceMode=discourse-imported
     - discussionSync=false
@@ -360,7 +362,8 @@ verification:
   source_topic_id: pass_434
   source_forum_hostname: pass_forum.repealobbba.org
   package_integration: pass_alpha_artifact
-  package_regression_suite: pass_35_of_35
+  package_regression_suite: pass_38_of_38
+  code_boss_review: final_pass
   crlf_write_preservation_regression: pass
   discourse_embed_declaration_review: pass_code_boss_p2_fixed
   local_deployment_shaped_build: pass
@@ -430,24 +433,43 @@ fresh_import_gate:
     stable_tie_breaker: topic_id_ascending
     optional_filters: [tags, created_date_range, open_closed, limit]
     optional_order: [oldest_created_at, newest_created_at]
+    optional_natural_order: numbered_topic_title_or_name
     forbidden_order: [bumped_at, last_reply, latest_activity]
     preview_selected_category_queue_before_import: required
     exclude_already_imported: required
   proofs_required:
     - name: fresh_topic_no_hero_no_prune
+      section: 10102
+      topic_id: 747
+      status: pass
       hero: false
       prune_rules: false
     - name: fresh_topic_hero_only
+      section: 10103
+      topic_id: 751
+      status: pass
       hero: true
-      hero_alt_text: required
+      hero_image: ../../../assets/obbbanotso.png
+      hero_alt_text: One Big (not so) Beautiful Bill over the U.S. Capitol
       prune_rules: false
+      normalized_raw_match:
+        chars: 20081
+        lines: 181
+        sha256: f2f25c1b0cece52154d7dd0358c3db08d065596b2a6df5a4625fbf1989c24098
     - name: fresh_topic_prune_only
+      section: 10104
+      topic_id: 752
+      status: pending_next
       hero: false
       prune_rules: true
     - name: fresh_topic_hero_and_prune
+      section: 10105
+      topic_id: 753
+      status: pending_after_10104
       hero: true
       hero_alt_text: required
       prune_rules: true
+  update_all_after_matrix: required
   every_proof_must_verify:
     - generated discussionSourceMode=discourse-imported
     - generated discussionSync=false
@@ -460,6 +482,19 @@ fresh_import_gate:
 ```
 
 Do not infer completion of this broader gate from the existing topic-434 page.
+
+OBBBA Starlight integration invariant:
+
+```yaml
+page_boundary_component: src/components/MarkdownContent.astro
+starlight_wiring: starlight.components.MarkdownContent
+content_schema: docsSchema extended with Discussion Bridge fields
+per_page_explicit_Discussion_component: prohibited_when_boundary_override_active
+verified_single_fullInteractive_instances:
+  - { section: 10101, topic_id: 434, count: 1, hero: true }
+  - { section: 10102, topic_id: 747, count: 1, hero: false }
+  - { section: 10103, topic_id: 751, count: 1, hero: true }
+```
 
 ## 10. Known Failures And Recovery
 

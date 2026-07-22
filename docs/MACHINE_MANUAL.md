@@ -157,20 +157,17 @@ Current implementation facts:
 - A guarded page reports `skipped` with reason `discussionSync is false`.
 - Frontmatter parse/update paths accept LF and CRLF boundaries and preserve the
   source file's existing line-ending style when writing updates.
-- Source-mode names are not currently parsed/enforced by the CLI.
-- `import-existing` currently writes link/import metadata but does not write
-  `discussionSync: false` or a named source-mode field.
+- Sync preflight remains guard-driven, while the reviewed import path generates
+  `discussionSourceMode: discourse-imported` and boolean `discussionSync: false`.
+- Import preserves the Discourse topic ID and URL.
 
 Therefore, the required Alpha import procedure is:
 
 1. run `import-existing --dry-run`;
 2. run the live import only after reviewing the destination;
-3. immediately add `discussionSync: false` to every imported file;
+3. verify the generated source mode, boolean sync guard, topic ID, and URL;
 4. review frontmatter before any directory-wide sync;
 5. remove the guard only after explicit promotion to Astro ownership.
-
-Implementation follow-up belongs to Bridge Boss: make imported/non-Astro source
-mode safety automatic and machine-verifiable.
 
 ## 5. Frontmatter Contract
 
@@ -325,6 +322,31 @@ npx astro-discussion-bridge import-existing src/content/docs \
   --dry-run
 ```
 
+Hero options:
+
+```text
+--hero-image PATH|URL
+--hero-alt TEXT
+```
+
+Validation contract:
+
+```yaml
+pairing: bidirectional_required
+hero_alt: non_empty_after_trim
+explicit_errors:
+  - bare option
+  - inline-empty value
+  - whitespace-only alt
+  - hero image without alt
+  - hero alt without image
+output:
+  placement: leading image before raw body
+  image_syntax: angle-wrapped destination
+  alt_escaping: supported
+  internal_path_spaces: supported
+```
+
 Accepted topic references: numeric ID or URL whose host matches
 `DISCOURSE_URL`. Expected statuses: `dry-run-import`, `dry-run-overwrite`,
 `imported`, `skipped`. Existing files are skipped unless `--overwrite` is used.
@@ -351,6 +373,7 @@ filters_optional:
 ordering_optional:
   - oldest by created_at
   - newest by created_at
+  - natural topic title/name for numbered collections
 forbidden_order_fields:
   - bumped_at
   - last reply
@@ -364,6 +387,21 @@ alpha_requirement: true
 
 The stable comparison key for the default queue is `(created_at, topic_id)`.
 Community replies must never reorder publishing candidates.
+
+### Starlight Imported-Page Integration
+
+Stock Starlight `docsSchema()` may strip custom bridge fields, and imported
+Markdown pages do not contain a hand-written `<Discussion>` component. A
+Starlight consumer must:
+
+1. extend `docsSchema` with the Discussion Bridge frontmatter fields;
+2. install `src/components/MarkdownContent.astro` at the page boundary;
+3. wire it through `starlight.components.MarkdownContent`;
+4. remove per-page explicit `<Discussion>` instances when the boundary override
+   is active, preventing duplicate discussions.
+
+Verification requires exactly one discussion instance per linked page with the
+expected topic ID and display mode.
 
 ## 7. Common CLI Options
 

@@ -65,3 +65,15 @@ and limit remain optional filters.
 Community activity is not publishing priority. `bumped_at`, last reply, and
 latest activity must never reorder an import queue. Operators preview candidates
 first, and already imported topics stay out of the selectable queue.
+
+For numbered legislative or structured collections, natural topic-title/name
+ordering is also an Alpha option when creation dates are muddled. This is still
+editorial ordering, never latest-activity ordering.
+
+## Accessible Hero Imports
+
+Alpha supports an optional leading hero during `import-existing`, but image and
+meaningful alt text are inseparable inputs. The bridge preserves the normalized
+Discourse body after inserting the leading image and supports local paths, URLs,
+spaces, and escaped alt text. This keeps accessibility part of the import
+contract rather than a cleanup step.
