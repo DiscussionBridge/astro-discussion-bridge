@@ -52,3 +52,16 @@ selection. Production OBBBA content remains on `forum.repealobbba.org`.
 
 This is a bounded topology proof and one step toward future many-to-many support;
 it is not a claim that general many-to-many operation is currently supported.
+
+## Alpha Import Queue Principle
+
+Alpha includes deterministic import discovery, not only one-off topic import.
+Curated manifests preserve the caller's chosen order. Category queue work first
+discovers categories and subcategories, then selects one by ID or unambiguous
+slug/name. After preview, “next” defaults to oldest Discourse `created_at`, with
+topic ID as the stable tie-breaker. Tags, created-date range, open/closed status,
+and limit remain optional filters.
+
+Community activity is not publishing priority. `bumped_at`, last reply, and
+latest activity must never reorder an import queue. Operators preview candidates
+first, and already imported topics stay out of the selectable queue.

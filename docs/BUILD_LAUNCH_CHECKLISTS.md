@@ -59,6 +59,17 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Run the repeatable live smoke pass before Alpha and before each release candidate. It covers publish/sync; docs, releases, blog, news, and comments demo routes; `simple`, `full`, and `fullInteractive` comments modes; full-app embed Discourse settings; and `forum.discussionbridge.dev` category, tags, and permissions.
 - [ ] Enforce source modes before Alpha: `astro-managed`, `discourse-managed`, and `discourse-imported` are documented, and `discussionSync: false` is enforced, but `import-existing` does not yet add the writeback guard automatically or persist an enforced source-mode field.
 
+### Import
+
+- [ ] Add explicit manifest input for curated production imports while preserving caller-supplied topic order.
+- [ ] Add a category selector that discovers/lists available categories and accepts category ID or an unambiguous slug/name, including subcategories.
+- [ ] Add deterministic "next in selected category" behavior: oldest Discourse `created_at` first, with topic ID as the stable tie-breaker.
+- [ ] Add import filters for tags, created-date range, open/closed status, and limit.
+- [ ] Add optional oldest/newest ordering by Discourse `created_at` and natural topic-title ordering for numbered source collections.
+- [ ] Ensure import sequencing never uses `bumped_at`, last reply, or latest activity.
+- [ ] Preview discovered candidates before import and prevent already imported topics from being selected again.
+- [ ] Add optional imported-page hero placement and require non-empty alt text whenever a hero image is configured.
+
 ### Diagnose
 
 - [ ] Confirm minimal Discourse granular scopes needed for existing-topic collision reconciliation.

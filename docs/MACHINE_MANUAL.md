@@ -330,6 +330,41 @@ Accepted topic references: numeric ID or URL whose host matches
 `imported`, `skipped`. Existing files are skipped unless `--overwrite` is used.
 After live import, apply the source-mode guard described above.
 
+### Alpha Import Discovery / Queue Contract
+
+```yaml
+selection_modes:
+  curated:
+    input: explicit topics or manifest
+    ordering: preserve caller-supplied order
+  next_in_category:
+    category_discovery: list available categories and subcategories
+    category_selector: ID or unambiguous slug/name
+    category_selection: required before queue preview
+    default_order: created_at ascending
+    tie_breaker: topic ID ascending
+filters_optional:
+  - tags
+  - created_at range
+  - open/closed status
+  - limit
+ordering_optional:
+  - oldest by created_at
+  - newest by created_at
+forbidden_order_fields:
+  - bumped_at
+  - last reply
+  - latest activity
+pre_import:
+  preview_selected_category_queue: required
+  preview_candidates: required
+  exclude_already_imported_topics: required
+alpha_requirement: true
+```
+
+The stable comparison key for the default queue is `(created_at, topic_id)`.
+Community replies must never reorder publishing candidates.
+
 ## 7. Common CLI Options
 
 ```text

@@ -59,14 +59,22 @@ const topics = [
 ];
 const overwrite = args.flags.has("overwrite");
 const commentsDisplay = commentsDisplayFromValue(args.values.get("comments-display"));
+const heroImage = args.values.get("hero-image");
+const heroAlt = args.values.get("hero-alt");
 
 const missing = [
+  ...(args.flags.has("hero-image") ? ["a value after --hero-image"] : []),
+  ...(args.flags.has("hero-alt") ? ["a value after --hero-alt"] : []),
+  ...(args.values.has("hero-image") && !heroImage?.trim() ? ["a non-empty --hero-image value"] : []),
+  ...(args.values.has("hero-alt") && !heroAlt?.trim() ? ["a non-empty --hero-alt value"] : []),
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
   ...(!siteUrl && command !== "check-discourse" ? ["SITE_URL or --site-url"] : []),
   ...(!dryRun && command !== "check-discourse" && command !== "import-existing" && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
   ...(!dryRun && command === "import-existing" && !importApiKey ? ["DISCOURSE_DIAGNOSTICS_API_KEY, DISCOURSE_API_KEY, --diagnostics-api-key, or --api-key"] : []),
   ...(!dryRun && command !== "check-discourse" && !apiUsername ? ["DISCOURSE_API_USERNAME or --api-username"] : []),
   ...(command === "import-existing" && topics.length === 0 ? ["--topic URL[,URL] or --topic-id ID[,ID]"] : []),
+  ...(command === "import-existing" && heroImage && !heroAlt?.trim() ? ["--hero-alt TEXT when --hero-image is used"] : []),
+  ...(command === "import-existing" && heroAlt && !heroImage ? ["--hero-image PATH when --hero-alt is used"] : []),
 ];
 
 if (missing.length > 0) {
@@ -184,6 +192,8 @@ if (command === "import-existing") {
     dryRun,
     overwrite,
     commentsDisplay,
+    heroImage,
+    heroAlt,
   });
 
   for (const result of results) {
@@ -379,6 +389,8 @@ function printUsage(error?: string) {
   console.error("  --topic-id ID[,ID]         Discourse topic ID to import.");
   console.error("  --overwrite                Replace existing imported Markdown files.");
   console.error("  --comments-display MODE    simple, full, or fullInteractive.");
+  console.error("  --hero-image PATH          Add a leading imported-page image using this asset path or URL.");
+  console.error("  --hero-alt TEXT            Required non-empty alt text when --hero-image is used.");
   console.error("");
   console.error("Diagnostics options:");
   console.error("  --diagnostics-api-key KEY  Use a broader/read-capable key for check-discourse and raw imports.");

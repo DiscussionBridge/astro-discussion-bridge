@@ -15,6 +15,8 @@ export interface ImportExistingDiscourseTopicsOptions {
   dryRun?: boolean;
   overwrite?: boolean;
   commentsDisplay?: "simple" | "full" | "fullInteractive";
+  heroImage?: string;
+  heroAlt?: string;
 }
 
 export interface ImportedDiscourseTopic {
@@ -30,6 +32,9 @@ export interface ImportedDiscourseTopic {
 export async function importExistingDiscourseTopics(
   options: ImportExistingDiscourseTopicsOptions,
 ): Promise<ImportedDiscourseTopic[]> {
+  const heroImage = options.heroImage?.trim();
+  const heroAlt = options.heroAlt?.trim();
+  validateHeroOptions({ heroImage, heroAlt });
   const docsDir = path.resolve(options.docsDir);
   const discourse = createDiscourseClient({
     discourseUrl: options.discourseUrl,
@@ -99,6 +104,8 @@ export async function importExistingDiscourseTopics(
         sourceHash,
         importedAt: new Date().toISOString(),
         commentsDisplay: options.commentsDisplay,
+        heroImage,
+        heroAlt,
         body,
       }),
     );
@@ -114,6 +121,15 @@ export async function importExistingDiscourseTopics(
   }
 
   return results;
+}
+
+function validateHeroOptions(options: Pick<ImportExistingDiscourseTopicsOptions, "heroImage" | "heroAlt">): void {
+  if (options.heroImage && !options.heroAlt) {
+    throw new Error("heroAlt is required when heroImage is configured.");
+  }
+  if (options.heroAlt && !options.heroImage) {
+    throw new Error("heroImage is required when heroAlt is configured.");
+  }
 }
 
 function parseTopicRef(value: string, discourseUrl: string): { topicId: number; slug?: string } {
@@ -197,6 +213,8 @@ function markdownForImportedTopic(input: {
   sourceHash: string;
   importedAt: string;
   commentsDisplay?: "simple" | "full" | "fullInteractive";
+  heroImage?: string;
+  heroAlt?: string;
   body: string;
 }): string {
   const frontmatter: Record<string, string | number | boolean> = {
@@ -213,7 +231,15 @@ function markdownForImportedTopic(input: {
   };
   if (input.commentsDisplay) frontmatter.discussionCommentsDisplay = input.commentsDisplay;
 
-  return `---\n${serializeYaml(frontmatter)}---\n\n${input.body.trim()}\n`;
+  const hero = input.heroImage
+    ? `![${escapeMarkdownAlt(input.heroAlt ?? "")}](<${input.heroImage}>)\n\n`
+    : "";
+
+  return `---\n${serializeYaml(frontmatter)}---\n\n${hero}${input.body.trim()}\n`;
+}
+
+function escapeMarkdownAlt(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/\]/g, "\\]").trim();
 }
 
 function serializeYaml(values: Record<string, string | number | boolean>): string {

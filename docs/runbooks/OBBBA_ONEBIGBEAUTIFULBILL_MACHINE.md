@@ -419,6 +419,20 @@ Broader OBBBA Discourse-to-Astro Alpha gate:
 ```yaml
 fresh_import_gate:
   status: open
+  discovery_queue:
+    alpha_requirement: true
+    curated_input: explicit_topic_or_manifest
+    curated_order: caller_supplied
+    category_discovery: list_categories_and_subcategories
+    category_selector: id_or_unambiguous_slug_or_name
+    category_selection_before_preview: required
+    next_in_category_default: created_at_ascending
+    stable_tie_breaker: topic_id_ascending
+    optional_filters: [tags, created_date_range, open_closed, limit]
+    optional_order: [oldest_created_at, newest_created_at]
+    forbidden_order: [bumped_at, last_reply, latest_activity]
+    preview_selected_category_queue_before_import: required
+    exclude_already_imported: required
   proofs_required:
     - name: fresh_topic_no_hero_no_prune
       hero: false

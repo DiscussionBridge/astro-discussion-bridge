@@ -71,9 +71,17 @@ quality review before Product Boss approval.
 
 ### Import
 
-- Add an import-discovery/queue workflow for selecting existing Discourse topics. Alpha keeps explicit `--topic` / `--topic-id` selection as the safe default and preserves the caller's list order. Future selectors should include category, tags, created-after/before, explicit status, limit, and ascending/descending order. For an automatic "next topic" within a category, default to oldest `created_at` first with topic ID as the stable tie-breaker; do not use bumped/latest-activity order. Discovery should preview candidates before import and persist enough checkpoint/link state to avoid duplicate imports.
+- Add an import-discovery/queue workflow in Alpha with these selection modes:
+  - explicit topic or manifest for curated production imports, preserving caller-supplied order
+  - category selector that discovers/lists available categories and accepts category ID or an unambiguous slug/name, including subcategories
+  - next in the selected category, defaulting to oldest Discourse `created_at` first with topic ID as the stable tie-breaker
+  - optional filters for tags, created-date range, open/closed status, and limit
+  - optional oldest/newest ordering by Discourse `created_at`, or natural topic-title ordering for numbered source collections such as `Sec. 10102`, `Sec. 10103`, and `Sec. 10104`
+- Never sequence imports by `bumped_at`, last reply, or latest activity. Community discussion must not reorder the publishing queue.
+- Preview discovered candidates before import and persist enough checkpoint/link state to avoid duplicate imports.
 
 - Keep `import-existing` safe by default: preserve topic ID and URL, write an editable Astro copy, and avoid automatic sync back to Discourse.
+- Add optional imported-page hero placement with required non-empty alt text.
 - Support both import paths:
   - import clean: prune known boilerplate blocks during import
   - import whole: bring the topic into Astro, then let a human edit it down in GitCMS or another editor

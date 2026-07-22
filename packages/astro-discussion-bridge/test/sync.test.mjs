@@ -1988,6 +1988,102 @@ test("import-existing can label imported frontmatter with a discussion target", 
   }
 });
 
+test("import-existing adds a leading hero image with alt text", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-hero-"));
+  const docsDir = path.join(dir, "blog");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Imported Hero Topic",
+        category_id: 5,
+        visible: true,
+        post_stream: {
+          posts: [
+            {
+              id: 101,
+              post_number: 1,
+              topic_id: 21,
+              topic_slug: "imported-hero-topic",
+              cooked: "<p>Imported hero body.</p>",
+            },
+          ],
+        },
+      },
+      post: {
+        id: 101,
+        post_number: 1,
+        topic_id: 21,
+        topic_slug: "imported-hero-topic",
+        raw: "Imported hero body.",
+        cooked: "<p>Imported hero body.</p>",
+      },
+    });
+
+    await importExistingDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+      heroImage: "../../../assets/hero image.png",
+      heroAlt: "One Big [not so] Beautiful Bill",
+    });
+
+    const source = await readFile(path.join(docsDir, "imported-hero-topic.md"), "utf8");
+    assert.match(source, /!\[One Big \[not so\\\] Beautiful Bill\]\(<\.\.\/\.\.\/\.\.\/assets\/hero image\.png>\)/);
+    assert.ok(source.indexOf("![") < source.indexOf("Imported hero body."));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing requires alt text for a configured hero image", async () => {
+  await assert.rejects(
+    importExistingDiscourseTopics({
+      docsDir: "unused",
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+      heroImage: "../../../assets/hero.png",
+    }),
+    /heroAlt is required when heroImage is configured/,
+  );
+
+  await assert.rejects(
+    importExistingDiscourseTopics({
+      docsDir: "unused",
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+      heroImage: "   ",
+      heroAlt: "Descriptive alt text",
+    }),
+    /heroImage is required when heroAlt is configured/,
+  );
+
+  await assert.rejects(
+    importExistingDiscourseTopics({
+      docsDir: "unused",
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+      heroAlt: "Descriptive alt text",
+    }),
+    /heroImage is required when heroAlt is configured/,
+  );
+});
+
 test("import-existing refuses to label cooked HTML conversion as an unpruned import", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-raw-required-"));
   const docsDir = path.join(dir, "blog");

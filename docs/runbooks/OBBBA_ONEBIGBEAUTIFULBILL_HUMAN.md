@@ -349,6 +349,20 @@ Fresh topics and pages must still prove:
 - [ ] Each approved proof builds, deploys, renders live, and displays comments.
 - [ ] No proof accidentally writes imported Astro content back to Discourse.
 
+The Alpha gate also requires a usable import discovery/queue:
+
+- [ ] Curated explicit-topic or manifest imports preserve operator order.
+- [ ] Category selection lists available categories and subcategories and
+      accepts category ID or an unambiguous slug/name.
+- [ ] After category selection and preview, “next” selects oldest `created_at`
+      first, with topic ID as the stable tie-breaker.
+- [ ] Tags, created-date range, open/closed status, and limit filters can be
+      applied where needed.
+- [ ] Oldest/newest ordering uses `created_at` only.
+- [ ] Candidates are previewed and already imported topics are excluded.
+- [ ] Replies and activity never reorder the queue; `bumped_at`, last reply,
+      and latest activity are prohibited sequencing inputs.
+
 ## 13. Current Open Inputs
 
 - [ ] Confirm the Discourse category ID for the proof lane.

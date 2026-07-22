@@ -268,6 +268,27 @@ replacement is intentional and recoverable.
 > **Stop if:** a dry run shows an unexpected page URL, topic ID, target,
 > category, managing page, overwrite, or writeback-eligible imported page.
 
+### Build And Preview An Import Queue
+
+Import discovery/queue is required for Alpha. Use either:
+
+- an explicit topic list or manifest for curated imports; preserve the order the
+  operator supplied;
+- “next in category” for queue work. First list/discover available categories,
+  including subcategories, then select by category ID or an unambiguous
+  slug/name. Preview that category's queue and choose the oldest Discourse
+  `created_at`, using topic ID as the stable tie-breaker.
+
+After category selection, optional filters may narrow tags, created-date range,
+open/closed status, and result limit. Operators may request oldest-first or
+newest-first ordering, but both use `created_at`.
+
+Always preview the candidate list before importing and exclude topics already
+represented by imported Astro pages.
+
+> **Never use:** `bumped_at`, last reply, or latest activity for queue order.
+> Community participation must not reorder publishing candidates.
+
 ## 7. Choose A Comments Display Mode
 
 | Mode | Use it when | Verify |
