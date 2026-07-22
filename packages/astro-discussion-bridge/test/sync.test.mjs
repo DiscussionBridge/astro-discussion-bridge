@@ -6,12 +6,355 @@ import test from "node:test";
 import { checkDiscourse } from "../dist/check-discourse.js";
 import { createDiscourseClient } from "../dist/discourse/client.js";
 import { importExistingDiscourseTopics } from "../dist/import-existing.js";
+import { importExistingDiscourseManifest, validateImportManifest } from "../dist/import-manifest.js";
 import { syncDiscourseTopics, validateDiscourseTopicTitle } from "../dist/sync/index.js";
 
 test("validates titles before publishing to Discourse", () => {
   assert.deepEqual(validateDiscourseTopicTitle("Discussion Bridge for Astro"), []);
   assert.match(validateDiscourseTopicTitle("Beta")[0].reason, /too short/);
   assert.equal(validateDiscourseTopicTitle("aaaa bbbb cccc").some((issue) => /unclear/.test(issue.reason)), true);
+});
+
+test("import manifest preserves curated order and per-topic policies", () => {
+  const manifest = validateImportManifest({
+    version: 1,
+    imports: [
+      {
+        topic: "https://forum.example.com/t/section-10102/747",
+        commentsDisplay: "fullInteractive",
+      },
+      {
+        topic: 751,
+        commentsDisplay: "fullInteractive",
+        heroImage: "../../../assets/hero.png",
+        heroAlt: "Descriptive hero",
+      },
+      {
+        topic: "752",
+        pruneProfiles: ["community-call-to-action"],
+      },
+    ],
+  });
+
+  assert.deepEqual(manifest.imports.map((entry) => entry.topic), [
+    "https://forum.example.com/t/section-10102/747",
+    "751",
+    "752",
+  ]);
+  assert.equal(manifest.imports[1].heroAlt, "Descriptive hero");
+  assert.deepEqual(manifest.imports[2].pruneProfiles, ["community-call-to-action"]);
+});
+
+test("import manifest rejects duplicate topics and unsafe option shapes", () => {
+  assert.throws(
+    () => validateImportManifest({
+      version: 1,
+      apiKey: "must-not-live-here",
+      imports: [{ topic: 747 }],
+    }),
+    /unknown root field.*apiKey/,
+  );
+
+  assert.throws(
+    () => validateImportManifest({
+      version: 1,
+      imports: [
+        { topic: "https://forum.example.com/t/section-10102/747" },
+        { topic: 747 },
+      ],
+    }),
+    /duplicate topic ID 747/,
+  );
+
+  assert.throws(
+    () => validateImportManifest({
+      version: 1,
+      imports: [{ topic: 751, heroImage: "hero.png" }],
+    }),
+    /heroAlt is required/,
+  );
+
+  assert.throws(
+    () => validateImportManifest({
+      version: 1,
+      imports: [{ topic: 752, pruneProfile: "community-call-to-action" }],
+    }),
+    /unknown field.*pruneProfile/,
+  );
+});
+
+test("import manifest stages all entries before changing destination files", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-manifest-stage-"));
+  const docsDir = path.join(dir, "docs");
+  const existingPath = path.join(docsDir, "first-topic.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(existingPath, "existing content\n");
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/t/21.json") {
+        return jsonResponse({
+          id: 21,
+          title: "First Topic",
+          post_stream: { posts: [{ id: 101, post_number: 1, topic_id: 21, topic_slug: "first-topic", cooked: "" }] },
+        });
+      }
+      if (pathname === "/posts/101.json") {
+        return jsonResponse({ id: 101, post_number: 1, topic_id: 21, topic_slug: "first-topic", raw: "replacement", cooked: "" });
+      }
+      if (pathname === "/t/22.json") {
+        return jsonResponse({
+          id: 22,
+          title: "Second Topic",
+          post_stream: { posts: [{ id: 102, post_number: 1, topic_id: 22, topic_slug: "second-topic", cooked: "" }] },
+        });
+      }
+      if (pathname === "/posts/102.json") {
+        return jsonResponse({ id: 102, post_number: 1, topic_id: 22, topic_slug: "second-topic", raw: "no matching footer", cooked: "" });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseManifest({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        overwrite: true,
+        manifest: validateImportManifest({
+          version: 1,
+          imports: [
+            { topic: 21 },
+            { topic: 22, pruneProfiles: ["community-call-to-action"] },
+          ],
+        }),
+      }),
+      /did not find a verified trailing block/,
+    );
+
+    assert.equal(await readFile(existingPath, "utf8"), "existing content\n");
+    await assert.rejects(readFile(path.join(docsDir, "second-topic.md"), "utf8"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import manifest runner revalidates runtime input and dry-run output collisions", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-manifest-collision-"));
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await assert.rejects(
+      importExistingDiscourseManifest({
+        docsDir: dir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        manifest: { version: 1, imports: [{ topic: "21" }], apiKey: "must-not-live-here" },
+      }),
+      /unknown root field.*apiKey/,
+    );
+
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      const topicId = pathname === "/t/21.json" ? 21 : pathname === "/t/22.json" ? 22 : undefined;
+      if (topicId) {
+        return jsonResponse({
+          id: topicId,
+          title: `Topic ${topicId}`,
+          post_stream: {
+            posts: [{ id: 100 + topicId, post_number: 1, topic_id: topicId, topic_slug: "same-slug", cooked: "" }],
+          },
+        });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseManifest({
+        docsDir: dir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        dryRun: true,
+        manifest: { version: 1, imports: [{ topic: "21" }, { topic: "22" }] },
+      }),
+      /resolve to the same Astro file/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import manifest aborts when a topic slug changes after preview", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-manifest-slug-race-"));
+  const originalFetch = globalThis.fetch;
+  let topicReads = 0;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/t/21.json") {
+        topicReads += 1;
+        const slug = topicReads === 1 ? "preview-slug" : "staged-slug";
+        return jsonResponse({
+          id: 21,
+          title: "Changing Topic",
+          post_stream: { posts: [{ id: 101, post_number: 1, topic_id: 21, topic_slug: slug, cooked: "" }] },
+        });
+      }
+      if (pathname === "/posts/101.json") {
+        return jsonResponse({ id: 101, post_number: 1, topic_id: 21, topic_slug: "staged-slug", raw: "content", cooked: "" });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseManifest({
+        docsDir: dir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        manifest: { version: 1, imports: [{ topic: "21" }] },
+      }),
+      /different Astro file between preview and staging/,
+    );
+    await assert.rejects(readFile(path.join(dir, "preview-slug.md"), "utf8"));
+    await assert.rejects(readFile(path.join(dir, "staged-slug.md"), "utf8"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing rejects an unsafe topic slug before writing", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-unsafe-slug-"));
+  const docsDir = path.join(dir, "docs");
+  const escapedPath = path.join(dir, "escaped.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/t/21.json") {
+        return jsonResponse({
+          id: 21,
+          title: "Unsafe Topic",
+          post_stream: { posts: [{ id: 101, post_number: 1, topic_id: 21, topic_slug: "../escaped", cooked: "" }] },
+        });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        topics: ["21"],
+      }),
+      /unsafe Astro file path/,
+    );
+    await assert.rejects(readFile(escapedPath, "utf8"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import manifest no-overwrite rechecks destinations at commit time", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-manifest-destination-race-"));
+  const targetPath = path.join(dir, "stable-slug.md");
+  const originalFetch = globalThis.fetch;
+  let topicReads = 0;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/t/21.json") {
+        topicReads += 1;
+        if (topicReads === 2) await writeFile(targetPath, "appeared after preview\n");
+        return jsonResponse({
+          id: 21,
+          title: "Stable Topic",
+          post_stream: { posts: [{ id: 101, post_number: 1, topic_id: 21, topic_slug: "stable-slug", cooked: "" }] },
+        });
+      }
+      if (pathname === "/posts/101.json") {
+        return jsonResponse({ id: 101, post_number: 1, topic_id: 21, topic_slug: "stable-slug", raw: "content", cooked: "" });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseManifest({
+        docsDir: dir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        manifest: { version: 1, imports: [{ topic: "21" }] },
+      }),
+      /Destination appeared after manifest preview and overwrite is disabled/,
+    );
+    assert.equal(await readFile(targetPath, "utf8"), "appeared after preview\n");
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import manifest preserves an empty destination when overwrite is disabled", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-manifest-empty-destination-"));
+  const targetPath = path.join(dir, "stable-slug.md");
+  const originalFetch = globalThis.fetch;
+  let topicReads = 0;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/t/21.json") {
+        topicReads += 1;
+        if (topicReads === 2) await writeFile(targetPath, "");
+        return jsonResponse({
+          id: 21,
+          title: "Stable Topic",
+          post_stream: { posts: [{ id: 101, post_number: 1, topic_id: 21, topic_slug: "stable-slug", cooked: "" }] },
+        });
+      }
+      if (pathname === "/posts/101.json") {
+        return jsonResponse({ id: 101, post_number: 1, topic_id: 21, topic_slug: "stable-slug", raw: "content", cooked: "" });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseManifest({
+        docsDir: dir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        manifest: { version: 1, imports: [{ topic: "21" }] },
+      }),
+      /Destination appeared after manifest preview and overwrite is disabled/,
+    );
+    assert.equal(await readFile(targetPath, "utf8"), "");
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
 });
 
 test("check-discourse discovers client settings and tag capabilities", async () => {

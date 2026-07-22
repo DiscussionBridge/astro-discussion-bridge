@@ -2,6 +2,7 @@
 import path from "node:path";
 import { checkDiscourse } from "./check-discourse.js";
 import { importExistingDiscourseTopics, type ImportPruneProfile } from "./import-existing.js";
+import { importExistingDiscourseManifest, loadImportManifest } from "./import-manifest.js";
 import { syncDiscourseTopics, type DiscoursePreflightLimits, type SyncMode } from "./sync/index.js";
 
 main().catch((error: unknown) => {
@@ -62,20 +63,26 @@ const commentsDisplay = commentsDisplayFromValue(args.values.get("comments-displ
 const heroImage = args.values.get("hero-image");
 const heroAlt = args.values.get("hero-alt");
 const pruneProfiles = pruneProfilesFromValue(args.values.get("prune-profile"));
+const manifestPath = args.values.get("manifest");
+const hasDirectImportOptions = topics.length > 0 || commentsDisplay !== undefined || heroImage !== undefined || heroAlt !== undefined || pruneProfiles !== undefined;
 
 const missing = [
   ...(args.flags.has("hero-image") ? ["a value after --hero-image"] : []),
   ...(args.flags.has("hero-alt") ? ["a value after --hero-alt"] : []),
   ...(args.flags.has("prune-profile") ? ["a value after --prune-profile"] : []),
+  ...(args.flags.has("manifest") ? ["a value after --manifest"] : []),
   ...(args.values.has("hero-image") && !heroImage?.trim() ? ["a non-empty --hero-image value"] : []),
   ...(args.values.has("hero-alt") && !heroAlt?.trim() ? ["a non-empty --hero-alt value"] : []),
   ...(args.values.has("prune-profile") && !args.values.get("prune-profile")?.trim() ? ["a non-empty --prune-profile value"] : []),
+  ...(args.values.has("manifest") && !manifestPath?.trim() ? ["a non-empty --manifest value"] : []),
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
   ...(!siteUrl && command !== "check-discourse" ? ["SITE_URL or --site-url"] : []),
   ...(!dryRun && command !== "check-discourse" && command !== "import-existing" && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
   ...(!dryRun && command === "import-existing" && !importApiKey ? ["DISCOURSE_DIAGNOSTICS_API_KEY, DISCOURSE_API_KEY, --diagnostics-api-key, or --api-key"] : []),
   ...(!dryRun && command !== "check-discourse" && !apiUsername ? ["DISCOURSE_API_USERNAME or --api-username"] : []),
-  ...(command === "import-existing" && topics.length === 0 ? ["--topic URL[,URL] or --topic-id ID[,ID]"] : []),
+  ...(command === "import-existing" && topics.length === 0 && !manifestPath ? ["--topic URL[,URL], --topic-id ID[,ID], or --manifest FILE"] : []),
+  ...(command === "import-existing" && manifestPath && hasDirectImportOptions ? ["use --manifest without --topic, --comments-display, --hero-image, --hero-alt, or --prune-profile"] : []),
+  ...(command !== "import-existing" && manifestPath ? ["--manifest is only valid with import-existing"] : []),
   ...(command === "import-existing" && heroImage && !heroAlt?.trim() ? ["--hero-alt TEXT when --hero-image is used"] : []),
   ...(command === "import-existing" && heroAlt && !heroImage ? ["--hero-image PATH when --hero-alt is used"] : []),
 ];
@@ -183,22 +190,36 @@ if (command === "import-existing") {
     console.log("Importing existing Discourse topics into Astro Markdown files.");
   }
 
-  const results = await importExistingDiscourseTopics({
-    docsDir,
-    siteUrl: siteUrl!,
-    routeBase,
-    targetName,
-    discourseUrl: discourseUrl!,
-    apiKey: importApiKey ?? "",
-    apiUsername: apiUsername ?? "",
-    topics,
-    dryRun,
-    overwrite,
-    commentsDisplay,
-    heroImage,
-    heroAlt,
-    pruneProfiles,
-  });
+  const manifest = manifestPath ? await loadImportManifest(manifestPath.trim()) : undefined;
+  const results = manifest
+    ? await importExistingDiscourseManifest({
+      docsDir,
+      siteUrl: siteUrl!,
+      routeBase,
+      targetName,
+      discourseUrl: discourseUrl!,
+      apiKey: importApiKey ?? "",
+      apiUsername: apiUsername ?? "",
+      manifest,
+      dryRun,
+      overwrite,
+    })
+    : await importExistingDiscourseTopics({
+      docsDir,
+      siteUrl: siteUrl!,
+      routeBase,
+      targetName,
+      discourseUrl: discourseUrl!,
+      apiKey: importApiKey ?? "",
+      apiUsername: apiUsername ?? "",
+      topics,
+      dryRun,
+      overwrite,
+      commentsDisplay,
+      heroImage,
+      heroAlt,
+      pruneProfiles,
+    });
 
   for (const result of results) {
     console.log(`${result.status}: ${result.filePath} -> ${result.topicUrl}`);
@@ -405,6 +426,7 @@ function printUsage(error?: string) {
   console.error("Import options:");
   console.error("  --topic URL[,URL]          Discourse topic URL or ID to import.");
   console.error("  --topic-id ID[,ID]         Discourse topic ID to import.");
+  console.error("  --manifest FILE            Ordered JSON imports with per-topic hero/prune/comments options.");
   console.error("  --overwrite                Replace existing imported Markdown files.");
   console.error("  --comments-display MODE    simple, full, or fullInteractive.");
   console.error("  --hero-image PATH          Add a leading imported-page image using this asset path or URL.");

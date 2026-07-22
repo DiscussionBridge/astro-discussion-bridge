@@ -58,7 +58,7 @@ export async function importExistingDiscourseTopics(
     }
 
     const slug = topicRef.slug ?? firstPostSummary.topic_slug ?? slugify(topic.title);
-    const filePath = path.join(docsDir, `${slug}.md`);
+    const filePath = safeImportFilePath(docsDir, slug, topic.id);
     const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl, routeBase: options.routeBase });
     const topicUrl = `${discourse.discourseUrl}/t/${slug}/${topic.id}`;
     const fileExists = await pathExists(filePath);
@@ -341,6 +341,15 @@ function pageUrlForFile(input: {
   const pathname = [routeBase, slug].filter(Boolean).join("/");
 
   return `${input.siteUrl.replace(/\/+$/, "")}/${pathname ? `${pathname}/` : ""}`;
+}
+
+function safeImportFilePath(docsDir: string, slug: string, topicId: number): string {
+  const filePath = path.resolve(docsDir, `${slug}.md`);
+  const relative = path.relative(docsDir, filePath);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`Discourse topic ${topicId} resolved to an unsafe Astro file path.`);
+  }
+  return filePath;
 }
 
 function normalizeRouteBase(value: string | undefined): string {

@@ -31,6 +31,10 @@
       "types": "./dist/import-existing.d.ts",
       "import": "./dist/import-existing.js"
     },
+    "./import-manifest": {
+      "types": "./dist/import-manifest.d.ts",
+      "import": "./dist/import-manifest.js"
+    },
     "./sync": {
       "types": "./dist/sync/index.d.ts",
       "import": "./dist/sync/index.js"
