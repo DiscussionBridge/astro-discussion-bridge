@@ -17,6 +17,8 @@ site:
   package_repo_commit: 7aadcf63c76b8ebd9e0c9383b5c7386ad704396e
   obbba_integration_commit: f277171
   obbba_deployment_fix_commit: e9c279dbe1b0bec512ff7fcf0c9ec6f17f0dd6b8
+  obbba_manifest_commit: 64a4f94
+  stale_starter_removal_commit: a225f00
   framework: Astro 7 + Starlight
   site_url: https://onebigbeautifulbill.us
   discourse_url: https://forum.repealobbba.org
@@ -43,9 +45,12 @@ proof_lane:
 current_integration:
   package_installed: true
   package_version: 0.1.0
-  alpha_artifact: vendor/astro-discussion-bridge-0.1.0-alpha-729d85f-ad0bdf0b.tgz
-  alpha_artifact_sha256: ad0bdf0bf181389b4f6677cee7170e4c57d9c6293b6a91d282a0537bd35f10fa
-  package_commit: 729d85f
+  alpha_artifact: vendor/astro-discussion-bridge-0.1.0-alpha-a646c6b-76684dbd.tgz
+  alpha_artifact_sha256: 76684dbdb2411ae37492d18209e672bc351818c580ff889a0034194ac9776c09
+  package_commits:
+    - 54bc429
+    - 6c01973
+    - a646c6b
   page_component: astro-discussion-bridge/Discussion.astro
   previous_comments_component: src/components/DiscourseComments.astro
   previous_comments_api_route: src/pages/api/discourse-comments.json.ts
@@ -106,7 +111,7 @@ with optional `fullApp` and `embedHeight`.
 package_manager: npm
 install_command: npm ci
 build_command: npm run build
-package_reference: file:vendor/astro-discussion-bridge-0.1.0-alpha-729d85f-ad0bdf0b.tgz
+package_reference: file:vendor/astro-discussion-bridge-0.1.0-alpha-a646c6b-76684dbd.tgz
 astro_site: https://onebigbeautifulbill.us
 wrangler:
   compatibility_date: '2026-06-30'
@@ -133,7 +138,7 @@ clean_install_note: wrapper timed out after 184 seconds, but npm ls subsequently
 wrangler_deploy:
   result: pass
   worker: onebigbeautifulbill
-  version: 85478ec8-af54-42bf-828e-2e0f2f1e0337
+  version: 9ea661a7-5b1e-46a9-90f0-3ccc0fd10095
   workers_dev_endpoint: https://onebigbeautifulbill.systems-b95.workers.dev
   deterministic_account_id_in_wrangler_jsonc: true
 ```
@@ -323,7 +328,7 @@ refresh operation without an explicit design.
 ```yaml
 migration:
   target_package: astro-discussion-bridge
-  package_version_or_build: 0.1.0-alpha-729d85f-ad0bdf0b packed reviewed artifact
+  package_version_or_build: 0.1.0-alpha-a646c6b-76684dbd packed reviewed artifact
   preserve:
     - discussionSourceMode=discourse-imported
     - discussionSync=false
@@ -358,11 +363,17 @@ verification:
   package_repo_commit_pushed_main: 7aadcf63c76b8ebd9e0c9383b5c7386ad704396e
   obbba_integration_commit_pushed: f277171
   obbba_deployment_fix_commit_pushed: e9c279dbe1b0bec512ff7fcf0c9ec6f17f0dd6b8
+  obbba_manifest_commit_pushed: 64a4f94
+  stale_starter_removal_commit_pushed: a225f00
+  staged_obbba_site_slice_code_boss_review: pass
+  clean_detached_build_at_a225f00: pass
+  stale_tracked_starter_page_removed: src/content/docs/impact/example.md
+  stale_starter_failure: referenced_removed_assets/obbba.png
   source_frontmatter_guard: pass
   source_topic_id: pass_434
   source_forum_hostname: pass_forum.repealobbba.org
   package_integration: pass_alpha_artifact
-  package_regression_suite: pass_38_of_38
+  package_regression_suite: pass_49_of_49
   code_boss_review: final_pass
   crlf_write_preservation_regression: pass
   discourse_embed_declaration_review: pass_code_boss_p2_fixed
@@ -415,13 +426,14 @@ verification:
     - custom component cleanup
     - starter content cleanup
   deployment_commits_absorbed_preserved_changes: false
+  superseded_untracked_artifacts_touched: false
 ```
 
 Broader OBBBA Discourse-to-Astro Alpha gate:
 
 ```yaml
 fresh_import_gate:
-  status: open
+  status: pass_live
   discovery_queue:
     alpha_requirement: true
     curated_input: explicit_topic_or_manifest
@@ -459,17 +471,63 @@ fresh_import_gate:
     - name: fresh_topic_prune_only
       section: 10104
       topic_id: 752
-      status: pending_next
+      status: pass_local_build
       hero: false
-      prune_rules: true
+      prune_profiles: [community-call-to-action]
+      import_policy: pruned:community-call-to-action
+      removed_chars: 453
+      raw_prefix_match: pass
+      footer_markers_absent: pass
     - name: fresh_topic_hero_and_prune
       section: 10105
       topic_id: 753
-      status: pending_after_10104
+      status: pass_local_build
       hero: true
       hero_alt_text: required
-      prune_rules: true
-  update_all_after_matrix: required
+      prune_profiles: [community-call-to-action]
+      import_policy: pruned:community-call-to-action
+      removed_chars: 441
+      raw_prefix_match: pass
+      footer_markers_absent: pass
+  local_matrix_status: complete
+  live_deployment_verification: pass
+  live_worker_version: 9ea661a7-5b1e-46a9-90f0-3ccc0fd10095
+  live_routes:
+    - topic_id: 434
+      http_status: 200
+    - topic_id: 747
+      http_status: 200
+    - topic_id: 751
+      http_status: 200
+    - topic_id: 752
+      http_status: 200
+    - topic_id: 753
+      http_status: 200
+  live_boundary_count_each: 1
+  live_topic_binding: pass
+  live_hero_prune_policy: pass
+  accidental_discourse_writeback: none
+  deterministic_refresh:
+    current_single_command_safe: true_with_reviewed_manifest
+    package_gate: pass
+    command_shape: import-existing --manifest PATH --overwrite
+    per_topic_fields: [commentsDisplay, heroImage, heroAlt, pruneProfiles]
+    manifest_order: preserve_caller_order
+    strict_schema: JSON_version_and_imports_only
+    duplicate_topics: reject
+    direct_option_mixing: reject
+    runner_revalidation: required
+    preflight: [dry_run, collision, path_containment]
+    staging: all_entries_before_write
+    no_overwrite_creation: atomic_exclusive
+    overwrite_failure: rollback
+    regressions: [slug_drift, destination_race, zero_byte, traversal]
+    obbba_manifest: discussionbridge-imports.json
+    obbba_order: [747, 751, 752, 753]
+    execution:
+      no_overwrite_dry_run: 4_skipped
+      overwrite_dry_run: 4_dry_run_overwrite
+      overwrite_live_local_files: 4_imported_in_order
   every_proof_must_verify:
     - generated discussionSourceMode=discourse-imported
     - generated discussionSync=false
@@ -481,7 +539,42 @@ fresh_import_gate:
     - no accidental writeback
 ```
 
-Do not infer completion of this broader gate from the existing topic-434 page.
+This broader gate passed from the five-page live matrix, not from the existing
+topic-434 page alone.
+
+Remaining OBBBA site-slice gate:
+
+```yaml
+status: complete
+completed:
+  - Code Boss PASS on staged OBBBA site slice
+  - manifest site slice committed and pushed as 64a4f94
+  - clean-build correction committed and pushed as a225f00
+  - exact candidate deployed as Worker version 9ea661a7-5b1e-46a9-90f0-3ccc0fd10095
+  - topics 434, 747, 751, 752, and 753 verified live
+  - exactly one correctly bound discussion per route
+  - expected hero and prune policy verified live
+  - no accidental Discourse writeback
+```
+
+Prune profile contract:
+
+```yaml
+profile: community-call-to-action
+opt_in_only: true
+boundary: trailing block after horizontal rule
+all_markers_required:
+  - Join the Conversation Today
+  - /signup
+  - Please share how
+  - /c/stories/
+no_verified_boundary: hard_failure_before_file_write
+invalid_profile_input_before_io:
+  - unknown profile
+  - duplicate profile
+  - bare CLI option
+  - empty CLI value
+```
 
 OBBBA Starlight integration invariant:
 

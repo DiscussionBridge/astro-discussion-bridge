@@ -77,3 +77,23 @@ meaningful alt text are inseparable inputs. The bridge preserves the normalized
 Discourse body after inserting the leading image and supports local paths, URLs,
 spaces, and escaped alt text. This keeps accessibility part of the import
 contract rather than a cleanup step.
+
+## Fail-Closed Import Pruning
+
+Pruning is an explicit import policy, not a loose text cleanup. The first Alpha
+profile removes a known trailing community call-to-action only when its complete
+boundary and marker set are verified. Ambiguity fails before writing, and the
+selected profile is preserved in import metadata.
+
+Because hero, pruning, and comments policy may differ by topic, deterministic
+multi-page refresh uses the reviewed ordered import manifest. It preserves
+caller order and each topic's policy, rejects ambiguous inputs, preflights and
+stages the complete batch, then uses atomic creation or overwrite rollback. A
+blanket “update all” cannot safely reconstruct heterogeneous page policy.
+
+The OBBBA five-page live proof (`434`, `747`, `751`, `752`, `753`) confirmed one
+correctly bound discussion per route and the expected hero/prune policies. It
+also established a release lesson: production-shaped verification must include
+a clean build of the exact tracked commit. A dirty local deletion had hidden a
+stale tracked starter page, so the removal was isolated before deployment while
+unrelated changes and superseded artifacts remained untouched.

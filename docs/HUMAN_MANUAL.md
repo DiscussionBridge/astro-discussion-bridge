@@ -287,6 +287,24 @@ escaped alt text are supported.
 > **Stop if:** only one hero option is present, alt text is empty/whitespace, or
 > the hero insertion changes the normalized Discourse body.
 
+To remove the known trailing community call-to-action block during import:
+
+```sh
+npx astro-discussion-bridge import-existing src/content/docs \
+  --topic https://forum.example.com/t/example-topic/123 \
+  --prune-profile community-call-to-action \
+  --dry-run
+```
+
+This opt-in profile removes only a trailing block after a horizontal rule when
+all four markers are present: `Join the Conversation Today`, `/signup`, `Please
+share how`, and `/c/stories/`. Without a verified boundary, import stops before
+writing a file. Unknown, duplicate, bare, or empty profile inputs also fail
+before file I/O.
+
+You should see `discussionImportPolicy: "pruned:community-call-to-action"` only
+after a successful profiled import.
+
 ### Build And Preview An Import Queue
 
 Import discovery/queue is required for Alpha. Use either:
@@ -308,6 +326,17 @@ This never permits ordering by latest activity.
 
 Always preview the candidate list before importing and exclude topics already
 represented by imported Astro pages.
+
+For deterministic refresh of pages with different policies, use the reviewed
+Alpha import manifest rather than a blanket update-all operation. Its strict
+JSON contains only `version` and ordered `imports`. Each topic entry retains its
+own `commentsDisplay`, `heroImage`/`heroAlt`, and `pruneProfiles`, and caller
+order is preserved. Run `import-existing --manifest ... --overwrite`.
+
+Preview before writing. The bridge rejects duplicate topics and mixing manifest
+mode with direct topic options, revalidates every entry, checks destinations and
+path containment, and stages the whole batch before atomic creation or
+overwrite rollback. A failed batch must not leave a partial import set.
 
 > **Never use:** `bumped_at`, last reply, or latest activity for queue order.
 > Community participation must not reorder publishing candidates.
@@ -392,6 +421,11 @@ private account labels and login addresses out of public manuals and screenshots
 
 Before making a deployment-only commit, inspect the site worktree. Preserve and
 report unrelated pre-existing edits instead of silently including them.
+
+Also build the exact committed candidate from a clean checkout or detached
+worktree. A local file deletion can make a dirty build look healthy while the
+tracked release still contains the stale page. If the clean build finds one,
+isolate the removal or repair in its own reviewed commit and build again.
 
 If the deployed page looks stale, verify the deployment commit and Discourse
 topic first. Then test with a cache-bypassing request or clear only the relevant

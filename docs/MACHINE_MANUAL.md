@@ -347,6 +347,31 @@ output:
   internal_path_spaces: supported
 ```
 
+Prune option:
+
+```text
+--prune-profile community-call-to-action
+```
+
+```yaml
+profile: community-call-to-action
+mode: opt_in
+removal_scope: trailing block after horizontal rule
+markers_all_required:
+  - Join the Conversation Today
+  - /signup
+  - Please share how
+  - /c/stories/
+failure_before_io:
+  - no verified boundary
+  - unknown profile
+  - duplicate profile
+  - bare option
+  - empty value
+success_metadata:
+  discussionImportPolicy: pruned:community-call-to-action
+```
+
 Accepted topic references: numeric ID or URL whose host matches
 `DISCOURSE_URL`. Expected statuses: `dry-run-import`, `dry-run-overwrite`,
 `imported`, `skipped`. Existing files are skipped unless `--overwrite` is used.
@@ -387,6 +412,42 @@ alpha_requirement: true
 
 The stable comparison key for the default queue is `(created_at, topic_id)`.
 Community replies must never reorder publishing candidates.
+
+Manifest refresh gate:
+
+```yaml
+command: import-existing --manifest PATH --overwrite
+purpose: deterministic multi-page refresh with per-topic policy
+schema:
+  format: strict_json
+  top_level_keys: [version, imports]
+manifest_entry_fields:
+  - topic
+  - commentsDisplay
+  - heroImage
+  - heroAlt
+  - pruneProfiles
+ordering: preserve caller-supplied manifest order
+reject:
+  - duplicate_topics
+  - manifest_and_direct_option_mixing
+validation:
+  - runner_revalidation
+  - dry_run_collision_and_path_preflight
+  - path_containment_before_writes
+write_model:
+  - stage_all_entries_before_writes
+  - exclusive_atomic_creation_without_overwrite
+  - atomic_overwrite_with_rollback
+regression_coverage:
+  - slug_drift
+  - destination_race
+  - zero_byte_output
+  - path_traversal
+blanket_update_all_safe: false
+package_gate: pass_49_of_49
+obbba_site_live_proof: pass_topics_434_747_751_752_753
+```
 
 ### Starlight Imported-Page Integration
 
@@ -614,6 +675,12 @@ Verification:
 Before deployment commits, inspect the consuming site's worktree. Preserve and
 report unrelated pre-existing changes; do not absorb them into deployment-only
 commits.
+
+Build the exact tracked candidate from a clean checkout or detached worktree
+before release. A dirty local deletion can hide a stale tracked page or asset
+reference and make the working-tree build pass when the committed candidate
+fails. Isolate the correction in its own reviewed commit, rebuild that exact
+commit, and leave unrelated unstaged changes and untracked artifacts untouched.
 
 ## 11. Known Failures And Recovery
 

@@ -69,7 +69,7 @@ C:\CodeProjects\Projects\OBBBA\sites\onebigbeautifulbill.us\astro
 The current site uses Astro 7, Starlight, Mermaid, the Cloudflare adapter, OG
 image generation, and `astro-discussion-bridge`. The Alpha integration uses the
 unique packed artifact
-`vendor/astro-discussion-bridge-0.1.0-alpha-729d85f-ad0bdf0b.tgz`; it is not the final
+`vendor/astro-discussion-bridge-0.1.0-alpha-a646c6b-76684dbd.tgz`; it is not the final
 release distribution.
 
 > **Stop if:** work is pointed at the `legacy-source` directory, a copied deploy
@@ -230,7 +230,7 @@ Bridge Boss completed the local package migration without a Discourse write:
 3. The proof page imports the package `Discussion.astro` component.
 4. All source-mode, topic, manually-pruned content, image, alt text, and comments
    settings were preserved.
-5. The package regression suite passed 38/38 with Code Boss final PASS.
+5. The package regression suite passed 49/49 with Code Boss final PASS.
 6. The deployment-shaped OBBBA build passed.
 7. Generated HTML contains topic ID `434`, `fullApp=true`, the correct forum
    URL, and the correct fallback topic URL.
@@ -261,6 +261,29 @@ over the U.S. Capitol`. Its normalized imported body exactly matches the
 Discourse raw body. Sections 10101, 10102, and 10103 each build with exactly one
 correct `fullInteractive` discussion.
 
+Sections 10104/topic 752 and 10105/topic 753 complete the local prune proofs.
+Both use the opt-in `community-call-to-action` profile, which removes only the
+verified trailing footer block. The prune-only page removed 453 characters; the
+hero-plus-prune page removed 441. Each local body matches the independently
+verified Discourse raw prefix, the footer markers are absent, and each page has
+exactly one correct `fullInteractive` discussion.
+
+The four-route matrix now passes locally, in a clean production-shaped build,
+and live. Topics `747`, `751`, `752`, and `753` each return HTTP 200 with exactly
+one correctly bound discussion and the intended hero/prune policy. Together
+with the existing topic `434` proof, this closes the broader live matrix gate.
+
+The reviewed refresh mechanism is the ordered `discussionbridge-imports.json`
+manifest. It records each topic's comments mode, hero pair, and prune profiles,
+in the deliberate order `747`, `751`, `752`, `753`. A normal dry run skipped all
+four existing pages; an overwrite dry run previewed four replacements; the
+actual overwrite then imported all four in that same order.
+
+The package validates the whole batch before writing, stages every result, and
+uses atomic creation or rollback so one bad entry does not leave a partial
+refresh. Keep using `import-existing --manifest ... --overwrite`; do not replace
+it with a blanket update-all command that loses per-page policy.
+
 The Discourse category ID and required topic tags for this proof lane are not
 yet recorded in the durable source reviewed for this runbook. They must be
 confirmed before any command that could create or update topic metadata.
@@ -284,8 +307,12 @@ Live deployment evidence:
   is on `main`.
 - OBBBA integration commit `f277171` and deterministic deployment fix
   `e9c279dbe1b0bec512ff7fcf0c9ec6f17f0dd6b8` were pushed.
+- The reviewed manifest site slice was committed and pushed as `64a4f94`.
+- A clean detached build found a tracked stale starter page that a dirty local
+  deletion had hidden. Removing that page was isolated and pushed as `a225f00`;
+  the clean build at that exact commit passed.
 - Worker `onebigbeautifulbill` deployed successfully as version
-  `85478ec8-af54-42bf-828e-2e0f2f1e0337` at
+  `9ea661a7-5b1e-46a9-90f0-3ccc0fd10095` at
   `https://onebigbeautifulbill.systems-b95.workers.dev`.
 - The canonical proof page returns HTTP 200 and contains the package signature:
   topic `434`, `fullApp=true`, the correct forum and fallback URLs, and the hero
@@ -294,6 +321,12 @@ Live deployment evidence:
   reply was created and verified after deployment.
 - `publishOnBuild` remains false; deployment performed no publish, sync, or
   import write.
+- Canonical smoke checks returned HTTP 200 for topics `434`, `747`, `751`,
+  `752`, and `753`; each route has one correct discussion boundary and the
+  expected hero/prune state.
+
+Unrelated unstaged OBBBA changes and superseded untracked package artifacts
+were left untouched.
 
 `wrangler.jsonc` now pins the operational Cloudflare account ID so deployment is
 deterministic. The private account label is intentionally omitted from this
@@ -353,8 +386,8 @@ Fresh topics and pages must still prove:
 
 - [x] Section 10102/topic 747: import with no hero and no pruning.
 - [x] Section 10103/topic 751: hero placement only, with required alt text.
-- [ ] Prune rules only.
-- [ ] Hero placement plus prune rules, including required alt text.
+- [x] Section 10104/topic 752: prune rules only, verified locally.
+- [x] Section 10105/topic 753: hero plus prune rules, verified locally.
 - [ ] Each generated page has `discussionSourceMode: discourse-imported`,
       `discussionSync: false`, and the correct topic ID and URL.
 - [ ] Each approved proof builds, deploys, renders live, and displays comments.
@@ -385,5 +418,12 @@ The Alpha gate also requires a usable import discovery/queue:
 - [ ] Confirm Cloudflare ownership/account boundary.
 - [x] Verify live canonical proof page and Worker deployment signature.
 - [x] Verify a signed-in browser-session reply against topic `434`.
-- [ ] Complete the fresh import/hero/prune proof matrix above.
+- [x] Complete the fresh import/hero/prune matrix locally and in a
+      production-shaped build.
+- [x] Deploy and verify all four fresh routes live, including comments and no
+      accidental writeback.
+- [x] Implement and prove the atomic per-topic import manifest refresh workflow
+      locally with the four-case OBBBA matrix.
+- [x] Pass the staged OBBBA site slice through Code Boss, commit and push it,
+      deploy it, and verify all four routes live.
 - [ ] Complete Manual Boss review and approve or replace visual placeholders.
