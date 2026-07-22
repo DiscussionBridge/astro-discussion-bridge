@@ -46,12 +46,40 @@ package configuration rather than hard-coded into site content.
 
 ## Bounded Cross-Forum Proof
 
-One or two clearly labeled demo/credit pages on `onebigbeautifulbill.us` may use
-companion topics on `forum.discussionbridge.dev` through explicit per-page target
-selection. Production OBBBA content remains on `forum.repealobbba.org`.
+Alpha now proposes real multi-target operation as active scope pending
+implementation design review:
 
-This is a bounded topology proof and one step toward future many-to-many support;
-it is not a claim that general many-to-many operation is currently supported.
+- the same selected `onebigbeautifulbill.us` page connects to both
+  `forum.repealobbba.org` and `forum.citizenactivist.network` through an explicit
+  ordered target list;
+- bounded demo/credit pages connect to `forum.discussionbridge.dev`;
+- multiple Astro/public sites converge on `forum.repealobbba.org`;
+
+The CitizenActivist.Network forum is publicly described as “A community of
+activists.”
+
+For each non-default target, configure the named target, select the pages
+explicitly, run diagnostics, verify build and live topic/page bindings, and prove
+there is no cross-target writeback. Production OBBBA source lanes remain on
+`forum.repealobbba.org`.
+
+This is a real Alpha product capability, not topology wording alone. The model
+must distinguish the source target from publication/discussion targets and
+persist forum identity, topic ID/URL, sync state, error state, and display policy
+for every target independently. An imported or Discourse-managed source retains
+its no-writeback protection while the page may publish explicitly to another
+target.
+
+Comments presentation must declare one primary rendered discussion and how
+additional targets are linked or rendered; the bridge must never silently pick
+one. Multi-target writes use recoverable partial-success semantics: keep
+successful bindings, report the failed target, and retry idempotently without
+creating duplicate topics. Diagnostics, dry-run, CLI output, manuals, and live
+proof are target-specific. General many-to-many administration remains later.
+
+The `forum.` hostname is deliberately literal and operationally clear; community
+meaning belongs in the forum identity and copy. Cloudflare/account ownership
+placement remains an Ops decision.
 
 ## Alpha Import Queue Principle
 
@@ -154,12 +182,22 @@ already understand.
 
 Tier 1 remains the free/self-serve, API-only floor and must remain useful without
 installing a Discourse plugin. A separate optional `Discussion Bridge for
-Discourse` plugin is proposed for Alpha product work, pending Phil's explicit
-scope confirmation. Its bounded v0.1 vertical slice would provide
+Discourse` plugin is accepted Alpha product work, pending implementation design
+and proof. Its bounded v0.1 vertical slice provides
 `fullInteractive` Mermaid/table rendering parity inside the Discourse-owned
 embed plus the architecture and test baseline for later control-plane work.
 
-That proposal does not include the full control plane, post-as-user, PM
-automation, or general many-to-many management. Until scope is confirmed, it is
-not an active Alpha release blocker and the roadmap must not imply that Tier 1
+That slice does not include the full control plane, post-as-user, PM automation,
+or general many-to-many administration. The roadmap must not imply that Tier 1
 requires plugin installation.
+
+Alpha scope is cumulative. The plugin and same-page multi-target gates add to,
+and do not replace, any previously accepted Alpha gate. The existing dashboard
+and build/launch checklists are the source of truth for the complete scope;
+items remain active unless Phil explicitly removes them.
+
+The current logical/workspace home for that optional plugin is
+`DiscussionBridge/plugins/discourse-discussion-bridge`. The `plugins` directory
+may move higher later. Physical GitHub repository naming and placement remain a
+Boss/folder decision because GitHub organizations do not provide nested
+repositories.

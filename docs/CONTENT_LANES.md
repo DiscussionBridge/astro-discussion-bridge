@@ -168,13 +168,39 @@ The first real proof lane is OBBBA: `forum.repealobbba.org` to `onebigbeautifulb
 
 OBBBA also proves a many-to-one shape: `onebigbeautifulbill.us`, `repealobbba.org`, `repealobbbaact.us`, and possibly `repealobbbapledge.us` can all connect to `forum.repealobbba.org`, while each site or lane may use a different source mode. That is distinct from full many-to-many, but it should keep the bridge from assuming one global forum, one global direction, or one global content lane.
 
-The next bounded topology proof should add one or two clearly labeled demo or
-credit pages on `onebigbeautifulbill.us` whose companion topics live on
-`forum.discussionbridge.dev`. Those pages should use an explicit per-page target
-and must not change the managing forum for the OBBBA content lanes. This proves
-that one Astro site can safely connect selected pages to another Discourse while
-remaining honest that Alpha supports one target per page, not full many-to-many
-orchestration.
+The bounded Alpha topology proof adds two explicit alternate-forum paths from
+selected `onebigbeautifulbill.us` pages. One uses a dedicated
+CitizenActivist.Network Discourse at canonical hostname
+`forum.citizenactivist.network`, publicly described as “A community of
+activists.” The
+other may use `forum.discussionbridge.dev` for clearly labeled demo/credit pages.
+Neither changes the managing forum for production OBBBA content lanes.
+
+Together with the existing many-to-one shape, this proposed active Alpha scope
+requires one-page-to-many-forums publishing, pending implementation design
+review. The same selected page uses an explicit ordered list containing
+`forum.repealobbba.org` and `forum.citizenactivist.network`. General many-to-many
+administration remains outside this gate.
+
+Required matrix:
+
+```text
+same selected onebigbeautifulbill.us page -> forum.repealobbba.org
+same selected onebigbeautifulbill.us page -> forum.citizenactivist.network
+bounded demo/credit pages              -> forum.discussionbridge.dev
+multiple Astro/public sites            -> forum.repealobbba.org
+```
+
+The first two edges are bindings of the same page and prove explicit multi-target
+publication. The last edge separately proves many sites converging on one forum.
+
+Each target needs independent binding and operational state. Source-target
+no-writeback protection remains intact, comments presentation identifies a
+primary discussion and additional targets, and partial writes retain successes
+for idempotent target-specific retry.
+
+Use `forum.` for literal operational clarity; express the community meaning in
+the forum identity/copy. Cloudflare/account ownership remains an Ops boundary.
 
 ## Content Tags And Discourse Tags
 

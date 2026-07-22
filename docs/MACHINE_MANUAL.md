@@ -786,6 +786,10 @@ must not be treated as the only failure record.
 ```yaml
 release_scope_doctrine:
   alpha: nearly_feature_complete_for_declared_product_promise
+  scope_model: cumulative
+  source_of_truth: existing_dashboard_and_build_launch_checklists
+  new_gates_displace_existing_gates: false
+  removal_authority: explicit_Phil_direction
   beta_primary_work:
     - usability
     - compatibility
@@ -806,10 +810,48 @@ tiers:
     plugin_required: false
     role: free_self_serve_floor
   optional_discourse_plugin:
-    alpha_vertical_slice_status: proposed_pending_Phil_confirmation
-    proposed_v0_1: fullInteractive_Mermaid_table_parity_plus_architecture_tests
+    alpha_vertical_slice_status: accepted_Alpha_pending_design_implementation_and_proof
+    v0_1: fullInteractive_Mermaid_table_parity_plus_architecture_tests
     not_v0_1: [full_control_plane, post_as_user, PM_automation, general_many_to_many]
     tier_1_dependency: false
+    logical_workspace_path: DiscussionBridge/plugins/discourse-discussion-bridge
+    physical_github_repo: unresolved_Boss_folder_decision
+alpha_topology_proof:
+  status: proposed_active_Alpha_pending_implementation_design_review
+  production_obbba_target: https://forum.repealobbba.org
+  citizen_activist_target:
+    canonical: https://forum.citizenactivist.network
+    public_description: A community of activists
+    hostname_policy: literal_forum_prefix_identity_in_copy
+    cloudflare_account_ownership: unresolved_Ops_decision
+  bounded_demo_target: https://forum.discussionbridge.dev
+  exact_matrix:
+    - { from: same_selected_onebigbeautifulbill.us_page, to: https://forum.repealobbba.org }
+    - { from: same_selected_onebigbeautifulbill.us_page, to: https://forum.citizenactivist.network }
+    - { from: bounded_demo_credit_pages, to: https://forum.discussionbridge.dev }
+    - { from: multiple_Astro_public_sites, to: https://forum.repealobbba.org }
+  proof_meaning:
+    one_page_multiple_forums: first_two_edges
+    multiple_sites_one_forum: fourth_edge
+  contract:
+    source_target_distinct_from_publication_discussion_targets: required
+    target_list: explicit_ordered
+    per_target_state: [forum_identity, topic_id, topic_url, sync_state, error_state, display_policy]
+    source_no_writeback: preserve_for_discourse_imported_and_discourse_managed
+    comments_presentation: explicit_primary_plus_additional_linked_or_rendered
+    silent_primary_selection: prohibited
+    write_semantics: recoverable_partial_success
+    successful_bindings_on_other_target_failure: retain
+    retry: target_specific_idempotent_no_duplicate_topics
+    target_specific_surfaces: [diagnostics, dry_run, CLI_output, manuals, live_proof]
+  required_gate:
+    - configure_named_target
+    - select_clearly_labeled_pages
+    - run_target_diagnostics
+    - verify_build_and_live_page_topic_binding
+    - prove_no_cross_target_writeback
+  claim: topology_many_to_many_across_sites_pages_forums
+  later_scope: general_many_to_many_administration
 ```
 
 ```yaml

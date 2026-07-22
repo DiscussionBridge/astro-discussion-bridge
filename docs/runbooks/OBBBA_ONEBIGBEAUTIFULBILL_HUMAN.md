@@ -371,13 +371,22 @@ not invent or relocate that boundary in this runbook.
 
 ### Deferred Demo And Credit Work
 
-After the broader fresh-import OBBBA gate is approved, add one or two clearly labeled demo/credit
-pages on `onebigbeautifulbill.us` whose companion topics live on
-`forum.discussionbridge.dev`. Each page must select that target explicitly.
-Production OBBBA pages and source content remain on `forum.repealobbba.org`.
+Add clearly labeled proof pages on `onebigbeautifulbill.us` for two bounded
+alternate targets: `forum.citizenactivist.network` (“A community of activists”)
+and `forum.discussionbridge.dev` demo/credit topics. Each page must select exactly
+one target explicitly. Production OBBBA pages and source content remain on
+`forum.repealobbba.org`.
 
-Describe this only as a bounded cross-forum topology proof—one step toward
-many-to-many—not as general many-to-many support. The planned comments-boundary
+The live proof record must also retain selected `onebigbeautifulbill.us` pages
+bound to `forum.repealobbba.org`, and record the separate edge from multiple
+Astro/public sites into that same forum. Those four edges distinguish
+page/lane-level target selection from the many-to-one convergence proof.
+
+The Alpha proof must use the same selected OBBBA page for both
+`forum.repealobbba.org` and `forum.citizenactivist.network` through an explicit
+ordered target list. This is proposed active Alpha scope pending implementation
+design review. It claims real one-page multi-forum operation, but not the future
+general administration plane. The planned comments-boundary
 credit must remain configurable, secondary, accessible, and outside site content.
 Its final wording and default remain undecided.
 

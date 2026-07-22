@@ -649,7 +649,7 @@ failures:
 
 ## 11. Release Evidence
 
-Deferred topology/credit inputs; these do not alter the open fresh-import gate:
+Additive Alpha topology/credit inputs; these do not replace or close any existing Alpha gate:
 
 ```yaml
 post_gate_demo:
@@ -657,10 +657,33 @@ post_gate_demo:
   page_count: 1_or_2
   labeling: explicit_demo_or_credit
   companion_forum: https://forum.discussionbridge.dev
-  target_selection: explicit_per_page
+  target_selection: explicit_ordered_per_page_target_list
   production_obbba_forum_remains: https://forum.repealobbba.org
   support_claim: bounded_cross_forum_topology_proof
-  full_many_to_many_claim: false
+  general_many_to_many_administration_claim: false
+  citizen_activist:
+    canonical_forum: https://forum.citizenactivist.network
+    public_description: A community of activists
+    cloudflare_account_ownership: unresolved_Ops_decision
+    pages: selected_and_clearly_labeled
+    target_selection: member_of_explicit_ordered_page_target_list
+  alpha_topology_claim: one_page_multi_forum_plus_many_sites_one_forum
+  status: proposed_active_Alpha_pending_implementation_design_review
+  exact_matrix:
+    - { from: same_selected_onebigbeautifulbill.us_page, to: https://forum.repealobbba.org }
+    - { from: same_selected_onebigbeautifulbill.us_page, to: https://forum.citizenactivist.network }
+    - { from: bounded_demo_credit_pages, to: https://forum.discussionbridge.dev }
+    - { from: multiple_Astro_public_sites, to: https://forum.repealobbba.org }
+  contract:
+    source_target_vs_publication_targets: distinct
+    publication_targets: explicit_ordered_list
+    per_target_state: [forum_identity, topic_id, topic_url, sync_state, error_state, display_policy]
+    protected_source_no_writeback: required
+    comments: explicit_primary_plus_additional_linked_or_rendered
+    partial_success: retain_success_report_failure_retry_idempotently
+    target_specific: [diagnostics, dry_run, CLI_output, manuals, live_proof]
+  later_scope: general_many_to_many_administration
+  gate: [design_review, configure_targets, diagnostics, dry_run, build, live_bindings, partial_failure_retry]
 comments_boundary_credit:
   implementation_state: planned_not_current_artifact
   candidate_text:

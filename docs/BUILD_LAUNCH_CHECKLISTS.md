@@ -8,6 +8,9 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 ### Release-Scope Doctrine
 
+- [x] Treat this dashboard/checklist as the cumulative Alpha scope source of
+      truth; new plugin or multi-target gates do not displace prior accepted
+      items, and items remain until Phil explicitly removes them.
 - [x] Treat Alpha as nearly feature-complete for the declared product promise;
       include known central capabilities or narrow the promise honestly.
 - [x] Treat Beta primarily as refinement of exercised behavior: usability,
@@ -157,7 +160,9 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 ## Product Roadmap Checklist
 
 - [x] Keep Tier 1 API-only and useful without a Discourse plugin.
-- [x] Support one Discourse target per page for Alpha.
+- [ ] Complete implementation design review for proposed active Alpha
+      multi-target pages; do not mark the capability complete before review and
+      live proof.
 - [x] Keep multiple content lanes first-class through config and frontmatter.
 - [x] Keep one package with two clear presets: `starlight` and `astro`.
 - [x] Keep the Starlight preset focused on Starlight conventions.
@@ -168,16 +173,42 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Use the OBBBA implementation lane as a real-world Discourse-to-Astro proof path: import/prune a `forum.repealobbba.org` topic into `onebigbeautifulbill.us`, keep it `discourse-imported` until explicit promotion, and feed lessons back into Discussion Bridge.
 - [ ] Preserve the Citizen Activist structured-document path: Discourse wiki topics as source material, Astro as polished public act/section pages, with status, last-edit context, source topic links, comments, and no accidental writeback.
 - [ ] Preserve the OBBBA many-to-one topology: `onebigbeautifulbill.us` / `OBBBA.us`, `repealobbba.org`, `repealobbbaact.us`, and possibly `repealobbbapledge.us` can all connect to `forum.repealobbba.org`, with source direction varying by site or lane.
+- [ ] Explicitly verify selected `onebigbeautifulbill.us` pages remain bound to
+      `forum.repealobbba.org` as the first edge of the topology matrix.
+- [x] Use canonical hostname `forum.citizenactivist.network` and public
+      description “A community of activists”; keep Cloudflare/account ownership
+      placement as a separate Ops decision.
+- [ ] Configure that forum as an explicit Discussion Bridge target and select
+      clearly labeled `onebigbeautifulbill.us` proof pages without changing the
+      production OBBBA lanes on `forum.repealobbba.org`.
+- [ ] Prove the same selected `onebigbeautifulbill.us` page uses an explicit
+      ordered target list for `forum.repealobbba.org` and
+      `forum.citizenactivist.network`.
+- [ ] Run target-specific diagnostics and dry-run, build, deploy, and verify
+      each live page/topic binding; prove source-target no-writeback and no
+      unintended writes to any other target.
 - [ ] Add one or two clearly labeled Discussion Bridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages to prove per-page target selection without implying full many-to-many support.
+- [ ] Persist each target's forum identity, topic ID/URL, sync state, error
+      state, and display policy independently.
+- [ ] Define primary rendered discussion versus additional linked/rendered
+      targets; never silently choose one target.
+- [ ] Prove recoverable partial success: retain successful bindings, report the
+      failed target, and retry idempotently without duplicate topics.
+- [ ] Record the completed Alpha proof as one-page multi-forum capability plus
+      multiple-sites-to-one-forum convergence, without claiming the future
+      general many-to-many administration plane.
 - [ ] Prove import layers sequentially before Alpha end-stage: no image/no prune, image only, prune only, then image plus prune.
 - [ ] Use `repealobbbaact.us` as an Alpha end-stage package-installed test for Discourse-source structured pages, source-mode safety, comments rendering, and Cloudflare deployment.
-- [ ] Obtain Phil's explicit scope confirmation before replacing the optional
-      Discourse-plugin design-note item with an Alpha vertical-slice gate.
-- [ ] Proposed after confirmation: build an optional `Discussion Bridge for
+- [x] Phil confirmed the optional Discourse plugin vertical slice belongs in
+      cumulative Alpha scope.
+- [ ] Build an optional `Discussion Bridge for
       Discourse` v0.1 Alpha slice for `fullInteractive` Mermaid/table rendering
       parity plus the architecture/test baseline for later control-plane work.
       Keep Tier 1 API-only and fully usable without plugin installation.
 - [ ] Keep the full control plane, post-as-user, PM automation, and general
       many-to-many management out of plugin v0.1 unless separately approved.
+- [x] Use logical/workspace path
+      `DiscussionBridge/plugins/discourse-discussion-bridge` for the proposed
+      plugin; leave physical GitHub repo naming/placement to Boss/folder review.
 - [ ] Investigate Discourse API/plugin support for delegated posting or notifications as configured users in multisite/multichannel agency scenarios, including possible `postAs` or `discussionPostAs` configuration.
 - [ ] Design future integration lanes for Statamic and other frameworks.

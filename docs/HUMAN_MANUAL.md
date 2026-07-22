@@ -521,11 +521,43 @@ This does not move every future or Layer 3 idea into Alpha.
 
 Tier 1 operation remains API-only, free/self-serve, and independent of any
 Discourse plugin. An optional Discourse plugin vertical slice has been proposed
-for Alpha, but is not an active installation requirement or release gate until
-Phil confirms its scope. The proposed first slice is limited to
+and accepted for Alpha, pending implementation design and proof. It is optional,
+not a Tier 1 installation requirement. The first slice is limited to
 `fullInteractive` Mermaid/table parity and a future-safe architecture/test
 baseline—not the full control plane, post-as-user, PM automation, or general
 many-to-many management.
+
+Alpha scope is cumulative. Plugin and multi-target work add to every previously
+accepted Alpha gate; they do not rewrite or shorten the promise. Use the existing
+dashboard and build/launch checklists as the complete source of truth, and remove
+an item only when Phil explicitly directs that change.
+
+### Alpha Topology Proof
+
+The proposed active Alpha multi-target proof, pending implementation design
+review, must show all four edges:
+
+- the same selected `onebigbeautifulbill.us` page → `forum.repealobbba.org`;
+- that same selected page → `forum.citizenactivist.network`;
+- bounded demo/credit pages → `forum.discussionbridge.dev`;
+- multiple Astro/public sites → `forum.repealobbba.org`.
+
+The first two prove one Astro page can explicitly connect to several forums; the
+last proves many sites can converge on one forum. Citizen Activist
+Network's forum identity is “A community of activists.” Its Cloudflare/account
+ownership placement remains an Ops decision.
+
+The page must distinguish its protected source target from its ordered
+publication/discussion targets. Review each target's forum, topic binding, sync
+and error state, and display policy independently. Keep the imported/managed
+source protected from writeback while allowing explicitly approved publication
+to another forum.
+
+Choose the primary rendered discussion and state whether additional targets are
+linked or rendered; never let the bridge silently select one. If one target
+fails, keep successful bindings, report the failure, and retry only that target
+idempotently without duplicate topics. Diagnostics, previews, CLI output, and
+live checks must identify the target. General administration remains later.
 
 ## 12. Alpha Support And Release Channel
 
