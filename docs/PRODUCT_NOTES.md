@@ -56,6 +56,14 @@ proof remains an open release gate:
 - bounded demo/credit pages connect to `forum.discussionbridge.dev`;
 - multiple Astro/public sites converge on `forum.repealobbba.org`;
 
+Live-gate status verified 2026-07-22: `forum.citizenactivist.network` does not
+resolve (`curl` error 6), and no Citizen Activist forum credential lane was found
+in the protected by-site vault locations checked. The forum, DNS, TLS, ownership,
+and non-secret operational coordinates are an explicit Boss/Ops prerequisite,
+routed to task `019f42a5-bd80-77a2-98bc-af5b57db0d8a`. This is not a Bridge code
+failure. Do not mark the topology gate complete until provisioning and live proof
+both succeed.
+
 The CitizenActivist.Network forum is publicly described as “A community of
 activists.”
 

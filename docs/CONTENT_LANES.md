@@ -182,6 +182,13 @@ topology proof remains open. The same selected page uses an explicit ordered lis
 `forum.repealobbba.org` and `forum.citizenactivist.network`. General many-to-many
 administration remains outside this gate.
 
+Current external prerequisite (verified 2026-07-22):
+`forum.citizenactivist.network` does not resolve, and the checked protected
+by-site vault locations contain no Citizen Activist credential lane. Boss/Ops
+owns forum/DNS/TLS/ownership provisioning under task
+`019f42a5-bd80-77a2-98bc-af5b57db0d8a`. Treat the live proof as blocked on that
+prerequisite, not failed in Discussion Bridge.
+
 Required matrix:
 
 ```text

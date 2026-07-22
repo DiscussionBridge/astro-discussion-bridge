@@ -391,6 +391,25 @@ general administration plane. The planned comments-boundary
 credit must remain configurable, secondary, accessible, and outside site content.
 Its final wording and default remain undecided.
 
+Live-gate stop condition verified 2026-07-22:
+`forum.citizenactivist.network` does not resolve (`curl` error 6), and no
+Citizen Activist credential lane was found in the protected by-site vault
+locations checked. Boss/Ops task `019f42a5-bd80-77a2-98bc-af5b57db0d8a` owns
+forum/DNS/TLS/ownership provisioning. Do not substitute another credential lane
+or classify this as a Bridge failure.
+
+When Ops returns non-secret coordinates, resume in this order:
+
+1. Verify forum DNS, TLS, and target diagnostics.
+2. Choose and visibly label one selected OBBBA page.
+3. Preserve `forum.repealobbba.org` as the protected source target.
+4. Add `forum.citizenactivist.network` as an explicit publication target.
+5. Run a target-specific dry-run.
+6. Publish and verify independent target bindings.
+7. Prove failed-target-only idempotent retry.
+8. Build the clean exact candidate, deploy it, and check live page/topic paths.
+9. Verify no source or cross-target writeback.
+
 For the proof page, use `discussionTargets` as the ordered target list,
 `discussionPublishTargets` as the writable subset, and
 `discussionSourceTarget` to protect the imported OBBBA source. Confirm each

@@ -875,7 +875,16 @@ multi_target_implementation:
   malformed_binding_state: fail_before_network
   public_export: astro-discussion-bridge/targets
 alpha_topology_proof:
-  status: implementation_complete_live_proof_pending
+  status: blocked_on_explicit_Ops_prerequisite
+  bridge_implementation_failure: false
+  verified_at: 2026-07-22
+  blocker:
+    hostname: forum.citizenactivist.network
+    dns_result: unresolved_curl_error_6
+    protected_by_site_credential_lane_found: false
+    owner: Boss_Ops
+    task: 019f42a5-bd80-77a2-98bc-af5b57db0d8a
+    secrets_in_manuals: prohibited
   production_obbba_target: https://forum.repealobbba.org
   citizen_activist_target:
     canonical: https://forum.citizenactivist.network
@@ -904,6 +913,8 @@ alpha_topology_proof:
     retry: target_specific_idempotent_no_duplicate_topics
     target_specific_surfaces: [diagnostics, dry_run, CLI_output, manuals, live_proof]
   required_gate:
+    - receive_non_secret_forum_coordinates_from_Ops
+    - verify_DNS_TLS_and_target_diagnostics
     - configure_named_target
     - select_clearly_labeled_pages
     - run_target_diagnostics

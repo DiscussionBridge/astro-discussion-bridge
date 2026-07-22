@@ -668,7 +668,16 @@ post_gate_demo:
     pages: selected_and_clearly_labeled
     target_selection: member_of_explicit_ordered_page_target_list
   alpha_topology_claim: one_page_multi_forum_plus_many_sites_one_forum
-  status: implementation_complete_live_proof_pending
+  status: blocked_on_explicit_Ops_prerequisite
+  bridge_code_failure: false
+  blocker_evidence:
+    verified_at: 2026-07-22
+    hostname: forum.citizenactivist.network
+    dns_result: unresolved_curl_error_6
+    protected_by_site_credential_lane_found: false
+    routed_owner: Boss_Ops
+    routed_task: 019f42a5-bd80-77a2-98bc-af5b57db0d8a
+    secret_values_allowed_here: false
   implementation:
     commit: 60e41e1
     review: Code_Boss_PASS
@@ -710,7 +719,16 @@ post_gate_demo:
       malformed_bindings: fail_before_network
   later_scope: general_many_to_many_administration
   completed_gate: [design_review, implementation, Code_Boss_review, package_tests, partial_failure_retry_tests]
-  open_gate: [configure_OBBBA_targets, target_diagnostics, target_dry_run, OBBBA_build, live_bindings, no_cross_target_writeback]
+  resume_order:
+    - verify_forum_DNS_TLS_and_target_diagnostics
+    - choose_and_label_one_OBBBA_page
+    - preserve_repeal_OBBBA_as_protected_source
+    - configure_citizen_activist_as_explicit_publication_target
+    - run_target_specific_dry_run
+    - publish_and_verify_independent_bindings
+    - prove_failed_target_only_idempotent_retry
+    - clean_exact_candidate_build_deploy_live_checks
+    - verify_no_source_or_cross_target_writeback
 comments_boundary_credit:
   implementation_state: planned_not_current_artifact
   candidate_text:

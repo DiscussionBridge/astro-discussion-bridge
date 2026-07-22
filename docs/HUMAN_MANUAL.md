@@ -547,6 +547,21 @@ last proves many sites can converge on one forum. Citizen Activist
 Network's forum identity is “A community of activists.” Its Cloudflare/account
 ownership placement remains an Ops decision.
 
+As verified 2026-07-22, `forum.citizenactivist.network` does not yet resolve and
+no Citizen Activist credential lane was found in the protected by-site vault
+locations checked. Stop here: do not invent coordinates, copy another forum's
+credentials, or mark the live proof complete. Boss/Ops task
+`019f42a5-bd80-77a2-98bc-af5b57db0d8a` owns the forum, DNS, TLS, ownership, and
+credential-lane prerequisite. This is an external setup blocker, not a Bridge
+code failure.
+
+After Ops supplies non-secret coordinates, verify DNS/TLS and diagnostics first;
+then choose and label one OBBBA page, preserve Repeal OBBBA as its protected
+source, add Citizen Activist as an explicit publication target, dry-run that
+target, publish and inspect both bindings, prove failed-target-only retry, build
+and deploy the exact candidate, verify both live page/topic paths, and finally
+confirm no source or cross-target writeback.
+
 The page must distinguish its protected source target from its ordered
 publication/discussion targets. Review each target's forum, topic binding, sync
 and error state, and display policy independently. Keep the imported/managed

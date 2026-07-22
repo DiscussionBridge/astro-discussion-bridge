@@ -25,6 +25,14 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 #### Phil/Ops Prerequisites Before Alpha Can Be Public
 
+- [ ] Provision `forum.citizenactivist.network`, including DNS, TLS, confirmed
+      ownership/Cloudflare placement, and a protected non-secret credential lane
+      reference. As verified 2026-07-22, the hostname does not resolve and no
+      Citizen Activist forum lane was present in the checked by-site vault
+      locations. Routed to Boss/Ops task
+      `019f42a5-bd80-77a2-98bc-af5b57db0d8a`; this blocks the bounded live
+      topology proof but is not a Bridge code failure.
+
 - [ ] Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
 - [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain.
 - [ ] Create live Discourse Alpha Support category.
