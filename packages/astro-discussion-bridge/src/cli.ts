@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from "node:path";
 import { checkDiscourse } from "./check-discourse.js";
-import { importExistingDiscourseTopics } from "./import-existing.js";
+import { importExistingDiscourseTopics, type ImportPruneProfile } from "./import-existing.js";
 import { syncDiscourseTopics, type DiscoursePreflightLimits, type SyncMode } from "./sync/index.js";
 
 main().catch((error: unknown) => {
@@ -61,12 +61,15 @@ const overwrite = args.flags.has("overwrite");
 const commentsDisplay = commentsDisplayFromValue(args.values.get("comments-display"));
 const heroImage = args.values.get("hero-image");
 const heroAlt = args.values.get("hero-alt");
+const pruneProfiles = pruneProfilesFromValue(args.values.get("prune-profile"));
 
 const missing = [
   ...(args.flags.has("hero-image") ? ["a value after --hero-image"] : []),
   ...(args.flags.has("hero-alt") ? ["a value after --hero-alt"] : []),
+  ...(args.flags.has("prune-profile") ? ["a value after --prune-profile"] : []),
   ...(args.values.has("hero-image") && !heroImage?.trim() ? ["a non-empty --hero-image value"] : []),
   ...(args.values.has("hero-alt") && !heroAlt?.trim() ? ["a non-empty --hero-alt value"] : []),
+  ...(args.values.has("prune-profile") && !args.values.get("prune-profile")?.trim() ? ["a non-empty --prune-profile value"] : []),
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
   ...(!siteUrl && command !== "check-discourse" ? ["SITE_URL or --site-url"] : []),
   ...(!dryRun && command !== "check-discourse" && command !== "import-existing" && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
@@ -194,6 +197,7 @@ if (command === "import-existing") {
     commentsDisplay,
     heroImage,
     heroAlt,
+    pruneProfiles,
   });
 
   for (const result of results) {
@@ -299,6 +303,20 @@ function commentsDisplayFromValue(value: string | undefined): "simple" | "full" 
   process.exit(1);
 }
 
+function pruneProfilesFromValue(value: string | undefined): ImportPruneProfile[] | undefined {
+  const profiles = csvFromValue(value);
+  if (!profiles) return undefined;
+
+  for (const profile of profiles) {
+    if (profile !== "community-call-to-action") {
+      printUsage(`Invalid --prune-profile value: ${profile}`);
+      process.exit(1);
+    }
+  }
+
+  return profiles as ImportPruneProfile[];
+}
+
 function preflightLimitsFromArgs(values: Map<string, string>): DiscoursePreflightLimits {
   return {
     minTopicTitleLength: numberFromValue(
@@ -391,6 +409,7 @@ function printUsage(error?: string) {
   console.error("  --comments-display MODE    simple, full, or fullInteractive.");
   console.error("  --hero-image PATH          Add a leading imported-page image using this asset path or URL.");
   console.error("  --hero-alt TEXT            Required non-empty alt text when --hero-image is used.");
+  console.error("  --prune-profile NAME       Opt-in trailing boilerplate rule; currently community-call-to-action.");
   console.error("");
   console.error("Diagnostics options:");
   console.error("  --diagnostics-api-key KEY  Use a broader/read-capable key for check-discourse and raw imports.");

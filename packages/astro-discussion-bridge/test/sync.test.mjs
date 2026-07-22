@@ -2084,6 +2084,139 @@ test("import-existing requires alt text for a configured hero image", async () =
   );
 });
 
+test("import-existing prunes only a verified trailing community call to action", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-prune-"));
+  const docsDir = path.join(dir, "blog");
+  const originalFetch = globalThis.fetch;
+  const raw = [
+    "# Source Content",
+    "",
+    "Keep this analysis.",
+    "",
+    "---",
+    "",
+    "***Created with AI, Will be Polished by Humans, Powered by You.***",
+    "",
+    "**[Join the Conversation Today!](https://forum.example.com/signup)**",
+    "",
+    "---",
+    "",
+    "Please share how this section is impacting you by telling your [story](https://forum.example.com/c/stories/7).",
+  ].join("\n");
+
+  try {
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Imported Pruned Topic",
+        category_id: 5,
+        visible: true,
+        post_stream: {
+          posts: [{ id: 101, post_number: 1, topic_id: 21, topic_slug: "imported-pruned-topic", cooked: "" }],
+        },
+      },
+      post: {
+        id: 101,
+        post_number: 1,
+        topic_id: 21,
+        topic_slug: "imported-pruned-topic",
+        raw,
+        cooked: "",
+      },
+    });
+
+    await importExistingDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+      pruneProfiles: ["community-call-to-action"],
+    });
+
+    const source = await readFile(path.join(docsDir, "imported-pruned-topic.md"), "utf8");
+    assert.match(source, /discussionImportPolicy: "pruned:community-call-to-action"/);
+    assert.match(source, /Keep this analysis\./);
+    assert.doesNotMatch(source, /Created with AI|Join the Conversation|Please share how/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing refuses to prune when the trailing boundary is not verified", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-prune-refusal-"));
+  const docsDir = path.join(dir, "blog");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Imported Unmatched Prune Topic",
+        category_id: 5,
+        visible: true,
+        post_stream: {
+          posts: [{ id: 101, post_number: 1, topic_id: 21, topic_slug: "imported-unmatched-prune-topic", cooked: "" }],
+        },
+      },
+      post: {
+        id: 101,
+        post_number: 1,
+        topic_id: 21,
+        topic_slug: "imported-unmatched-prune-topic",
+        raw: "# Source Content\n\nDo not remove any of this.",
+        cooked: "",
+      },
+    });
+
+    await assert.rejects(
+      importExistingDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        topics: ["21"],
+        pruneProfiles: ["community-call-to-action"],
+      }),
+      /did not find a verified trailing block.*No file was written/,
+    );
+    await assert.rejects(readFile(path.join(docsDir, "imported-unmatched-prune-topic.md"), "utf8"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing rejects unsupported and duplicate prune profiles before I/O", async () => {
+  const baseOptions = {
+    docsDir: "unused",
+    siteUrl: "https://docs.example.com",
+    discourseUrl: "https://forum.example.com",
+    apiKey: "test-key",
+    apiUsername: "test-user",
+    topics: ["21"],
+  };
+
+  await assert.rejects(
+    importExistingDiscourseTopics({
+      ...baseOptions,
+      pruneProfiles: ["unknown-profile"],
+    }),
+    /Unsupported import prune profile: unknown-profile/,
+  );
+
+  await assert.rejects(
+    importExistingDiscourseTopics({
+      ...baseOptions,
+      pruneProfiles: ["community-call-to-action", "community-call-to-action"],
+    }),
+    /Duplicate import prune profile: community-call-to-action/,
+  );
+});
+
 test("import-existing refuses to label cooked HTML conversion as an unpruned import", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-raw-required-"));
   const docsDir = path.join(dir, "blog");

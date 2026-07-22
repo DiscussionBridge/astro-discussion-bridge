@@ -3,6 +3,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createDiscourseClient, type DiscoursePost, type TopicResponse } from "./discourse/client.js";
 
+export type ImportPruneProfile = "community-call-to-action";
+
 export interface ImportExistingDiscourseTopicsOptions {
   docsDir: string;
   discourseUrl: string;
@@ -17,6 +19,7 @@ export interface ImportExistingDiscourseTopicsOptions {
   commentsDisplay?: "simple" | "full" | "fullInteractive";
   heroImage?: string;
   heroAlt?: string;
+  pruneProfiles?: ImportPruneProfile[];
 }
 
 export interface ImportedDiscourseTopic {
@@ -35,6 +38,7 @@ export async function importExistingDiscourseTopics(
   const heroImage = options.heroImage?.trim();
   const heroAlt = options.heroAlt?.trim();
   validateHeroOptions({ heroImage, heroAlt });
+  const pruneProfiles = validateImportPruneProfiles(options.pruneProfiles ?? []);
   const docsDir = path.resolve(options.docsDir);
   const discourse = createDiscourseClient({
     discourseUrl: options.discourseUrl,
@@ -91,7 +95,11 @@ export async function importExistingDiscourseTopics(
       if (!firstPostSummary.raw?.trim()) throw error;
       firstPost = firstPostSummary;
     }
-    const body = postBodyForImport(firstPost, topic.id);
+    const body = applyImportPruneProfiles(
+      postBodyForImport(firstPost, topic.id),
+      pruneProfiles,
+      topic.id,
+    );
     const sourceHash = hashDiscussionSource({ title: topic.title, pageUrl, content: body });
 
     await fs.writeFile(
@@ -106,6 +114,9 @@ export async function importExistingDiscourseTopics(
         commentsDisplay: options.commentsDisplay,
         heroImage,
         heroAlt,
+        importPolicy: pruneProfiles.length
+          ? `pruned:${pruneProfiles.join(",")}`
+          : "unpruned",
         body,
       }),
     );
@@ -130,6 +141,23 @@ function validateHeroOptions(options: Pick<ImportExistingDiscourseTopicsOptions,
   if (options.heroAlt && !options.heroImage) {
     throw new Error("heroImage is required when heroAlt is configured.");
   }
+}
+
+function validateImportPruneProfiles(profiles: ImportPruneProfile[]): ImportPruneProfile[] {
+  const supported = new Set<ImportPruneProfile>(["community-call-to-action"]);
+  const seen = new Set<string>();
+
+  for (const profile of profiles as string[]) {
+    if (!supported.has(profile as ImportPruneProfile)) {
+      throw new Error(`Unsupported import prune profile: ${profile}`);
+    }
+    if (seen.has(profile)) {
+      throw new Error(`Duplicate import prune profile: ${profile}`);
+    }
+    seen.add(profile);
+  }
+
+  return [...profiles];
 }
 
 function parseTopicRef(value: string, discourseUrl: string): { topicId: number; slug?: string } {
@@ -177,6 +205,41 @@ function postBodyForImport(post: DiscoursePost, topicId: number): string {
   );
 }
 
+function applyImportPruneProfiles(
+  body: string,
+  profiles: ImportPruneProfile[],
+  topicId: number,
+): string {
+  return profiles.reduce((current, profile) => {
+    if (profile === "community-call-to-action") {
+      return pruneTrailingCommunityCallToAction(current, topicId);
+    }
+    return current;
+  }, body);
+}
+
+function pruneTrailingCommunityCallToAction(body: string, topicId: number): string {
+  const candidates = Array.from(body.matchAll(/\r?\n---[ \t]*\r?\n/g));
+
+  for (let index = candidates.length - 1; index >= 0; index -= 1) {
+    const start = candidates[index].index;
+    if (start === undefined) continue;
+    const suffix = body.slice(start);
+    const hasJoinPrompt = /Join the Conversation Today!/i.test(suffix);
+    const hasSignupLink = /\/signup(?:[)\s]|$)/i.test(suffix);
+    const hasImpactPrompt = /Please share how\b/i.test(suffix);
+    const hasStoryLink = /\/c\/stories\//i.test(suffix);
+
+    if (hasJoinPrompt && hasSignupLink && hasImpactPrompt && hasStoryLink) {
+      return body.slice(0, start).trim();
+    }
+  }
+
+  throw new Error(
+    `Prune profile community-call-to-action did not find a verified trailing block in Discourse topic ${topicId}. No file was written.`,
+  );
+}
+
 function cookedHtmlToMarkdown(value: string): string {
   return decodeHtmlEntities(value)
     .replace(/<pre><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, (_, code) => `\n\n\`\`\`\n${decodeHtmlEntities(stripTags(code)).trim()}\n\`\`\`\n\n`)
@@ -215,6 +278,7 @@ function markdownForImportedTopic(input: {
   commentsDisplay?: "simple" | "full" | "fullInteractive";
   heroImage?: string;
   heroAlt?: string;
+  importPolicy: string;
   body: string;
 }): string {
   const frontmatter: Record<string, string | number | boolean> = {
@@ -225,7 +289,7 @@ function markdownForImportedTopic(input: {
     discourseTopicId: input.topicId,
     discourseTopicUrl: input.topicUrl,
     discussionImportedFrom: input.topicUrl,
-    discussionImportPolicy: "unpruned",
+    discussionImportPolicy: input.importPolicy,
     discussionSourceHash: input.sourceHash,
     discussionImportedAt: input.importedAt,
   };
