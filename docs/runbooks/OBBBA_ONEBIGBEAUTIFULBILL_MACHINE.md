@@ -734,8 +734,24 @@ source_disclosure:
   review: Code_Boss_PASS
   tests: 68_of_68_PASS
   package_exports_verified: true
-  current_OBBBA_vendor_artifact_contains_feature: false
-  OBBBA_gate: pending_artifact_install_build_deploy_live_verification
+  OBBBA_gate: complete
+  adoption_commit: aa7846d
+  artifact: vendor/astro-discussion-bridge-0.1.0-alpha-a9d2097-f3fbb73e.tgz
+  artifact_sha256: F3FBB73E95D52B5799FBEBE5221298040FD32292EDA8BD76C257C0C19E4267B2
+  Code_Boss_adoption_review: PASS
+  clean_detached_npm_ci_build: PASS
+  publishOnBuild: false
+  Discourse_writes: none
+  deployed_worker_version: 005b9ff2-c880-43e4-b759-31ec2d02bed5
+  canonical_Title_I_routes_verified: 5
+  per_route_evidence:
+    Content_source_aside_count: 1
+    source_link_count: 1
+    source_forum: forum.repealobbba.org
+    source_label: Repeal OBBBA Forum
+    imported_wording: exact
+    existing_discussion_boundary: present
+  citizen_activist_topology_gate: separate_open
   component: astro-discussion-bridge/DiscussionSource.astro
   placement: canonical_Starlight_MarkdownContent_near_article_start
   protected_source: https://forum.repealobbba.org

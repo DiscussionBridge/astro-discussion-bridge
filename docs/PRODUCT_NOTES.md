@@ -129,9 +129,16 @@ publication forum.
 
 The package exports the component plus `resolveDiscussionSourceNotice`,
 `DiscussionSourceMode`, and `DiscussionSourceNotice` through the root and
-`./source`. Canonical Astro and Starlight boundaries are wired. OBBBA remains a
-separate installation/live-proof gate because its current vendor artifact does
-not include `a9d2097`.
+`./source`. Canonical Astro and Starlight boundaries are wired.
+
+OBBBA adoption is complete at `aa7846d` using reviewed artifact
+`astro-discussion-bridge-0.1.0-alpha-a9d2097-f3fbb73e.tgz` (SHA256
+`F3FBB73E95D52B5799FBEBE5221298040FD32292EDA8BD76C257C0C19E4267B2`). A clean
+detached install/build passed, deployment succeeded, and all five canonical
+Title I routes showed exactly one correctly labeled source aside/link to their
+protected Repeal OBBBA topics while preserving the discussion boundary. No
+Discourse write occurred. Citizen Activist topology remains a separate open
+gate.
 
 ## Alpha Import Queue Principle
 

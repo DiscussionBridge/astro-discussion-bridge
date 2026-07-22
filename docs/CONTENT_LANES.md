@@ -227,8 +227,9 @@ comments boundary. On a multi-target page, resolve provenance from the protected
 publication target. This keeps WHEREFROM disclosure distinct from WHERETO
 discussion publication.
 
-The implementation is complete at `a9d2097`; OBBBA artifact installation and
-live verification remain pending.
+The implementation is complete at `a9d2097`. OBBBA adopted it at `aa7846d` and
+verified the protected Repeal OBBBA source disclosure across all five live Title
+I routes. This does not close the separate Citizen Activist multi-target gate.
 
 ## Content Tags And Discourse Tags
 

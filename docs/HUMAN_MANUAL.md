@@ -631,9 +631,14 @@ malformed, the disclosure remains visible without a link.
 > publication target. Provenance must always follow the protected source target.
 
 Package behavior is implemented and reviewed at `a9d2097` with Code Boss PASS
-and 68/68 tests. OBBBA installation and live verification are separate: its
-current vendor artifact does not yet contain this feature, so do not mark OBBBA
-source disclosure deployed.
+and 68/68 tests. OBBBA adopted reviewed artifact
+`astro-discussion-bridge-0.1.0-alpha-a9d2097-f3fbb73e.tgz` at commit `aa7846d`.
+Its clean production build and deployment passed. All five canonical Title I
+routes now show exactly one **Content source** aside and one source link, with
+the imported wording, `Repeal OBBBA Forum` label, and correct protected
+`forum.repealobbba.org` topic. The existing discussion boundary remains present.
+This closes OBBBA source-disclosure adoption only; it does not close the separate
+Citizen Activist topology gate.
 
 ## 13. Alpha Support And Release Channel
 

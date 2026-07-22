@@ -864,8 +864,24 @@ site_wiring:
   plain_Astro: canonical_BlogPost_layout
   Starlight: MarkdownContent_override
 OBBBA:
-  current_vendor_artifact_contains_a9d2097: false
-  package_install_build_deploy_live_verification: pending
+  adoption_status: complete
+  adoption_commit: aa7846d
+  artifact: vendor/astro-discussion-bridge-0.1.0-alpha-a9d2097-f3fbb73e.tgz
+  artifact_sha256: F3FBB73E95D52B5799FBEBE5221298040FD32292EDA8BD76C257C0C19E4267B2
+  Code_Boss_adoption_review: PASS
+  clean_detached_npm_ci_build: PASS
+  publishOnBuild: false
+  Discourse_writes: none
+  worker_version: 005b9ff2-c880-43e4-b759-31ec2d02bed5
+  live_routes_verified: 5
+  per_route:
+    Content_source_asides: 1
+    source_links: 1
+    source_forum: forum.repealobbba.org
+    source_label: Repeal OBBBA Forum
+    wording: exact_imported_default_with_custom_label
+    discussion_boundary_preserved: true
+  citizen_activist_topology_gate: separate_and_open
 ```
 
 ## 15. Alpha Release And Support Inputs

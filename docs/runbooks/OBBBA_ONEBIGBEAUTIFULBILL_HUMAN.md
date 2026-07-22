@@ -424,16 +424,17 @@ the target-specific sanitized failure, and retry only the failed target.
 ### Source disclosure gate
 
 The package source-disclosure feature is implemented and reviewed at `a9d2097`
-(68/68), but the current OBBBA vendor artifact does not include it. Keep this
-separate from the Citizen Activist topology gate and do not describe it as live.
+(68/68). OBBBA adoption commit `aa7846d` installed the reviewed artifact and
+wired `DiscussionSource` near the article start through the canonical Starlight
+`MarkdownContent` boundary. Code Boss adoption review, clean detached install,
+and production build passed; `publishOnBuild` remained false.
 
-After Bridge Boss installs a reviewed artifact containing `a9d2097`, place
-`DiscussionSource` near the article start through OBBBA's canonical Starlight
-`MarkdownContent` boundary. The page should show a quiet **Content source** aside
-whose link follows `forum.repealobbba.org`, the protected source. It must not
-attribute origin to Citizen Activist or another publication target. Verify that
-unsafe or malformed source candidates never become links and that the notice
-still renders without a safe URL.
+Live verification passed on all five canonical Title I routes. Each contains
+exactly one **Content source** aside, one **View the source discussion** link to
+the correct `forum.repealobbba.org` topic, exact imported wording with the
+`Repeal OBBBA Forum` label, and the existing discussion boundary. No Discourse
+write occurred. Source-disclosure adoption is complete; Citizen Activist
+multi-target topology remains separately open.
 
 For the exact OBBBA release candidate:
 

@@ -180,9 +180,11 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       68/68), including safe URL selection, multi-target protected-source
       provenance, canonical Astro/Starlight placement, and public component/
       helper/type exports.
-- [ ] Install an artifact containing `a9d2097` into OBBBA, wire the canonical
-      source notice near the article start, then build, deploy, and verify the
-      live disclosure independently from the comments-boundary credit.
+- [x] Install reviewed artifact
+      `astro-discussion-bridge-0.1.0-alpha-a9d2097-f3fbb73e.tgz` into OBBBA,
+      wire the canonical source notice near the article start, clean-build and
+      deploy adoption commit `aa7846d`, and verify exactly one correct source
+      notice/link on all five live Title I routes independently from comments.
 - [ ] Add an unobtrusive, configurable comments-boundary credit such as `Discussion connection by Discussion Bridge` or `Discourse connection by Discussion Bridge`; verify wording, link destination, accessibility, and behavior across `simple`, `full`, and `fullInteractive` modes.
 - [ ] Consider optional mapping from Astro/template content tags to Discourse topic tags.
 - [ ] Package the setup/diagnostics/docs workflow for self-serve users and paid assisted setup.
