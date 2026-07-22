@@ -71,6 +71,8 @@ quality review before Product Boss approval.
 
 ### Import
 
+- Add an import-discovery/queue workflow for selecting existing Discourse topics. Alpha keeps explicit `--topic` / `--topic-id` selection as the safe default and preserves the caller's list order. Future selectors should include category, tags, created-after/before, explicit status, limit, and ascending/descending order. For an automatic "next topic" within a category, default to oldest `created_at` first with topic ID as the stable tie-breaker; do not use bumped/latest-activity order. Discovery should preview candidates before import and persist enough checkpoint/link state to avoid duplicate imports.
+
 - Keep `import-existing` safe by default: preserve topic ID and URL, write an editable Astro copy, and avoid automatic sync back to Discourse.
 - Support both import paths:
   - import clean: prune known boilerplate blocks during import

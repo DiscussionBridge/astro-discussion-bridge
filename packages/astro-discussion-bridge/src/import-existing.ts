@@ -189,11 +189,15 @@ function markdownForImportedTopic(input: {
   commentsDisplay?: "simple" | "full" | "fullInteractive";
   body: string;
 }): string {
-  const frontmatter: Record<string, string> = {
+  const frontmatter: Record<string, string | number | boolean> = {
     title: input.title,
     ...(input.targetName ? { discussionTarget: input.targetName } : {}),
-    discourseTopicId: String(input.topicId),
+    discussionSourceMode: "discourse-imported",
+    discussionSync: false,
+    discourseTopicId: input.topicId,
     discourseTopicUrl: input.topicUrl,
+    discussionImportedFrom: input.topicUrl,
+    discussionImportPolicy: "unpruned",
     discussionSourceHash: input.sourceHash,
     discussionImportedAt: input.importedAt,
   };
@@ -202,13 +206,14 @@ function markdownForImportedTopic(input: {
   return `---\n${serializeYaml(frontmatter)}---\n\n${input.body.trim()}\n`;
 }
 
-function serializeYaml(values: Record<string, string>): string {
+function serializeYaml(values: Record<string, string | number | boolean>): string {
   return Object.entries(values)
     .map(([key, value]) => `${key}: ${quoteYamlValue(value)}`)
     .join("\n") + "\n";
 }
 
-function quoteYamlValue(value: string): string {
+function quoteYamlValue(value: string | number | boolean): string {
+  if (typeof value !== "string") return String(value);
   if (/^[0-9]+$/.test(value)) return value;
   return JSON.stringify(value);
 }

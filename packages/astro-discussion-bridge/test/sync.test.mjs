@@ -1919,7 +1919,11 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
 
     const source = await readFile(path.join(docsDir, "imported-discourse-topic.md"), "utf8");
     assert.match(source, /title: "Imported Discourse Topic"/);
+    assert.match(source, /discussionSourceMode: "discourse-imported"/);
+    assert.match(source, /discussionSync: false/);
     assert.match(source, /discourseTopicId: 21/);
+    assert.match(source, /discussionImportedFrom: "https:\/\/forum\.example\.com\/t\/imported-discourse-topic\/21"/);
+    assert.match(source, /discussionImportPolicy: "unpruned"/);
     assert.match(source, /discussionCommentsDisplay: "full"/);
     assert.match(source, /discussionSourceHash: "[a-f0-9]{64}"/);
     assert.match(source, /# Imported Body/);
@@ -1975,6 +1979,8 @@ test("import-existing can label imported frontmatter with a discussion target", 
 
     const source = await readFile(path.join(docsDir, "imported-target-topic.md"), "utf8");
     assert.match(source, /discussionTarget: "community"/);
+    assert.match(source, /discussionSourceMode: "discourse-imported"/);
+    assert.match(source, /discussionSync: false/);
     assert.match(source, /discourseTopicId: 21/);
   } finally {
     globalThis.fetch = originalFetch;
