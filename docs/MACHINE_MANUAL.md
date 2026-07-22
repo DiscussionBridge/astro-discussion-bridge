@@ -447,7 +447,7 @@ regression_coverage:
   - zero_byte_output
   - path_traversal
 blanket_update_all_safe: false
-package_gate: pass_50_of_50
+package_gate: pass_51_of_51
 obbba_site_live_proof: pass_topics_434_747_751_752_753
 ```
 
@@ -558,10 +558,12 @@ discussionBridge({
   comments: {
     display: "full", // simple | full | fullInteractive
     embedHeight: "800px",
+    className: "discussion-bridge-embed",
   },
   replies: {
     refreshOnPageLoad: true,
     refreshEndpoint: "/api/discourse/topics/{topicId}.json",
+    renderMermaid: true,
   },
 });
 ```
@@ -580,13 +582,32 @@ fullInteractive:
   owner: cross_origin_Discourse_iframe
   host_Astro_transforms_or_CSS_cross_boundary: false
   mermaid_and_table_styling_owner: Discourse
-  current_official_mermaid_option: Discourse Mermaid theme component
-  setup_verified: false
+  ordinary_topic_434_mermaid_theme_result: SVG
+  full_app_embed_topic_434_mermaid_result: raw_code
+  full_app_embed_theme_component_js_loaded: false
+  table_parse: pass
+  table_presentation: weak_until_embedded_CSS
+  immediate_table_path: Discourse common/embedded.scss targeted by embed class
+  mermaid_embed_solution: open_extension_plugin_or_upstream
 full:
   owner: Astro_rendered_bridge_component
-  first_generation_mermaid_postprocessor: existed
-  current_package_parity_review: required
+  parity_review: pass_d7800d7_code_boss_final
+  renderMermaid_default: true
+  renderMermaid_opt_out: false
+  mermaid_version: 11
+  security_level: strict
+  loading: lazy_when_reply_contains_mermaid
+  failure: preserve_source_and_allow_module_load_retry
+  tables: readable_borders_padding_and_horizontal_overflow
+  repeated_components: claim_each_replies_container_once
+embed_class_hooks:
+  comments.className: forwarded_to_window.DiscourseEmbed.className
+  embedClassName_components: [Discussion, DiscourseDiscussion, DiscourseComments]
 ```
+
+The lazy Mermaid chunk is emitted during a `full`-capable build and may trigger
+Vite's greater-than-500-kB warning, but browsers fetch it only when a full-mode
+reply contains Mermaid.
 
 Verification matrix:
 

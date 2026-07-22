@@ -230,7 +230,9 @@ Bridge Boss completed the local package migration without a Discourse write:
 3. The proof page imports the package `Discussion.astro` component.
 4. All source-mode, topic, manually-pruned content, image, alt text, and comments
    settings were preserved.
-5. The package regression suite passed 50/50 with Code Boss final PASS.
+5. The installed OBBBA artifact's integration suite passed 50/50. Package main
+   later passed 51/51 with Code Boss final PASS for `full` rendering parity;
+   that later package change was not deployed to OBBBA in this pass.
 6. The deployment-shaped OBBBA build passed.
 7. Generated HTML contains topic ID `434`, `fullApp=true`, the correct forum
    URL, and the correct fallback topic URL.
@@ -278,13 +280,17 @@ the Astro content root, output file, public route, and Astro navigation lane. In
 this Starlight implementation, that lane is the mapped Title sidebar group.
 Validate both before writing; never infer either side from latest activity.
 
-The live outer Astro page renders the Mermaid SVG and five HTML tables, while
-topic `434` cooked HTML contains `code.lang-mermaid` and a table. The
-`fullInteractive` discussion is a cross-origin Discourse iframe, so Astro-side
-transforms and CSS cannot alter that inner content. Discourse-side Mermaid/theme
-support remains unverified; do not mark it configured. The package `full` mode
-also remains pending an explicit parity review with the earlier Mermaid-aware
-bridge renderer.
+The live outer Astro page renders the Mermaid SVG and five HTML tables. The
+ordinary Discourse view of topic `434` also renders Mermaid and its tables, but
+the `fullInteractive` embed still shows raw Mermaid code and weak table styling.
+That cross-origin iframe is Discourse-owned, so Astro transforms and CSS cannot
+alter it. Embedded Discourse CSS, targeted through the new class hook, is the
+supported immediate table path; Mermaid remains an open Discourse embed issue.
+
+Package commit `d7800d7` completed the separate Astro-rendered `full` parity
+work: lazy Mermaid 11 rendering, readable tables, public opt-out, and resilient
+failure behavior. Code Boss passed it with 51/51 tests and both demo builds. No
+OBBBA content write or deployment occurred during that package-only pass.
 
 The package validates the whole batch before writing, stages every result, and
 uses atomic creation or rollback so one bad entry does not leave a partial

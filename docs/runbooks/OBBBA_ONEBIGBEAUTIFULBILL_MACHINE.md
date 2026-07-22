@@ -57,6 +57,10 @@ current_integration:
   previous_comments_component: src/components/DiscourseComments.astro
   previous_comments_api_route: src/pages/api/discourse-comments.json.ts
   source_metadata_present: true
+  latest_package_main_commit: d7800d7
+  latest_package_main_suite: pass_51_of_51
+  latest_package_code_boss_review: final_pass
+  latest_package_deployed_to_obbba: false
 ```
 
 Canonical hostname assertion:
@@ -594,10 +598,29 @@ rendering_boundary:
   fullInteractive:
     owner: cross_origin_Discourse_iframe
     host_Astro_transform_or_CSS_access: none
-    Discourse_Mermaid_theme_component: official_current_option_not_verified_installed
+    ordinary_topic_434_mermaid: rendered_to_svg
+    full_app_embed_topic_434_mermaid: raw_code
+    full_app_embed_theme_component_js: absent
+    tables: parsed_weak_style
+    immediate_table_path: Discourse_common_embedded_scss_with_embed_class_hook
+    mermaid_resolution: open_Discourse_embed_extension_plugin_or_upstream
   full:
-    first_generation_mermaid_postprocessor: present
-    current_package_parity_review: pending
+    package_commit: d7800d7
+    parity_review: pass
+    code_boss: final_pass
+    package_tests: 51_of_51
+    plain_astro_build: pass
+    starlight_build: pass_known_docs_404_only
+    mermaid: version_11_strict_lazy_default_true_opt_out_false
+    failure_fallback: source_preserved_and_module_load_retryable
+    tables: borders_padding_horizontal_overflow
+    repeated_component_guard: claim_container_once
+    lazy_chunk_warning: emitted_over_500k_but_fetched_only_when_needed
+  embed_class_hooks:
+    comments_className_forwarded_to_window_DiscourseEmbed: true
+    embedClassName_public_components: [Discussion, DiscourseDiscussion, DiscourseComments]
+  obbba_content_writes_this_pass: none
+  obbba_live_deployment_this_pass: none
 ```
 
 ## 10. Known Failures And Recovery

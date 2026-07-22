@@ -381,13 +381,21 @@ For an existing topic, pass its topic ID through the complete component path.
 The native embed should configure `{ topicId }` when it is present and fall back
 to `{ discourseEmbedUrl: embedUrl }` only when there is no explicit topic ID.
 
-Rendering ownership changes by comments mode. In `fullInteractive`, the
-cross-origin iframe belongs to Discourse, so Astro-side Mermaid transforms and
-CSS cannot render or restyle content inside it. Configure Mermaid and theme
-support on Discourse for that mode; the current official option is the Discourse
-Mermaid theme component. This records an available path, not completed setup.
-The package's current Astro-rendered `full` mode still needs an explicit parity
-review against the first-generation bridge component's Mermaid postprocessor.
+Rendering ownership changes by comments mode. The package's Astro-rendered
+`full` mode now has reviewed first-generation parity: Mermaid replies render
+client-side by default, and tables receive readable styling plus horizontal
+overflow handling. Set `replies.renderMermaid: false` to opt out. Mermaid is
+loaded only when a reply needs it; a load or render failure preserves the source
+code for recovery instead of destroying the reply.
+
+In `fullInteractive`, the cross-origin iframe belongs to Discourse, so Astro-side
+Mermaid transforms and CSS cannot render or restyle content inside it. The
+ordinary topic view may render Mermaid while the full-app comments embed still
+shows raw Mermaid source because the embed application does not load normal
+theme-component JavaScript. Use Discourse embedded CSS, targeted with the bridge
+embed class hook, for immediate table presentation. Mermaid still needs a
+Discourse-side embed extension, plugin, or upstream solution; do not mark it
+fixed.
 
 **Screenshot placeholders:** one desktop and one mobile capture for each mode.
 

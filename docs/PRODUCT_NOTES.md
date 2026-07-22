@@ -120,8 +120,20 @@ and a table. In `fullInteractive`, that content lives in a cross-origin iframe
 owned by Discourse; host Astro transforms and CSS cannot cross that boundary to
 render Mermaid or restyle the tables.
 
-This is a product boundary, not a confirmed setup fix. `fullInteractive` needs
-Discourse-side Mermaid/theme support; the current official option is the
-Discourse Mermaid theme component. The first-generation bridge-rendered `full`
-component had a Mermaid postprocessor, so the current package `full` mode needs
-an explicit parity review.
+The package's bridge-rendered `full` mode has now completed that parity review.
+It lazily renders Mermaid 11 with strict security and source-preserving failure
+fallback, styles tables for readability and overflow, and exposes
+`replies.renderMermaid` as a default-true public option. The lazy chunk may cause
+Vite's greater-than-500-kB build warning, but is fetched only when needed.
+
+`fullInteractive` remains a different product boundary. The ordinary topic-434
+view renders Mermaid through the Discourse theme component, but the full-app
+comments embed leaves Mermaid as raw code because normal theme-component JS is
+not loaded there. Tables parse but need stronger embedded styling. The immediate
+supported table path is Discourse `common/embedded.scss`, targeted with the new
+embed class hook. Mermaid remains open pending a Discourse embed extension,
+plugin, or upstream answer; it is not fixed by the `full` implementation.
+
+Commit `d7800d7` passed Code Boss review and 51/51 package tests plus plain Astro
+and Starlight production builds. This implementation pass made no OBBBA content
+writes and performed no live deployment.
