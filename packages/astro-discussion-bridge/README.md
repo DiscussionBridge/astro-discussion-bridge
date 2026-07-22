@@ -107,9 +107,9 @@ The API-only path should stay useful on its own. A future Discourse plugin shoul
 
 ### Discussion targets
 
-Current Tier 1 usage manages one Discourse target topic per Astro page. Use `--target NAME`, `DISCUSSION_TARGET`, or `activeTarget` when you want that single target to be named explicitly, such as `community`, `members`, or `regional`.
+Tier 1 supports both a single named Discourse target and bounded multi-target pages. Use `--target NAME`, `DISCUSSION_TARGET`, or `activeTarget` to select exactly one target for each CLI run, such as `community`, `members`, or `regional`.
 
-When a target is active, DiscussionBridge writes the target label into frontmatter:
+Single-target pages retain the compact frontmatter contract:
 
 ```yaml
 discussionTarget: "community"
@@ -119,7 +119,29 @@ discourseTopicUrl: "https://forum.example.com/t/topic-slug/1234"
 
 Later publish/sync runs only manage a targeted page when the active target matches. If a page says `discussionTarget: "community"` and you run with `--target regional`, the page is skipped instead of being synced to the wrong forum. If you omit `--target`, targeted pages are also skipped with a message telling you which target to use.
 
-This is intentionally not full multi-Discourse support yet. It preserves the future path toward namespaced `discussionTargets` while keeping today's frontmatter and commands simple.
+For a page connected to more than one forum, use an ordered target list, an explicit writable subset, a protected source target when applicable, and independent target bindings:
+
+```yaml
+discussionSourceMode: discourse-imported
+discussionSync: false
+discussionTarget: "source-community"
+discussionSourceTarget: "source-community"
+discussionTargets: "source-community,regional-community"
+discussionPublishTargets: "regional-community"
+discussionPrimaryTarget: "source-community"
+discussionTargetBindings: '{"source-community":{"topicId":1234,"topicUrl":"https://source.example.com/t/topic/1234","status":"synced"}}'
+```
+
+Run the command once for the intended writable target:
+
+```powershell
+npx astro-discussion-bridge publish-and-sync src/content/docs --target regional-community --dry-run
+npx astro-discussion-bridge publish-and-sync src/content/docs --target regional-community
+```
+
+An imported or Discourse-managed source target remains protected from writeback, even when the page explicitly publishes to another target. Successful bindings are retained independently, so a failed target can be retried without recreating topics on targets that already succeeded. When several discussions are linked, `discussionPrimaryTarget` selects the one rendered on the page; additional targets appear as named links.
+
+This is deliberately bounded multi-target publishing, not a general many-to-many administration system. Targets, writable destinations, source ownership, and presentation remain explicit and inspectable.
 
 ## Content Lanes
 
