@@ -97,3 +97,16 @@ also established a release lesson: production-shaped verification must include
 a clean build of the exact tracked commit. A dirty local deletion had hidden a
 stale tracked starter page, so the removal was isolated before deployment while
 unrelated changes and superseded artifacts remained untouched.
+
+Curated import routing now has an explicit WHEREFROM/WHERETO product model.
+WHEREFROM proves the Discourse source identity, curated order, category where
+applicable, and required tags/filters before writing. WHERETO fixes the Astro
+content root, safe output file, public route/site, and navigation lane. Manifest
+v1 expresses this with its current flat fields (`topic` and `requiredTags`;
+`docsDir`, `output`, site/route settings, and the site title-lane map). A nested
+`from`/`to` schema may be explored later, but is not a v1 redesign.
+
+The OBBBA Title-lane proof requires `TITLE-I` on all five source topics, routes
+each entry explicitly, generates Starlight Title I–X navigation from the site
+map, and passed clean build plus live verification on Worker version
+`cde279d5-1c27-452c-964f-59d8dfd7c320`.

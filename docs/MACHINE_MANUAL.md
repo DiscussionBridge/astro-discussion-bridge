@@ -423,6 +423,8 @@ schema:
   top_level_keys: [version, imports]
 manifest_entry_fields:
   - topic
+  - requiredTags
+  - output
   - commentsDisplay
   - heroImage
   - heroAlt
@@ -445,9 +447,35 @@ regression_coverage:
   - zero_byte_output
   - path_traversal
 blanket_update_all_safe: false
-package_gate: pass_49_of_49
+package_gate: pass_50_of_50
 obbba_site_live_proof: pass_topics_434_747_751_752_753
 ```
+
+Every import route has two validated contracts:
+
+```yaml
+WHEREFROM:
+  discourse_base_or_target: required
+  topic_identity_or_curated_manifest_order: required
+  category: required_when_lane_uses_one
+  required_tags_and_filters: validate_against_live_source_before_write
+WHERETO:
+  docs_dir: deterministic Astro content root
+  output: safe relative .md or .mdx file
+  public_identity: site_url + route_base
+  navigation: site title-lane/sidebar map
+  invariants: [deterministic, reviewable, path_contained, never_latest_activity]
+manifest_v1_mapping:
+  wherefrom: [topic, requiredTags]
+  whereto: [docsDir, output, site-url, route-base, site_title_lane_map]
+future_schema_note: nested from/to may be considered later; do not redesign v1 now
+```
+
+`requiredTags` comparisons are case-insensitive assertions against live
+Discourse tags and fail before any write. Discourse topic tags may arrive as
+strings or objects. `output` must be a safe relative `.md` or `.mdx` path;
+nested parent directories are created only after the entire destination passes
+validation and containment checks.
 
 ### Starlight Imported-Page Integration
 

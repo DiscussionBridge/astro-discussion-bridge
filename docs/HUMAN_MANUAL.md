@@ -338,6 +338,19 @@ mode with direct topic options, revalidates every entry, checks destinations and
 path containment, and stages the whole batch before atomic creation or
 overwrite rollback. A failed batch must not leave a partial import set.
 
+Treat every import as two joined contracts:
+
+- **WHEREFROM:** the Discourse base or target, explicit topic or curated order,
+  category when the lane uses one, and required tags or filters;
+- **WHERETO:** the Astro content root, explicit output file, public site and
+  route base, and the navigation/sidebar lane.
+
+Validate the source identity and live tag constraints before writing. Make the
+destination deterministic, reviewable, and contained inside the content root.
+Manifest v1 keeps these as the existing flat fields—such as `topic`,
+`requiredTags`, and `output`—rather than a new nested structure. A nested
+`from`/`to` form is only a possible future evolution.
+
 > **Never use:** `bumped_at`, last reply, or latest activity for queue order.
 > Community participation must not reorder publishing candidates.
 

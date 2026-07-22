@@ -69,7 +69,7 @@ C:\CodeProjects\Projects\OBBBA\sites\onebigbeautifulbill.us\astro
 The current site uses Astro 7, Starlight, Mermaid, the Cloudflare adapter, OG
 image generation, and `astro-discussion-bridge`. The Alpha integration uses the
 unique packed artifact
-`vendor/astro-discussion-bridge-0.1.0-alpha-a646c6b-76684dbd.tgz`; it is not the final
+`vendor/astro-discussion-bridge-0.1.0-alpha-69846cf-64a151bd.tgz`; it is not the final
 release distribution.
 
 > **Stop if:** work is pointed at the `legacy-source` directory, a copied deploy
@@ -230,7 +230,7 @@ Bridge Boss completed the local package migration without a Discourse write:
 3. The proof page imports the package `Discussion.astro` component.
 4. All source-mode, topic, manually-pruned content, image, alt text, and comments
    settings were preserved.
-5. The package regression suite passed 49/49 with Code Boss final PASS.
+5. The package regression suite passed 50/50 with Code Boss final PASS.
 6. The deployment-shaped OBBBA build passed.
 7. Generated HTML contains topic ID `434`, `fullApp=true`, the correct forum
    URL, and the correct fallback topic URL.
@@ -255,18 +255,11 @@ every imported Markdown page receives its discussion. Do not add a second
 per-page `<Discussion>` component; the old explicit 10101 instance was removed
 to prevent duplication.
 
-Section 10103/topic 751 proves hero-only import using
-`../../../assets/obbbanotso.png` and alt text `One Big (not so) Beautiful Bill
-over the U.S. Capitol`. Its normalized imported body exactly matches the
-Discourse raw body. Sections 10101, 10102, and 10103 each build with exactly one
-correct `fullInteractive` discussion.
-
-Sections 10104/topic 752 and 10105/topic 753 complete the local prune proofs.
-Both use the opt-in `community-call-to-action` profile, which removes only the
-verified trailing footer block. The prune-only page removed 453 characters; the
-hero-plus-prune page removed 441. Each local body matches the independently
-verified Discourse raw prefix, the footer markers are absent, and each page has
-exactly one correct `fullInteractive` discussion.
+The final tag-routed policy applies the hero with required exact alt text and
+the opt-in `community-call-to-action` prune profile to all five topics. Each
+body matches the independently verified Discourse raw prefix. The verified CTA
+suffix removals are 456 characters for topic `434`, 511 for `747`, 549 for
+`751`, 453 for `752`, and 441 for `753`; no CTA footer remains.
 
 The four-route matrix now passes locally, in a clean production-shaped build,
 and live. Topics `747`, `751`, `752`, and `753` each return HTTP 200 with exactly
@@ -274,10 +267,15 @@ one correctly bound discussion and the intended hero/prune policy. Together
 with the existing topic `434` proof, this closes the broader live matrix gate.
 
 The reviewed refresh mechanism is the ordered `discussionbridge-imports.json`
-manifest. It records each topic's comments mode, hero pair, and prune profiles,
-in the deliberate order `747`, `751`, `752`, `753`. A normal dry run skipped all
-four existing pages; an overwrite dry run previewed four replacements; the
-actual overwrite then imported all four in that same order.
+manifest. It records topics `434`, `747`, `751`, `752`, and `753` in deliberate
+order. Every entry requires the live `TITLE-I` tag, uses `fullInteractive`, a
+hero with required alt text, the community CTA prune profile, and a safe explicit
+output. Topic `434` keeps its curated `10101-impact.mdx` destination.
+
+Every route has two contracts. WHEREFROM identifies the Discourse source,
+topic/order, category when applicable, and required source tags. WHERETO fixes
+the Astro content root, output file, public route/site, and Title sidebar lane.
+Validate both before writing; never infer either side from latest activity.
 
 The package validates the whole batch before writing, stages every result, and
 uses atomic creation or rollback so one bad entry does not leave a partial
@@ -311,8 +309,10 @@ Live deployment evidence:
 - A clean detached build found a tracked stale starter page that a dirty local
   deletion had hidden. Removing that page was isolated and pushed as `a225f00`;
   the clean build at that exact commit passed.
+- Tag-safe curated outputs were reviewed in package commit `69846cf`; the OBBBA
+  Title-lane site slice received Code Boss PASS and was pushed as `bd591c9`.
 - Worker `onebigbeautifulbill` deployed successfully as version
-  `9ea661a7-5b1e-46a9-90f0-3ccc0fd10095` at
+  `cde279d5-1c27-452c-964f-59d8dfd7c320` at
   `https://onebigbeautifulbill.systems-b95.workers.dev`.
 - The canonical proof page returns HTTP 200 and contains the package signature:
   topic `434`, `fullApp=true`, the correct forum and fallback URLs, and the hero
@@ -323,7 +323,9 @@ Live deployment evidence:
   import write.
 - Canonical smoke checks returned HTTP 200 for topics `434`, `747`, `751`,
   `752`, and `753`; each route has one correct discussion boundary and the
-  expected hero/prune state.
+  expected hero/prune state, exact alt text, canonical topic URL, and no CTA
+  footer. The sidebar exposes Title I through Title X and five unique Title I
+  destinations.
 
 Unrelated unstaged OBBBA changes and superseded untracked package artifacts
 were left untouched.
