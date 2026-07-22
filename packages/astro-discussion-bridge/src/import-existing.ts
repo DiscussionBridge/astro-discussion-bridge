@@ -20,6 +20,8 @@ export interface ImportExistingDiscourseTopicsOptions {
   heroImage?: string;
   heroAlt?: string;
   pruneProfiles?: ImportPruneProfile[];
+  outputFile?: string;
+  requiredTags?: string[];
 }
 
 export interface ImportedDiscourseTopic {
@@ -39,6 +41,10 @@ export async function importExistingDiscourseTopics(
   const heroAlt = options.heroAlt?.trim();
   validateHeroOptions({ heroImage, heroAlt });
   const pruneProfiles = validateImportPruneProfiles(options.pruneProfiles ?? []);
+  const requiredTags = normalizeRequiredTags(options.requiredTags ?? []);
+  if (options.outputFile && options.topics.length !== 1) {
+    throw new Error("outputFile can only be used when importing one topic.");
+  }
   const docsDir = path.resolve(options.docsDir);
   const discourse = createDiscourseClient({
     discourseUrl: options.discourseUrl,
@@ -52,13 +58,16 @@ export async function importExistingDiscourseTopics(
 
   for (const topicRef of topicRefs) {
     const topic = await discourse.topic(topicRef.topicId);
+    validateRequiredTopicTags(topic, requiredTags);
     const firstPostSummary = firstPostForTopic(topic);
     if (!firstPostSummary) {
       throw new Error(`Could not find first post for Discourse topic ${topicRef.topicId}.`);
     }
 
     const slug = topicRef.slug ?? firstPostSummary.topic_slug ?? slugify(topic.title);
-    const filePath = safeImportFilePath(docsDir, slug, topic.id);
+    const filePath = options.outputFile
+      ? safeExplicitImportFilePath(docsDir, options.outputFile, topic.id)
+      : safeImportFilePath(docsDir, slug, topic.id);
     const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl, routeBase: options.routeBase });
     const topicUrl = `${discourse.discourseUrl}/t/${slug}/${topic.id}`;
     const fileExists = await pathExists(filePath);
@@ -102,6 +111,7 @@ export async function importExistingDiscourseTopics(
     );
     const sourceHash = hashDiscussionSource({ title: topic.title, pageUrl, content: body });
 
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(
       filePath,
       markdownForImportedTopic({
@@ -350,6 +360,44 @@ function safeImportFilePath(docsDir: string, slug: string, topicId: number): str
     throw new Error(`Discourse topic ${topicId} resolved to an unsafe Astro file path.`);
   }
   return filePath;
+}
+
+function safeExplicitImportFilePath(docsDir: string, outputFile: string, topicId: number): string {
+  const trimmed = outputFile.trim();
+  if (!trimmed || !/\.(?:md|mdx)$/i.test(trimmed)) {
+    throw new Error(`Import output for Discourse topic ${topicId} must be a relative .md or .mdx file.`);
+  }
+  if (path.isAbsolute(trimmed)) {
+    throw new Error(`Import output for Discourse topic ${topicId} must be relative to the docs directory.`);
+  }
+  const filePath = path.resolve(docsDir, trimmed);
+  const relative = path.relative(docsDir, filePath);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`Import output for Discourse topic ${topicId} resolved outside the docs directory.`);
+  }
+  return filePath;
+}
+
+function normalizeRequiredTags(tags: string[]): string[] {
+  const normalized = tags.map((tag) => tag.trim()).filter(Boolean);
+  if (normalized.length !== tags.length) throw new Error("requiredTags must contain non-empty tag names.");
+  const keys = normalized.map((tag) => tag.toLowerCase());
+  if (new Set(keys).size !== keys.length) throw new Error("requiredTags must not contain duplicates.");
+  return normalized;
+}
+
+function validateRequiredTopicTags(topic: TopicResponse, requiredTags: string[]): void {
+  if (requiredTags.length === 0) return;
+  const actual = (topic.tags ?? [])
+    .map((tag) => typeof tag === "string" ? tag : tag.name ?? tag.slug ?? "")
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+  const missing = requiredTags.filter((tag) => !actual.includes(tag.toLowerCase()));
+  if (missing.length) {
+    throw new Error(
+      `Discourse topic ${topic.id} is missing required import tag(s): ${missing.join(", ")}. No file was written.`,
+    );
+  }
 }
 
 function normalizeRouteBase(value: string | undefined): string {

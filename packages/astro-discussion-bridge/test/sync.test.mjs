@@ -28,6 +28,8 @@ test("import manifest preserves curated order and per-topic policies", () => {
         commentsDisplay: "fullInteractive",
         heroImage: "../../../assets/hero.png",
         heroAlt: "Descriptive hero",
+        output: "title-i/10103-impact.mdx",
+        requiredTags: ["TITLE-I"],
       },
       {
         topic: "752",
@@ -42,7 +44,68 @@ test("import manifest preserves curated order and per-topic policies", () => {
     "752",
   ]);
   assert.equal(manifest.imports[1].heroAlt, "Descriptive hero");
+  assert.equal(manifest.imports[1].output, "title-i/10103-impact.mdx");
+  assert.deepEqual(manifest.imports[1].requiredTags, ["TITLE-I"]);
   assert.deepEqual(manifest.imports[2].pruneProfiles, ["community-call-to-action"]);
+});
+
+test("import manifest writes an explicit output only when required tags match", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-manifest-output-"));
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/t/21.json") {
+        return jsonResponse({
+          id: 21,
+          title: "Section 10101 Impact",
+          tags: ["Impact", "TITLE-I"],
+          post_stream: { posts: [{ id: 101, post_number: 1, topic_id: 21, topic_slug: "section-10101-impact", cooked: "" }] },
+        });
+      }
+      if (pathname === "/posts/101.json") {
+        return jsonResponse({ id: 101, post_number: 1, topic_id: 21, topic_slug: "section-10101-impact", raw: "Imported body", cooked: "" });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    const [result] = await importExistingDiscourseManifest({
+      docsDir: dir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      manifest: {
+        version: 1,
+        imports: [{ topic: "21", output: "title-i/10101-impact.mdx", requiredTags: ["TITLE-I"] }],
+      },
+    });
+
+    const expectedPath = path.join(dir, "title-i", "10101-impact.mdx");
+    assert.equal(result.filePath, expectedPath);
+    assert.match(await readFile(expectedPath, "utf8"), /Imported body/);
+
+    await assert.rejects(
+      importExistingDiscourseManifest({
+        docsDir: dir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        dryRun: true,
+        manifest: {
+          version: 1,
+          imports: [{ topic: "21", output: "title-ii/10101-impact.md", requiredTags: ["TITLE-II"] }],
+        },
+      }),
+      /missing required import tag\(s\): TITLE-II/,
+    );
+    await assert.rejects(readFile(path.join(dir, "title-ii", "10101-impact.md"), "utf8"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
 });
 
 test("import manifest rejects duplicate topics and unsafe option shapes", () => {
@@ -80,6 +143,22 @@ test("import manifest rejects duplicate topics and unsafe option shapes", () => 
       imports: [{ topic: 752, pruneProfile: "community-call-to-action" }],
     }),
     /unknown field.*pruneProfile/,
+  );
+
+  assert.throws(
+    () => validateImportManifest({
+      version: 1,
+      imports: [{ topic: 753, output: "../outside.md" }],
+    }),
+    /output must stay inside the docs directory/,
+  );
+
+  assert.throws(
+    () => validateImportManifest({
+      version: 1,
+      imports: [{ topic: 754, requiredTags: ["TITLE-I", "title-i"] }],
+    }),
+    /requiredTags contains duplicates/,
   );
 });
 

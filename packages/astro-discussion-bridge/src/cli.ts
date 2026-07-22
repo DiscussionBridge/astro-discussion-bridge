@@ -426,7 +426,7 @@ function printUsage(error?: string) {
   console.error("Import options:");
   console.error("  --topic URL[,URL]          Discourse topic URL or ID to import.");
   console.error("  --topic-id ID[,ID]         Discourse topic ID to import.");
-  console.error("  --manifest FILE            Ordered JSON imports with per-topic hero/prune/comments options.");
+  console.error("  --manifest FILE            Ordered JSON imports with per-topic output/tag/hero/prune/comments policies.");
   console.error("  --overwrite                Replace existing imported Markdown files.");
   console.error("  --comments-display MODE    simple, full, or fullInteractive.");
   console.error("  --hero-image PATH          Add a leading imported-page image using this asset path or URL.");

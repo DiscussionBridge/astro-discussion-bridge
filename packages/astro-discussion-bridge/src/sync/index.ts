@@ -1124,8 +1124,8 @@ function canonicalTopicUrl(discourseUrl: string, topicId: number | string, slug?
   return `${discourseUrl}/t/${slug}/${topicId}`;
 }
 
-function tagNamesFromTopic(tags: Array<{ name?: string; slug?: string }> | undefined): string[] {
-  return tags?.map((tag) => tag.name ?? tag.slug).filter((tag): tag is string => Boolean(tag)) ?? [];
+function tagNamesFromTopic(tags: Array<{ name?: string; slug?: string } | string> | undefined): string[] {
+  return tags?.map((tag) => typeof tag === "string" ? tag : tag.name ?? tag.slug).filter((tag): tag is string => Boolean(tag)) ?? [];
 }
 
 function sameTags(left: string[], right: string[]): boolean {

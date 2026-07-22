@@ -13,6 +13,8 @@ export interface ImportManifestEntry {
   heroImage?: string;
   heroAlt?: string;
   pruneProfiles?: ImportPruneProfile[];
+  output?: string;
+  requiredTags?: string[];
 }
 
 export interface ImportManifest {
@@ -20,12 +22,12 @@ export interface ImportManifest {
   imports: ImportManifestEntry[];
 }
 
-const entryKeys = new Set(["topic", "commentsDisplay", "heroImage", "heroAlt", "pruneProfiles"]);
+const entryKeys = new Set(["topic", "commentsDisplay", "heroImage", "heroAlt", "pruneProfiles", "output", "requiredTags"]);
 const rootKeys = new Set(["version", "imports"]);
 
 export interface ImportManifestRunOptions extends Omit<
   ImportExistingDiscourseTopicsOptions,
-  "topics" | "commentsDisplay" | "heroImage" | "heroAlt" | "pruneProfiles"
+  "topics" | "commentsDisplay" | "heroImage" | "heroAlt" | "pruneProfiles" | "outputFile" | "requiredTags"
 > {
   manifest: ImportManifest;
 }
@@ -76,6 +78,21 @@ export function validateImportManifest(value: unknown, source = "import manifest
     if (heroImage && !heroAlt) throw new Error(`${label}.heroAlt is required when heroImage is configured.`);
     if (heroAlt && !heroImage) throw new Error(`${label}.heroImage is required when heroAlt is configured.`);
 
+    const output = optionalString(entry.output, `${label}.output`);
+    if (output) validateManifestOutput(output, `${label}.output`);
+
+    let requiredTags: string[] | undefined;
+    if (entry.requiredTags !== undefined) {
+      if (!Array.isArray(entry.requiredTags) || entry.requiredTags.length === 0) {
+        throw new Error(`${label}.requiredTags must be a non-empty array.`);
+      }
+      requiredTags = entry.requiredTags.map((tag, tagIndex) => optionalString(tag, `${label}.requiredTags[${tagIndex}]`)!);
+      const normalizedTags = requiredTags.map((tag) => tag.toLowerCase());
+      if (new Set(normalizedTags).size !== normalizedTags.length) {
+        throw new Error(`${label}.requiredTags contains duplicates.`);
+      }
+    }
+
     let pruneProfiles: ImportPruneProfile[] | undefined;
     if (entry.pruneProfiles !== undefined) {
       if (!Array.isArray(entry.pruneProfiles)) throw new Error(`${label}.pruneProfiles must be an array.`);
@@ -95,6 +112,8 @@ export function validateImportManifest(value: unknown, source = "import manifest
       ...(heroImage ? { heroImage } : {}),
       ...(heroAlt ? { heroAlt } : {}),
       ...(pruneProfiles ? { pruneProfiles } : {}),
+      ...(output ? { output } : {}),
+      ...(requiredTags ? { requiredTags } : {}),
     };
   });
 
@@ -117,6 +136,8 @@ export async function importExistingDiscourseManifest(
       heroImage: entry.heroImage,
       heroAlt: entry.heroAlt,
       pruneProfiles: entry.pruneProfiles,
+      outputFile: entry.output,
+      requiredTags: entry.requiredTags,
       dryRun: true,
     });
     previews.push({ entry, result });
@@ -146,6 +167,8 @@ export async function importExistingDiscourseManifest(
         heroImage: entry.heroImage,
         heroAlt: entry.heroAlt,
         pruneProfiles: entry.pruneProfiles,
+        outputFile: entry.output,
+        requiredTags: entry.requiredTags,
         dryRun: false,
         overwrite: true,
       });
@@ -260,6 +283,16 @@ function optionalString(value: unknown, label: string): string | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} must be a non-empty string.`);
   return value.trim();
+}
+
+function validateManifestOutput(value: string, label: string): void {
+  const normalized = path.normalize(value);
+  if (path.isAbsolute(value) || normalized === ".." || normalized.startsWith(`..${path.sep}`)) {
+    throw new Error(`${label} must stay inside the docs directory.`);
+  }
+  if (!/\.(?:md|mdx)$/i.test(normalized)) {
+    throw new Error(`${label} must name a .md or .mdx file.`);
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

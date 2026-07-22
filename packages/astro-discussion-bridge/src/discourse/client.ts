@@ -107,7 +107,7 @@ export interface TopicResponse {
   slug?: string;
   category_id?: number;
   visible?: boolean;
-  tags?: DiscourseTag[];
+  tags?: Array<DiscourseTag | string>;
   posts_count: number;
   created_at: string;
   post_stream: {
