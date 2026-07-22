@@ -516,7 +516,8 @@ fresh_import_gate:
       output_each: safe_relative_md_or_mdx
       route_base: title-i
       site_url: https://onebigbeautifulbill.us
-      title_lane_map: discussionbridge-title-lanes.json
+      astro_navigation_lane_map: discussionbridge-title-lanes.json
+      implementation: Starlight_Title_sidebar_groups
       path_containment: required
     manifest_v1_fields: [topic, requiredTags, output, commentsDisplay, heroImage, heroAlt, pruneProfiles]
     future_nested_from_to_schema: possible_not_current
@@ -579,8 +580,24 @@ content_schema: docsSchema extended with Discussion Bridge fields
 per_page_explicit_Discussion_component: prohibited_when_boundary_override_active
 verified_single_fullInteractive_instances:
   - { section: 10101, topic_id: 434, count: 1, hero: true }
-  - { section: 10102, topic_id: 747, count: 1, hero: false }
+  - { section: 10102, topic_id: 747, count: 1, hero: true }
   - { section: 10103, topic_id: 751, count: 1, hero: true }
+  - { section: 10104, topic_id: 752, count: 1, hero: true }
+  - { section: 10105, topic_id: 753, count: 1, hero: true }
+rendering_boundary:
+  outer_astro_page:
+    mermaid_svg: present
+    html_tables: 5
+  topic_434_cooked_html:
+    code_lang_mermaid: present
+    table: present
+  fullInteractive:
+    owner: cross_origin_Discourse_iframe
+    host_Astro_transform_or_CSS_access: none
+    Discourse_Mermaid_theme_component: official_current_option_not_verified_installed
+  full:
+    first_generation_mermaid_postprocessor: present
+    current_package_parity_review: pending
 ```
 
 ## 10. Known Failures And Recovery

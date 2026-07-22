@@ -274,8 +274,17 @@ output. Topic `434` keeps its curated `10101-impact.mdx` destination.
 
 Every route has two contracts. WHEREFROM identifies the Discourse source,
 topic/order, category when applicable, and required source tags. WHERETO fixes
-the Astro content root, output file, public route/site, and Title sidebar lane.
+the Astro content root, output file, public route, and Astro navigation lane. In
+this Starlight implementation, that lane is the mapped Title sidebar group.
 Validate both before writing; never infer either side from latest activity.
+
+The live outer Astro page renders the Mermaid SVG and five HTML tables, while
+topic `434` cooked HTML contains `code.lang-mermaid` and a table. The
+`fullInteractive` discussion is a cross-origin Discourse iframe, so Astro-side
+transforms and CSS cannot alter that inner content. Discourse-side Mermaid/theme
+support remains unverified; do not mark it configured. The package `full` mode
+also remains pending an explicit parity review with the earlier Mermaid-aware
+bridge renderer.
 
 The package validates the whole batch before writing, stages every result, and
 uses atomic creation or rollback so one bad entry does not leave a partial

@@ -342,8 +342,8 @@ Treat every import as two joined contracts:
 
 - **WHEREFROM:** the Discourse base or target, explicit topic or curated order,
   category when the lane uses one, and required tags or filters;
-- **WHERETO:** the Astro content root, explicit output file, public site and
-  route base, and the navigation/sidebar lane.
+- **WHERETO:** the Astro content root, explicit output file, public route, and
+  Astro navigation lane, with the site URL fixed as part of public identity.
 
 Validate the source identity and live tag constraints before writing. Make the
 destination deterministic, reviewable, and contained inside the content root.
@@ -380,6 +380,14 @@ comments, and no accidental writeback.
 For an existing topic, pass its topic ID through the complete component path.
 The native embed should configure `{ topicId }` when it is present and fall back
 to `{ discourseEmbedUrl: embedUrl }` only when there is no explicit topic ID.
+
+Rendering ownership changes by comments mode. In `fullInteractive`, the
+cross-origin iframe belongs to Discourse, so Astro-side Mermaid transforms and
+CSS cannot render or restyle content inside it. Configure Mermaid and theme
+support on Discourse for that mode; the current official option is the Discourse
+Mermaid theme component. This records an available path, not completed setup.
+The package's current Astro-rendered `full` mode still needs an explicit parity
+review against the first-generation bridge component's Mermaid postprocessor.
 
 **Screenshot placeholders:** one desktop and one mobile capture for each mode.
 

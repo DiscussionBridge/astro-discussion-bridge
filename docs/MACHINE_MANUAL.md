@@ -463,11 +463,11 @@ WHERETO:
   docs_dir: deterministic Astro content root
   output: safe relative .md or .mdx file
   public_identity: site_url + route_base
-  navigation: site title-lane/sidebar map
+  navigation: Astro navigation lane
   invariants: [deterministic, reviewable, path_contained, never_latest_activity]
 manifest_v1_mapping:
   wherefrom: [topic, requiredTags]
-  whereto: [docsDir, output, site-url, route-base, site_title_lane_map]
+  whereto: [docsDir, output, site-url, route-base, astro_navigation_lane_map]
 future_schema_note: nested from/to may be considered later; do not redesign v1 now
 ```
 
@@ -572,6 +572,21 @@ discussionBridge({
   refresh needs CORS or same-origin proxy.
 - `fullInteractive`: Discourse full-app iframe; requires full-app embedding and
   compatible sign-in/cookie configuration.
+
+Rendering boundary:
+
+```yaml
+fullInteractive:
+  owner: cross_origin_Discourse_iframe
+  host_Astro_transforms_or_CSS_cross_boundary: false
+  mermaid_and_table_styling_owner: Discourse
+  current_official_mermaid_option: Discourse Mermaid theme component
+  setup_verified: false
+full:
+  owner: Astro_rendered_bridge_component
+  first_generation_mermaid_postprocessor: existed
+  current_package_parity_review: required
+```
 
 Verification matrix:
 

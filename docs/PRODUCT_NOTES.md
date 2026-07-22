@@ -101,7 +101,8 @@ unrelated changes and superseded artifacts remained untouched.
 Curated import routing now has an explicit WHEREFROM/WHERETO product model.
 WHEREFROM proves the Discourse source identity, curated order, category where
 applicable, and required tags/filters before writing. WHERETO fixes the Astro
-content root, safe output file, public route/site, and navigation lane. Manifest
+content root, safe output file, public route, site identity, and Astro navigation
+lane. Manifest
 v1 expresses this with its current flat fields (`topic` and `requiredTags`;
 `docsDir`, `output`, site/route settings, and the site title-lane map). A nested
 `from`/`to` schema may be explored later, but is not a v1 redesign.
@@ -110,3 +111,17 @@ The OBBBA Title-lane proof requires `TITLE-I` on all five source topics, routes
 each entry explicitly, generates Starlight Title I–X navigation from the site
 map, and passed clean build plus live verification on Worker version
 `cde279d5-1c27-452c-964f-59d8dfd7c320`.
+
+## Comments Rendering Ownership
+
+The live OBBBA outer Astro page renders its Mermaid SVG and five HTML tables.
+The cooked Discourse HTML for topic `434` still contains `code.lang-mermaid`
+and a table. In `fullInteractive`, that content lives in a cross-origin iframe
+owned by Discourse; host Astro transforms and CSS cannot cross that boundary to
+render Mermaid or restyle the tables.
+
+This is a product boundary, not a confirmed setup fix. `fullInteractive` needs
+Discourse-side Mermaid/theme support; the current official option is the
+Discourse Mermaid theme component. The first-generation bridge-rendered `full`
+component had a Mermaid postprocessor, so the current package `full` mode needs
+an explicit parity review.
