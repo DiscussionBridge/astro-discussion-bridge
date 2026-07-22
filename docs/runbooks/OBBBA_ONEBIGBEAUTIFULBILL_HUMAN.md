@@ -384,11 +384,23 @@ page/lane-level target selection from the many-to-one convergence proof.
 
 The Alpha proof must use the same selected OBBBA page for both
 `forum.repealobbba.org` and `forum.citizenactivist.network` through an explicit
-ordered target list. This is proposed active Alpha scope pending implementation
-design review. It claims real one-page multi-forum operation, but not the future
+ordered target list. The package design and implementation are reviewed and
+complete at `60e41e1`; the OBBBA live proof is still pending. It claims real
+one-page multi-forum operation, but not the future
 general administration plane. The planned comments-boundary
 credit must remain configurable, secondary, accessible, and outside site content.
 Its final wording and default remain undecided.
+
+For the proof page, use `discussionTargets` as the ordered target list,
+`discussionPublishTargets` as the writable subset, and
+`discussionSourceTarget` to protect the imported OBBBA source. Confirm each
+result appears under its own `discussionTargetBindings` entry. Set
+`discussionPrimaryTarget` before linking the second discussion; the primary must
+render and the additional target must appear as an accessible named link.
+
+Run one explicit `--target` at a time. If the Citizen Activist publication fails
+after the Repeal OBBBA binding succeeds, preserve the successful binding, inspect
+the target-specific sanitized failure, and retry only the failed target.
 
 For the exact OBBBA release candidate:
 

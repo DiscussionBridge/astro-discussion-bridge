@@ -534,8 +534,8 @@ an item only when Phil explicitly directs that change.
 
 ### Alpha Topology Proof
 
-The proposed active Alpha multi-target proof, pending implementation design
-review, must show all four edges:
+The Alpha multi-target model is implemented and reviewed; its live topology
+proof must still show all four edges:
 
 - the same selected `onebigbeautifulbill.us` page → `forum.repealobbba.org`;
 - that same selected page → `forum.citizenactivist.network`;
@@ -552,6 +552,23 @@ publication/discussion targets. Review each target's forum, topic binding, sync
 and error state, and display policy independently. Keep the imported/managed
 source protected from writeback while allowing explicitly approved publication
 to another forum.
+
+In frontmatter, list the page's targets in order with `discussionTargets`, then
+name only writable destinations in `discussionPublishTargets`. Identify the
+protected imported/managed source with `discussionSourceTarget`. The bridge keeps
+each forum's result independently in `discussionTargetBindings`.
+
+If more than one discussion is linked, choose `discussionPrimaryTarget`. You
+should see that discussion rendered in the selected comments mode and the other
+targets as accessible named links. Optional `targetLabels` can make those link
+names friendlier. Stop if a multi-linked page has no explicit primary; the build
+error is protecting the operator from a silent choice.
+
+Run the CLI once per explicit `--target`. If one target fails after another
+succeeds, keep the successful binding and retry only the failed target. The
+stored failure is target-specific and sanitized. Do not manually discard a
+successful binding or create a replacement topic merely because another target
+failed.
 
 Choose the primary rendered discussion and state whether additional targets are
 linked or rendered; never let the bridge silently select one. If one target

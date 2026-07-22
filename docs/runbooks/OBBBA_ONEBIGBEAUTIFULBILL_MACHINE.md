@@ -668,7 +668,13 @@ post_gate_demo:
     pages: selected_and_clearly_labeled
     target_selection: member_of_explicit_ordered_page_target_list
   alpha_topology_claim: one_page_multi_forum_plus_many_sites_one_forum
-  status: proposed_active_Alpha_pending_implementation_design_review
+  status: implementation_complete_live_proof_pending
+  implementation:
+    commit: 60e41e1
+    review: Code_Boss_PASS
+    tests: 62_of_62_PASS
+    package_check: PASS
+    package_dry_run: PASS
   exact_matrix:
     - { from: same_selected_onebigbeautifulbill.us_page, to: https://forum.repealobbba.org }
     - { from: same_selected_onebigbeautifulbill.us_page, to: https://forum.citizenactivist.network }
@@ -677,13 +683,34 @@ post_gate_demo:
   contract:
     source_target_vs_publication_targets: distinct
     publication_targets: explicit_ordered_list
-    per_target_state: [forum_identity, topic_id, topic_url, sync_state, error_state, display_policy]
+    binding_fields: [topic_id, topic_url, source_hash, last_synced_at, status, last_error, last_attempted_at]
+    presentation_policy: explicit_primary_plus_accessible_additional_links
     protected_source_no_writeback: required
     comments: explicit_primary_plus_additional_linked_or_rendered
     partial_success: retain_success_report_failure_retry_idempotently
     target_specific: [diagnostics, dry_run, CLI_output, manuals, live_proof]
+    frontmatter:
+      discussionTargets: ordered_CSV_target_names
+      discussionPublishTargets: explicit_writable_subset_CSV
+      discussionSourceTarget: explicit_protected_source_target
+      discussionTargetBindings: JSON_scalar_map_by_target
+      discussionPrimaryTarget: required_when_multiple_linked_topics
+    execution:
+      CLI: one_explicit_--target_per_run
+      publishOnBuild: ordered_sequential_lanes_with_per_lane_target_and_credentials
+    presentation:
+      primary: rendered_in_selected_comments_mode
+      additional: accessible_named_links
+      optional_labels: targetLabels
+      missing_primary_with_multiple_links: hard_failure
+    recovery:
+      failure_state: sanitized_truncated_error_plus_attempt_time
+      retry: failed_target_only
+      collision_422: reconcile_owning_topic_into_active_binding
+      malformed_bindings: fail_before_network
   later_scope: general_many_to_many_administration
-  gate: [design_review, configure_targets, diagnostics, dry_run, build, live_bindings, partial_failure_retry]
+  completed_gate: [design_review, implementation, Code_Boss_review, package_tests, partial_failure_retry_tests]
+  open_gate: [configure_OBBBA_targets, target_diagnostics, target_dry_run, OBBBA_build, live_bindings, no_cross_target_writeback]
 comments_boundary_credit:
   implementation_state: planned_not_current_artifact
   candidate_text:

@@ -176,9 +176,9 @@ activists.” The
 other may use `forum.discussionbridge.dev` for clearly labeled demo/credit pages.
 Neither changes the managing forum for production OBBBA content lanes.
 
-Together with the existing many-to-one shape, this proposed active Alpha scope
-requires one-page-to-many-forums publishing, pending implementation design
-review. The same selected page uses an explicit ordered list containing
+Together with the existing many-to-one shape, Alpha requires one-page-to-many-
+forums publishing. Package commit `60e41e1` implements the target model; live
+topology proof remains open. The same selected page uses an explicit ordered list containing
 `forum.repealobbba.org` and `forum.citizenactivist.network`. General many-to-many
 administration remains outside this gate.
 
@@ -198,6 +198,15 @@ Each target needs independent binding and operational state. Source-target
 no-writeback protection remains intact, comments presentation identifies a
 primary discussion and additional targets, and partial writes retain successes
 for idempotent target-specific retry.
+
+Use `discussionTargets` for the ordered CSV target list,
+`discussionPublishTargets` for its explicitly writable subset, and
+`discussionSourceTarget` for the protected source. Store independent state in
+the JSON scalar `discussionTargetBindings`. When multiple linked discussions
+exist, set `discussionPrimaryTarget`; it renders normally while additional
+targets appear as accessible named links. `targetLabels` may customize those
+names. The CLI handles one explicit `--target` at a time, while ordered
+`publishOnBuild.lanes` can execute several named targets sequentially.
 
 Use `forum.` for literal operational clarity; express the community meaning in
 the forum identity/copy. Cloudflare/account ownership remains an Ops boundary.

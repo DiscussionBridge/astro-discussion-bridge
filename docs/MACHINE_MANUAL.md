@@ -781,7 +781,48 @@ must not be treated as the only failure record.
 10. Sanitize logs before sharing; update manuals with newly confirmed facts.
 ```
 
-## 13. Alpha Release And Support Inputs
+## 13. Multi-Target Frontmatter And Execution
+
+The frontmatter values are YAML scalars. CSV fields preserve target order; the
+binding map is serialized JSON:
+
+```yaml
+discussionSourceMode: discourse-imported
+discussionSync: false
+discussionTarget: repeal-obbba
+discussionSourceTarget: repeal-obbba
+discussionTargets: repeal-obbba,citizen-activist
+discussionPublishTargets: citizen-activist
+discussionPrimaryTarget: repeal-obbba
+discussionTargetBindings: '{"repeal-obbba":{"topicId":434,"topicUrl":"https://forum.repealobbba.org/t/434","status":"synced"},"citizen-activist":{"status":"failed","lastError":"sanitized target error","lastAttemptedAt":"2026-07-22T00:00:00.000Z"}}'
+```
+
+Operate one target per CLI invocation:
+
+```powershell
+npx astro-discussion-bridge publish-and-sync src/content/docs --target citizen-activist --dry-run
+npx astro-discussion-bridge publish-and-sync src/content/docs --target citizen-activist
+```
+
+`discussionSync: false` does not authorize source writeback. The named source
+remains protected for `discourse-imported` and `discourse-managed`; only a target
+listed in `discussionPublishTargets` is writable. New targeted imports set both
+legacy `discussionTarget` and `discussionSourceTarget`. A legacy imported page
+without the latter protects its legacy `discussionTarget`.
+
+Run ordered `publishOnBuild.lanes` sequentially when build-time publishing is
+intended. Each lane needs `targetName` and may override `discourseUrl`,
+`apiKey`/`apiUsername`, or named `apiKeyEnv`/`apiUsernameEnv`. Do not put secret
+values in frontmatter, manuals, or committed configuration.
+
+On failure, inspect only the active target's binding. Preserve other successful
+bindings and retry with the failed `--target`. A stored error is whitespace-
+normalized, truncated, and paired with `lastAttemptedAt`. A reconciled 422
+embed/title collision records the discovered owning topic in the active binding
+and clears its failure state. Invalid binding JSON or shape must fail before
+network access.
+
+## 14. Alpha Release And Support Inputs
 
 ```yaml
 release_scope_doctrine:
@@ -816,8 +857,25 @@ tiers:
     tier_1_dependency: false
     logical_workspace_path: DiscussionBridge/plugins/discourse-discussion-bridge
     physical_github_repo: unresolved_Boss_folder_decision
+multi_target_implementation:
+  commit: 60e41e1
+  review: Code_Boss_PASS
+  tests: 62_of_62_PASS
+  package_check: PASS
+  package_dry_run: PASS
+  frontmatter:
+    discussionTargets: ordered_CSV_target_names
+    discussionPublishTargets: explicit_writable_subset_CSV
+    discussionSourceTarget: explicit_protected_source
+    discussionTargetBindings: JSON_scalar_map_by_target
+    discussionPrimaryTarget: required_when_multiple_linked
+  cli: one_explicit_--target_per_run
+  publish_on_build: ordered_sequential_lanes
+  recovery: retain_success_retry_failed_target_idempotently
+  malformed_binding_state: fail_before_network
+  public_export: astro-discussion-bridge/targets
 alpha_topology_proof:
-  status: proposed_active_Alpha_pending_implementation_design_review
+  status: implementation_complete_live_proof_pending
   production_obbba_target: https://forum.repealobbba.org
   citizen_activist_target:
     canonical: https://forum.citizenactivist.network
@@ -836,7 +894,8 @@ alpha_topology_proof:
   contract:
     source_target_distinct_from_publication_discussion_targets: required
     target_list: explicit_ordered
-    per_target_state: [forum_identity, topic_id, topic_url, sync_state, error_state, display_policy]
+    binding_fields: [topic_id, topic_url, source_hash, last_synced_at, status, last_error, last_attempted_at]
+    presentation_policy: explicit_primary_plus_accessible_additional_links
     source_no_writeback: preserve_for_discourse_imported_and_discourse_managed
     comments_presentation: explicit_primary_plus_additional_linked_or_rendered
     silent_primary_selection: prohibited

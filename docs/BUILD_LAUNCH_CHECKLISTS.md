@@ -160,13 +160,14 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 ## Product Roadmap Checklist
 
 - [x] Keep Tier 1 API-only and useful without a Discourse plugin.
-- [ ] Complete implementation design review for proposed active Alpha
-      multi-target pages; do not mark the capability complete before review and
-      live proof.
+- [x] Complete implementation and Code Boss review for Alpha multi-target pages
+      (`60e41e1`, package suite 62/62); keep the separate live topology proof
+      open.
 - [x] Keep multiple content lanes first-class through config and frontmatter.
 - [x] Keep one package with two clear presets: `starlight` and `astro`.
 - [x] Keep the Starlight preset focused on Starlight conventions.
-- [ ] Preserve future multi-Discourse compatibility in names, helper APIs, and docs language.
+- [x] Provide multi-Discourse target names, frontmatter, presentation helpers,
+      and the public `astro-discussion-bridge/targets` export.
 - [ ] Add an unobtrusive, configurable comments-boundary credit such as `Discussion connection by Discussion Bridge` or `Discourse connection by Discussion Bridge`; verify wording, link destination, accessibility, and behavior across `simple`, `full`, and `fullInteractive` modes.
 - [ ] Consider optional mapping from Astro/template content tags to Discourse topic tags.
 - [ ] Package the setup/diagnostics/docs workflow for self-serve users and paid assisted setup.
@@ -187,13 +188,16 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Run target-specific diagnostics and dry-run, build, deploy, and verify
       each live page/topic binding; prove source-target no-writeback and no
       unintended writes to any other target.
-- [ ] Add one or two clearly labeled Discussion Bridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages to prove per-page target selection without implying full many-to-many support.
-- [ ] Persist each target's forum identity, topic ID/URL, sync state, error
-      state, and display policy independently.
-- [ ] Define primary rendered discussion versus additional linked/rendered
+- [ ] Add one or two clearly labeled Discussion Bridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages as part of the bounded many-to-many proof without claiming a general administration plane.
+- [x] Persist each target's topic ID/URL, source hash, sync state, sanitized
+      error, and attempt time independently in target-keyed bindings.
+- [ ] Complete any per-target display-policy model beyond the implemented
+      explicit primary discussion and accessible additional-target links.
+- [x] Define primary rendered discussion versus additional linked
       targets; never silently choose one target.
-- [ ] Prove recoverable partial success: retain successful bindings, report the
-      failed target, and retry idempotently without duplicate topics.
+- [x] Implement and test recoverable partial success: retain successful
+      bindings, report the failed target, and retry idempotently without
+      duplicate topics.
 - [ ] Record the completed Alpha proof as one-page multi-forum capability plus
       multiple-sites-to-one-forum convergence, without claiming the future
       general many-to-many administration plane.

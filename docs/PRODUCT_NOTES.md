@@ -46,8 +46,9 @@ package configuration rather than hard-coded into site content.
 
 ## Bounded Cross-Forum Proof
 
-Alpha now proposes real multi-target operation as active scope pending
-implementation design review:
+Alpha includes implemented multi-target operation. Package commit `60e41e1`
+establishes the code and test baseline; the OBBBA/Citizen Activist live topology
+proof remains an open release gate:
 
 - the same selected `onebigbeautifulbill.us` page connects to both
   `forum.repealobbba.org` and `forum.citizenactivist.network` through an explicit
@@ -76,6 +77,29 @@ one. Multi-target writes use recoverable partial-success semantics: keep
 successful bindings, report the failed target, and retry idempotently without
 creating duplicate topics. Diagnostics, dry-run, CLI output, manuals, and live
 proof are target-specific. General many-to-many administration remains later.
+
+The settled frontmatter contract is:
+
+- `discussionTargets`: ordered CSV of every named target for the page;
+- `discussionPublishTargets`: explicit writable subset;
+- `discussionSourceTarget`: protected imported/managed source target;
+- `discussionTargetBindings`: JSON scalar map keyed by target, preserving each
+  topic ID/URL, source hash, sync time, status, sanitized error, and attempt time;
+- `discussionPrimaryTarget`: required when more than one linked discussion exists.
+
+The CLI intentionally operates on one explicit `--target` per run. Build-time
+publishing may use ordered `publishOnBuild.lanes`; each lane names its target and
+may supply its own forum URL and direct or named-environment credentials. Lanes
+run sequentially, so a later failure does not erase earlier success. Retry only
+the failed target. A 422 embed/title collision is reconciled to the discovered
+owning topic for that target. Malformed binding JSON or shape fails before any
+network access.
+
+At presentation time the declared primary discussion renders in the chosen
+comments mode. Additional discussions appear as accessible named links, with
+optional `targetLabels`. Multiple linked discussions without an explicit primary
+fail clearly instead of choosing silently. Reusable parsing, presentation, label,
+and type helpers are public through `astro-discussion-bridge/targets`.
 
 The `forum.` hostname is deliberately literal and operationally clear; community
 meaning belongs in the forum identity and copy. Cloudflare/account ownership
