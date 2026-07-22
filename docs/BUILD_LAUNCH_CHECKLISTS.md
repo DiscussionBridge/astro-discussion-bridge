@@ -6,6 +6,18 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 ## Alpha Readiness Checklist
 
+### Release-Scope Doctrine
+
+- [x] Treat Alpha as nearly feature-complete for the declared product promise;
+      include known central capabilities or narrow the promise honestly.
+- [x] Treat Beta primarily as refinement of exercised behavior: usability,
+      compatibility, reliability, performance, packaging, docs, installation,
+      recovery, support, and presentation.
+- [x] Keep long-term roadmap, plugin expansion, and Layer 3 ideas outside Alpha
+      when they are not part of the declared product promise.
+- [x] Allow Beta feedback to reveal genuinely missing capability without using
+      planned feature deferral as the default Beta strategy.
+
 ### Brutal Current Split
 
 #### Phil/Ops Prerequisites Before Alpha Can Be Public
@@ -159,6 +171,13 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Add one or two clearly labeled Discussion Bridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages to prove per-page target selection without implying full many-to-many support.
 - [ ] Prove import layers sequentially before Alpha end-stage: no image/no prune, image only, prune only, then image plus prune.
 - [ ] Use `repealobbbaact.us` as an Alpha end-stage package-installed test for Discourse-source structured pages, source-mode safety, comments rendering, and Cloudflare deployment.
-- [ ] Start a design note for an optional Discourse plugin as the Discourse-side control plane.
+- [ ] Obtain Phil's explicit scope confirmation before replacing the optional
+      Discourse-plugin design-note item with an Alpha vertical-slice gate.
+- [ ] Proposed after confirmation: build an optional `Discussion Bridge for
+      Discourse` v0.1 Alpha slice for `fullInteractive` Mermaid/table rendering
+      parity plus the architecture/test baseline for later control-plane work.
+      Keep Tier 1 API-only and fully usable without plugin installation.
+- [ ] Keep the full control plane, post-as-user, PM automation, and general
+      many-to-many management out of plugin v0.1 unless separately approved.
 - [ ] Investigate Discourse API/plugin support for delegated posting or notifications as configured users in multisite/multichannel agency scenarios, including possible `postAs` or `discussionPostAs` configuration.
 - [ ] Design future integration lanes for Statamic and other frameworks.

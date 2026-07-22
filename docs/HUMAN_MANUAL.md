@@ -511,6 +511,22 @@ edit-pending Code Boss review blocks Product Boss approval.
 > the manuals describe a different build, or either Product Boss decision has
 > not been recorded for the exact release candidate.
 
+### Alpha/Beta Scope Strategy
+
+Alpha should honestly represent the major capabilities in its declared product
+promise and be nearly feature-complete for that promise. Beta should primarily
+refine real-user experience, compatibility, reliability, performance,
+packaging, documentation, installation, recovery, support, and presentation.
+This does not move every future or Layer 3 idea into Alpha.
+
+Tier 1 operation remains API-only, free/self-serve, and independent of any
+Discourse plugin. An optional Discourse plugin vertical slice has been proposed
+for Alpha, but is not an active installation requirement or release gate until
+Phil confirms its scope. The proposed first slice is limited to
+`fullInteractive` Mermaid/table parity and a future-safe architecture/test
+baseline—not the full control plane, post-as-user, PM automation, or general
+many-to-many management.
+
 ## 12. Alpha Support And Release Channel
 
 The current Alpha release decision is GitHub release plus repository-installable;

@@ -137,3 +137,29 @@ plugin, or upstream answer; it is not fixed by the `full` implementation.
 Commit `d7800d7` passed Code Boss review and 51/51 package tests plus plain Astro
 and Starlight production builds. This implementation pass made no OBBBA content
 writes and performed no live deployment.
+
+## Alpha And Beta Product Doctrine
+
+Alpha should be nearly feature-complete for the product promise it declares.
+Major capabilities already known to be central belong in Alpha scope or must be
+removed from that promise; planned deferral of known product pillars is not the
+default Beta strategy. This does not pull every long-term, plugin, or Layer 3
+idea into Alpha.
+
+Beta primarily refines what real users exercise: usability, compatibility,
+reliability, performance, packaging, documentation, installation, recovery,
+support, and presentation. User evidence may still reveal a genuinely missing
+capability during Beta, but Beta is not the planned home for central pillars we
+already understand.
+
+Tier 1 remains the free/self-serve, API-only floor and must remain useful without
+installing a Discourse plugin. A separate optional `Discussion Bridge for
+Discourse` plugin is proposed for Alpha product work, pending Phil's explicit
+scope confirmation. Its bounded v0.1 vertical slice would provide
+`fullInteractive` Mermaid/table rendering parity inside the Discourse-owned
+embed plus the architecture and test baseline for later control-plane work.
+
+That proposal does not include the full control plane, post-as-user, PM
+automation, or general many-to-many management. Until scope is confirmed, it is
+not an active Alpha release blocker and the roadmap must not imply that Tier 1
+requires plugin installation.

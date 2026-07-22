@@ -784,6 +784,35 @@ must not be treated as the only failure record.
 ## 13. Alpha Release And Support Inputs
 
 ```yaml
+release_scope_doctrine:
+  alpha: nearly_feature_complete_for_declared_product_promise
+  beta_primary_work:
+    - usability
+    - compatibility
+    - reliability
+    - performance
+    - packaging
+    - documentation
+    - installation
+    - recovery
+    - support
+    - presentation
+  beta_missing_capability_from_user_evidence: allowed
+  planned_major_pillar_deferral_to_beta: prohibited_by_default
+  long_term_and_layer_3_outside_declared_promise: later
+tiers:
+  tier_1:
+    transport: Discourse_API
+    plugin_required: false
+    role: free_self_serve_floor
+  optional_discourse_plugin:
+    alpha_vertical_slice_status: proposed_pending_Phil_confirmation
+    proposed_v0_1: fullInteractive_Mermaid_table_parity_plus_architecture_tests
+    not_v0_1: [full_control_plane, post_as_user, PM_automation, general_many_to_many]
+    tier_1_dependency: false
+```
+
+```yaml
 release_channel:
   alpha: GitHub release plus repository-installable
   npm: held until late Beta
