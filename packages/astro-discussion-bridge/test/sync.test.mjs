@@ -1988,6 +1988,58 @@ test("import-existing can label imported frontmatter with a discussion target", 
   }
 });
 
+test("import-existing refuses to label cooked HTML conversion as an unpruned import", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-raw-required-"));
+  const docsDir = path.join(dir, "blog");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 21,
+        title: "Imported Topic Without Raw Markdown",
+        category_id: 5,
+        visible: true,
+        post_stream: {
+          posts: [
+            {
+              id: 101,
+              post_number: 1,
+              topic_id: 21,
+              topic_slug: "imported-topic-without-raw-markdown",
+              cooked: "<p>Cooked content only.</p>",
+            },
+          ],
+        },
+      },
+      post: {
+        id: 101,
+        post_number: 1,
+        topic_id: 21,
+        topic_slug: "imported-topic-without-raw-markdown",
+        cooked: "<p>Cooked content only.</p>",
+      },
+    });
+
+    await assert.rejects(
+      importExistingDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "granular-key-without-raw-access",
+        apiUsername: "test-user",
+        topics: ["21"],
+      }),
+      /did not expose raw Markdown.*DISCOURSE_DIAGNOSTICS_API_KEY/s,
+    );
+
+    await assert.rejects(readFile(path.join(docsDir, "imported-topic-without-raw-markdown.md"), "utf8"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("import-existing skips existing files unless overwrite is enabled", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-skip-"));
   const docsDir = path.join(dir, "blog");

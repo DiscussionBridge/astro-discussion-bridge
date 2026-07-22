@@ -43,6 +43,7 @@ const targetName = args.values.get("target") ?? process.env.DISCUSSION_TARGET;
 const apiKey = args.values.get("api-key") ?? process.env.DISCOURSE_API_KEY;
 const apiUsername = args.values.get("api-username") ?? process.env.DISCOURSE_API_USERNAME;
 const diagnosticsApiKey = args.values.get("diagnostics-api-key") ?? process.env.DISCOURSE_DIAGNOSTICS_API_KEY;
+const importApiKey = diagnosticsApiKey ?? apiKey;
 const categoryId = numberFromValue(args.values.get("category-id") ?? process.env.DISCOURSE_CATEGORY_ID);
 const titleMinLength = numberFromValue(args.values.get("title-min-length") ?? process.env.DISCOURSE_TITLE_MIN_LENGTH);
 const preflightLimits = preflightLimitsFromArgs(args.values);
@@ -62,7 +63,8 @@ const commentsDisplay = commentsDisplayFromValue(args.values.get("comments-displ
 const missing = [
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
   ...(!siteUrl && command !== "check-discourse" ? ["SITE_URL or --site-url"] : []),
-  ...(!dryRun && command !== "check-discourse" && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
+  ...(!dryRun && command !== "check-discourse" && command !== "import-existing" && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
+  ...(!dryRun && command === "import-existing" && !importApiKey ? ["DISCOURSE_DIAGNOSTICS_API_KEY, DISCOURSE_API_KEY, --diagnostics-api-key, or --api-key"] : []),
   ...(!dryRun && command !== "check-discourse" && !apiUsername ? ["DISCOURSE_API_USERNAME or --api-username"] : []),
   ...(command === "import-existing" && topics.length === 0 ? ["--topic URL[,URL] or --topic-id ID[,ID]"] : []),
 ];
@@ -153,7 +155,7 @@ if (command === "check-discourse") {
   process.exit(result.tagIssues.length || result.setupIssues.length ? 1 : 0);
 }
 
-if (mode === "publish-new" && !dryRun) {
+if ((command === "publish-new" || command === "sync") && !dryRun) {
   console.log("Publishing missing discussion companion topics. Existing linked docs will be skipped.");
 }
 
@@ -176,7 +178,7 @@ if (command === "import-existing") {
     routeBase,
     targetName,
     discourseUrl: discourseUrl!,
-    apiKey: apiKey ?? "",
+    apiKey: importApiKey ?? "",
     apiUsername: apiUsername ?? "",
     topics,
     dryRun,
@@ -379,7 +381,7 @@ function printUsage(error?: string) {
   console.error("  --comments-display MODE    simple, full, or fullInteractive.");
   console.error("");
   console.error("Diagnostics options:");
-  console.error("  --diagnostics-api-key KEY  Use a broader/read-capable key for check-discourse.");
+  console.error("  --diagnostics-api-key KEY  Use a broader/read-capable key for check-discourse and raw imports.");
   console.error("  --page-url URL             Test existing-topic reconciliation for one Astro page URL.");
   console.error("");
   console.error("Examples:");

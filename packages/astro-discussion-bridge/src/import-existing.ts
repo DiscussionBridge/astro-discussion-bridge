@@ -48,13 +48,10 @@ export async function importExistingDiscourseTopics(
       throw new Error(`Could not find first post for Discourse topic ${topicRef.topicId}.`);
     }
 
-    const firstPost = await discourse.post(firstPostSummary.id).catch(() => firstPostSummary);
-    const slug = topicRef.slug ?? firstPost.topic_slug ?? slugify(topic.title);
+    const slug = topicRef.slug ?? firstPostSummary.topic_slug ?? slugify(topic.title);
     const filePath = path.join(docsDir, `${slug}.md`);
     const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl, routeBase: options.routeBase });
     const topicUrl = `${discourse.discourseUrl}/t/${slug}/${topic.id}`;
-    const body = postBodyForImport(firstPost);
-    const sourceHash = hashDiscussionSource({ title: topic.title, pageUrl, content: body });
     const fileExists = await pathExists(filePath);
 
     if (fileExists && !options.overwrite) {
@@ -81,6 +78,16 @@ export async function importExistingDiscourseTopics(
       });
       continue;
     }
+
+    let firstPost: DiscoursePost;
+    try {
+      firstPost = await discourse.post(firstPostSummary.id);
+    } catch (error) {
+      if (!firstPostSummary.raw?.trim()) throw error;
+      firstPost = firstPostSummary;
+    }
+    const body = postBodyForImport(firstPost, topic.id);
+    const sourceHash = hashDiscussionSource({ title: topic.title, pageUrl, content: body });
 
     await fs.writeFile(
       filePath,
@@ -146,9 +153,12 @@ function firstPostForTopic(topic: TopicResponse): DiscoursePost | undefined {
   return topic.post_stream.posts.find((post) => post.post_number === 1);
 }
 
-function postBodyForImport(post: DiscoursePost): string {
+function postBodyForImport(post: DiscoursePost, topicId: number): string {
   if (post.raw?.trim()) return post.raw.trim();
-  return cookedHtmlToMarkdown(post.cooked).trim() || "Imported from Discourse.";
+  throw new Error(
+    `Discourse did not expose raw Markdown for topic ${topicId}. ` +
+      "Rerun import-existing with DISCOURSE_DIAGNOSTICS_API_KEY or --diagnostics-api-key using a read-capable key.",
+  );
 }
 
 function cookedHtmlToMarkdown(value: string): string {
