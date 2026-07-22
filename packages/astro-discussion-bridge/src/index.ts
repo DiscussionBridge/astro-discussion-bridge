@@ -49,6 +49,11 @@ export interface PublishOnBuildLaneOptions {
   docsDir: string;
   routeBase?: string;
   targetName?: string;
+  discourseUrl?: string;
+  apiKey?: string;
+  apiUsername?: string;
+  apiKeyEnv?: string;
+  apiUsernameEnv?: string;
   syncExisting?: boolean;
   unlistSyncedTopics?: boolean;
   validateTitles?: boolean;
@@ -63,8 +68,6 @@ export interface PublishOnBuildLaneOptions {
 export interface PublishOnBuildOptions extends Omit<PublishOnBuildLaneOptions, "docsDir"> {
   enabled?: boolean;
   docsDir?: string;
-  apiKey?: string;
-  apiUsername?: string;
   lanes?: PublishOnBuildLaneOptions[];
 }
 
@@ -105,6 +108,11 @@ interface ResolvedPublishLane {
   docsDir: string;
   routeBase?: string;
   targetName?: string;
+  discourseUrl?: string;
+  apiKey?: string;
+  apiUsername?: string;
+  apiKeyEnv?: string;
+  apiUsernameEnv?: string;
   syncExisting: boolean;
   unlistSyncedTopics: boolean;
   validateTitles: boolean;
@@ -140,21 +148,33 @@ export default function discussionBridge(
         if (!resolvedOptions.publishOnBuild.enabled) return;
 
         const siteUrl = resolvedOptions.siteUrl ?? process.env.SITE_URL;
-        const apiKey = resolvedOptions.publishOnBuild.apiKey ?? process.env.DISCOURSE_API_KEY;
-        const apiUsername = resolvedOptions.publishOnBuild.apiUsername ?? process.env.DISCOURSE_API_USERNAME;
-
-        if (!siteUrl || !apiKey || !apiUsername) {
+        if (!siteUrl) {
           throw new Error(
-            "publishOnBuild requires siteUrl, DISCOURSE_API_KEY, and DISCOURSE_API_USERNAME.",
+            "publishOnBuild requires siteUrl or SITE_URL.",
           );
         }
 
         for (const lane of resolvedOptions.publishOnBuild.lanes) {
+          const discourseUrl = lane.discourseUrl ?? resolvedOptions.discourseUrl;
+          const apiKey = lane.apiKey
+            ?? valueFromNamedEnv(lane.apiKeyEnv)
+            ?? process.env.DISCOURSE_API_KEY;
+          const apiUsername = lane.apiUsername
+            ?? valueFromNamedEnv(lane.apiUsernameEnv)
+            ?? process.env.DISCOURSE_API_USERNAME;
+          if (!apiKey || !apiUsername) {
+            const expectedKey = lane.apiKeyEnv ?? "DISCOURSE_API_KEY";
+            const expectedUsername = lane.apiUsernameEnv ?? "DISCOURSE_API_USERNAME";
+            throw new Error(
+              `publishOnBuild lane "${lane.name}" requires credentials via apiKey/apiUsername or ${expectedKey}/${expectedUsername}.`,
+            );
+          }
+
           await publishLane({
             lane,
             projectRoot,
             siteUrl,
-            discourseUrl: resolvedOptions.discourseUrl,
+            discourseUrl,
             activeTarget: resolvedOptions.activeTarget ?? process.env.DISCUSSION_TARGET,
             apiKey,
             apiUsername,
@@ -169,8 +189,19 @@ export default function discussionBridge(
 export { createDiscourseClient } from "./discourse/client.js";
 export { checkDiscourse } from "./check-discourse.js";
 export { syncDiscourseTopics } from "./sync/index.js";
+export {
+  discussionTargetLabel,
+  parseDiscussionTargetBindings,
+  resolveDiscussionPresentation,
+} from "./targets.js";
 export type { CheckDiscourseOptions, CheckDiscourseResult } from "./check-discourse.js";
 export type { DiscoursePreflightLimits, SyncDiscourseTopicsOptions, SyncedPage } from "./sync/index.js";
+export type {
+  DiscussionPresentation,
+  DiscussionTargetBinding,
+  DiscussionTargetBindings,
+  ResolvedDiscussionTarget,
+} from "./targets.js";
 
 function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
   if (!options.discourseUrl) {
@@ -231,6 +262,15 @@ function resolvePublishLanes(input: {
     docsDir: lane.docsDir,
     routeBase: lane.routeBase,
     targetName: lane.targetName ?? defaults?.targetName,
+    discourseUrl: lane.discourseUrl
+      ? normalizeBaseUrl(lane.discourseUrl)
+      : defaults?.discourseUrl
+        ? normalizeBaseUrl(defaults.discourseUrl)
+        : undefined,
+    apiKey: lane.apiKey ?? defaults?.apiKey,
+    apiUsername: lane.apiUsername ?? defaults?.apiUsername,
+    apiKeyEnv: lane.apiKeyEnv ?? defaults?.apiKeyEnv,
+    apiUsernameEnv: lane.apiUsernameEnv ?? defaults?.apiUsernameEnv,
     syncExisting: lane.syncExisting ?? defaults?.syncExisting ?? false,
     unlistSyncedTopics: lane.unlistSyncedTopics ?? defaults?.unlistSyncedTopics ?? false,
     validateTitles: lane.validateTitles ?? defaults?.validateTitles ?? true,
@@ -322,6 +362,11 @@ function tagsFromEnv(name: string): string[] | undefined {
   if (!value) return undefined;
 
   return value.split(",").map((tag) => tag.trim()).filter(Boolean);
+}
+
+function valueFromNamedEnv(name: string | undefined): string | undefined {
+  if (!name) return undefined;
+  return process.env[name];
 }
 
 function virtualConfigPlugin(options: PublicOptions): Plugin {

@@ -3,6 +3,7 @@ import DiscourseDiscussion from "./DiscourseDiscussion.astro";
 
 interface Props {
   class?: string;
+  discourseUrl?: string;
   embedClassName?: string;
   embedUrl?: string;
   heading?: string;
@@ -13,6 +14,7 @@ interface Props {
 
 <DiscourseDiscussion
   class={Astro.props.class}
+  discourseUrl={Astro.props.discourseUrl}
   embedClassName={Astro.props.embedClassName}
   embedUrl={Astro.props.embedUrl}
   heading={Astro.props.heading}

@@ -16,7 +16,10 @@ test("native embeds pass an existing topic ID to Discourse", async () => {
     "utf8",
   );
 
-  assert.match(discussion, /topicId=\{Astro\.props\.topicId\}/);
+  assert.match(discussion, /topicId=\{topicId\}/);
+  assert.match(discussion, /resolveDiscussionPresentation/);
+  assert.match(discussion, /aria-label="Additional discussions"/);
+  assert.match(discussion, /discourseUrl=\{discourseUrl\}/);
   assert.match(
     discourseDiscussion,
     /\.\.\.\(topicId \? \{ topicId \} : \{ discourseEmbedUrl: embedUrl \}\)/,

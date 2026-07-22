@@ -2,6 +2,11 @@ import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createDiscourseClient } from "../discourse/client.js";
+import {
+  parseDiscussionTargetBindings,
+  type DiscussionTargetBinding,
+  type DiscussionTargetBindings,
+} from "../targets.js";
 
 export type SyncMode = "publish-new" | "sync-existing" | "publish-and-sync";
 
@@ -88,6 +93,7 @@ export async function syncDiscourseTopics(
       const content = discussionContentForPage(parsed);
       const sourceHash = hashDiscussionSource({ title, pageUrl, content });
       const pageOptions = discussionOptionsForPage(parsed.frontmatter, options);
+      const target = targetContextForPage(parsed.frontmatter, options.targetName, filePath);
 
       return {
         filePath,
@@ -97,11 +103,17 @@ export async function syncDiscourseTopics(
         pageUrl,
         content,
         sourceHash,
-        syncEnabled: booleanFromFrontmatter(parsed.frontmatter.discussionSync) !== false,
-        targetName: parsed.frontmatter.discussionTarget,
-        existingTopicId: parsed.frontmatter.discourseTopicId,
-        existingTopicUrl: parsed.frontmatter.discourseTopicUrl,
-        previousHash: parsed.frontmatter.discussionSourceHash,
+        syncEnabled: target.syncEnabled,
+        syncDisabledReason: target.syncDisabledReason,
+        targetMatches: target.matches,
+        targetMismatchReason: target.mismatchReason,
+        targetName: target.targetName,
+        targetNames: target.targetNames,
+        targetBindings: target.bindings,
+        usesTargetBindings: target.usesTargetBindings,
+        existingTopicId: target.binding.topicId ? String(target.binding.topicId) : undefined,
+        existingTopicUrl: target.binding.topicUrl,
+        previousHash: target.binding.sourceHash,
         categoryId: pageOptions.categoryId,
         tags: pageOptions.tags,
         visible: pageOptions.visible,
@@ -173,8 +185,21 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         existingTopicUrl,
         previousHash,
       } = page;
-      const targetStatus = discussionTargetStatus(page.targetName, input.targetName);
       const resultTargetName = page.targetName ?? input.targetName;
+
+      if (!page.targetMatches) {
+        results.push({
+          filePath,
+          title,
+          pageUrl,
+          targetName: resultTargetName,
+          topicId: existingTopicId ? Number(existingTopicId) : undefined,
+          topicUrl: existingTopicUrl,
+          status: "skipped",
+          reason: page.targetMismatchReason,
+        });
+        continue;
+      }
 
       if (!page.syncEnabled) {
         results.push({
@@ -185,21 +210,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           topicId: existingTopicId ? Number(existingTopicId) : undefined,
           topicUrl: existingTopicUrl,
           status: "skipped",
-          reason: "discussionSync is false",
-        });
-        continue;
-      }
-
-      if (!targetStatus.matches) {
-        results.push({
-          filePath,
-          title,
-          pageUrl,
-          targetName: resultTargetName,
-          topicId: existingTopicId ? Number(existingTopicId) : undefined,
-          topicUrl: existingTopicUrl,
-          status: "skipped",
-          reason: targetStatus.reason,
+          reason: page.syncDisabledReason ?? "discussionSync is false",
         });
         continue;
       }
@@ -337,15 +348,30 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
           updateReasons.push(page.visible ? "topic listed" : "topic unlisted");
         }
 
-        if (latestTopicUrl && existingTopicUrl !== latestTopicUrl) {
+        if (latestTopicUrl && existingTopicUrl !== latestTopicUrl && !page.usesTargetBindings) {
           frontmatterUpdates.discourseTopicUrl = latestTopicUrl;
           updated = true;
           updateReasons.push("topic URL refreshed");
         }
 
-        if (sourceChanged) {
+        if (sourceChanged && !page.usesTargetBindings) {
           frontmatterUpdates.discussionSourceHash = sourceHash;
           frontmatterUpdates.discussionLastSyncedAt = new Date().toISOString();
+        }
+
+        if (page.usesTargetBindings && resultTargetName) {
+          const bindingUpdates = targetBindingFrontmatterUpdates(page, resultTargetName, {
+            topicId: Number(existingTopicId),
+            topicUrl: latestTopicUrl,
+            sourceHash: sourceChanged ? sourceHash : previousHash,
+            lastSyncedAt: sourceChanged ? new Date().toISOString() : page.targetBindings[resultTargetName]?.lastSyncedAt,
+            status: "synced",
+          });
+          Object.assign(frontmatterUpdates, bindingUpdates);
+          if (Object.keys(bindingUpdates).length > 0 && !updated) {
+            updated = true;
+            updateReasons.push("target binding state refreshed");
+          }
         }
 
         if (Object.keys(frontmatterUpdates).length) {
@@ -462,16 +488,23 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         });
       }
 
-      await fs.writeFile(
-        filePath,
-        updateFrontmatter(source, {
-          ...(input.targetName ? { discussionTarget: input.targetName } : {}),
-          discourseTopicId: String(topic.topic_id),
-          discourseTopicUrl: topicUrl,
-          discussionSourceHash: sourceHash,
-          discussionLastSyncedAt: lastSyncedAt,
-        }),
-      );
+      const createdBindingValues = page.usesTargetBindings && resultTargetName
+        ? targetBindingFrontmatterUpdates(page, resultTargetName, {
+            topicId: topic.topic_id,
+            topicUrl,
+            sourceHash,
+            lastSyncedAt,
+            status: "synced",
+          })
+        : {
+            ...(input.targetName ? { discussionTarget: input.targetName } : {}),
+            discourseTopicId: String(topic.topic_id),
+            discourseTopicUrl: topicUrl,
+            discussionSourceHash: sourceHash,
+            discussionLastSyncedAt: lastSyncedAt,
+          };
+
+      await fs.writeFile(filePath, updateFrontmatter(source, createdBindingValues));
 
       results.push({
         filePath,
@@ -484,6 +517,7 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
         reason: reconciledEmbed ? "reconciled existing embedded topic" : undefined,
       });
     } catch (error) {
+      await persistTargetFailure(page, error);
       await notifySyncFailure({
         discourse: input.discourse,
         options: {
@@ -509,7 +543,13 @@ interface ParsedPage {
   content: string;
   sourceHash: string;
   syncEnabled: boolean;
+  syncDisabledReason?: string;
+  targetMatches: boolean;
+  targetMismatchReason?: string;
   targetName?: string;
+  targetNames: string[];
+  targetBindings: DiscussionTargetBindings;
+  usesTargetBindings: boolean;
   existingTopicId?: string;
   existingTopicUrl?: string;
   previousHash?: string;
@@ -517,6 +557,139 @@ interface ParsedPage {
   tags?: string[];
   visible?: boolean;
   notifyOnFailure?: NotifyOnFailureOptions;
+}
+
+function targetContextForPage(
+  frontmatter: Record<string, string>,
+  activeTargetName: string | undefined,
+  filePath: string,
+): {
+  binding: DiscussionTargetBinding;
+  bindings: DiscussionTargetBindings;
+  matches: boolean;
+  mismatchReason?: string;
+  syncEnabled: boolean;
+  syncDisabledReason?: string;
+  targetName?: string;
+  targetNames: string[];
+  usesTargetBindings: boolean;
+} {
+  const legacyTargetName = frontmatter.discussionTarget?.trim() || undefined;
+  const configuredTargetNames = csvFromFrontmatter(frontmatter.discussionTargets);
+  const targetNames = configuredTargetNames ?? (legacyTargetName ? [legacyTargetName] : []);
+  const targetName = activeTargetName ?? legacyTargetName ?? targetNames[0];
+  const usesTargetBindings = Boolean(
+    frontmatter.discussionTargets || frontmatter.discussionTargetBindings,
+  );
+  const bindings = parseDiscussionTargetBindings(
+    frontmatter.discussionTargetBindings,
+    `discussionTargetBindings in ${filePath}`,
+  );
+  const sourceMode = frontmatter.discussionSourceMode?.trim().toLowerCase();
+  const sourceTargetName = frontmatter.discussionSourceTarget?.trim()
+    || (["discourse-imported", "discourse-managed"].includes(sourceMode ?? "")
+      ? legacyTargetName
+      : undefined);
+  const publishTargetNames = csvFromFrontmatter(frontmatter.discussionPublishTargets) ?? [];
+
+  let matches = true;
+  let mismatchReason: string | undefined;
+  if (targetNames.length > 0 && !activeTargetName) {
+    matches = false;
+    mismatchReason = targetNames.length === 1
+      ? `page is assigned to discussion target "${targetNames[0]}"; rerun with --target ${targetNames[0]}`
+      : `page is assigned to multiple discussion targets (${targetNames.join(", ")}); rerun once per target with --target NAME`;
+  } else if (activeTargetName && targetNames.length > 0 && !targetNames.includes(activeTargetName)) {
+    matches = false;
+    mismatchReason = `page is assigned to discussion targets (${targetNames.join(", ")}), not active target "${activeTargetName}"`;
+  }
+
+  const legacyBinding: DiscussionTargetBinding = {
+    topicId: numberFromFrontmatter(frontmatter.discourseTopicId),
+    topicUrl: frontmatter.discourseTopicUrl,
+    sourceHash: frontmatter.discussionSourceHash,
+    lastSyncedAt: frontmatter.discussionLastSyncedAt,
+  };
+  const binding = targetName && bindings[targetName]
+    ? bindings[targetName]
+    : (!usesTargetBindings || (sourceTargetName && targetName === sourceTargetName))
+      ? legacyBinding
+      : {};
+
+  const sourceIsProtected = Boolean(
+    targetName &&
+    sourceTargetName === targetName &&
+    ["discourse-imported", "discourse-managed"].includes(sourceMode ?? ""),
+  );
+  const explicitlyPublishable = Boolean(targetName && publishTargetNames.includes(targetName));
+  const syncConfigured = booleanFromFrontmatter(frontmatter.discussionSync) !== false;
+  let syncEnabled = syncConfigured;
+  let syncDisabledReason: string | undefined;
+
+  if (sourceIsProtected) {
+    syncEnabled = false;
+    syncDisabledReason = `discussion source target "${targetName}" is protected by ${sourceMode} no-writeback policy`;
+  } else if (publishTargetNames.length > 0) {
+    syncEnabled = explicitlyPublishable;
+    if (!syncEnabled) {
+      syncDisabledReason = targetName
+        ? `discussion target "${targetName}" is not listed in discussionPublishTargets`
+        : "page requires an explicit --target from discussionPublishTargets";
+    }
+  } else if (!syncConfigured) {
+    syncDisabledReason = "discussionSync is false";
+  }
+
+  return {
+    binding,
+    bindings,
+    matches,
+    mismatchReason,
+    syncEnabled,
+    syncDisabledReason,
+    targetName,
+    targetNames,
+    usesTargetBindings,
+  };
+}
+
+function targetBindingFrontmatterUpdates(
+  page: Pick<ParsedPage, "parsed" | "targetBindings">,
+  targetName: string,
+  values: DiscussionTargetBinding,
+): Record<string, string> {
+  const nextBinding = Object.fromEntries(
+    Object.entries({
+      ...page.targetBindings[targetName],
+      ...values,
+      lastError: values.status === "synced" ? undefined : values.lastError,
+      lastAttemptedAt: values.status === "synced" ? undefined : values.lastAttemptedAt,
+    }).filter(([, value]) => value !== undefined),
+  ) as DiscussionTargetBinding;
+  const serialized = JSON.stringify({
+    ...page.targetBindings,
+    [targetName]: nextBinding,
+  });
+
+  if (page.parsed.frontmatter.discussionTargetBindings === serialized) return {};
+  return { discussionTargetBindings: serialized };
+}
+
+async function persistTargetFailure(page: ParsedPage, error: unknown): Promise<void> {
+  if (!page.targetMatches || !page.syncEnabled || !page.usesTargetBindings || !page.targetName) return;
+
+  const updates = targetBindingFrontmatterUpdates(page, page.targetName, {
+    status: "failed",
+    lastError: errorMessage(error).replace(/\s+/g, " ").slice(0, 500),
+    lastAttemptedAt: new Date().toISOString(),
+  });
+  if (Object.keys(updates).length === 0) return;
+
+  try {
+    await fs.writeFile(page.filePath, updateFrontmatter(page.source, updates));
+  } catch {
+    // Preserve the original Discourse failure when local failure-state recording also fails.
+  }
 }
 
 async function notifySyncFailure(input: {
@@ -696,6 +869,7 @@ function validateManagedPages(input: {
     pageUrl: string;
     content: string;
     syncEnabled?: boolean;
+    targetMatches?: boolean;
     tags?: string[];
     targetName?: string;
     existingTopicId?: string;
@@ -706,7 +880,7 @@ function validateManagedPages(input: {
 }) {
   const issues = input.pages.flatMap((page) => {
     if (page.syncEnabled === false) return [];
-    if (!discussionTargetStatus(page.targetName, input.targetName).matches) return [];
+    if (page.targetMatches === false) return [];
 
     const managesPage =
       (input.mode === "publish-new" && !page.existingTopicId) ||
@@ -780,6 +954,7 @@ function duplicateManagedPageIssues(input: {
     filePath: string;
     pageUrl: string;
     syncEnabled?: boolean;
+    targetMatches?: boolean;
     targetName?: string;
     existingTopicId?: string;
   }>;
@@ -788,7 +963,7 @@ function duplicateManagedPageIssues(input: {
 }): Array<{ filePath: string; reason: string }> {
   const managedPages = input.pages.filter((page) => {
     if (page.syncEnabled === false) return false;
-    if (!discussionTargetStatus(page.targetName, input.targetName).matches) return false;
+    if (page.targetMatches === false) return false;
 
     return (
       (input.mode === "publish-new" && !page.existingTopicId) ||
@@ -838,25 +1013,6 @@ function duplicateValueIssues<TPage extends { filePath: string }>(input: {
   }
 
   return issues;
-}
-
-function discussionTargetStatus(
-  pageTargetName: string | undefined,
-  activeTargetName: string | undefined,
-): { matches: true } | { matches: false; reason: string } {
-  if (!pageTargetName) return { matches: true };
-  if (!activeTargetName) {
-    return {
-      matches: false,
-      reason: `page is assigned to discussion target "${pageTargetName}"; rerun with --target ${pageTargetName}`,
-    };
-  }
-  if (pageTargetName === activeTargetName) return { matches: true };
-
-  return {
-    matches: false,
-    reason: `page is assigned to discussion target "${pageTargetName}", not active target "${activeTargetName}"`,
-  };
 }
 
 async function findMarkdownFiles(dir: string): Promise<string[]> {
@@ -968,7 +1124,16 @@ function quoteYamlValue(value: string): string {
 }
 
 function unquoteYamlValue(value: string): string {
-  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+  if (value.startsWith('"') && value.endsWith('"')) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (typeof parsed === "string") return parsed;
+    } catch {
+      return value.slice(1, -1);
+    }
+  }
+
+  if (value.startsWith("'") && value.endsWith("'")) {
     return value.slice(1, -1);
   }
 

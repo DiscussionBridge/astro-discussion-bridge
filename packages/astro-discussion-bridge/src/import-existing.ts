@@ -293,7 +293,12 @@ function markdownForImportedTopic(input: {
 }): string {
   const frontmatter: Record<string, string | number | boolean> = {
     title: input.title,
-    ...(input.targetName ? { discussionTarget: input.targetName } : {}),
+    ...(input.targetName
+      ? {
+          discussionTarget: input.targetName,
+          discussionSourceTarget: input.targetName,
+        }
+      : {}),
     discussionSourceMode: "discourse-imported",
     discussionSync: false,
     discourseTopicId: input.topicId,

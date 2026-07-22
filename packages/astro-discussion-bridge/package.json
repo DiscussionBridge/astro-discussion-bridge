@@ -39,6 +39,10 @@
       "types": "./dist/sync/index.d.ts",
       "import": "./dist/sync/index.js"
     },
+    "./targets": {
+      "types": "./dist/targets.d.ts",
+      "import": "./dist/targets.js"
+    },
     "./DiscourseComments.astro": "./src/components/DiscourseComments.astro",
     "./DiscourseReplies.astro": "./src/components/DiscourseReplies.astro",
     "./DiscourseDiscussion.astro": "./src/components/DiscourseDiscussion.astro",

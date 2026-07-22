@@ -3,6 +3,7 @@ import config from "virtual:discussion-bridge/config";
 
 interface Props {
   class?: string;
+  discourseUrl?: string;
   embedClassName?: string;
   embedUrl?: string;
   fullApp?: boolean;
@@ -11,7 +12,7 @@ interface Props {
   topicUrl?: string;
 }
 
-const discourseUrl = `${config.discourseUrl}/`;
+const discourseUrl = `${Astro.props.discourseUrl ?? config.discourseUrl}/`;
 const embedClassName = Astro.props.embedClassName ?? config.comments.className;
 const embedUrl = Astro.props.embedUrl ?? Astro.url.href;
 const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteractive";

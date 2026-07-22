@@ -2059,6 +2059,115 @@ test("publish-new reconciles an existing Discourse embed topic when embed info i
   }
 });
 
+test("multi-target retry reconciles an ambiguous create into the active target binding", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-target-reconcile-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "shared.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Ambiguous Create Recovery for Regional Forum"',
+        'discussionTargets: "community,regional"',
+        'discussionPublishTargets: "community,regional"',
+        'discussionTargetBindings: "{\\"community\\":{\\"topicId\\":101,\\"topicUrl\\":\\"https://community.example.com/t/shared/101\\",\\"status\\":\\"synced\\"},\\"regional\\":{\\"status\\":\\"failed\\",\\"lastError\\":\\"network timeout\\"}}"',
+        "---",
+        "",
+        "# Ambiguous Create Recovery",
+        "",
+        "The first regional request may have reached Discourse before the client timed out.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async (url, init = {}) => {
+      const parsed = new URL(url);
+      const method = init.method ?? "GET";
+      const body = init.body ? JSON.parse(String(init.body)) : undefined;
+
+      if (method === "POST" && parsed.pathname === "/posts.json") {
+        return new Response(JSON.stringify({
+          action: "create_post",
+          errors: ["Embed url has already been taken"],
+        }), {
+          status: 422,
+          statusText: "Unprocessable Entity",
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (method === "GET" && parsed.pathname === "/embed/info") {
+        return jsonResponse({ topic_id: 909, topic_slug: "ambiguous-create-recovery" });
+      }
+
+      if (method === "GET" && parsed.pathname === "/t/909.json") {
+        return jsonResponse({
+          id: 909,
+          title: "Ambiguous Create Recovery for Regional Forum",
+          slug: "ambiguous-create-recovery",
+          category_id: 5,
+          visible: true,
+          post_stream: {
+            posts: [{
+              id: 1909,
+              name: "",
+              username: "bridge-bot",
+              avatar_template: "",
+              created_at: new Date(0).toISOString(),
+              cooked: "",
+              post_number: 1,
+              post_type: 1,
+              updated_at: new Date(0).toISOString(),
+              reply_count: 0,
+              reply_to_post_number: null,
+              quote_count: 0,
+              incoming_link_count: 0,
+              reads: 0,
+              readers_count: 0,
+              score: 0,
+              topic_id: 909,
+              topic_slug: "ambiguous-create-recovery",
+            }],
+          },
+        });
+      }
+
+      if (method === "PUT" && parsed.pathname === "/posts/1909.json") {
+        assert.match(body.post.raw, /first regional request may have reached Discourse/);
+        return jsonResponse({ post: { id: 1909, post_number: 1 } });
+      }
+
+      return new Response(`Unexpected request: ${method} ${parsed.pathname}`, { status: 500 });
+    };
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      targetName: "regional",
+      discourseUrl: "https://regional.example.com",
+      apiKey: "regional-key",
+      apiUsername: "bridge-bot",
+      categoryId: 5,
+      mode: "publish-new",
+    });
+
+    assert.equal(results[0].status, "updated");
+    assert.equal(results[0].topicId, 909);
+    assert.equal(results[0].reason, "reconciled existing embedded topic");
+    const bindings = targetBindingsFromSource(await readFile(filePath, "utf8"));
+    assert.equal(bindings.community.topicId, 101);
+    assert.equal(bindings.regional.topicId, 909);
+    assert.equal(bindings.regional.status, "synced");
+    assert.equal(bindings.regional.lastError, undefined);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("frontmatter can override lane category, tags, visibility, and failure recipients", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-overrides-"));
   const docsDir = path.join(dir, "docs");
@@ -2250,6 +2359,335 @@ test("sync skips pages assigned to a different discussion target", async () => {
   }
 });
 
+test("multi-target publishing protects the imported source and creates an independent target binding", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-multi-target-source-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "impact.md");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Section 10101 Impact Across Communities"',
+        'discussionSourceMode: "discourse-imported"',
+        "discussionSync: false",
+        'discussionSourceTarget: "repeal-obbba"',
+        'discussionTargets: "repeal-obbba,citizen-activist"',
+        'discussionPublishTargets: "citizen-activist"',
+        "discourseTopicId: 434",
+        'discourseTopicUrl: "https://forum.repealobbba.org/t/source-topic/434"',
+        "---",
+        "",
+        "# Section 10101 Impact",
+        "",
+        "This body came from the protected source forum.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async (...args) => {
+      calls.push(args);
+      throw new Error("unexpected source-forum write");
+    };
+
+    const sourceResults = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://onebigbeautifulbill.us",
+      targetName: "repeal-obbba",
+      discourseUrl: "https://forum.repealobbba.org",
+      apiKey: "source-key",
+      apiUsername: "obbba-bot",
+      mode: "publish-and-sync",
+    });
+
+    assert.equal(sourceResults[0].status, "skipped");
+    assert.match(sourceResults[0].reason, /protected by discourse-imported no-writeback policy/);
+    assert.equal(sourceResults[0].topicId, 434);
+    assert.equal(calls.length, 0);
+
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      createdTopic: {
+        topic_id: 812,
+        topic_slug: "section-10101-impact-across-communities",
+      },
+    });
+
+    const publicationResults = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://onebigbeautifulbill.us",
+      targetName: "citizen-activist",
+      discourseUrl: "https://forum.citizenactivist.network",
+      apiKey: "publication-key",
+      apiUsername: "can-bot",
+      mode: "publish-new",
+    });
+
+    assert.equal(publicationResults[0].status, "created");
+    assert.equal(publicationResults[0].topicId, 812);
+    assert.equal(publicationResults[0].targetName, "citizen-activist");
+
+    const source = await readFile(filePath, "utf8");
+    const bindings = targetBindingsFromSource(source);
+    assert.equal(bindings["citizen-activist"].topicId, 812);
+    assert.equal(bindings["citizen-activist"].status, "synced");
+    assert.match(bindings["citizen-activist"].topicUrl, /^https:\/\/forum\.citizenactivist\.network\/t\//);
+    assert.match(source, /discourseTopicId: 434/);
+    assert.match(source, /forum\.repealobbba\.org\/t\/source-topic\/434/);
+
+    calls.length = 0;
+    globalThis.fetch = async (...args) => {
+      calls.push(args);
+      throw new Error("unexpected duplicate create");
+    };
+
+    const retryResults = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://onebigbeautifulbill.us",
+      targetName: "citizen-activist",
+      discourseUrl: "https://forum.citizenactivist.network",
+      apiKey: "publication-key",
+      apiUsername: "can-bot",
+      mode: "publish-new",
+    });
+
+    assert.equal(retryResults[0].status, "skipped");
+    assert.equal(retryResults[0].reason, "already linked");
+    assert.equal(retryResults[0].topicId, 812);
+    assert.equal(calls.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("multi-target publishing protects legacy imported source frontmatter", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-multi-target-legacy-source-"));
+  const docsDir = path.join(dir, "docs");
+  const originalFetch = globalThis.fetch;
+  let networkCalls = 0;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      path.join(docsDir, "legacy-import.md"),
+      [
+        "---",
+        'title: "Legacy Imported Source Protection"',
+        'discussionTarget: "repeal-obbba"',
+        'discussionSourceMode: "discourse-imported"',
+        "discussionSync: false",
+        'discussionTargets: "repeal-obbba,citizen-activist"',
+        'discussionPublishTargets: "repeal-obbba,citizen-activist"',
+        "discourseTopicId: 434",
+        'discourseTopicUrl: "https://forum.repealobbba.org/t/source-topic/434"',
+        "---",
+        "",
+        "This is the frontmatter shape written by earlier package imports.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async () => {
+      networkCalls += 1;
+      throw new Error("protected source target must not write");
+    };
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://onebigbeautifulbill.us",
+      targetName: "repeal-obbba",
+      discourseUrl: "https://forum.repealobbba.org",
+      apiKey: "source-key",
+      apiUsername: "obbba-bot",
+      mode: "publish-and-sync",
+    });
+
+    assert.equal(results[0].status, "skipped");
+    assert.match(results[0].reason, /protected by discourse-imported no-writeback policy/);
+    assert.equal(results[0].topicId, 434);
+    assert.equal(networkCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("multi-target publishing preserves independent bindings across forum runs", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-multi-target-bindings-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "shared.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "A Shared Page for Two Discussion Forums"',
+        'discussionTargets: "community,regional"',
+        'discussionPublishTargets: "community,regional"',
+        "---",
+        "",
+        "# Shared Page",
+        "",
+        "One Astro page can maintain independent companion topics.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      createdTopic: { topic_id: 101, topic_slug: "shared-page-community" },
+    });
+    await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      targetName: "community",
+      discourseUrl: "https://community.example.com",
+      apiKey: "community-key",
+      apiUsername: "bridge-bot",
+      mode: "publish-new",
+    });
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      createdTopic: { topic_id: 202, topic_slug: "shared-page-regional" },
+    });
+    await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      targetName: "regional",
+      discourseUrl: "https://regional.example.com",
+      apiKey: "regional-key",
+      apiUsername: "bridge-bot",
+      mode: "publish-new",
+    });
+
+    const bindings = targetBindingsFromSource(await readFile(filePath, "utf8"));
+    assert.equal(bindings.community.topicId, 101);
+    assert.match(bindings.community.topicUrl, /^https:\/\/community\.example\.com\//);
+    assert.equal(bindings.regional.topicId, 202);
+    assert.match(bindings.regional.topicUrl, /^https:\/\/regional\.example\.com\//);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("multi-target failure state is recoverable by retrying only the failed target", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-multi-target-retry-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "retry.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Recoverable Multi Target Publication"',
+        'discussionTargets: "community,regional"',
+        'discussionPublishTargets: "community,regional"',
+        'discussionTargetBindings: "{\\"community\\":{\\"topicId\\":101,\\"topicUrl\\":\\"https://community.example.com/t/retry/101\\",\\"status\\":\\"synced\\"}}"',
+        "---",
+        "",
+        "# Recoverable Publication",
+        "",
+        "A failed regional publication should not disturb the community binding.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = async () => new Response("Temporary outage", { status: 503, statusText: "Unavailable" });
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        targetName: "regional",
+        discourseUrl: "https://regional.example.com",
+        apiKey: "regional-key",
+        apiUsername: "bridge-bot",
+        mode: "publish-new",
+      }),
+      /503 Unavailable/,
+    );
+
+    const failedBindings = targetBindingsFromSource(await readFile(filePath, "utf8"));
+    assert.equal(failedBindings.community.topicId, 101);
+    assert.equal(failedBindings.community.status, "synced");
+    assert.equal(failedBindings.regional.status, "failed");
+    assert.match(failedBindings.regional.lastError, /503 Unavailable/);
+    assert.ok(failedBindings.regional.lastAttemptedAt);
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      createdTopic: { topic_id: 303, topic_slug: "recoverable-multi-target-publication" },
+    });
+    const retryResults = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      targetName: "regional",
+      discourseUrl: "https://regional.example.com",
+      apiKey: "regional-key",
+      apiUsername: "bridge-bot",
+      mode: "publish-new",
+    });
+
+    assert.equal(retryResults[0].status, "created");
+    const recoveredBindings = targetBindingsFromSource(await readFile(filePath, "utf8"));
+    assert.equal(recoveredBindings.community.topicId, 101);
+    assert.equal(recoveredBindings.regional.topicId, 303);
+    assert.equal(recoveredBindings.regional.status, "synced");
+    assert.equal(recoveredBindings.regional.lastError, undefined);
+    assert.equal(recoveredBindings.regional.lastAttemptedAt, undefined);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("malformed multi-target bindings fail before network access", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-multi-target-invalid-"));
+  const docsDir = path.join(dir, "docs");
+  const originalFetch = globalThis.fetch;
+  let networkCalls = 0;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      path.join(docsDir, "invalid.md"),
+      [
+        "---",
+        'title: "Invalid Multi Target Binding Data"',
+        'discussionTargets: "community"',
+        'discussionTargetBindings: "not-json"',
+        "---",
+        "",
+        "Invalid binding data must fail closed.",
+      ].join("\n"),
+    );
+    globalThis.fetch = async () => {
+      networkCalls += 1;
+      throw new Error("unexpected network call");
+    };
+
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        targetName: "community",
+        discourseUrl: "https://community.example.com",
+        apiKey: "community-key",
+        apiUsername: "bridge-bot",
+        mode: "publish-new",
+      }),
+      /Invalid discussionTargetBindings.*invalid\.md/,
+    );
+    assert.equal(networkCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("routeBase maps content lane files to their public URL prefix", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-route-base-"));
   const docsDir = path.join(dir, "src", "content", "releases");
@@ -2401,6 +2839,7 @@ test("import-existing can label imported frontmatter with a discussion target", 
 
     const source = await readFile(path.join(docsDir, "imported-target-topic.md"), "utf8");
     assert.match(source, /discussionTarget: "community"/);
+    assert.match(source, /discussionSourceTarget: "community"/);
     assert.match(source, /discussionSourceMode: "discourse-imported"/);
     assert.match(source, /discussionSync: false/);
     assert.match(source, /discourseTopicId: 21/);
@@ -2922,4 +3361,10 @@ function jsonResponse(value) {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+function targetBindingsFromSource(source) {
+  const rawValue = source.match(/^discussionTargetBindings:\s*(.+)$/m)?.[1];
+  assert.ok(rawValue, "discussionTargetBindings frontmatter is present");
+  return JSON.parse(JSON.parse(rawValue));
 }
