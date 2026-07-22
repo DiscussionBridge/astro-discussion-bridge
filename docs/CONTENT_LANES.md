@@ -126,6 +126,56 @@ Use `discussionSummary` when the Astro source contains components, MDX JSX, Star
 
 Use `discussionSync: false` when a page should display an existing Discourse discussion but should not publish or sync the companion topic first post.
 
+## Source Modes
+
+Discussion Bridge should keep the content source of truth explicit.
+
+Source-mode operating vocabulary:
+
+- `astro-managed`: Astro owns the page. Publish and sync commands may create or update the Discourse companion topic.
+- `discourse-managed`: Discourse owns the content lifecycle. Astro pulls or renders from Discourse and should not write back to the Discourse first post.
+- `discourse-imported`: Astro contains an imported copy of a Discourse topic. Editors can refine it in Astro or GitCMS, but sync back to Discourse stays off until the page is explicitly promoted.
+
+Safety rule: never write back across a source-of-truth boundary unless the user explicitly changes or promotes the source mode.
+
+Current Alpha enforcement detail: the CLI enforces `discussionSync: false`, not
+the source-mode names themselves. Add that guard to every `discourse-managed`
+or `discourse-imported` page. `import-existing` does not add the guard
+automatically yet, so add and review it immediately after import.
+
+For Discourse-to-Astro workflows, support both editorial paths:
+
+- import clean: prune known boilerplate during import
+- import whole: bring the topic into Astro, then let a human edit it down in GitCMS or another source editor
+
+Both paths should preserve the linked Discourse topic ID and URL so the Astro page can still render the original discussion.
+
+### Structured Discourse-Managed Pages
+
+Some sites need more than companion comments. Advocacy, policy, standards, product governance, and long-form documentation projects may use Discourse as the drafting room and Astro as the public publishing layer.
+
+In that model, a Discourse topic can be the source for an Astro page. Wiki topics are especially useful when a community is drafting or refining a section over time. The Astro page should present the polished public version while preserving source topic links, comments, status, and last-edit context.
+
+This is a future-facing requirement, but it should guide Tier 1 decisions now:
+
+- keep `discourse-managed` distinct from `astro-managed`
+- preserve topic ID, topic URL, source mode, and route metadata during import
+- avoid writeback unless a human explicitly promotes the source mode
+- allow room for status, revision, and last-edit metadata on rendered pages
+- support prune/import behavior for Discourse-only boilerplate
+
+The first real proof lane is OBBBA: `forum.repealobbba.org` to `onebigbeautifulbill.us`, with `repealobbbaact.us` as the stronger future structured-document candidate.
+
+OBBBA also proves a many-to-one shape: `onebigbeautifulbill.us`, `repealobbba.org`, `repealobbbaact.us`, and possibly `repealobbbapledge.us` can all connect to `forum.repealobbba.org`, while each site or lane may use a different source mode. That is distinct from full many-to-many, but it should keep the bridge from assuming one global forum, one global direction, or one global content lane.
+
+The next bounded topology proof should add one or two clearly labeled demo or
+credit pages on `onebigbeautifulbill.us` whose companion topics live on
+`forum.discussionbridge.dev`. Those pages should use an explicit per-page target
+and must not change the managing forum for the OBBBA content lanes. This proves
+that one Astro site can safely connect selected pages to another Discourse while
+remaining honest that Alpha supports one target per page, not full many-to-many
+orchestration.
+
 ## Content Tags And Discourse Tags
 
 `discussionTags` are Discourse topic tags. They are explicit bridge metadata.

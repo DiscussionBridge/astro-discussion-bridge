@@ -10,15 +10,25 @@ main().catch((error: unknown) => {
 });
 
 async function main() {
-  const command = process.argv[2] ?? "help";
+  const rawCommand = process.argv[2] ?? "help";
+  if (rawCommand === "help" || rawCommand === "--help" || rawCommand === "-h") {
+    printUsage();
+    return;
+  }
+
+  const command = rawCommand;
   const validCommands = new Set(["sync", "publish-new", "sync-existing", "publish-and-sync", "import-existing", "check-discourse"]);
 
   if (!validCommands.has(command)) {
-    printUsage(command === "help" ? undefined : `Unknown command: ${command}`);
-    process.exit(command === "help" ? 0 : 1);
+    printUsage(`Unknown command: ${command}`);
+    process.exit(1);
   }
 
 const args = parseArgs(process.argv.slice(3));
+if (args.flags.has("help") || args.flags.has("h")) {
+  printUsage();
+  return;
+}
 const docsDir = path.resolve(args.positionals[0] ?? "src/content/docs");
 const dryRun = args.flags.has("dry-run");
 const showDetails = args.flags.has("details") || args.flags.has("verbose");
@@ -58,7 +68,7 @@ const missing = [
 ];
 
 if (missing.length > 0) {
-  console.error(`Missing required configuration: ${missing.join(", ")}`);
+  printMissingConfiguration({ command, missing, dryRun });
   process.exit(1);
 }
 
@@ -319,11 +329,77 @@ function oneLine(value: string): string {
 
 function printUsage(error?: string) {
   if (error) console.error(error);
+  if (error) console.error("");
+  console.error("Discussion Bridge for Astro CLI");
+  console.error("");
   console.error("Usage:");
-  console.error("  astro-discussion-bridge publish-new [docsDir] [--dry-run] [--details] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge sync-existing [docsDir] [--dry-run] [--details] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [--dry-run] [--details] [--force] [--unlist] [--target NAME] [--route-base PATH] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--skip-title-validation] [--notify-on-failure] [--notify-recipients USER[,USER]] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [--topic-id ID[,ID]] [--dry-run] [--overwrite] [--target NAME] [--route-base PATH] [--comments-display simple|full|fullInteractive] [--discourse-url URL] [--site-url URL]");
-  console.error("  astro-discussion-bridge check-discourse [--category-id ID] [--tags TAG[,TAG]] [--page-url URL] [--diagnostics-api-key KEY] [--title-min-length N] [--max-topic-title-length N] [--max-post-length N] [--max-tags-per-topic N] [--max-tag-length N] [--discourse-url URL]");
-  console.error("  astro-discussion-bridge sync [docsDir] [--dry-run] [--target NAME] [--route-base PATH] [--discourse-url URL] [--site-url URL]");
+  console.error("  astro-discussion-bridge publish-new [docsDir] [options]");
+  console.error("  astro-discussion-bridge sync-existing [docsDir] [options]");
+  console.error("  astro-discussion-bridge publish-and-sync [docsDir] [options]");
+  console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [options]");
+  console.error("  astro-discussion-bridge check-discourse [options]");
+  console.error("");
+  console.error("Commands:");
+  console.error("  publish-new       Create missing Discourse companion topics; skip pages already linked.");
+  console.error("  sync-existing     Rewrite/update already linked companion topics; skip pages without discourseTopicId.");
+  console.error("  publish-and-sync  Create missing topics and sync existing linked topics in one explicit run.");
+  console.error("  import-existing   Import existing Discourse topics into editable Astro Markdown.");
+  console.error("  check-discourse   Read target forum settings/capabilities before live writes.");
+  console.error("  sync              Backward-compatible alias for publish-new.");
+  console.error("");
+  console.error("Common options:");
+  console.error("  --dry-run                  Preview without Discourse writes or file updates.");
+  console.error("  --details                  Show title, page URL, target, topic ID, and reason for each page.");
+  console.error("  --target NAME              Run only pages for one discussion target.");
+  console.error("  --route-base PATH          Public route prefix for this content lane, such as blog or releases.");
+  console.error("  --discourse-url URL        Discourse base URL, or DISCOURSE_URL.");
+  console.error("  --site-url URL             Public Astro site URL, or SITE_URL.");
+  console.error("  --api-username USER        Discourse API username, or DISCOURSE_API_USERNAME.");
+  console.error("  --api-key KEY              Discourse API key, or DISCOURSE_API_KEY.");
+  console.error("  --tags TAG[,TAG]           Discourse topic tags for this lane.");
+  console.error("  --category-id ID           Discourse category ID for created/updated topics.");
+  console.error("  --force                    Rewrite linked first posts even when source hash is unchanged.");
+  console.error("  --unlist                   Mark synced/created companion topics unlisted.");
+  console.error("  --notify-on-failure        Send a Discourse PM when publish/sync fails.");
+  console.error("  --notify-recipients USER[,USER]");
+  console.error("                             Discourse users to notify on failure.");
+  console.error("");
+  console.error("Preflight options:");
+  console.error("  --title-min-length N       Minimum topic title length; default 15.");
+  console.error("  --max-topic-title-length N Fail locally when a topic title is too long.");
+  console.error("  --max-post-length N        Fail locally when the companion first post is too long.");
+  console.error("  --max-tags-per-topic N     Fail locally when too many tags are requested.");
+  console.error("  --max-tag-length N         Fail locally when a tag is too long.");
+  console.error("  --skip-title-validation    Skip local title validation.");
+  console.error("");
+  console.error("Import options:");
+  console.error("  --topic URL[,URL]          Discourse topic URL or ID to import.");
+  console.error("  --topic-id ID[,ID]         Discourse topic ID to import.");
+  console.error("  --overwrite                Replace existing imported Markdown files.");
+  console.error("  --comments-display MODE    simple, full, or fullInteractive.");
+  console.error("");
+  console.error("Diagnostics options:");
+  console.error("  --diagnostics-api-key KEY  Use a broader/read-capable key for check-discourse.");
+  console.error("  --page-url URL             Test existing-topic reconciliation for one Astro page URL.");
+  console.error("");
+  console.error("Examples:");
+  console.error("  astro-discussion-bridge check-discourse --category-id 5 --tags discussionbridge,docs --discourse-url https://forum.example.com");
+  console.error("  astro-discussion-bridge publish-new src/content/docs --dry-run --details --discourse-url https://forum.example.com --site-url https://docs.example.com");
+  console.error("  astro-discussion-bridge sync-existing src/content/blog --route-base blog --force --details");
+}
+
+function printMissingConfiguration(input: { command: string; missing: string[]; dryRun: boolean }) {
+  console.error("Discussion Bridge is missing required configuration.");
+  console.error("");
+  console.error(`Command: ${input.command}${input.dryRun ? " --dry-run" : ""}`);
+  console.error("Missing:");
+  for (const item of input.missing) console.error(`- ${item}`);
+  console.error("");
+  console.error("How to fix:");
+  console.error("- Pass the missing values as CLI options, or set the matching environment variables in the shell running the command.");
+  console.error("- Run from the Astro project root so relative content paths resolve correctly.");
+  if (!input.dryRun && input.command !== "check-discourse") {
+    console.error("- Add --dry-run when you want to preview publish/sync behavior without API credentials or live writes.");
+  }
+  console.error("- Use --help to see commands and options.");
 }

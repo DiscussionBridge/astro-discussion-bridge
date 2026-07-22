@@ -6,16 +6,40 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 ## Alpha Readiness Checklist
 
+### Brutal Current Split
+
+#### Phil/Ops Prerequisites Before Alpha Can Be Public
+
+- [ ] Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
+- [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain.
+- [ ] Create live Discourse Alpha Support category.
+- [ ] Route `alphasupport@discussionbridge.dev` into Discourse.
+- [ ] Confirm final public support links after the live support category and email route exist.
+
+#### Codex/Product Work That Can Continue Now
+
+- [x] Tighten CLI/help text and friendly validation messages.
+- [x] Build and publish the paired Human Manual and Machine Manual in the repository and generated Starlight docs site.
+- [ ] Route the paired manuals through Manual Boss review for consistency, presentation, secrets, usability, accessibility, screenshot/video placeholders, and public/private boundaries; resolve Alpha-blocking findings before public release.
+- [ ] Add or confirm `check-discourse` examples for global diagnostics key, granular publishing key, and explicit configured limits.
+- [ ] Finish docs link wiring once Phil/Ops prerequisites produce final URLs.
+- [ ] Prepare the repeatable live smoke-pass script/checklist so it is ready when Cloudflare/support wiring is done.
+- [ ] Keep polishing sync/recovery documentation without adding major feature scope.
+
 ### Publish
 
-- [ ] Confirm CLI names/help are clear: `publish-new`, `sync-existing`, `publish-and-sync`, `import-existing`, and `check-discourse`.
+- [x] Confirm CLI names/help are clear: `publish-new`, `sync-existing`, `publish-and-sync`, `import-existing`, and `check-discourse`.
 - [ ] Decide whether to add a configurable topic title template or prefix, such as `Discussion: {title}`, for sites with short Astro titles.
 - [ ] Keep local preflight validation working for dry runs and restricted keys.
-- [ ] Confirm title/body/tag preflight messages are friendly enough for non-package authors.
+- [x] Confirm title/body/tag preflight messages are friendly enough for non-package authors.
 - [ ] Confirm generated first-post body is reader-facing and does not expose implementation labels.
-- [ ] Finalize Alpha support and feedback channels.
-- [ ] Decide product docs URL: `docs.discussionbridge.dev` or `discussionbridge.dev/docs`.
-- [ ] Make `discussionbridge.dev` live in a credible public form before showing Alpha outside the working circle.
+- [x] Finalize Alpha support and feedback channel model: GitHub Issues for formal product work, GitHub Discussions for repo-bound design/implementation discussion, Discourse Alpha Support plus `alphasupport@discussionbridge.dev` for support discovery/community memory, and cross-links when support becomes tracked work.
+- [ ] Create live Discourse Alpha Support category, route `alphasupport@discussionbridge.dev` into Discourse, and wire final channel links into README, docs, package metadata, demo pages, and release notes. Phil/Ops owns the live category and email route; Codex owns final link wiring after those exist.
+- [x] Product docs URL decided: use `docs.discussionbridge.dev` with Starlight. Keep `discussionbridge.dev/docs` only as a redirect or fallback if needed.
+- [x] Deploy the Starlight docs site source for `docs.discussionbridge.dev` into the repo under `sites/docs`, generated from repository `docs/*.md`.
+- [ ] Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan before Alpha: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles. Phil/Ops prerequisite.
+- [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain. Phil/Ops prerequisite.
+- [x] Make `discussionbridge.dev` live in a credible public form before showing Alpha outside the working circle.
 - [x] Add proper attribution, ownership, and licensing notes to docs where appropriate.
 
 ### Sync
@@ -32,7 +56,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Add stronger MDX summary extraction for component-heavy pages.
 - [ ] Document when to use `discussionSummary`.
 - [ ] Document and test the distinction between Astro/template content tags and Discourse `discussionTags`.
-- [ ] Verify tag/category/title/listing sync behavior with current live bot keys one more time before Alpha.
+- [ ] Run the repeatable live smoke pass before Alpha and before each release candidate. It covers publish/sync; docs, releases, blog, news, and comments demo routes; `simple`, `full`, and `fullInteractive` comments modes; full-app embed Discourse settings; and `forum.discussionbridge.dev` category, tags, and permissions.
+- [ ] Enforce source modes before Alpha: `astro-managed`, `discourse-managed`, and `discourse-imported` are documented, and `discussionSync: false` is enforced, but `import-existing` does not yet add the writeback guard automatically or persist an enforced source-mode field.
 
 ### Diagnose
 
@@ -47,7 +72,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Document maintenance sync as a repeatable test: package version, `--dry-run --details`, live sync, verify Discourse/Astro/cache.
 - [ ] Add or update demo npm scripts for lane-specific dry runs using `--details`.
 - [ ] Decide whether `--details` should also apply to `import-existing` output.
-- [ ] Resolve or document the demo build warning: `Entry docs -> 404 was not found`.
+- [x] Document the demo build warning: `Entry docs -> 404 was not found`.
 - [ ] Prepare and file a Starlight GitHub issue for the stock Starlight `Entry docs -> 404 was not found` finding; include the likely `getEntry('docs', '404')` source, `disable404Route: true` confirmation, and custom `docs/404.md` route-conflict result.
 - [x] Keep the local package demo dependency pointed at the package directory unless a release-packaging test specifically needs a tarball.
 
@@ -61,41 +86,50 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 ### Document
 
+- [x] Add paired entry-point manuals: `docs/HUMAN_MANUAL.md` for operators and `docs/MACHINE_MANUAL.md` for exact reusable implementation facts and site-specific runbook generation.
+- [x] Include the paired manuals in the generated `sites/docs` Starlight site and verify both routes build.
+- [ ] Complete Manual Boss Alpha quality review of the paired manuals and record or resolve findings.
+- [x] Add paired reusable site-specific Human and Machine Runbook templates that consume settled Machine Manual inputs.
+- [x] Create the first paired OBBBA runbooks for `onebigbeautifulbill.us` and `forum.repealobbba.org`, preserving topic `434`, `discourse-imported`, and `discussionSync: false` while exposing unresolved implementation inputs.
+- [ ] Review and replace or approve screenshot/video placeholders after Manual Boss confirms usability, accessibility, secret safety, and public/private boundaries.
 - [x] Add a concise Alpha setup guide.
 - [x] Add a key-management guide.
 - [x] Add a comments-display guide covering `simple`, `full`, and `fullInteractive`.
 - [x] Add a content-lanes guide for docs, releases, blog, news, and Starlog-style release notes.
 - [x] Add a discussion-safe Markdown guide.
 - [x] Add troubleshooting entries for title validation, body length, tag limits, duplicate embed URLs, stale Cloudflare cache, missing topic, missing first post, and Discourse offline.
-- [ ] Finalize support and feedback guide after exact channels are chosen.
+- [x] Finalize support and feedback guide with Alpha channel model.
+- [ ] Update public support links after the Alpha Support category and email route are live.
 - [x] Complete one-time Alpha attribution/ownership/licensing pass across public docs.
 
 ## Alpha Demo Checklist
 
 - [x] Verify the local Starlight demo builds from `examples/starlight-demo`.
-- [ ] Verify live Astro and Starlight demos deploy from the canonical `astro-discussion-bridge` example source trees.
-- [ ] Verify docs, releases, blog, news, and comments demo routes.
-- [ ] Verify `simple`, `full`, and `fullInteractive` comments modes.
-- [ ] Verify full-app embed Discourse settings.
-- [ ] Verify `forum.discussionbridge.dev` category, tags, and permissions match the docs.
+- [x] Verify live Astro and Starlight demos deploy from the canonical `astro-discussion-bridge` example source trees.
+- [ ] Include demo routes, comments modes, full-app embed settings, and forum category/tag/permission checks in the repeatable live smoke pass before Alpha and every release candidate.
 - [ ] Test with Cloudflare CDN in place on Discourse and document that the bridge works with a CDN-backed forum.
 - [ ] Verify topic creation so pages from different Astro hosts do not collide or create confusing duplicate topics.
 - [ ] Confirm `embed_url` maps each Astro page to the correct companion topic across hosts.
-- [ ] Verify public Alpha demo domains use the demo-lane pattern: `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, `astrostarlight.demo.discussionbridge.dev`, `stockstarlight.demo.discussionbridge.dev`, and future parallel integration hosts.
+- [x] Verify public Alpha demo domains use the demo-lane pattern: `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, `astrostarlight.demo.discussionbridge.dev`, `stockstarlight.demo.discussionbridge.dev`, and future parallel integration hosts.
 - [x] Add and build clean stock Starlight control site to compare framework warnings and upgrades.
 - [x] Apply demo topic lifecycle policy in Discourse: tagged old/transitional topics `20`, `21`, `24`, and `28` as `historical-reference`; reserve deletion/permanent deletion for true mistakes or sensitive/unsafe content.
-- [ ] Retire or clearly mark transitional demo deploy copies under `discussionbridge.dev` after public demo projects build from `astro-discussion-bridge`.
+- [x] Retire or clearly mark transitional demo deploy copies under `discussionbridge.dev` after public demo projects build from `astro-discussion-bridge`.
 
 ## Release/Upgrade Checklist
 
+- [ ] Record the Code Boss pass/fail result against the exact release candidate; complete all blocking edits and obtain re-review where required before Product Boss approval.
+- [ ] Confirm Bridge Boss technical verification and Manual Boss quality review are complete before Product Boss approval.
+- [ ] For every Alpha, Beta, release candidate, patch, and Current release, confirm the Human and Machine Manuals are ready for the exact release; treat this as a release blocker.
+- [ ] Record Product Boss documentation sign-off for every release before publishing; code completion alone is not release readiness.
+- [ ] Record separate Product Boss release approval for every release, covering intended scope, operator readiness, known limitations, and the coherent release package; this does not replace Bridge Boss technical verification or Manual Boss quality review.
 - [ ] Maintain an Astro compatibility matrix for Astro 6 and 7.
 - [ ] Test demo installs after Astro core and official integration releases, especially `@astrojs/cloudflare`.
 - [ ] Add a `doctor` or `check-upgrade` command.
 - [ ] Document the recommended upgrade order.
 - [ ] Keep Starlight optional.
 - [ ] Before any Alpha tag/release, run package tests, local demo build, dry-run CLI checks, and at least one live smoke sync.
-- [ ] Decide Alpha release channel: npm, GitHub release, or repo-installable.
-- [ ] Confirm release pages, README, package metadata, and demo pages point to the same support and feedback channels.
+- [x] Alpha release channel decided: GitHub release plus repo-installable. Hold npm until late Beta, after the first support/docs loop survives real use.
+- [ ] Confirm release pages, README, package metadata, and demo pages point to the same support and feedback channels after the Alpha Support category and email route are live.
 
 ## Product Roadmap Checklist
 
@@ -105,8 +139,15 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Keep one package with two clear presets: `starlight` and `astro`.
 - [x] Keep the Starlight preset focused on Starlight conventions.
 - [ ] Preserve future multi-Discourse compatibility in names, helper APIs, and docs language.
+- [ ] Add an unobtrusive, configurable comments-boundary credit such as `Discussion connection by Discussion Bridge` or `Discourse connection by Discussion Bridge`; verify wording, link destination, accessibility, and behavior across `simple`, `full`, and `fullInteractive` modes.
 - [ ] Consider optional mapping from Astro/template content tags to Discourse topic tags.
 - [ ] Package the setup/diagnostics/docs workflow for self-serve users and paid assisted setup.
+- [ ] Use the OBBBA implementation lane as a real-world Discourse-to-Astro proof path: import/prune a `forum.repealobbba.org` topic into `onebigbeautifulbill.us`, keep it `discourse-imported` until explicit promotion, and feed lessons back into Discussion Bridge.
+- [ ] Preserve the Citizen Activist structured-document path: Discourse wiki topics as source material, Astro as polished public act/section pages, with status, last-edit context, source topic links, comments, and no accidental writeback.
+- [ ] Preserve the OBBBA many-to-one topology: `onebigbeautifulbill.us` / `OBBBA.us`, `repealobbba.org`, `repealobbbaact.us`, and possibly `repealobbbapledge.us` can all connect to `forum.repealobbba.org`, with source direction varying by site or lane.
+- [ ] Add one or two clearly labeled Discussion Bridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages to prove per-page target selection without implying full many-to-many support.
+- [ ] Prove import layers sequentially before Alpha end-stage: no image/no prune, image only, prune only, then image plus prune.
+- [ ] Use `repealobbbaact.us` as an Alpha end-stage package-installed test for Discourse-source structured pages, source-mode safety, comments rendering, and Cloudflare deployment.
 - [ ] Start a design note for an optional Discourse plugin as the Discourse-side control plane.
 - [ ] Investigate Discourse API/plugin support for delegated posting or notifications as configured users in multisite/multichannel agency scenarios, including possible `postAs` or `discussionPostAs` configuration.
 - [ ] Design future integration lanes for Statamic and other frameworks.

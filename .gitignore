@@ -20,3 +20,6 @@ tmp/
 .tmp/npm-cache/
 .DS_Store
 Thumbs.db
+
+# Generated docs-site content
+sites/docs/src/content/docs/

@@ -6,6 +6,7 @@ interface Props {
   embedUrl?: string;
   fullApp?: boolean;
   heading?: string;
+  topicId?: number | string;
   topicUrl?: string;
 }
 
@@ -14,6 +15,7 @@ const embedUrl = Astro.props.embedUrl ?? Astro.url.href;
 const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteractive";
 const embedHeight = config.comments.embedHeight;
 const heading = Astro.props.heading ?? "Comments";
+const topicId = Astro.props.topicId;
 const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
 ---
 
@@ -28,10 +30,10 @@ const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopic
 )}
 
 {config.comments.enabled && (
-  <script define:vars={{ discourseUrl, embedUrl, fullApp, embedHeight }}>
+  <script define:vars={{ discourseUrl, embedUrl, fullApp, embedHeight, topicId }}>
     window.DiscourseEmbed = {
       discourseUrl,
-      discourseEmbedUrl: embedUrl,
+      ...(topicId ? { topicId } : { discourseEmbedUrl: embedUrl }),
       ...(fullApp ? { fullApp: true, embedHeight } : {}),
     };
 

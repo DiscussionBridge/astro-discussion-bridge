@@ -5,6 +5,7 @@ interface Props {
   class?: string;
   embedUrl?: string;
   heading?: string;
+  topicId?: number | string;
   topicUrl?: string;
 }
 ---
@@ -13,5 +14,6 @@ interface Props {
   class={Astro.props.class}
   embedUrl={Astro.props.embedUrl}
   heading={Astro.props.heading}
+  topicId={Astro.props.topicId}
   topicUrl={Astro.props.topicUrl}
 />

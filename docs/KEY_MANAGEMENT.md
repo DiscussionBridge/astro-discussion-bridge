@@ -15,6 +15,8 @@ For Alpha, the practical model is:
 - use a granular publishing key when it can create topics/posts, read linked topics/posts, update managed first posts, update topic metadata, update tags, and unlist when needed
 - use a global/admin-capable diagnostics key when granular keys cannot read the site metadata or reconciliation endpoints needed by `check-discourse`
 
+Established product rule: when documenting or requesting a granular publishing key, provide the exact Discourse scope settings. Do not describe the publishing key as "similar", "roughly", or "mostly" once a product key model has been settled.
+
 When Discourse supports or confirms granular diagnostics/read scopes for the required endpoints, move to a two-key model:
 
 - granular publishing key for runtime sync
@@ -32,6 +34,63 @@ The publishing key needs enough permission to:
 - unlist topics when `--unlist` is used
 
 On typical Discourse installs, retitling replied topics and changing listing status can require a staff or moderator-capable user.
+
+Use this exact granular publishing/runtime key scope set unless a new feature explicitly requires a documented change:
+
+```text
+categories
+  list
+  show
+
+tags
+  list
+
+topics
+  write
+  update
+  read
+  status
+
+posts
+  edit
+  list
+
+search
+  show
+```
+
+This is the settled runtime publishing key model used for Discussion Bridge-style publishing and sync. Diagnostics/setup work stays on the diagnostics key.
+
+Allowed parameters from the Discourse granular key UI:
+
+```text
+categories show
+  id: any parameter
+
+posts edit
+  id: any parameter
+
+search show
+  q: any parameter
+  page: any parameter
+
+topics write
+  topic_id: any parameter
+
+topics update
+  topic_id: any parameter
+  category_id: any parameter
+
+topics read
+  topic_id: any parameter
+  external_id: any parameter
+
+topics status
+  topic_id: any parameter
+  category_id: any parameter
+  status: any parameter
+  enabled: any parameter
+```
 
 ## Required Diagnostics Capabilities
 
@@ -99,6 +158,60 @@ Example filename convention:
 ```text
 discussionbridge-forum-discussbridge-bot-publishing-granular-key-YYYYMMDD.txt
 discussionbridge-forum-discussbridge-bot-diagnostics-key-YYYYMMDD.txt
+```
+
+## Credential File Templates
+
+Use the same structure for every stored Discourse API key. Keep the human-readable purpose and scope above the key value.
+
+### Publishing Granular Key File
+
+```text
+Purpose: Runtime publishing granular key
+Use: publish-new, sync-existing, publish-and-sync, check-discourse basic limits
+Bot user role: Admin currently; intended future runtime posture is non-admin or least-privilege
+Key scope: Granular
+Operational rule: Use this for normal bridge publishing/runtime operations. Diagnostics/setup work belongs on the diagnostics key.
+
+Description
+{site-or-project} publishing granular key
+
+Scope
+Granular
+
+Scopes
+categories:list
+categories:show
+posts:edit
+posts:list
+search:show
+tags:list
+topics:write
+topics:update
+topics:read
+topics:status
+
+Key
+{paste key here}
+```
+
+### Diagnostics Key File
+
+```text
+Purpose: Diagnostics/setup key
+Use: check-discourse, setup verification, site settings/capability reads, embed/topic reconciliation when the granular publishing key cannot read the required endpoints
+Bot user role: Admin currently; diagnostics key is admin-capable by design
+Key scope: Global
+Operational rule: Keep this key out of runtime/deploy paths. Use only for setup checks, diagnostics, and controlled troubleshooting.
+
+Description
+{site-or-project} diagnostics key
+
+Scope
+Global
+
+Key
+{paste key here}
 ```
 
 ## Leak Paths

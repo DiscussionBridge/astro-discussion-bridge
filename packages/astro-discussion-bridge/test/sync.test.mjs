@@ -663,6 +663,108 @@ test("discussionSync false makes linked display pages non-managing", async () =>
   }
 });
 
+test("discussionSync false is enforced for CRLF frontmatter", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-crlf-guard-"));
+  const docsDir = path.join(dir, "docs");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      path.join(docsDir, "display-only.mdx"),
+      [
+        "---",
+        'title: "CRLF Display Only Page"',
+        "discourseTopicId: 434",
+        'discourseTopicUrl: "https://forum.example.com/t/existing-topic/434"',
+        "discussionSync: false",
+        "---",
+        "",
+        "# CRLF Display Only Page",
+      ].join("\r\n"),
+    );
+
+    globalThis.fetch = async (...args) => {
+      calls.push(args);
+      throw new Error("unexpected network call");
+    };
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      mode: "sync-existing",
+      dryRun: true,
+    });
+
+    assert.equal(calls.length, 0);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].status, "skipped");
+    assert.equal(results[0].reason, "discussionSync is false");
+    assert.equal(results[0].topicId, 434);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("sync updates preserve CRLF frontmatter line endings", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-crlf-update-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "managed.mdx");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "CRLF Managed Page"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/crlf-managed-page/21"',
+        "---",
+        "",
+        "# CRLF Managed Page",
+        "",
+        "The source body changed.",
+      ].join("\r\n"),
+    );
+
+    const calls = [];
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 21,
+        title: "CRLF Managed Page",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+    });
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      mode: "sync-existing",
+    });
+
+    const updatedSource = await readFile(filePath, "utf8");
+    assert.equal(results[0].status, "updated");
+    assert.match(updatedSource, /discussionSourceHash: "[a-f0-9]{64}"/);
+    assert.doesNotMatch(updatedSource, /(?<!\r)\n/);
+    assert.doesNotMatch(updatedSource, /\r\n\r\n---/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("sync-existing can update topic metadata and unlist when source content is unchanged", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-sync-"));
   const docsDir = path.join(dir, "docs");

@@ -32,3 +32,23 @@ For Discussion Bridge, the durable product loop is:
 publish -> sync -> diagnose -> maintain -> recover -> document
 
 Every feature should make that loop more usable, understandable, and recoverable. The product is not only topic creation; it is the operating system around linked publishing and community discussion.
+
+## Product Identity At The Comments Boundary
+
+A restrained credit near the comments boundary may help readers understand what
+connects the page and forum. Candidate wording is `Discussion connection by
+Discussion Bridge` or `Discourse connection by Discussion Bridge`. The final
+wording, default, and configuration are not yet decided.
+
+The credit should link to the canonical product page, remain visually secondary,
+be accessible, work in `simple`, `full`, and `fullInteractive`, and be emitted by
+package configuration rather than hard-coded into site content.
+
+## Bounded Cross-Forum Proof
+
+One or two clearly labeled demo/credit pages on `onebigbeautifulbill.us` may use
+companion topics on `forum.discussionbridge.dev` through explicit per-page target
+selection. Production OBBBA content remains on `forum.repealobbba.org`.
+
+This is a bounded topology proof and one step toward future many-to-many support;
+it is not a claim that general many-to-many operation is currently supported.

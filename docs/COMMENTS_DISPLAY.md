@@ -98,6 +98,20 @@ discussionBridge({
 });
 ```
 
+## Discussion Bridge Credit
+
+The discussion boundary should support a restrained product credit near the
+comments section. Candidate language includes:
+
+- `Discussion connection by Discussion Bridge`
+- `Discourse connection by Discussion Bridge`
+
+The credit should link to the canonical Discussion Bridge product page, remain
+visually secondary to the article and discussion, and work consistently across
+`simple`, `full`, and `fullInteractive`. Its final wording, default behavior,
+configuration surface, and accessibility treatment remain an implementation
+decision; it should not be hard-coded into site content.
+
 Without `refreshEndpoint`, browser refresh reads directly from `https://forum.example.com/t/{topicId}.json`. That requires the Discourse site to allow browser CORS from the Astro site. Static deployments can avoid CORS by adding a same-origin proxy route and pointing `refreshEndpoint` at it.
 
 When Discourse is unavailable, `full` should keep the article shell intact and show a temporary unavailable state with an "Open the full discussion" link when the topic URL is available.

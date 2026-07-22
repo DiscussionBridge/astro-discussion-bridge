@@ -26,6 +26,10 @@ declare module "virtual:discussion-bridge/config" {
 interface Window {
   DiscourseEmbed?: {
     discourseUrl: string;
-    discourseEmbedUrl: string;
-  };
+    embedHeight?: string;
+    fullApp?: boolean;
+  } & (
+    | { discourseEmbedUrl: string; topicId?: never }
+    | { discourseEmbedUrl?: never; topicId: number | string }
+  );
 }

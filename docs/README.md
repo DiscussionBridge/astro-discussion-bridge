@@ -18,6 +18,12 @@ Keep commercial strategy, pricing, services positioning, and private brand plann
 
 ## Current Docs
 
+- [Human Manual](./HUMAN_MANUAL.md) - operator journey, safety decisions, and verification.
+- [Machine Manual](./MACHINE_MANUAL.md) - exact reusable commands, fields, scopes, and runbook inputs.
+- [Site Human Runbook Template](./SITE_RUNBOOK_HUMAN_TEMPLATE.md) - client/operator-specific readable runbook.
+- [Site Machine Runbook Template](./SITE_RUNBOOK_MACHINE_TEMPLATE.md) - exact resolved site inputs, commands, checks, and release evidence.
+- [OBBBA Human Runbook](./runbooks/OBBBA_ONEBIGBEAUTIFULBILL_HUMAN.md) - operator guide for `onebigbeautifulbill.us` and `forum.repealobbba.org`.
+- [OBBBA Machine Runbook](./runbooks/OBBBA_ONEBIGBEAUTIFULBILL_MACHINE.md) - exact current facts, safety constraints, checks, and Bridge Boss migration inputs.
 - [Alpha Setup Guide](./ALPHA_SETUP.md)
 - [Key Management Guide](./KEY_MANAGEMENT.md)
 - [Support And Feedback](./SUPPORT_AND_FEEDBACK.md)

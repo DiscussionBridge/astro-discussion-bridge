@@ -30,6 +30,8 @@ npm install astro-discussion-bridge
 
 Start with the public Alpha docs when wiring a real site:
 
+- [Human Manual](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/HUMAN_MANUAL.md)
+- [Machine Manual](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/MACHINE_MANUAL.md)
 - [Alpha Setup Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/ALPHA_SETUP.md)
 - [Key Management Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/KEY_MANAGEMENT.md)
 - [Support And Feedback](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/SUPPORT_AND_FEEDBACK.md)

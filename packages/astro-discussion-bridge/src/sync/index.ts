@@ -56,6 +56,14 @@ interface ParsedMarkdown {
   rawFrontmatter: string;
 }
 
+interface FrontmatterBlock {
+  bodyStart: number;
+  closingMarkerStart: number;
+  lineEnding: "\n" | "\r\n";
+  rawEnd: number;
+  rawStart: number;
+}
+
 const markdownExtensions = new Set([".md", ".mdx"]);
 const defaultTitleMinLength = 15;
 const notifiedErrors = new WeakSet<object>();
@@ -652,14 +660,14 @@ export function validateDiscourseTopicTitle(
   if (normalizedTitle.length < minLength) {
     issues.push({
       title,
-      reason: `Title is too short for Discourse topic creation; minimum is ${minLength} characters.`,
+      reason: `Title is too short for Discourse topic creation; minimum is ${minLength} characters. Use a longer frontmatter title or first heading, or lower the limit with --title-min-length only if the target forum allows shorter titles.`,
     });
   }
 
   if (maxLength !== undefined && normalizedTitle.length > maxLength) {
     issues.push({
       title,
-      reason: `Title is too long for Discourse topic creation; maximum is ${maxLength} characters.`,
+      reason: `Title is too long for Discourse topic creation; maximum is ${maxLength} characters. Shorten the frontmatter title or first heading, or raise --max-topic-title-length only if the target forum allows longer titles.`,
     });
   }
 
@@ -674,7 +682,7 @@ export function validateDiscourseTopicTitle(
   if (words.length > 0 && repeatedWords.length / words.length > 0.5) {
     issues.push({
       title,
-      reason: "Title may be rejected by Discourse as unclear because most words repeat the same letters.",
+      reason: "Title may be rejected by Discourse as unclear because most words repeat the same letters. Replace placeholder/filler text with a descriptive page title, or use --skip-title-validation for a deliberate test case.",
     });
   }
 
@@ -720,14 +728,14 @@ function validateManagedPages(input: {
     if (input.limits.maxPostLength !== undefined && page.content.length > input.limits.maxPostLength) {
       pageIssues.push({
         filePath: page.filePath,
-        reason: `Companion post body is too long for Discourse; maximum is ${input.limits.maxPostLength} characters. Current body is ${page.content.length} characters.`,
+        reason: `Companion post body is too long for Discourse; maximum is ${input.limits.maxPostLength} characters. Current body is ${page.content.length} characters. Add a shorter discussionSummary, trim discussion-safe content, or raise --max-post-length only if the target forum allows it.`,
       });
     }
 
     if (input.limits.maxTagsPerTopic !== undefined && page.tags && normalizeTags(page.tags).length > input.limits.maxTagsPerTopic) {
       pageIssues.push({
         filePath: page.filePath,
-        reason: `Too many tags for Discourse topic; maximum is ${input.limits.maxTagsPerTopic}. Current tags: ${formatTags(page.tags)}.`,
+        reason: `Too many tags for Discourse topic; maximum is ${input.limits.maxTagsPerTopic}. Current tags: ${formatTags(page.tags)}. Remove tags from discussionTags, lane config, or --tags; keep Astro/template tags separate unless explicitly mapped.`,
       });
     }
 
@@ -736,7 +744,7 @@ function validateManagedPages(input: {
         if (tag.length > input.limits.maxTagLength) {
           pageIssues.push({
             filePath: page.filePath,
-            reason: `Tag "${tag}" is too long for Discourse; maximum is ${input.limits.maxTagLength} characters.`,
+            reason: `Tag "${tag}" is too long for Discourse; maximum is ${input.limits.maxTagLength} characters. Rename the Discourse tag or raise --max-tag-length only if the target forum allows it.`,
           });
         }
       }
@@ -755,7 +763,16 @@ function validateManagedPages(input: {
     })
     .join("\n");
 
-  throw new Error(`Discourse preflight failed:\n${details}`);
+  throw new Error(
+    [
+      "Discourse preflight failed before any Discourse writes were attempted.",
+      "",
+      details,
+      "",
+      "Fix the listed Astro frontmatter/content or adjust the explicit CLI/env limits after confirming the target Discourse settings.",
+      "Tip: run check-discourse for the target forum, then rerun this command with --dry-run --details.",
+    ].join("\n"),
+  );
 }
 
 function duplicateManagedPageIssues(input: {
@@ -857,20 +874,37 @@ async function findMarkdownFiles(dir: string): Promise<string[]> {
 }
 
 function parseMarkdown(source: string): ParsedMarkdown {
-  if (!source.startsWith("---\n")) {
+  const block = findFrontmatterBlock(source);
+  if (!block) {
     return { frontmatter: {}, body: source, rawFrontmatter: "" };
   }
 
-  const end = source.indexOf("\n---", 4);
-  if (end === -1) {
-    return { frontmatter: {}, body: source, rawFrontmatter: "" };
-  }
-
-  const rawFrontmatter = source.slice(4, end);
+  const rawFrontmatter = source.slice(block.rawStart, block.rawEnd);
   return {
     frontmatter: parseSimpleYaml(rawFrontmatter),
-    body: source.slice(end + 4).replace(/^\r?\n/, ""),
+    body: source.slice(block.bodyStart).replace(/^\r?\n/, ""),
     rawFrontmatter,
+  };
+}
+
+function findFrontmatterBlock(source: string): FrontmatterBlock | undefined {
+  const opening = /^---(\r?\n)/.exec(source);
+  if (!opening) return undefined;
+
+  const lineEnding = opening[1] as "\n" | "\r\n";
+  const rawStart = opening[0].length;
+  const closing = /\r?\n---(?=\r?\n|$)/g;
+  closing.lastIndex = rawStart;
+  const match = closing.exec(source);
+  if (!match) return undefined;
+
+  const closingMarkerStart = match.index + match[0].length - 3;
+  return {
+    bodyStart: closingMarkerStart + 3,
+    closingMarkerStart,
+    lineEnding,
+    rawEnd: match.index,
+    rawStart,
   };
 }
 
@@ -888,22 +922,19 @@ function parseSimpleYaml(source: string): Record<string, string> {
 }
 
 function updateFrontmatter(source: string, values: Record<string, string>): string {
-  if (!source.startsWith("---\n")) {
+  const block = findFrontmatterBlock(source);
+  if (!block) {
     const frontmatter = serializeYaml(values);
     return `---\n${frontmatter}---\n\n${source}`;
   }
 
-  const end = source.indexOf("\n---", 4);
-  if (end === -1) {
-    const frontmatter = serializeYaml(values);
-    return `---\n${frontmatter}---\n\n${source}`;
-  }
+  const rawFrontmatter = source.slice(block.rawStart, block.rawEnd);
+  const nextFrontmatter = upsertYamlValues(rawFrontmatter, values).replace(
+    /\n/g,
+    block.lineEnding,
+  );
 
-  const rawFrontmatter = source.slice(4, end);
-  const rest = source.slice(end);
-  const nextFrontmatter = upsertYamlValues(rawFrontmatter, values);
-
-  return `---\n${nextFrontmatter}${rest}`;
+  return `${source.slice(0, block.rawStart)}${nextFrontmatter}${source.slice(block.closingMarkerStart)}`;
 }
 
 function upsertYamlValues(source: string, values: Record<string, string>): string {

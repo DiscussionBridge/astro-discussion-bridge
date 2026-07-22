@@ -48,6 +48,32 @@ Use the narrowest key that works for routine publishing. Use a broader diagnosti
 
 See [KEY_MANAGEMENT.md](./KEY_MANAGEMENT.md).
 
+Use this exact granular publishing/runtime key scope set:
+
+```text
+categories
+  list
+  show
+
+tags
+  list
+
+topics
+  write
+  update
+  read
+  status
+
+posts
+  edit
+  list
+
+search
+  show
+```
+
+Use the diagnostics/setup key for `check-discourse`, site settings/capability reads, and reconciliation when the granular publishing key cannot read the required endpoints.
+
 ## 4. Install the Package
 
 From the Astro project root:
@@ -228,4 +254,3 @@ Recommended Alpha split:
 - GitHub issues: reproducible bugs and feature requests
 - Discourse category/topic: setup questions, community discussion, examples, and operational notes
 - paid help path: private setup, migration, and implementation assistance
-
