@@ -113,6 +113,26 @@ The `forum.` hostname is deliberately literal and operationally clear; community
 meaning belongs in the forum identity and copy. Cloudflare/account ownership
 placement remains an Ops decision.
 
+## Discourse Source Disclosure
+
+Source provenance is implemented and reviewed at `a9d2097` (Code Boss PASS,
+68/68). `DiscussionSource.astro` gives imported and Discourse-managed pages a
+quiet, accessible source notice near the article start. It is deliberately
+separate from comments and the proposed Discussion Bridge credit.
+
+The helper resolves only `discourse-imported` and `discourse-managed`; Astro-
+managed and unknown modes produce no notice. It prefers an explicit URL, then
+the imported-from URL, then the protected source-target binding, and finally
+legacy topic metadata. Unsafe URLs are skipped without suppressing the notice.
+On multi-target pages provenance follows the protected source—not an additional
+publication forum.
+
+The package exports the component plus `resolveDiscussionSourceNotice`,
+`DiscussionSourceMode`, and `DiscussionSourceNotice` through the root and
+`./source`. Canonical Astro and Starlight boundaries are wired. OBBBA remains a
+separate installation/live-proof gate because its current vendor artifact does
+not include `a9d2097`.
+
 ## Alpha Import Queue Principle
 
 Alpha includes deterministic import discovery, not only one-off topic import.

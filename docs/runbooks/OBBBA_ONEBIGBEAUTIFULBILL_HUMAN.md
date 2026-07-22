@@ -421,6 +421,20 @@ Run one explicit `--target` at a time. If the Citizen Activist publication fails
 after the Repeal OBBBA binding succeeds, preserve the successful binding, inspect
 the target-specific sanitized failure, and retry only the failed target.
 
+### Source disclosure gate
+
+The package source-disclosure feature is implemented and reviewed at `a9d2097`
+(68/68), but the current OBBBA vendor artifact does not include it. Keep this
+separate from the Citizen Activist topology gate and do not describe it as live.
+
+After Bridge Boss installs a reviewed artifact containing `a9d2097`, place
+`DiscussionSource` near the article start through OBBBA's canonical Starlight
+`MarkdownContent` boundary. The page should show a quiet **Content source** aside
+whose link follows `forum.repealobbba.org`, the protected source. It must not
+attribute origin to Citizen Activist or another publication target. Verify that
+unsafe or malformed source candidates never become links and that the notice
+still renders without a safe URL.
+
 For the exact OBBBA release candidate:
 
 - [ ] Code Boss pass/fail recorded.

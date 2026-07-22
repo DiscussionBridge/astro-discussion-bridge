@@ -176,6 +176,13 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Keep the Starlight preset focused on Starlight conventions.
 - [x] Provide multi-Discourse target names, frontmatter, presentation helpers,
       and the public `astro-discussion-bridge/targets` export.
+- [x] Implement and review accessible Discourse source disclosure (`a9d2097`,
+      68/68), including safe URL selection, multi-target protected-source
+      provenance, canonical Astro/Starlight placement, and public component/
+      helper/type exports.
+- [ ] Install an artifact containing `a9d2097` into OBBBA, wire the canonical
+      source notice near the article start, then build, deploy, and verify the
+      live disclosure independently from the comments-boundary credit.
 - [ ] Add an unobtrusive, configurable comments-boundary credit such as `Discussion connection by Discussion Bridge` or `Discourse connection by Discussion Bridge`; verify wording, link destination, accessibility, and behavior across `simple`, `full`, and `fullInteractive` modes.
 - [ ] Consider optional mapping from Astro/template content tags to Discourse topic tags.
 - [ ] Package the setup/diagnostics/docs workflow for self-serve users and paid assisted setup.

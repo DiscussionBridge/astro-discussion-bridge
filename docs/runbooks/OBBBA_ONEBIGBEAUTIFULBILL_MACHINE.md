@@ -729,6 +729,20 @@ post_gate_demo:
     - prove_failed_target_only_idempotent_retry
     - clean_exact_candidate_build_deploy_live_checks
     - verify_no_source_or_cross_target_writeback
+source_disclosure:
+  implementation_commit: a9d2097
+  review: Code_Boss_PASS
+  tests: 68_of_68_PASS
+  package_exports_verified: true
+  current_OBBBA_vendor_artifact_contains_feature: false
+  OBBBA_gate: pending_artifact_install_build_deploy_live_verification
+  component: astro-discussion-bridge/DiscussionSource.astro
+  placement: canonical_Starlight_MarkdownContent_near_article_start
+  protected_source: https://forum.repealobbba.org
+  additional_publication_target_must_not_be_used_as_provenance: true
+  separate_from: [comments_boundary, Discussion_Bridge_credit]
+  safe_links_only: absolute_http_https
+  no_safe_link_behavior: render_notice_without_link
 comments_boundary_credit:
   implementation_state: planned_not_current_artifact
   candidate_text:

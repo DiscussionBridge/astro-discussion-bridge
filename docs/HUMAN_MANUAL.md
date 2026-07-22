@@ -591,7 +591,51 @@ fails, keep successful bindings, report the failure, and retry only that target
 idempotently without duplicate topics. Diagnostics, previews, CLI output, and
 live checks must identify the target. General administration remains later.
 
-## 12. Alpha Support And Release Channel
+## 12. Show Where Discourse-Sourced Content Came From
+
+Pages imported from or managed in Discourse should disclose their source near
+the start of the article. This notice is separate from comments and from any
+Discussion Bridge credit at the comments boundary.
+
+Wire `DiscussionSource` into the canonical page boundary:
+
+```astro
+---
+import DiscussionSource from "astro-discussion-bridge/DiscussionSource.astro";
+---
+
+<DiscussionSource frontmatter={Astro.props.frontmatter} />
+```
+
+The plain Astro BlogPost layout and Starlight `MarkdownContent` override are the
+canonical placements. You should see a quiet aside labeled **Content source**
+with a bold **Source:** prefix:
+
+- `discourse-imported`: “This page originated in Discourse and was imported
+  here for publication.”
+- `discourse-managed`: “This page is managed in Discourse and published here
+  for easier reading.”
+- `astro-managed` or unknown mode: no notice.
+
+`sourceLabel` defaults to `Discourse`. Use `sourceLabel`, `message`, and
+`linkLabel` to adapt public wording without hiding provenance. Other component
+inputs are `class`, `mode`, `sourceUrl`, `targetBindings`, and `frontmatter`.
+
+The source link follows this order: explicit `sourceUrl`,
+`discussionImportedFrom`, the protected `discussionSourceTarget` binding (with
+legacy `discussionTarget` fallback), then legacy `discourseTopicUrl`. Only
+absolute `http` or `https` URLs become links. If every candidate is unsafe or
+malformed, the disclosure remains visible without a link.
+
+> **Stop if:** a multi-target page attributes its origin to an additional
+> publication target. Provenance must always follow the protected source target.
+
+Package behavior is implemented and reviewed at `a9d2097` with Code Boss PASS
+and 68/68 tests. OBBBA installation and live verification are separate: its
+current vendor artifact does not yet contain this feature, so do not mark OBBBA
+source disclosure deployed.
+
+## 13. Alpha Support And Release Channel
 
 The current Alpha release decision is GitHub release plus repository-installable;
 npm publication is held until late Beta. The intended support split is:

@@ -218,6 +218,18 @@ names. The CLI handles one explicit `--target` at a time, while ordered
 Use `forum.` for literal operational clarity; express the community meaning in
 the forum identity/copy. Cloudflare/account ownership remains an Ops boundary.
 
+## Source Provenance Across Lanes
+
+Render `astro-discussion-bridge/DiscussionSource.astro` near the article start
+for `discourse-imported` and `discourse-managed` lanes. Do not place it at the
+comments boundary. On a multi-target page, resolve provenance from the protected
+`discussionSourceTarget` (or legacy source target), never from an additional
+publication target. This keeps WHEREFROM disclosure distinct from WHERETO
+discussion publication.
+
+The implementation is complete at `a9d2097`; OBBBA artifact installation and
+live verification remain pending.
+
 ## Content Tags And Discourse Tags
 
 `discussionTags` are Discourse topic tags. They are explicit bridge metadata.

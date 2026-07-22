@@ -822,7 +822,53 @@ embed/title collision records the discovered owning topic in the active binding
 and clears its failure state. Invalid binding JSON or shape must fail before
 network access.
 
-## 14. Alpha Release And Support Inputs
+## 14. Source-Provenance Contract
+
+```yaml
+implementation:
+  commit: a9d2097
+  review: Code_Boss_PASS
+  tests: 68_of_68_PASS
+  package_dry_run_exports:
+    - dist/source.*
+    - DiscussionSource.astro
+    - package_root_helpers_and_types
+    - astro-discussion-bridge/source
+public_api:
+  component: astro-discussion-bridge/DiscussionSource.astro
+  helper: resolveDiscussionSourceNotice
+  types: [DiscussionSourceMode, DiscussionSourceNotice]
+rendering:
+  placement: near_article_start
+  separate_from: [comments_boundary, Discussion_Bridge_credit]
+  aria_label: Content source
+  prefix: "Source:"
+  default_source_label: Discourse
+  modes:
+    discourse-imported: This page originated in {sourceLabel} and was imported here for publication.
+    discourse-managed: This page is managed in {sourceLabel} and published here for easier reading.
+    astro-managed: no_notice
+    unknown: no_notice
+source_url_precedence:
+  - explicit_sourceUrl_prop
+  - discussionImportedFrom
+  - protected_discussionSourceTarget_binding
+  - legacy_discussionTarget_binding_fallback
+  - legacy_discourseTopicUrl
+accepted_link_protocols: [http, https]
+unsafe_or_malformed_candidates: skip
+no_safe_url: render_notice_without_link
+multi_target_rule: provenance_follows_protected_source_not_publication_target
+custom_props: [sourceLabel, message, linkLabel, class, mode, sourceUrl, targetBindings, frontmatter]
+site_wiring:
+  plain_Astro: canonical_BlogPost_layout
+  Starlight: MarkdownContent_override
+OBBBA:
+  current_vendor_artifact_contains_a9d2097: false
+  package_install_build_deploy_live_verification: pending
+```
+
+## 15. Alpha Release And Support Inputs
 
 ```yaml
 release_scope_doctrine:
@@ -954,7 +1000,7 @@ output, lane name, public URLs, category ID, tags, key type, and dry-run result.
 They must not include key values, credentials, private account data, or
 production secrets.
 
-## 14. Durable Update Rule
+## 16. Durable Update Rule
 
 When implementation confirms or changes a command, field, scope, endpoint,
 failure, recovery path, or deployment invariant:
