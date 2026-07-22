@@ -262,6 +262,27 @@ Cloudflare worker name: onebigbeautifulbill
 production branch: main
 ```
 
+Live deployment evidence:
+
+- Package implementation/manual commit `7aadcf63c76b8ebd9e0c9383b5c7386ad704396e`
+  is on `main`.
+- OBBBA integration commit `f277171` and deterministic deployment fix
+  `e9c279dbe1b0bec512ff7fcf0c9ec6f17f0dd6b8` were pushed.
+- Worker `onebigbeautifulbill` deployed successfully as version
+  `85478ec8-af54-42bf-828e-2e0f2f1e0337` at
+  `https://onebigbeautifulbill.systems-b95.workers.dev`.
+- The canonical proof page returns HTTP 200 and contains the package signature:
+  topic `434`, `fullApp=true`, the correct forum and fallback URLs, and the hero
+  image. The legacy `data-topic-id` renderer is absent.
+- Topic `434` remains visible, open, unarchived, and has 11 posts.
+- `publishOnBuild` remains false; deployment performed no publish, sync, or
+  import write.
+
+`wrangler.jsonc` now pins the operational Cloudflare account ID so deployment is
+deterministic. The private account label is intentionally omitted from this
+public-facing runbook. The broader OBBBA-versus-Citizen-Activist ownership
+decision remains open.
+
 Verify the deployed commit, HTTPS, the Section 10101 route, the source topic,
 the embed host setting, and comments behavior. Cloudflare account ownership and
 the OBBBA-versus-Citizen-Activist ownership boundary remain an Ops decision; do
@@ -314,4 +335,5 @@ No OBBBA release ships because code alone is complete.
 - [ ] Replace the packed Alpha artifact with the approved GitHub release asset
       for the release candidate.
 - [ ] Confirm Cloudflare ownership/account boundary.
+- [x] Verify live canonical proof page and Worker deployment signature.
 - [ ] Complete Manual Boss review and approve or replace visual placeholders.

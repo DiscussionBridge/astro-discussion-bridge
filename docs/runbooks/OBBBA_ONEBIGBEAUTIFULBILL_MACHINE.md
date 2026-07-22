@@ -14,12 +14,16 @@ site:
   repository: https://github.com/OneBigBeautifulBill/onebigbeautifulbill.us.git
   local_root: 'C:\CodeProjects\Projects\OBBBA\sites\onebigbeautifulbill.us\astro'
   branch: main
-  inspected_commit: 7c4dc62
+  package_repo_commit: 7aadcf63c76b8ebd9e0c9383b5c7386ad704396e
+  obbba_integration_commit: f277171
+  obbba_deployment_fix_commit: e9c279dbe1b0bec512ff7fcf0c9ec6f17f0dd6b8
   framework: Astro 7 + Starlight
   site_url: https://onebigbeautifulbill.us
   discourse_url: https://forum.repealobbba.org
   deployment_adapter: '@astrojs/cloudflare'
   cloudflare_worker_name: onebigbeautifulbill
+  cloudflare_account_placement: current_operational_account_sanitized
+  cloudflare_ownership_boundary: unresolved_obbba_vs_citizen_activist
 
 proof_lane:
   name: title-i-section-10101-impact
@@ -124,6 +128,12 @@ sandbox_constraints:
   - Wrangler profile log writes may fail under sandbox restrictions
 deployment_shaped_result: pass after Alpha artifact install
 clean_install_note: wrapper timed out after 184 seconds, but npm ls subsequently resolved astro-discussion-bridge@0.1.0 and the full build passed
+wrangler_deploy:
+  result: pass
+  worker: onebigbeautifulbill
+  version: 85478ec8-af54-42bf-828e-2e0f2f1e0337
+  workers_dev_endpoint: https://onebigbeautifulbill.systems-b95.workers.dev
+  deterministic_account_id_in_wrangler_jsonc: true
 ```
 
 Verification command:
@@ -343,7 +353,9 @@ verification chain.
 
 ```yaml
 verification:
-  inspected_source_commit: 7c4dc62
+  package_repo_commit_pushed_main: 7aadcf63c76b8ebd9e0c9383b5c7386ad704396e
+  obbba_integration_commit_pushed: f277171
+  obbba_deployment_fix_commit_pushed: e9c279dbe1b0bec512ff7fcf0c9ec6f17f0dd6b8
   source_frontmatter_guard: pass
   source_topic_id: pass_434
   source_forum_hostname: pass_forum.repealobbba.org
@@ -362,12 +374,33 @@ verification:
     status: skipped
     reason: discussionSync is false
     summary: '0 created, 0 updated, 1 skipped, 0 unchanged, 0 dry-run'
-  live_page_current_pass: not_run_by_product_boss
-  live_comments_current_pass: not_run_by_product_boss
+  live_page:
+    url: https://onebigbeautifulbill.us/title-i/10101-impact/
+    http_status: 200
+    package_embed_signature: pass
+    topic_id: 434
+    full_app: true
+    forum_url: pass
+    fallback_topic_url: pass
+    hero_image: present
+    legacy_data_topic_id_renderer: absent
+  live_topic_434:
+    visible: true
+    open: true
+    archived: false
+    post_count: 11
   discourse_diagnostics: pass_setup_issues_none
   topic_434_read_check: pass_public_open_category_18_posts_11_editable
   page_url_reconciliation: no_owner_found_not_required_with_explicit_topic_id
   secret_review: pass_no_values_recorded
+  publish_on_build: false
+  discourse_write_operations: none
+  package_repo_state: clean_matches_origin_main
+  obbba_preserved_unstaged_changes:
+    - README
+    - custom component cleanup
+    - starter content cleanup
+  deployment_commits_absorbed_preserved_changes: false
 ```
 
 ## 10. Known Failures And Recovery

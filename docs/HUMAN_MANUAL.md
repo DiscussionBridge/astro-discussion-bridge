@@ -327,6 +327,16 @@ For a static Astro site:
 5. Attach the intended custom domain and wait for HTTPS to become valid.
 6. Add that exact hostname to Discourse's allowed embed hosts.
 7. Verify the homepage, a lane route, its companion topic, and comments.
+8. When Workers are used, verify both the Worker endpoint and canonical domain.
+9. Confirm the deployed page has the expected package/topic signature and that
+   any retired renderer is absent.
+
+If more than one Cloudflare account is available, the approved site deployment
+configuration should pin the intended account so deployment is repeatable. Keep
+private account labels and login addresses out of public manuals and screenshots.
+
+Before making a deployment-only commit, inspect the site worktree. Preserve and
+report unrelated pre-existing edits instead of silently including them.
 
 If the deployed page looks stale, verify the deployment commit and Discourse
 topic first. Then test with a cache-bypassing request or clear only the relevant

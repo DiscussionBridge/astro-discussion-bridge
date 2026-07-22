@@ -474,7 +474,16 @@ custom_domain: exact public hostname
 astro_site: exact public URL
 discussion_bridge_site_url: exact public URL
 discourse_embed_host: exact hostname
+account_id: explicit deployment account identifier in approved site config
+worker_name: exact Worker name when using Workers
+worker_version: deployment evidence
+workers_dev_endpoint: deployment verification endpoint
 ```
+
+When more than one Cloudflare account is available, pin the intended
+`account_id` in the approved deployment configuration so CLI/CI selection is
+deterministic. Manuals and support bundles should describe the placement without
+copying private account labels or login email addresses.
 
 Verification:
 
@@ -487,6 +496,13 @@ Verification:
 6. The selected comments mode works on desktop and mobile.
 7. Cache bypass or narrowly scoped purge is tested before declaring stale
    output a failed sync/deploy.
+8. The Worker endpoint and canonical domain serve the intended candidate.
+9. Generated HTML contains the expected package/topic signature and does not
+   contain the retired renderer signature.
+
+Before deployment commits, inspect the consuming site's worktree. Preserve and
+report unrelated pre-existing changes; do not absorb them into deployment-only
+commits.
 
 ## 11. Known Failures And Recovery
 
