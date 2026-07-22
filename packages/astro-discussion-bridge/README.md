@@ -143,6 +143,25 @@ An imported or Discourse-managed source target remains protected from writeback,
 
 This is deliberately bounded multi-target publishing, not a general many-to-many administration system. Targets, writable destinations, source ownership, and presentation remain explicit and inspectable.
 
+### Source disclosure
+
+Pages that originate in Discourse should say so on the public Astro page. Render `DiscussionSource` near the beginning of the article and pass the page frontmatter:
+
+```astro
+---
+import DiscussionSource from "astro-discussion-bridge/DiscussionSource.astro";
+---
+
+<DiscussionSource
+  frontmatter={entry.data}
+  sourceLabel="Repeal OBBBA Forum"
+/>
+```
+
+For `discourse-imported`, the default notice says the page originated in Discourse and was imported for publication. For `discourse-managed`, it says the page is managed in Discourse and published in Astro for easier reading. The source link resolves from `discussionImportedFrom`, the protected source-target binding, or the legacy topic URL. `astro-managed` pages render no source notice.
+
+Use the `message`, `linkLabel`, and `sourceLabel` props to match the public site's voice without obscuring provenance. This notice belongs with the article content; the comments boundary remains responsible for discussion controls and Discussion Bridge credit.
+
 ## Content Lanes
 
 A content lane is a source content collection or path mapped to Discourse behavior.

@@ -1,10 +1,12 @@
 ---
 import Discussion from "astro-discussion-bridge/Discussion.astro";
+import DiscussionSource from "astro-discussion-bridge/DiscussionSource.astro";
 
 interface Props {
   commentsDisplay?: "simple" | "full" | "fullInteractive";
   description: string;
   embedUrl?: string;
+  frontmatter?: Record<string, unknown>;
   pubDate: Date;
   tags?: string[];
   title: string;
@@ -46,6 +48,7 @@ const formattedDate = new Intl.DateTimeFormat("en", {
         ) : null}
       </div>
       <article>
+        <DiscussionSource frontmatter={Astro.props.frontmatter} />
         <slot />
       </article>
       <Discussion

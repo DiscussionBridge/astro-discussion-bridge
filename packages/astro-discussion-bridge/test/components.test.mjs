@@ -46,3 +46,15 @@ test("full replies preserve Mermaid rendering and readable tables", async () => 
   assert.match(replies, /\.discussion-bridge-reply__body table/);
   assert.match(replies, /overflow-x: auto/);
 });
+
+test("source disclosure is accessible and links to the source discussion", async () => {
+  const source = await readFile(
+    new URL("../src/components/DiscussionSource.astro", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /aria-label="Content source"/);
+  assert.match(source, /<strong>Source:<\/strong>/);
+  assert.match(source, /View the source discussion/);
+  assert.match(source, /resolveDiscussionSourceNotice/);
+});

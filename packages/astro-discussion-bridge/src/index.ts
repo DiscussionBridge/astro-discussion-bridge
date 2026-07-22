@@ -194,6 +194,7 @@ export {
   parseDiscussionTargetBindings,
   resolveDiscussionPresentation,
 } from "./targets.js";
+export { resolveDiscussionSourceNotice } from "./source.js";
 export type { CheckDiscourseOptions, CheckDiscourseResult } from "./check-discourse.js";
 export type { DiscoursePreflightLimits, SyncDiscourseTopicsOptions, SyncedPage } from "./sync/index.js";
 export type {
@@ -202,6 +203,7 @@ export type {
   DiscussionTargetBindings,
   ResolvedDiscussionTarget,
 } from "./targets.js";
+export type { DiscussionSourceMode, DiscussionSourceNotice } from "./source.js";
 
 function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
   if (!options.discourseUrl) {

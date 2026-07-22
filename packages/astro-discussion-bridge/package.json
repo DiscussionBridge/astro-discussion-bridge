@@ -43,10 +43,15 @@
       "types": "./dist/targets.d.ts",
       "import": "./dist/targets.js"
     },
+    "./source": {
+      "types": "./dist/source.d.ts",
+      "import": "./dist/source.js"
+    },
     "./DiscourseComments.astro": "./src/components/DiscourseComments.astro",
     "./DiscourseReplies.astro": "./src/components/DiscourseReplies.astro",
     "./DiscourseDiscussion.astro": "./src/components/DiscourseDiscussion.astro",
-    "./Discussion.astro": "./src/components/Discussion.astro"
+    "./Discussion.astro": "./src/components/Discussion.astro",
+    "./DiscussionSource.astro": "./src/components/DiscussionSource.astro"
   },
   "files": [
     "dist",

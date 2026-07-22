@@ -1,6 +1,7 @@
 ---
 import DefaultMarkdownContent from "@astrojs/starlight/components/MarkdownContent.astro";
 import Discussion from "astro-discussion-bridge/Discussion.astro";
+import DiscussionSource from "astro-discussion-bridge/DiscussionSource.astro";
 
 const entry = Astro.locals.starlightRoute.entry;
 const topicId = entry.data.discourseTopicId;
@@ -8,6 +9,7 @@ const topicUrl = entry.data.discussionUrl ?? entry.data.discourseTopicUrl;
 ---
 
 <DefaultMarkdownContent>
+  <DiscussionSource frontmatter={entry.data} />
   <slot />
 </DefaultMarkdownContent>
 {topicUrl && <Discussion topicId={topicId} topicUrl={topicUrl} />}

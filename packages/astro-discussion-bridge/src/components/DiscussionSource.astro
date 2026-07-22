@@ -1,0 +1,73 @@
+---
+import {
+  resolveDiscussionSourceNotice,
+  type DiscussionSourceMode,
+  type DiscussionTargetBindings,
+} from "astro-discussion-bridge";
+
+interface Props {
+  class?: string;
+  frontmatter?: Record<string, unknown>;
+  linkLabel?: string;
+  message?: string;
+  mode?: DiscussionSourceMode;
+  sourceLabel?: string;
+  sourceUrl?: string;
+  targetBindings?: DiscussionTargetBindings | string;
+}
+
+const frontmatter = Astro.props.frontmatter;
+const notice = resolveDiscussionSourceNotice({
+  mode: Astro.props.mode ?? stringValue(frontmatter?.discussionSourceMode),
+  sourceLabel: Astro.props.sourceLabel ?? stringValue(frontmatter?.discussionSourceLabel),
+  sourceUrl: Astro.props.sourceUrl,
+  importedFrom: stringValue(frontmatter?.discussionImportedFrom),
+  sourceTarget: stringValue(frontmatter?.discussionSourceTarget),
+  legacyTarget: stringValue(frontmatter?.discussionTarget),
+  bindings: Astro.props.targetBindings ?? bindingValue(frontmatter?.discussionTargetBindings),
+  legacyTopicUrl: stringValue(frontmatter?.discourseTopicUrl),
+});
+const className = ["discussion-bridge-source", Astro.props.class].filter(Boolean).join(" ");
+const message = Astro.props.message?.trim() || notice?.message;
+const linkLabel = Astro.props.linkLabel?.trim() || "View the source discussion";
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function bindingValue(value: unknown): DiscussionTargetBindings | string | undefined {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as DiscussionTargetBindings;
+  }
+  return undefined;
+}
+---
+
+{notice && (
+  <aside class={className} aria-label="Content source">
+    <p>
+      <strong>Source:</strong> {message}
+      {notice.sourceUrl && <> <a href={notice.sourceUrl}>{linkLabel}</a>.</>}
+    </p>
+  </aside>
+)}
+
+<style>
+  .discussion-bridge-source {
+    margin-block: 0 1.5rem;
+    padding: 0.75rem 1rem;
+    border-inline-start: 3px solid var(--sl-color-accent, #2762a9);
+    color: var(--sl-color-gray-2, #454545);
+    background: var(--sl-color-gray-7, #f5f6f8);
+    font-size: 0.9375rem;
+  }
+
+  .discussion-bridge-source p {
+    margin: 0;
+  }
+
+  .discussion-bridge-source strong {
+    color: inherit;
+  }
+</style>
