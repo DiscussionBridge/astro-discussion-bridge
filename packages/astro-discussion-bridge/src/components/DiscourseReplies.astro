@@ -9,6 +9,7 @@ interface Props {
   discourseUrl?: string;
   heading?: string;
   refreshOnPageLoad?: boolean;
+  renderMermaid?: boolean;
   showLikes?: boolean;
   class?: string;
   topicUrl?: string;
@@ -20,6 +21,7 @@ const maxReplies = Astro.props.maxReplies ?? config.replies.maxReplies;
 const discourseUrl = Astro.props.discourseUrl ?? config.discourseUrl;
 const heading = Astro.props.heading ?? "Discussion";
 const refreshOnPageLoad = Astro.props.refreshOnPageLoad ?? config.replies.refreshOnPageLoad;
+const renderMermaid = Astro.props.renderMermaid ?? config.replies.renderMermaid;
 const showLikes = Astro.props.showLikes ?? config.replies.showLikes;
 const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
 let replies: DiscoursePost[] = [];
@@ -141,6 +143,7 @@ const refreshConfig = topicId
       maxReplies,
       minScore,
       refreshEndpoint: config.replies.refreshEndpoint,
+      renderMermaid,
       showLikes,
       topicId: String(topicId),
     }
@@ -152,6 +155,7 @@ const refreshConfig = topicId
     class:list={["discussion-bridge-replies", Astro.props.class]}
     data-discussion-bridge-replies
     data-refresh={refreshOnPageLoad ? "true" : "false"}
+    data-render-mermaid={renderMermaid ? "true" : "false"}
     data-refresh-config={refreshConfig ? JSON.stringify(refreshConfig) : undefined}
   >
     <div class="discussion-bridge-replies__header">
@@ -213,32 +217,82 @@ const refreshConfig = topicId
   </section>
 )}
 
-{config.replies.enabled && refreshOnPageLoad && topicId && (
+{config.replies.enabled && topicId && (
   <script>
-    const containers = document.querySelectorAll("[data-discussion-bridge-replies][data-refresh='true']");
+    let mermaidReady;
+    const containers = document.querySelectorAll("[data-discussion-bridge-replies]");
 
     for (const container of containers) {
+      if (container.getAttribute("data-discussion-bridge-initialized") === "true") continue;
+      container.setAttribute("data-discussion-bridge-initialized", "true");
+
       const configValue = container.getAttribute("data-refresh-config");
       const list = container.querySelector("[data-discussion-bridge-replies-list]");
       if (!configValue || !list) continue;
 
+      const refreshConfig = JSON.parse(configValue);
+
+      if (container.getAttribute("data-refresh") === "true") {
+        try {
+          const topicUrl = refreshConfig.refreshEndpoint
+            ? refreshConfig.refreshEndpoint.replace("{topicId}", encodeURIComponent(refreshConfig.topicId))
+            : `${refreshConfig.discourseUrl}/t/${refreshConfig.topicId}.json`;
+          const response = await fetch(topicUrl, { headers: { Accept: "application/json" } });
+          if (response.ok) {
+            const topic = await response.json();
+            const replies = topic.post_stream.posts
+              .filter((post) => post.post_number > 1)
+              .filter((post) => post.score >= refreshConfig.minScore)
+              .slice(0, refreshConfig.maxReplies);
+
+            list.replaceChildren(...replies.map((reply) => renderReply(reply, refreshConfig)));
+          }
+        } catch {
+          // Keep the server-rendered fallback if the live refresh is unavailable.
+        }
+      }
+
+      if (container.getAttribute("data-render-mermaid") === "true") {
+        await renderMermaidBlocks(list);
+      }
+    }
+
+    async function renderMermaidBlocks(container) {
+      const blocks = container.querySelectorAll(
+        "pre code.language-mermaid, pre code.lang-mermaid, code.language-mermaid, code.lang-mermaid",
+      );
+      if (blocks.length === 0) return;
+
+      let mermaid;
       try {
-        const refreshConfig = JSON.parse(configValue);
-        const topicUrl = refreshConfig.refreshEndpoint
-          ? refreshConfig.refreshEndpoint.replace("{topicId}", encodeURIComponent(refreshConfig.topicId))
-          : `${refreshConfig.discourseUrl}/t/${refreshConfig.topicId}.json`;
-        const response = await fetch(topicUrl, { headers: { Accept: "application/json" } });
-        if (!response.ok) continue;
+        mermaidReady ??= import("mermaid").then((module) => {
+          module.default.initialize({ startOnLoad: false, securityLevel: "strict" });
+          return module.default;
+        });
+        mermaid = await mermaidReady;
+      } catch (error) {
+        console.error("[DiscussionBridge] Mermaid renderer failed to load", error);
+        mermaidReady = undefined;
+        return;
+      }
 
-        const topic = await response.json();
-        const replies = topic.post_stream.posts
-          .filter((post) => post.post_number > 1)
-          .filter((post) => post.score >= refreshConfig.minScore)
-          .slice(0, refreshConfig.maxReplies);
+      for (const block of blocks) {
+        const source = block.textContent?.trim();
+        if (!source) continue;
 
-        list.replaceChildren(...replies.map((reply) => renderReply(reply, refreshConfig)));
-      } catch {
-        // Keep the server-rendered fallback if the live refresh is unavailable.
+        const wrapper = document.createElement("div");
+        const id = `discussion-bridge-mermaid-${
+          crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)
+        }`;
+        wrapper.className = "discussion-bridge-reply__mermaid";
+
+        try {
+          const { svg } = await mermaid.render(id, source);
+          wrapper.innerHTML = svg;
+          (block.closest("pre") ?? block).replaceWith(wrapper);
+        } catch (error) {
+          console.error("[DiscussionBridge] Mermaid reply render failed", error);
+        }
       }
     }
 
@@ -534,6 +588,32 @@ const refreshConfig = topicId
 
   .discussion-bridge-reply__body > :last-child {
     margin-block-end: 0;
+  }
+
+  .discussion-bridge-reply__body table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+
+  .discussion-bridge-reply__body th,
+  .discussion-bridge-reply__body td {
+    border: 1px solid var(--sl-color-gray-5, #d7d9d3);
+    padding: 0.45rem 0.625rem;
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .discussion-bridge-reply__mermaid {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .discussion-bridge-reply__mermaid svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
   }
 
   .discussion-bridge-reply__actions {

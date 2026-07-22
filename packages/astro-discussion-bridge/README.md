@@ -175,9 +175,11 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 
 `Discussion` uses the configured provider. With `provider: "discourse"`, the default `comments.display: "simple"` mode uses Discourse's embeddable comments script. This is the lightweight path for page comments, but Discourse's embed output may omit some topic action detail such as visible like counts.
 
-Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, then refreshes from Discourse again on page load by default so new replies and like counts can appear without an Astro rebuild. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
+Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, then refreshes from Discourse again on page load by default so new replies and like counts can appear without an Astro rebuild. It also renders Discourse Mermaid code blocks in the browser and applies readable, horizontally scrollable table styling. Mermaid support is lazy-loaded only when a reply contains a Mermaid block and can be disabled with `replies.renderMermaid: false`. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
 
 Use `comments.display: "fullInteractive"` when you want Discourse's native full app embed inside the page. This keeps logged-in reply, like, quote, and other interaction inside Discourse's iframe instead of reimplementing user actions in Astro. The target Discourse site must support and enable full app embeds in its embedding settings.
+
+`fullInteractive` content is rendered inside Discourse's cross-origin iframe, so Astro styles and scripts cannot repair its tables or transform Mermaid blocks. Put embed-specific presentation in the Discourse theme's Embedded CSS or `common/embedded.scss`. Discourse theme-component JavaScript that works on normal topic pages may not run in the full-app embed application; verify Mermaid and other client-rendered extensions in the embed itself. Set `comments.className` (or the component's `embedClassName` prop) to add a stable class to the iframe document for targeted embedded CSS.
 
 Configure the allowed host in Discourse admin under embedding settings, using your Astro/Starlight site hostname.
 
@@ -202,8 +204,10 @@ discussionBridge({
   comments: {
     display: "simple", // simple | full | fullInteractive
     embedHeight: "800px",
+    className: "discussion-bridge-embed",
   },
   replies: {
+    renderMermaid: true,
     refreshOnPageLoad: true,
     // Use a same-origin proxy when the Discourse site does not allow browser CORS.
     refreshEndpoint: "/api/discourse/topics/{topicId}.json",

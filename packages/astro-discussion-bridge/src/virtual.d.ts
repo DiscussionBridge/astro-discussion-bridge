@@ -15,6 +15,7 @@ declare module "virtual:discussion-bridge/config" {
       minScore: number;
       maxReplies: number;
       refreshEndpoint?: string;
+      renderMermaid: boolean;
       showLikes: boolean;
       refreshOnPageLoad: boolean;
     };
@@ -25,6 +26,7 @@ declare module "virtual:discussion-bridge/config" {
 
 interface Window {
   DiscourseEmbed?: {
+    className?: string;
     discourseUrl: string;
     embedHeight?: string;
     fullApp?: boolean;

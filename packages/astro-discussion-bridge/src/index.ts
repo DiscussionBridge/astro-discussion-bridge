@@ -37,6 +37,7 @@ export interface DiscussionBridgeOptions {
     minScore?: number;
     maxReplies?: number;
     refreshEndpoint?: string;
+    renderMermaid?: boolean;
     showLikes?: boolean;
     refreshOnPageLoad?: boolean;
   };
@@ -84,6 +85,7 @@ interface PublicOptions {
     minScore: number;
     maxReplies: number;
     refreshEndpoint?: string;
+    renderMermaid: boolean;
     showLikes: boolean;
     refreshOnPageLoad: boolean;
   };
@@ -199,6 +201,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
       minScore: options.replies?.minScore ?? 0,
       maxReplies: options.replies?.maxReplies ?? 5,
       refreshEndpoint: options.replies?.refreshEndpoint,
+      renderMermaid: options.replies?.renderMermaid ?? true,
       showLikes: options.replies?.showLikes ?? true,
       refreshOnPageLoad: options.replies?.refreshOnPageLoad ?? true,
     },
