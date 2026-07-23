@@ -1058,6 +1058,13 @@ alpha_topology_proof:
     publication_category: { id: 5, name: One Big Beautiful Bill, slug: one-big-beautiful-bill, public: true }
     publication_tags: [discussionbridge, obbba, impact, title-i]
     additional_presentation: one_accessible_link
+    publication_interaction:
+      posts_count: 2
+      highest_post_number: 2
+      last_poster: discourseadmin
+      Astro_primary_topic_remained: 434
+      reachability: accessible_Additional_discussions_link
+      evidence_scope: interaction_and_presentation_only
     source_post_count: 12
     source_first_post_updated_at: 2026-07-01T01:35:12Z
   lane:

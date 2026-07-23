@@ -753,8 +753,15 @@ post_gate_demo:
       category: { id: 5, name: One Big Beautiful Bill, slug: one-big-beautiful-bill, public: true }
       visible: true
       tags: [discussionbridge, obbba, impact, title-i]
+      interaction_addendum:
+        posts_count: 2
+        highest_post_number: 2
+        last_poster: discourseadmin
+        public_JSON_verified: true
     retry: unchanged_no_duplicate
     additional_navigation_links: 1
+    Astro_primary_topic_after_additional_reply: 434
+    interaction_claim: presentation_separation_only_gate_scope_unchanged
     source_writeback: none
   lane:
     docsDir: src/content/docs/title i

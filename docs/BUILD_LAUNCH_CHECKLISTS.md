@@ -206,7 +206,9 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       `forum.citizenactivist.network`.
 - [x] Run target-specific diagnostics and dry-run, build, deploy, and verify
       each live page/topic binding; prove source-target no-writeback and no
-      unintended writes to any other target.
+      unintended writes to any other target. Post-proof interaction also
+      confirmed Citizen Activist topic 9 accepted public post 2 while the Astro
+      page continued to render primary Repeal OBBBA topic 434.
 - [ ] Add one or two clearly labeled Discussion Bridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages as part of the bounded many-to-many proof without claiming a general administration plane.
 - [x] Persist each target's topic ID/URL, source hash, sync state, sanitized
       error, and attempt time independently in target-keyed bindings.

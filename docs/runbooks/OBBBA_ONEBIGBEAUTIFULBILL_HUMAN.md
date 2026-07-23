@@ -412,6 +412,12 @@ visible in public category 5 with the Bridge-created tags. Exact retry returned
 unchanged, so no duplicate was created. Source topic 434 retained 12 posts and
 its first-post update time, proving no source writeback.
 
+Interaction addendum: Citizen Activist topic 9 accepted a live reply as post 2.
+The OBBBA page continued to embed primary Repeal OBBBA topic 434 and exposed the
+independent Citizen Activist conversation through the accessible **Additional
+discussions** link. This is interaction/presentation proof for the already-
+closed bounded gate; its scope is unchanged.
+
 The correct publishing lane is `src/content/docs/title i`, route base `title-i`,
 active target `citizen-activist`. A broad dry-run first exposed the wrong root/
 index and malformed route before any write. Always correct route drift before

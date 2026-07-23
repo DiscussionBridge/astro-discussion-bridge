@@ -607,6 +607,13 @@ the protected vault. The exact clean install reported 10 dependency audit
 findings (1 low, 1 moderate, 8 high); route them for dependency review and do not
 apply an automatic `npm audit fix`.
 
+Post-proof interaction remained correctly separated: Citizen Activist topic 9
+accepted a live reply as post 2, while the Astro page continued embedding
+protected/primary Repeal OBBBA topic 434. Readers could reach the independent
+Citizen Activist conversation through the accessible **Additional discussions**
+link. This is interaction/presentation evidence for the closed bounded gate,
+not a broader topology claim.
+
 The page must distinguish its protected source target from its ordered
 publication/discussion targets. Review each target's forum, topic binding, sync
 and error state, and display policy independently. Keep the imported/managed

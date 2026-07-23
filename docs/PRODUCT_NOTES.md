@@ -64,6 +64,12 @@ Activist topic 9. Target diagnostics, target-specific dry-run, publication,
 unchanged retry, clean build, deployment, live binding checks, and no-writeback
 checks passed.
 
+After closure, Citizen Activist topic 9 accepted a live reply as public post 2.
+The Astro page still embedded protected/primary Repeal OBBBA topic 434, and the
+Citizen Activist thread remained independently reachable through accessible
+Additional discussions navigation. This strengthens interaction/presentation
+evidence only; it does not expand the bounded claim.
+
 This proves the exercised same-page two-forum topology, not a general
 many-to-many administration plane. Credential records remain protected; their
 format cleanup is a vault task, not public documentation. Dependency review is

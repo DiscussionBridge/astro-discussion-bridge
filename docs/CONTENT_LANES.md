@@ -189,6 +189,12 @@ Repeal OBBBA topic 434 and its additional Citizen Activist publication is topic
 index/route preview and was rejected before any write; always review the
 target-specific dry-run before publication.
 
+Interaction addendum: Citizen Activist topic 9 later accepted public post 2.
+The Astro page correctly continued rendering Repeal OBBBA topic 434 as its
+protected primary discussion; the independent Citizen Activist conversation
+remained reachable through **Additional discussions**. This confirms lane and
+presentation separation without broadening the bounded topology claim.
+
 Required matrix:
 
 ```text
