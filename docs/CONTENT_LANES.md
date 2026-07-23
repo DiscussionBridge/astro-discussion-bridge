@@ -374,6 +374,18 @@ Before a live run:
 - confirm `max_tag_length`
 - confirm the bot user can tag topics
 
+Category ownership follows source direction:
+
+- for Astro-managed topics, a configured lane/page category is authoritative
+  and sync corrects manual category drift;
+- when no category is configured, a manual Discourse category change remains;
+- `discourse-managed` and `discourse-imported` source topics are protected from
+  category writeback;
+- each additional publication target has its own independent target category.
+
+Preview the active target and category before each write. Do not infer one
+forum's category from another target.
+
 Use `check-discourse` to verify what the bridge can read:
 
 ```sh

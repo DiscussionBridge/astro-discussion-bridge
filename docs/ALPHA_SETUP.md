@@ -138,7 +138,7 @@ Set credentials in the shell, CI secret store, or hosting provider environment. 
 PowerShell:
 
 ```powershell
-$env:DISCOURSE_API_USERNAME="discussbridge-bot"
+$env:DISCOURSE_POST_AS="discussbridge-bot"
 $env:DISCOURSE_API_KEY="paste-publishing-key-here"
 $env:DISCOURSE_DIAGNOSTICS_API_KEY="paste-diagnostics-key-here"
 ```
@@ -146,12 +146,13 @@ $env:DISCOURSE_DIAGNOSTICS_API_KEY="paste-diagnostics-key-here"
 Shell:
 
 ```sh
-export DISCOURSE_API_USERNAME="discussbridge-bot"
+export DISCOURSE_POST_AS="discussbridge-bot"
 export DISCOURSE_API_KEY="paste-publishing-key-here"
 export DISCOURSE_DIAGNOSTICS_API_KEY="paste-diagnostics-key-here"
 ```
 
 `DISCOURSE_DIAGNOSTICS_API_KEY` is optional. If it is absent, `check-discourse` uses the publishing key.
+`DISCOURSE_API_USERNAME` remains available as a legacy actor fallback.
 
 ## 7. Run Setup Diagnostics
 

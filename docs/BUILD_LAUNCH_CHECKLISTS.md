@@ -77,7 +77,10 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       placement decision in Ops; do not expose protected paths or values.
 
 - [ ] Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
-- [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain.
+- [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: canonical
+      docs URLs are 200, but raw
+      `https://docs-discussionbridge-dev.pages.dev/` still returns 200. Add and
+      verify a 301 to `https://docs.discussionbridge.dev/`.
 - [ ] Create live Discourse Alpha Support category.
 - [ ] Route `alphasupport@discussionbridge.dev` into Discourse.
 - [ ] Confirm final public support links after the live support category and email route exist.
@@ -104,7 +107,10 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Product docs URL decided: use `docs.discussionbridge.dev` with Starlight. Keep `discussionbridge.dev/docs` only as a redirect or fallback if needed.
 - [x] Deploy the Starlight docs site source for `docs.discussionbridge.dev` into the repo under `sites/docs`, generated from repository `docs/*.md`.
 - [ ] Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan before Alpha: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles. Phil/Ops prerequisite.
-- [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain. Phil/Ops prerequisite.
+- [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: canonical
+      docs URLs are live; configure the raw
+      `docs-discussionbridge-dev.pages.dev` hostname to return 301 to the
+      custom domain. Phil/Ops prerequisite.
 - [x] Make `discussionbridge.dev` live in a credible public form before showing Alpha outside the working circle.
 - [x] Add proper attribution, ownership, and licensing notes to docs where appropriate.
 
@@ -375,9 +381,10 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Use logical/workspace path
       `DiscussionBridge/plugins/discourse-discussion-bridge` for the proposed
       plugin; leave physical GitHub repo naming/placement to Boss/folder review.
-- [x] Document the implemented request actor: `DISCOURSE_API_USERNAME`,
-      `--api-username`, or lane `apiUsername`/`apiUsernameEnv` supplies
-      `Api-Username`; no separate `postAs` option exists.
+- [x] Implement and document preferred request actor controls: `--post-as`,
+      `DISCOURSE_POST_AS`, and lane/default `postAs`/`postAsEnv`, with legacy
+      API-username controls as fallbacks and the resolved actor sent as
+      `Api-Username`. Package suite 76/76.
 - [x] Document independent Discourse key User Level and Scope behavior:
       `All Users` may act for supplied `Api-Username`; `Single User` is bound
       to its selected user; Scope controls endpoints separately.
@@ -391,4 +398,13 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       ownership from `discourseadmin`, edit as the selected editor, overwrite
       refresh the Discourse-managed guide, build/deploy/live verify, and prove
       no Astro writeback.
+- [x] Persist Discourse first-post author username/name during import and
+      explicit overwrite refresh; render safe same-forum source-author profile
+      attribution while preserving source mode, no-writeback, and topic ID.
+- [ ] Design an explicit existing-topic owner-transfer operation separately
+      from `postAs` and normal sync; neither may silently change ownership.
+- [x] Document category authority: configured categories are authoritative for
+      Astro-managed topics and sync corrects drift; absent configuration
+      preserves manual placement; Discourse-source categories are protected;
+      target categories are independent.
 - [ ] Design future integration lanes for Statamic and other frameworks.

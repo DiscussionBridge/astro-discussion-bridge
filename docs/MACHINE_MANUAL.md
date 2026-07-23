@@ -45,7 +45,8 @@ environment: dev | staging | live | placeholder
 framework_preset: astro | starlight
 site_url: required absolute HTTPS URL for live use
 discourse_url: required absolute URL
-api_username: required for live writes
+post_as: preferred request actor for live writes
+legacy_api_username: optional compatibility fallback
 publishing_key_location: private reference only; never key value
 diagnostics_key_location: private reference only; never key value
 active_target: optional logical target name
@@ -150,6 +151,7 @@ scopes and secret placeholder, are in `docs/KEY_MANAGEMENT.md`.
 ```text
 DISCOURSE_URL
 SITE_URL
+DISCOURSE_POST_AS
 DISCOURSE_API_USERNAME
 DISCOURSE_API_KEY
 DISCOURSE_DIAGNOSTICS_API_KEY
@@ -176,12 +178,23 @@ Resolution behavior:
 
 ```yaml
 request_actor:
-  implemented_inputs:
+  preferred_inputs:
+    environment: DISCOURSE_POST_AS
+    cli: --post-as
+    publishOnBuild_lane_or_default: [postAs, postAsEnv]
+  legacy_fallbacks:
     environment: DISCOURSE_API_USERNAME
     cli: --api-username
-    publishOnBuild_lane: [apiUsername, apiUsernameEnv]
+    publishOnBuild_lane_or_default: [apiUsername, apiUsernameEnv]
+  precedence:
+    - explicit_or_lane_postAs
+    - named_postAsEnv
+    - DISCOURSE_POST_AS
+    - legacy_apiUsername_controls
   request_header: Api-Username
-  separate_postAs_option: not_implemented
+  live_output: "Post as: USER"
+  diagnostics_output: "Request actor"
+  changes_existing_topic_owner: false
 api_key_authority:
   user_level:
     All_Users: may_act_for_supplied_Api_Username
@@ -1271,6 +1284,26 @@ discussionbridge_dev_dogfood:
       - verify_content_and_source_ownership
       - build_deploy_and_verify_live_markers
       - prove_no_Astro_writeback
+source_author_provenance:
+  import_fields:
+    - discussionSourceAuthorUsername
+    - discussionSourceAuthorName
+  overwrite_refresh: update_from_current_Discourse_first_post_author
+  preserved_on_refresh:
+    - discussionSourceMode
+    - discussionSync_false
+    - discourseTopicId
+  rendered_notice: "Source author: Display Name (@username)"
+  profile_link: same_forum_safe_/u/username
+  unsafe_username_behavior: omit_author_metadata_and_link
+category_contract:
+  astro_managed:
+    configured_category: authoritative_sync_corrects_drift
+    no_configured_category: preserve_manual_Discourse_category
+  discourse_managed_or_imported_source:
+    category_writeback: prohibited
+  multi_target:
+    target_categories: independent
     evidence_record: docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md
     count_boundary:
       apex_generated_public_routes: 5

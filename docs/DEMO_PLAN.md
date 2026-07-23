@@ -130,7 +130,7 @@ Current cleanup pass completed:
 
 ```powershell
 $env:DISCOURSE_URL="https://forum.discussionbridge.dev"
-$env:DISCOURSE_API_USERNAME="discussbridge-bot"
+$env:DISCOURSE_POST_AS="discussbridge-bot"
 $env:DISCOURSE_API_KEY="..."
 node scripts/tag-discourse-topics.mjs --tag historical-reference 20 21 24 28 --dry-run
 node scripts/tag-discourse-topics.mjs --tag historical-reference 20 21 24 28
@@ -141,7 +141,7 @@ node scripts/tag-discourse-topics.mjs --tag historical-reference 20 21 24 28
 - 2026-07-16: Starlight demo published companion topics to the public Discussion Bridge for Astro category.
   - `existing-md-page.md`: https://forum.discussionbridge.dev/t/existing-md-page/20
   - `index.md`: https://forum.discussionbridge.dev/t/discussionbridge-starlight-demo/21
-  - API user: `discussbridge-bot`
+  - Post as / request actor: `discussbridge-bot`
   - Current key scope: global; replace with granular/category-scoped key when available.
 - 2026-07-16: Starlight demo deployed to Cloudflare Pages and verified at https://astrostarlightdemo.discussionbridge.dev/.
   - Homepage returns `200` and links topic 21.

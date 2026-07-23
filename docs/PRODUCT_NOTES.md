@@ -199,10 +199,17 @@ or summary behavior is later scope and requires its own contract.
 
 ### Every Automated Actor Has An Origin
 
-The current Astro-to-Discourse actor is the configured API username, sent as
-`Api-Username`; it is not a separate `postAs` feature. Discourse key User Level
-controls whether a key is bound to one user or may act for a supplied username,
-while key Scope independently controls endpoints.
+The preferred Astro-to-Discourse actor is now configured with `--post-as`,
+`DISCOURSE_POST_AS`, or lane/default `postAs`/`postAsEnv`; legacy API-username
+controls remain fallback-compatible. The resolved actor is sent as
+`Api-Username`. Discourse key User Level controls whether a key is bound to one
+user or may act for a supplied username, while key Scope independently controls
+endpoints.
+
+`postAs` does not silently transfer ownership of an existing topic. Owner
+transfer remains a separate future operation. Imported source-author metadata
+now follows the current Discourse first-post author during explicit overwrite
+refresh and renders only through a safe same-forum profile link.
 
 Many-to-many operation must not create identical or visually ambiguous
 nonhuman identities across forums. Service identities encode role plus origin:
@@ -215,6 +222,12 @@ identity.
 Each forum should use a `special-admin` custom group as the visible inventory
 for nonhuman admin/service accounts. That group is not an authorization
 mechanism and grants no admin status, category permissions, or API rights.
+
+Category intent is source- and target-specific. A configured category is
+authoritative for Astro-managed topics and sync corrects drift. Without a
+configured category, manual Discourse placement remains. Discourse-managed and
+imported source topics are protected from category writeback, while each
+publication target keeps an independent category contract.
 
 Citizen Activist Network supports both directions through separate page/topic
 pairs with explicit ownership. Astro-managed `citizenactivist.network` content

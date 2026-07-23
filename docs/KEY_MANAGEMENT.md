@@ -27,11 +27,16 @@ sent in `Api-Username`. With `Single User`, the key is bound to the selected
 user. Scope separately controls which endpoints/actions are available. See
 [Discourse Meta: Create and configure an API key](https://meta.discourse.org/t/create-and-configure-an-api-key/230124).
 
-Discussion Bridge currently selects the request actor through
-`DISCOURSE_API_USERNAME`, CLI `--api-username`, or a `publishOnBuild` lane's
-`apiUsername`/`apiUsernameEnv`. The client sends that value as Discourse
-`Api-Username`. This is the implemented actor control; there is no separate
-implemented `postAs` option.
+Discussion Bridge now has preferred request-actor controls:
+
+- CLI `--post-as`;
+- environment `DISCOURSE_POST_AS`;
+- `publishOnBuild` lane/default `postAs` or `postAsEnv`.
+
+Legacy `--api-username`, `DISCOURSE_API_USERNAME`, `apiUsername`, and
+`apiUsernameEnv` remain compatible fallbacks. Actor precedence is explicit/lane
+`postAs`, named `postAsEnv`, `DISCOURSE_POST_AS`, then legacy API-username
+controls. The selected actor is sent as Discourse `Api-Username`.
 
 When Discourse supports or confirms granular diagnostics/read scopes for the required endpoints, move to a two-key model:
 
@@ -132,9 +137,13 @@ If a granular key receives `403` for these endpoints, use one of these fallbacks
 Runtime publishing:
 
 ```sh
+DISCOURSE_POST_AS=discussbridge-bot
 DISCOURSE_API_USERNAME=discussbridge-bot
 DISCOURSE_API_KEY=publishing-key
 ```
+
+Prefer `DISCOURSE_POST_AS`. Keep `DISCOURSE_API_USERNAME` only where a current
+installation still relies on the compatibility fallback.
 
 Optional diagnostics:
 
@@ -199,8 +208,11 @@ Operational rule: Use this to validate the minimum permissions needed for normal
 Description
 {site-or-project} publishing granular key
 
-User
-{bot-username}
+Key selected user
+{bot-username when User Level is Single User; not applicable for All Users}
+
+Request actor
+{resolved postAs / Api-Username}
 
 User Level
 {Single User or All Users; if Single User, record the selected user}
@@ -237,8 +249,11 @@ Operational rule: Do not use in CI/build unless explicitly intended
 Description
 {site-or-project} diagnostics key
 
-User
-{admin-bot-username}
+Key selected user
+{admin-bot-username when User Level is Single User; not applicable for All Users}
+
+Request actor
+{resolved postAs / Api-Username used for diagnostics}
 
 User Level
 {Single User or All Users; if Single User, record the selected user}
@@ -288,14 +303,16 @@ For rotation:
 
 ## Delegated Posting Investigation
 
-Do not document a hypothetical `postAs` or `discussionPostAs` field as current
-behavior. Today the configured API username is the request actor. Whether that
-username may differ from the key's selected user depends on the key's **User
-Level**, while endpoint authority depends on **Scope**.
+`postAs` is now the implemented preferred actor selector. It changes the
+`Api-Username` request actor; it does not transfer ownership of an existing
+topic. Whether that actor may differ from the key's selected user depends on the
+key's **User Level**, while endpoint authority depends on **Scope**.
 
 Before a write, record and verify the key User Level, its selected user when
-`Single User`, the configured `Api-Username` actor, the key Scope/granular
-permissions, and the actor's category/tag/staff permissions.
+`Single User`, the resolved `postAs`/`Api-Username` actor, the key
+Scope/granular permissions, and the actor's category/tag/staff permissions.
+Live CLI output should show `Post as: USER`; `check-discourse` reports
+`Request actor`.
 
 ### Nonhuman Identity Inventory
 

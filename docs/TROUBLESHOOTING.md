@@ -38,12 +38,13 @@ Check:
 Symptom:
 
 ```text
-Missing required configuration: DISCOURSE_API_KEY or --api-key, DISCOURSE_API_USERNAME or --api-username
+Missing required configuration: DISCOURSE_API_KEY or --api-key, plus DISCOURSE_POST_AS or --post-as (legacy API-username controls remain fallback-compatible)
 ```
 
 Fix:
 
-- set `DISCOURSE_API_USERNAME`
+- set preferred `DISCOURSE_POST_AS` or `--post-as`
+- use `DISCOURSE_API_USERNAME` / `--api-username` only as a compatibility fallback
 - set `DISCOURSE_API_KEY`
 - run from the same shell session where the variables are set
 - use hosting-provider encrypted environment variables for deployed builds
@@ -51,7 +52,7 @@ Fix:
 PowerShell:
 
 ```powershell
-$env:DISCOURSE_API_USERNAME="discussbridge-bot"
+$env:DISCOURSE_POST_AS="discussbridge-bot"
 $env:DISCOURSE_API_KEY="paste-publishing-key-here"
 ```
 

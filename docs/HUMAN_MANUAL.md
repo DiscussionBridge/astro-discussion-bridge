@@ -84,9 +84,11 @@ imported file by itself is not promotion.
 For each key, choose **User Level** and **Scope** independently. `All Users`
 allows the request to act for the supplied `Api-Username`; `Single User` binds
 the key to its selected user. Scope separately limits endpoints. Discussion
-Bridge supplies the request actor from `DISCOURSE_API_USERNAME`,
-`--api-username`, or lane `apiUsername`/`apiUsernameEnv`, and sends
-`Api-Username`. There is no separate implemented `postAs` option.
+Bridge supplies the preferred request actor from `--post-as`,
+`DISCOURSE_POST_AS`, or lane/default `postAs`/`postAsEnv`. Legacy
+`--api-username`, `DISCOURSE_API_USERNAME`, `apiUsername`, and `apiUsernameEnv`
+remain fallbacks. The resolved actor is sent as `Api-Username`. Live operations
+show `Post as: USER`; `check-discourse` shows `Request actor`.
 
 When creating either key, show its complete purpose block with the setup
 instructions and copy that block into the respective protected credential file
@@ -99,6 +101,8 @@ Purpose: Runtime publishing granular key
 Use: publish-new, sync-existing, publish-and-sync, check-discourse basic limits
 Bot user role: Admin currently; intended future runtime posture is non-admin or least-privilege
 Key user level: Record All Users or Single User; prefer Single User for a fixed runtime actor
+Key selected user: Record when User Level is Single User
+Request actor: Record resolved postAs / Api-Username
 Key scope: Granular
 Operational rule: Use this to validate the minimum permissions needed for normal bridge publishing.
 ```
@@ -110,6 +114,8 @@ Purpose: Diagnostics/setup key
 Use: check-discourse only
 Bot user role: Admin
 Key user level: Record All Users or Single User and the selected user/actor relationship
+Key selected user: Record when User Level is Single User
+Request actor: Record resolved postAs / Api-Username used for diagnostics
 Key scope: Global or admin-read capable
 Operational rule: Do not use in CI/build unless explicitly intended
 ```
@@ -204,6 +210,7 @@ secret store:
 ```text
 DISCOURSE_URL
 SITE_URL
+DISCOURSE_POST_AS
 DISCOURSE_API_USERNAME
 DISCOURSE_API_KEY
 DISCOURSE_DIAGNOSTICS_API_KEY
@@ -212,6 +219,10 @@ DISCOURSE_DIAGNOSTICS_API_KEY
 `DISCOURSE_DIAGNOSTICS_API_KEY` is optional. When absent,
 `check-discourse` falls back to the publishing key and may report metadata as
 unavailable rather than failing.
+
+Prefer `DISCOURSE_POST_AS`; retain `DISCOURSE_API_USERNAME` only for backward
+compatibility. `postAs` selects the request actor but does not silently change
+ownership of an existing topic.
 
 You should be able to run a command without printing any key value.
 
@@ -706,6 +717,13 @@ Discussion Bridge Forum editor, edit the wiki while signed in as that editor,
 re-import/refresh the `discourse-managed` guide with overwrite, then verify
 content and source ownership, build/deploy/live markers, and no Astro
 writeback. Actor configuration alone does not complete this test.
+
+Imported pages may now show `Source author: Display Name (@username)` when
+Discourse exposes safe author data. The username links only to the same forum's
+safe `/u/username` profile. Unsafe usernames are omitted rather than linked.
+An explicit overwrite refresh updates `discussionSourceAuthorUsername` and
+`discussionSourceAuthorName` while preserving source mode,
+`discussionSync: false`, and topic ID.
 
 ### Alpha Topology Proof
 

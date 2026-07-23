@@ -27,7 +27,8 @@ site:
     - "{companion topic URL after creation/linking}"
 
 credentials:
-  api_username: "{bot username; not secret}"
+  post_as: "{preferred request actor username; not secret}"
+  legacy_api_username: "{compatibility fallback, if still used; not secret}"
   publishing_key_reference: "{private vault reference; never value}"
   diagnostics_key_reference: "{private vault reference; never value}"
 
@@ -57,7 +58,8 @@ mode, category, managing-page rule, or recovery owner is unknown.
 Publishing key environment:
 
 ```text
-DISCOURSE_API_USERNAME={bot username}
+DISCOURSE_POST_AS={request actor username}
+# Legacy fallback only: DISCOURSE_API_USERNAME={bot username}
 DISCOURSE_API_KEY={secret value supplied privately at runtime}
 ```
 
@@ -146,7 +148,8 @@ For every file in the command directory:
 ```text
 DISCOURSE_URL={https://forum.example.com}
 SITE_URL={https://site.example.com}
-DISCOURSE_API_USERNAME={bot username}
+DISCOURSE_POST_AS={request actor username}
+# Legacy fallback only: DISCOURSE_API_USERNAME={bot username}
 DISCOURSE_API_KEY={private runtime secret}
 DISCOURSE_DIAGNOSTICS_API_KEY={private runtime secret; setup only}
 DISCOURSE_CATEGORY_ID={integer}
