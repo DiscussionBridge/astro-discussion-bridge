@@ -14,6 +14,7 @@ The separate DiscussionBridge.dev two-direction dogfood gate is now complete at
 apex commit `d68ffc4`: Astro-managed blog topic `37` and Discourse-managed wiki
 topic `36` were independently verified live. This evidence does not change or
 close any remaining OBBBA-specific gate.
+[Sanitized dogfood verification record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md).
 
 This runbook covers the first real OBBBA Discussion Bridge lane:
 

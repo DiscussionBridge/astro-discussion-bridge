@@ -435,8 +435,11 @@ guides without hand-authored `description`/`pubDate`, and the Astro 7 engine
 contract is Node `>=22.12.0`.
 
 Apex commit `d68ffc4` completed the bounded two-direction dogfood proof with
-Code Boss PASS, a clean detached install/build producing five routes, push, and
-live Cloudflare deployment on 2026-07-23. The Astro-managed blog route binds
+Code Boss PASS, a clean detached install/build producing five actual public
+apex routes, push, and live Cloudflare deployment on 2026-07-23. That apex
+route count is separate from the Product Boss readable-docs render of 20
+synchronized documentation sources and 21 generated HTML pages. The
+Astro-managed blog route binds
 independent public topic `37`. The Discourse-managed guide discloses and renders
 wiki topic `36` as its primary fullInteractive discussion. A deliberate guide
 sync dry run skipped for no-writeback, and the raw Pages hostname redirects to
@@ -446,6 +449,8 @@ The claim is limited to these two separate single-writer connections; it does
 not merge reply streams or prove general forum-to-forum orchestration. One high
 npm audit finding and the Mermaid >500 kB chunk warning remain recorded; no
 automatic audit fix was run.
+[Sanitized verification evidence](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md)
+preserves the live facts that are not contained in the apex source commit.
 
 ### After Alpha
 

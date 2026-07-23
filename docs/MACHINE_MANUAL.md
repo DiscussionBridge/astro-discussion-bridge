@@ -1219,6 +1219,11 @@ discussionbridge_dev_dogfood:
       sync_existing_dry_run: skipped_discourse_managed_no_writeback
     npm_audit: { high: 1, automatic_fix: prohibited_not_run }
     known_warning: Mermaid_chunk_over_500k
+    evidence_record: docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md
+    count_boundary:
+      apex_generated_public_routes: 5
+      docs_synced_sources: 20
+      docs_generated_html_pages: 21
   direction_1:
     source: discussionbridge.dev_Astro_managed_blog
     destination: forum.discussionbridge.dev_public_companion_topic

@@ -29,6 +29,8 @@ the guide route `/guides/how-to-choose-a-discussion-bridge-source-mode/`
 discloses and renders wiki source topic `36` as its primary fullInteractive
 discussion. A deliberate guide sync dry run skipped under the
 `discourse-managed` no-writeback rule.
+[Sanitized live evidence](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md)
+records the HTTP, topic metadata, redirect, build, and known-notice checks.
 
 One Astro or Starlight site may publish several kinds of content:
 

@@ -633,7 +633,26 @@ durable knowledge. The site publishes what the community learns.”
 
 Implementation and Code Boss review are complete at `1731547` with 72/72 tests.
 Apex adoption commit `d68ffc4` also received Code Boss PASS, passed a clean
-detached install/build with five routes, and was deployed on 2026-07-23.
+detached install/build that generated five actual public apex routes, and was
+deployed on 2026-07-23. This is distinct from the readable product-docs build,
+which synchronized 20 documentation sources and generated 21 HTML pages in this
+documentation pass.
+
+<figure>
+<pre role="img" aria-label="Two separate Discussion Bridge connections. An Astro-managed blog publishes to forum topic 37. Forum wiki topic 36 publishes to an Astro guide. Their reply streams remain separate.">
+Astro-managed blog ──publishes──▶ Forum topic 37
+
+Forum wiki topic 36 ──publishes──▶ Discourse-managed Astro guide
+
+             Reply streams remain separate
+</pre>
+<figcaption>DiscussionBridge.dev two-direction dogfood topology.</figcaption>
+</figure>
+
+Visuals derived from this diagram must use alt text that names both directions
+and says the reply streams remain separate. Do not include admin screens,
+credentials, tokens, account identifiers, or protected storage in screenshots
+or video.
 
 Live verification shows:
 
@@ -650,6 +669,9 @@ This closes the bounded two-direction dogfood gate. It does not claim merged
 reply streams or general forum-to-forum orchestration. The clean install still
 reported one high-severity npm audit finding, and the Mermaid chunk remains
 larger than 500 kB; neither was hidden or changed with an automatic audit fix.
+See the
+[sanitized verification record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md)
+for the live markers and claim boundary.
 
 ### Alpha Topology Proof
 

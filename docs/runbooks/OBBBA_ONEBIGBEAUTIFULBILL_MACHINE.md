@@ -20,6 +20,7 @@ alpha_feature_lock:
     astro_managed_blog_topic: 37
     discourse_managed_guide_topic: 36
     OBBBA_gate_effect: none
+    evidence_record: docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md
 source_mode_import_update:
   implementation: 1731547
   tests: 72/72

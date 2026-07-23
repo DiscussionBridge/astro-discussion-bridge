@@ -43,7 +43,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       Discourse-managed frontmatter and deterministic destination preview.
 - [x] Complete the credentialed import, exact clean Astro build/deploy, and
       canonical live guide/source/discussion verification in apex commit
-      `d68ffc4` (Code Boss PASS), deployed 2026-07-23.
+      `d68ffc4` (Code Boss PASS), deployed 2026-07-23. See the
+      [sanitized dogfood evidence record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md).
 - [x] Publish an Astro-managed `discussionbridge.dev` blog post to a public
       companion discussion on `forum.discussionbridge.dev`; verify the page,
       topic, declared connection purpose, comments presentation, and
