@@ -554,6 +554,12 @@ edit-pending Code Boss review blocks Product Boss approval.
 
 ### Alpha/Beta Scope Strategy
 
+The cumulative Alpha feature/function set is locked in the product checklist.
+After the lock, work belongs in Alpha only when it closes an existing promise or
+gate, fixes exercised behavior, or is approved explicitly as a scope change.
+Unchecked Alpha gates still need to be finished; the lock does not mark them
+complete.
+
 Alpha should honestly represent the major capabilities in its declared product
 promise and be nearly feature-complete for that promise. Beta should primarily
 refine real-user experience, compatibility, reliability, performance,
@@ -584,6 +590,40 @@ Alpha scope is cumulative. Plugin and multi-target work add to every previously
 accepted Alpha gate; they do not rewrite or shorten the promise. Use the existing
 dashboard and build/launch checklists as the complete source of truth, and remove
 an item only when Phil explicitly directs that change.
+
+All three Alpha software tracks remain free/open source unless explicitly
+changed later: the Astro package, the optional light Discourse plugin, and
+public docs/community support. Paid offerings are implementation help,
+handholding, managed hosting/operations, customization, support, and
+consulting. Third-party hosting and infrastructure remain operator-paid.
+
+### DiscussionBridge.dev Dogfood Proof
+
+Alpha must demonstrate the product loop in both directions without creating a
+two-writer loop:
+
+1. Publish an Astro-managed `discussionbridge.dev` blog post to a public
+   companion discussion on `forum.discussionbridge.dev`.
+2. Republish a reviewed community wiki/how-to from
+   `forum.discussionbridge.dev` as a durable guide on
+   `discussionbridge.dev`.
+
+For the wiki lane, use `discourse-managed` plus `discussionSync: false`, show
+source provenance near the article start, preserve the source topic as the
+primary discussion, and define the output route and Astro navigation lane
+explicitly. Refresh deterministically from the wiki topic. Editors change the
+wiki in Discourse; the site republishes the reviewed source. Do not imply that
+replies from separate topics are merged.
+
+> **You should see:** a public guide with a clear source link, an explicit
+> primary discussion, and predictable navigation placement.
+
+> **Stop if:** the site is able to write back to the wiki source, the source
+> topic changes unexpectedly, the destination route drifts, or comments
+> presentation silently selects or merges discussions.
+
+The public outcome is: “The site starts conversations. The community develops
+durable knowledge. The site publishes what the community learns.”
 
 ### Alpha Topology Proof
 

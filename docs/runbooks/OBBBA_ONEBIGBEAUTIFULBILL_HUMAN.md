@@ -5,6 +5,11 @@ Environment: current live proof lane plus local canonical source
 Last verified from workspace facts: 2026-07-21  
 Companion: [OBBBA Machine Runbook](./OBBBA_ONEBIGBEAUTIFULBILL_MACHINE.md)
 
+> **Alpha feature lock:** This runbook remains part of the cumulative locked
+> Alpha proof set. New OBBBA work must close an existing gate, fix exercised
+> behavior, or be approved explicitly as a scope change. The separate
+> DiscussionBridge.dev dogfood gate does not replace an OBBBA gate.
+
 This runbook covers the first real OBBBA Discussion Bridge lane:
 
 - public site: `https://onebigbeautifulbill.us`

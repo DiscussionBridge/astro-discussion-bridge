@@ -8,6 +8,9 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 ### Release-Scope Doctrine
 
+- [x] Lock the cumulative Alpha feature/function set recorded by this checklist.
+      After this lock, new work must close an existing promise or gate, fix
+      exercised behavior, or receive explicit approval as a scope change.
 - [x] Treat this dashboard/checklist as the cumulative Alpha scope source of
       truth; new plugin or multi-target gates do not displace prior accepted
       items, and items remain until Phil explicitly removes them.
@@ -20,6 +23,33 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       when they are not part of the declared product promise.
 - [x] Allow Beta feedback to reveal genuinely missing capability without using
       planned feature deferral as the default Beta strategy.
+- [x] Keep all three Alpha software tracks free/open source unless a later
+      explicit decision changes that: the Astro API/package, the optional light
+      Discourse plugin, and public docs/community support. Paid value is
+      implementation labor, handholding, managed hosting/operations,
+      customization, support, and consulting; third-party infrastructure
+      remains operator-paid.
+
+### DiscussionBridge.dev Two-Direction Dogfood Gate
+
+- [ ] Publish an Astro-managed `discussionbridge.dev` blog post to a public
+      companion discussion on `forum.discussionbridge.dev`; verify the page,
+      topic, declared connection purpose, comments presentation, and
+      site-to-forum single-writer direction.
+- [ ] Select a community wiki/how-to on `forum.discussionbridge.dev` and
+      deterministically import/refresh it as a durable public guide on
+      `discussionbridge.dev`.
+- [ ] For the wiki lane, prove `discussionSourceMode: discourse-managed`,
+      `discussionSync: false`, explicit source provenance, preserved source
+      topic identity, deterministic output, public route, and Astro navigation
+      lane.
+- [ ] Keep the source forum topic as the primary discussion; make comments
+      behavior explicit and verify that edits originate in the wiki topic while
+      the site republishes reviewed source without site-to-source writeback.
+- [ ] State clearly that separate topic reply streams are not merged.
+- [ ] Use the public outcome: “The site starts conversations. The community
+      develops durable knowledge. The site publishes what the community
+      learns.”
 
 ### Brutal Current Split
 

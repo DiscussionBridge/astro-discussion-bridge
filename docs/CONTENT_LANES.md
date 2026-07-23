@@ -7,6 +7,21 @@ gates pass; they are not the primary public distribution story.
 
 A content lane maps a group of Astro content to Discourse behavior.
 
+## Two-Direction Dogfood Lanes
+
+The Alpha dogfood proof uses two separate single-writer lanes:
+
+- `discussionbridge.dev` Astro-managed blog -> public companion topic on
+  `forum.discussionbridge.dev`;
+- `forum.discussionbridge.dev` community wiki/how-to -> a durable public guide
+  and Astro navigation lane on `discussionbridge.dev`.
+
+The wiki lane is `discourse-managed` with `discussionSync: false`. It preserves
+source provenance and topic identity, imports or refreshes deterministically,
+and keeps the source topic as its primary discussion. Wiki edits happen in
+Discourse; the site republishes reviewed source. These lanes do not merge reply
+streams.
+
 One Astro or Starlight site may publish several kinds of content:
 
 - docs

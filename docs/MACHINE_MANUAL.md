@@ -1150,6 +1150,42 @@ release_channel:
     repo_tarball: development_recovery_fallback
   Discourse_plugin:
     npm_distribution_decision_applies: false
+alpha_feature_lock:
+  status: locked
+  cumulative_scope_source: docs/BUILD_LAUNCH_CHECKLISTS.md
+  allowed_new_work:
+    - close_existing_promise_or_gate
+    - fix_exercised_behavior
+    - explicitly_approved_scope_change
+  software_tracks:
+    astro_package: free_open_source
+    optional_light_discourse_plugin: free_open_source
+    public_docs_and_community_support: free_open_source
+  paid_value:
+    - implementation_help
+    - handholding
+    - managed_hosting_and_operations
+    - customization
+    - support
+    - consulting
+  third_party_infrastructure: operator_paid
+discussionbridge_dev_dogfood:
+  direction_1:
+    source: discussionbridge.dev_Astro_managed_blog
+    destination: forum.discussionbridge.dev_public_companion_topic
+    writer: Astro
+  direction_2:
+    source: forum.discussionbridge.dev_community_wiki
+    destination: discussionbridge.dev_durable_public_guide
+    source_mode: discourse-managed
+    discussionSync: false
+    source_provenance: required
+    refresh: deterministic_reviewed_source
+    destination_contract: explicit_public_route_and_Astro_navigation_lane
+    primary_discussion: source_forum_topic
+    writer: Discourse_wiki
+  reply_streams: independent_never_merged
+  public_outcome: The site starts conversations. The community develops durable knowledge. The site publishes what the community learns.
 support:
   formal_work: GitHub Issues
   setup_and_field_reports: Discourse Alpha Support category

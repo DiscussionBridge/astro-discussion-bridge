@@ -356,6 +356,15 @@ writes and performed no live deployment.
 
 ## Alpha And Beta Product Doctrine
 
+### Alpha Feature Lock
+
+The cumulative Alpha feature/function set in the build/launch checklist is now
+locked. New work after the lock must close a recorded promise or release gate,
+fix behavior exercised by implementation or users, or be approved explicitly as
+a scope change. Remaining unchecked work is the proof, operations,
+documentation, compatibility, and release work required to finish the locked
+promise.
+
 Alpha should be nearly feature-complete for the product promise it declares.
 Major capabilities already known to be central belong in Alpha scope or must be
 removed from that promise; planned deferral of known product pillars is not the
@@ -383,6 +392,42 @@ Alpha scope is cumulative. The plugin and same-page multi-target gates add to,
 and do not replace, any previously accepted Alpha gate. The existing dashboard
 and build/launch checklists are the source of truth for the complete scope;
 items remain active unless Phil explicitly removes them.
+
+All three Alpha software tracks remain free/open source unless a later explicit
+decision changes that: `astro-discussion-bridge`, the optional light
+`Discussion Bridge for Discourse` plugin, and public docs/community support.
+Paid value is implementation help, handholding, managed hosting and operations,
+customization, support, and consulting. Operators remain responsible for
+third-party infrastructure costs.
+
+### DiscussionBridge.dev Dogfood Loop
+
+Alpha must prove both directions as separate, single-writer connections:
+
+1. An Astro-managed `discussionbridge.dev` blog post publishes a public
+   companion discussion to `forum.discussionbridge.dev`.
+2. A community wiki/how-to on `forum.discussionbridge.dev` is republished as a
+   durable public guide on `discussionbridge.dev`.
+
+The wiki lane is `discourse-managed`, uses `discussionSync: false`, discloses
+its source, refreshes deterministically, and has an explicit public route and
+Astro navigation lane. Its source forum topic remains the primary discussion.
+Edits originate in the wiki topic; the site republishes reviewed source.
+Comments presentation is explicit, and independent reply streams are never
+described or presented as merged.
+
+The reader-facing outcome is: “The site starts conversations. The community
+develops durable knowledge. The site publishes what the community learns.”
+
+### After Alpha
+
+Beta primarily refines exercised usability, compatibility, reliability,
+performance, packaging, installation, recovery, support, documentation, and
+presentation. The optional plugin v0.1 remains intentionally light and may be
+revisited as locked gates close and user feedback arrives. The full control
+plane, broad forum-to-forum orchestration, post-as-user, PM automation, and
+general many-to-many administration remain excluded later work unless
+separately approved. Tier 1 remains fully useful without the plugin.
 
 The current logical/workspace home for that optional plugin is
 `DiscussionBridge/plugins/discourse-discussion-bridge`. The `plugins` directory

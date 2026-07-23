@@ -6,6 +6,16 @@ Companion: [OBBBA Human Runbook](./OBBBA_ONEBIGBEAUTIFULBILL_HUMAN.md)
 
 No secret values belong in this file.
 
+```yaml
+alpha_feature_lock:
+  cumulative_OBBBA_gates_preserved: true
+  allowed_new_work:
+    - close_existing_gate
+    - fix_exercised_behavior
+    - explicitly_approved_scope_change
+  discussionbridge_dev_dogfood_gate: separate_not_a_replacement
+```
+
 ## 1. Resolved System Inputs
 
 ```yaml
