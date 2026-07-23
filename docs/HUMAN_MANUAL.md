@@ -851,6 +851,36 @@ GitHub/npm commit correspondence, dist-tag verification, consumer install, and
 rollback/deprecation procedure. Published npm versions are immutable. Never run
 an automatic `npm audit fix` as part of release preparation.
 
+### Attribution And Licensing Gate
+
+Run the full package suite against the exact built release candidate. Its 73/73
+result includes the automated full attribution gate, covering root/package MIT
+parity and holder, package metadata, production dependency licenses against the
+explicit allowlist or reviewed override evidence, required npm package
+contents, README/non-affiliation and rendered links, tracked-media provenance,
+and protected-path scanning.
+
+The readable docs build runs a narrower gate. You should see:
+
+```text
+Attribution and licensing gate: PASS (docs scope)
+npm package contents: SKIPPED (requires built release candidate)
+```
+
+The docs total—20 synchronized sources and 21 HTML pages—means synchronization,
+rendering, and this bounded docs-scope check passed. It does not verify the
+release tarball and does not replace the full gate inside 73/73.
+
+> **Stop if:** either gate fails, the results are conflated, generated
+> attribution output was not regenerated on a fresh checkout, or a
+> protected/private path appears.
+
+Automation cannot decide whether attribution is adequate or whether copied,
+adapted, branded, or sourced material is appropriate. Before release, Manual
+Boss must record `Attribution and Licensing: PASS / FAIL / N/A`, list the paths
+reviewed, and create a sanitized review record tied to the exact release
+commit. No Manual Boss PASS has been recorded yet.
+
 The intended support split is:
 
 - GitHub Issues for confirmed bugs, reproducible failures, docs gaps, and

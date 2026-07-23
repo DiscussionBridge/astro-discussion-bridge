@@ -39,6 +39,25 @@ dependencies, installation, docs, and support problems before stable. Beta
 continues on a deliberately selected prerelease tag rather than being the first
 npm publication.
 
+### Attribution And Licensing Release Contract
+
+The automated attribution gate is now part of the package suite (73/73, Code
+Boss final PASS). It checks objective license parity/holder, metadata,
+production dependency licenses with explicit allowlist or reviewed override
+evidence, required packed contents, README/non-affiliation and rendered links,
+tracked-media provenance, and protected paths. Khroma 2.1.0 has durable reviewed
+MIT evidence.
+
+The docs build runs a bounded `--docs-scope` gate before rendering and reports
+`PASS (docs scope)` while explicitly skipping npm package contents because they
+require the built release candidate. Its 20/21 result is therefore not the full
+73/73 package gate.
+
+Both automated gates remain distinct from Manual Boss semantic judgment.
+Release requires an exact `Attribution and Licensing: PASS / FAIL / N/A`,
+reviewed paths, and a sanitized record tied to the release commit. That Manual
+Boss result is not yet PASS.
+
 ## Product Frame
 
 Discussion Bridge shows a path from static publishing to living community infrastructure.

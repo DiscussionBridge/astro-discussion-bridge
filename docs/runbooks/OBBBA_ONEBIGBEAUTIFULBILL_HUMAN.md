@@ -16,6 +16,12 @@ topic `36` were independently verified live. This evidence does not change or
 close any remaining OBBBA-specific gate.
 [Sanitized dogfood verification record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md).
 
+For release reuse, distinguish the full automated attribution gate inside
+package 73/73 from the bounded docs-scope gate inside the 20-source/21-page
+docs build. Neither records Manual Boss semantic approval. The exact release
+still needs `Attribution and Licensing: PASS / FAIL / N/A`, reviewed paths, and
+a sanitized review record.
+
 This runbook covers the first real OBBBA Discussion Bridge lane:
 
 Current package import behavior also supports explicit `--source-mode

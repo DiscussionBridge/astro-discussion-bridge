@@ -7,6 +7,12 @@ gates pass; they are not the primary public distribution story.
 
 A content lane maps a group of Astro content to Discourse behavior.
 
+Attribution travels with lane content. The automated gate checks objective
+license/provenance inventory and protected-path conditions, but a release still
+requires Manual Boss semantic review of source rights, adapted material,
+trademark/affiliation wording, and public/private boundaries. A package 73/73
+or docs 20/21 count is not that human approval.
+
 ## Two-Direction Dogfood Lanes
 
 The Alpha dogfood proof uses two separate single-writer lanes:

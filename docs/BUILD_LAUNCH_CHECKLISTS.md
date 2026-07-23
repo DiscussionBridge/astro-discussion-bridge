@@ -186,6 +186,19 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Finalize support and feedback guide with Alpha channel model.
 - [ ] Update public support links after the Alpha Support category and email route are live.
 - [x] Complete one-time Alpha attribution/ownership/licensing pass across public docs.
+- [x] Implement the automated full attribution/licensing gate in
+      `scripts/check-attribution.mjs`, backed by
+      `docs/THIRD_PARTY_PROVENANCE.json` and reviewed khroma 2.1.0 MIT
+      evidence. Package regression proves a fresh checkout regenerates the
+      rendered attribution source before checking it; Code Boss final PASS,
+      package suite 73/73.
+- [x] Run the bounded docs-scope attribution gate before the readable docs
+      build. Require the exact distinctions `PASS (docs scope)` and
+      `npm package contents: SKIPPED (requires built release candidate)`.
+- [ ] Obtain Manual Boss semantic attribution/licensing review for the exact
+      Alpha release. Record `Attribution and Licensing: PASS / FAIL / N/A`,
+      reviewed paths, and a sanitized exact-release review record. Automated
+      73/73 and docs 20/21 results do not satisfy this item.
 
 ## Alpha Demo Checklist
 
@@ -236,6 +249,9 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Prove credentials, fixtures, local paths, and unintended files are absent.
 - [ ] Record Code Boss PASS and Manual Boss installation/docs review for the
       exact package candidate.
+- [ ] Retain the exact candidate's full automated attribution result from
+      73/73 and its separate Manual Boss semantic
+      `Attribution and Licensing: PASS / FAIL / N/A` review record.
 - [ ] Prove GitHub prerelease and npm artifact correspond to the same commit.
 - [ ] Verify `npm view`, dist-tags, and a clean consumer install by `@alpha`.
 - [ ] Document rollback, deprecation, and yank response; npm versions are

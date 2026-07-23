@@ -30,6 +30,16 @@ source_mode_import_update:
   manifest_field: sourceMode
   discussionSync: false
   OBBBA_policy_change: none
+attribution_gate_reuse:
+  full_package_gate: included_in_73_of_73
+  docs_scope_gate: included_in_20_sources_21_HTML_pages
+  docs_scope_package_contents: SKIPPED_requires_built_release_candidate
+  results_interchangeable: false
+  manual_boss_semantic_result:
+    format: "Attribution and Licensing: PASS / FAIL / N/A"
+    current: not_yet_passed
+    reviewed_paths: required
+    sanitized_exact_release_record: required
 ```
 
 ## 1. Resolved System Inputs

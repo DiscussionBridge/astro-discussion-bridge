@@ -1245,6 +1245,38 @@ support:
   setup_and_field_reports: Discourse Alpha Support category
   email_intake: alphasupport@discussionbridge.dev -> Discourse
   private_help: paid implementation/migration
+attribution_and_licensing:
+  implementation:
+    script: scripts/check-attribution.mjs
+    inventory: docs/THIRD_PARTY_PROVENANCE.json
+    reviewed_override_evidence: docs/third-party-licenses/khroma-2.1.0-MIT.txt
+    fresh_checkout_sync:
+      executable: process.execPath
+      shell: false
+      regression: passed
+  full_package_gate:
+    command: npm run check:attribution
+    included_in_package_suite: 73/73
+    status: PASS
+    checks:
+      - root_package_MIT_parity_and_holder
+      - package_license_metadata
+      - production_lock_dependency_license_allowlist_or_reviewed_override
+      - npm_pack_required_contents
+      - README_non_affiliation_and_rendered_links
+      - tracked_media_provenance
+      - protected_path_scan
+  docs_scope_gate:
+    command: npm run check:attribution --docs-scope
+    required_status: PASS (docs scope)
+    npm_package_contents: SKIPPED (requires built release candidate)
+    docs_result: 20_synced_sources_21_HTML_pages
+  reporting_invariant: package_73_of_73_and_docs_20_of_21_are_not_interchangeable
+  manual_boss:
+    required_result: "Attribution and Licensing: PASS / FAIL / N/A"
+    reviewed_paths: required
+    sanitized_exact_release_record: required
+    current_status: not_yet_passed
 release_prerequisites:
   - npm package name, ownership, and publisher authority confirmed
   - npm account 2FA or trusted publishing confirmed
