@@ -762,6 +762,29 @@ post_gate_demo:
     additional_navigation_links: 1
     Astro_primary_topic_after_additional_reply: 434
     interaction_claim: presentation_separation_only_gate_scope_unchanged
+  content_correction:
+    commit: 4fffe5e
+    change: removed_stray_flowchart_editing_instruction_only
+    Mermaid_source_preserved: true
+    active_target: citizen-activist
+    target_topic_updated: 9
+    source_topic_434_changed: false
+    topic_9_posts_count: 2
+    target_specific_dry_run: PASS
+    live_sync: PASS
+    clean_detached_build: PASS
+    worker_version: 344dfe40-8b71-4ff4-aea2-bc831af9c51d
+    canonical_live_HTTP: 200
+    Astro_Mermaid_rendered: true
+    primary_and_additional_presentation_preserved: true
+  connection_job:
+    public_lead: Every connection has a job
+    explicit_human_role: required_product_behavior_not_yet_implemented
+    label_and_CTA_match_role: required
+    independent_replies_merged: false
+    bidirectional_CAN_requires_separate_pairs: true
+    same_item_dual_write: prohibited
+    configuration_vocabulary: pending_design_review
     source_writeback: none
   lane:
     docsDir: src/content/docs/title i

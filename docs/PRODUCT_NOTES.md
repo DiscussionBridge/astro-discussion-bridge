@@ -125,6 +125,76 @@ The `forum.` hostname is deliberately literal and operationally clear; community
 meaning belongs in the forum identity and copy. Cloudflare/account ownership
 placement remains an Ops decision.
 
+### Every connection has a job
+
+Discussion Bridge does not pour every conversation into one shared comment
+stream. It connects each page to the right community for a declared reason.
+Every connection tells people who the conversation is for, what they can do
+there, and where the durable source lives. Each community keeps its own members,
+moderation, permissions, history, and context.
+
+Target labels alone are insufficient. The Citizen Activist additional-target
+reply felt odd because the interface named a destination without explaining why
+that connection mattered. Reader-facing language should instead say things like:
+
+- **Discuss with the Citizen Activist Community** — Public advocacy discussion.
+  Replies remain in the CAN Community.
+- **Review with the policy team** — Private internal review for staff and
+  subject-matter experts.
+- **Discuss with your state chapter** — Local implementation and impact
+  discussion.
+- **View the source wiki** — This guide is maintained by the community in
+  Discourse.
+
+Independent replies remain independent; the bridge must not silently merge
+them. Primary versus additional presentation stays explicit. Relay, promotion,
+or summary behavior is later scope and requires its own contract.
+
+Citizen Activist Network supports both directions through separate page/topic
+pairs with explicit ownership. Astro-managed `citizenactivist.network` content
+may publish companion topics to `forum.citizenactivist.network`; selected forum
+topics may become Discourse-managed or imported Astro pages. Never make the same
+item writable in both directions at once. That single-writer rule prevents
+publication loops.
+
+The public promise is: **Publish from the site. Learn in the community. Turn
+what the community knows into durable pages.** One site and one community can
+work in both directions: an Astro apex blog post can start discussion on the CAN
+forum, while a community-authored Discourse wiki/how-to can become a durable
+page on the apex site without losing its forum source or history.
+
+Candidate implementation vocabulary—pending design review, not final or
+implemented—is `role`/`purpose`, `audience`, `callToAction`, `description`, a
+visibility/context note, direction/source ownership, and presentation as
+embedded primary versus linked additional. Candidate roles include
+`primary-community`, `public-community`, `chapter`, `internal-review`,
+`expert-feedback`, `source-wiki`, and `syndication`.
+
+### Local ownership. National reach.
+
+A governed chapter-to-national connection is a strong future use case. A local
+chapter can promote selected work from a designated category on its own forum
+into a mapped national category, remaining visibly credited and linked to the
+place where the work began. Local coordination replies and national learning/
+amplification replies remain separate because they have different jobs.
+
+The reverse direction is also useful: national campaign guidance can distribute
+to selected chapter forums for local discussion and adaptation. This is a
+governed hub-and-spoke/federated pattern, not silent post duplication. Public
+language can say **Discuss with the local chapter**, **Join the national
+discussion**, **See how other chapters are responding**, or **Share this chapter
+report with the national community**.
+
+Future design must carry source forum/topic and chapter identity, parent/child
+relationship, mapped categories, required region/chapter tags, automatic versus
+moderator-approved promotion, public/private eligibility, attribution/return
+link, target-specific title/CTA/description, one-way first-post sync,
+independent replies, target-specific recovery/idempotency, and moderation
+ownership at both levels. Optional posting as chapter identity is later scope.
+Current Discussion Bridge does not claim full forum-to-forum orchestration.
+These governance mappings and approvals belong in future optional plugin/control-
+plane design; they must not become a Tier 1 plugin dependency.
+
 ## CDN-Backed Discourse Field Proof
 
 `forum.repealobbba.org` is served through Cloudflare CDN. The completed OBBBA
@@ -228,6 +298,13 @@ map, and passed clean build plus live verification on Worker version
 `cde279d5-1c27-452c-964f-59d8dfd7c320`.
 
 ## Comments Rendering Ownership
+
+For active Alpha consideration on CAN, use the existing Discourse Mermaid theme
+component as the immediate baseline for normal topics, and start a bounded
+optional `Discussion Bridge for Discourse` slice for Mermaid inside full-app
+embeds, table presentation parity, embed-context detection, and tests. This is a
+proposal pending design/review; it is not completed. Tier 1 remains API-only and
+must not require the plugin.
 
 The live OBBBA outer Astro page renders its Mermaid SVG and five HTML tables.
 The cooked Discourse HTML for topic `434` still contains `code.lang-mermaid`

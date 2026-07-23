@@ -216,6 +216,25 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       explicit primary discussion and accessible additional-target links.
 - [x] Define primary rendered discussion versus additional linked
       targets; never silently choose one target.
+- [ ] Implement “Every connection has a job”: ensure every connection declares
+      its audience/purpose and its visible label/call to action communicates the role (public community,
+      chapter/regional, internal review, subject-matter feedback, advocacy
+      coordination, syndication, or another approved purpose). Never silently
+      merge independent reply streams.
+- [ ] Review and finalize configuration vocabulary corresponding to the reader
+      model—candidate `role`/`purpose`, `audience`, `callToAction`, `description`,
+      visibility/context, direction/source ownership, and primary/additional
+      presentation. Do not mark this implemented until design and tests pass.
+- [ ] Prove CAN bidirectional operation with separate page/topic pairs and
+      explicit source ownership; prevent loops by prohibiting the same item from
+      being writable in both directions simultaneously.
+- [ ] Design the future governed chapter↔national pattern under “Local
+      ownership. National reach.” Include source/chapter identity, parent/child
+      relationship, mapped categories, region/chapter tags, promotion approval,
+      privacy eligibility, attribution/return links, target-specific copy,
+      one-way first-post direction, independent replies, target-specific retry,
+      and moderation ownership. Do not claim current general forum-to-forum
+      orchestration.
 - [x] Implement and test recoverable partial success: retain successful
       bindings, report the failed target, and retry idempotently without
       duplicate topics.
@@ -230,6 +249,10 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       Discourse` v0.1 Alpha slice for `fullInteractive` Mermaid/table rendering
       parity plus the architecture/test baseline for later control-plane work.
       Keep Tier 1 API-only and fully usable without plugin installation.
+- [ ] On CAN, evaluate/install the existing Discourse Mermaid theme component
+      as the immediate normal-topic baseline, then build the bounded optional
+      plugin slice for Mermaid in full-app embeds, table presentation parity,
+      embed-context detection, and tests. Do not make Tier 1 depend on it.
 - [ ] Keep the full control plane, post-as-user, PM automation, and general
       many-to-many management out of plugin v0.1 unless separately approved.
 - [x] Use logical/workspace path

@@ -226,6 +226,24 @@ the forum identity/copy. Cloudflare/account ownership remains an Ops boundary.
 
 ## Source Provenance Across Lanes
 
+### Every connection has a job
+
+For each source-to-discussion or publication connection, record an operator-
+readable job and expose it in the link label/call to action. Useful roles include
+public community, chapter/regional discussion, internal review, subject-matter
+feedback, advocacy coordination, and syndication. Do not silently combine reply
+streams from independent edges.
+
+Public language should explain who the conversation is for and what readers can
+do there, not merely name the destination forum. Configuration vocabulary for
+this model is pending design review and is not yet implemented.
+
+CAN may operate in both directions only through separate page/topic pairs:
+Astro-managed pages can publish companion topics, while selected forum topics
+can become Discourse-managed/imported pages. Assign explicit source ownership
+and keep each item single-writer. The same item must never be writable in both
+directions simultaneously.
+
 Render `astro-discussion-bridge/DiscussionSource.astro` near the article start
 for `discourse-imported` and `discourse-managed` lanes. Do not place it at the
 comments boundary. On a multi-target page, resolve provenance from the protected
@@ -237,6 +255,17 @@ The implementation is complete at `a9d2097`. OBBBA adopted it at `aa7846d` and
 verified the protected Repeal OBBBA source disclosure across all five live Title
 I routes. The later bounded Citizen Activist multi-target proof completed at
 `36df91c`; provenance still follows the protected Repeal OBBBA source.
+
+### Chapter and national lanes (future design)
+
+Use **Local ownership. National reach.** as the reader model. A selected local
+chapter topic may be promoted into a mapped national category while retaining
+chapter attribution and a return link; national guidance may flow to selected
+chapter categories for local adaptation. In both directions, declare the source
+owner and one-way first-post update direction. Local and national replies stay
+independent, and public/private eligibility plus moderation ownership are
+enforced at each forum. This governed hub-and-spoke model is not yet implemented
+as general forum-to-forum orchestration.
 
 ## Content Tags And Discourse Tags
 

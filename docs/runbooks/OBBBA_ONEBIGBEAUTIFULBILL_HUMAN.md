@@ -418,6 +418,21 @@ independent Citizen Activist conversation through the accessible **Additional
 discussions** link. This is interaction/presentation proof for the already-
 closed bounded gate; its scope is unchanged.
 
+Content correction evidence: OBBBA commit `4fffe5e` removed only the stray
+flowchart editing instruction; the requested Mermaid block remained. A
+target-specific dry-run and live sync updated only Citizen Activist topic 9 and
+its binding state. Repeal OBBBA source topic 434 stayed protected and unchanged.
+Topic 9 retained two posts and Mermaid source, with the instruction absent.
+The clean build and deployment passed (Worker
+`344dfe40-8b71-4ff4-aea2-bc831af9c51d`); the canonical Astro Mermaid rendered,
+primary topic 434 and additional topic 9 remained correctly presented.
+
+For future additional links, follow **Every connection has a job**: explain who
+the discussion is for and what readers can do there, not only the forum name.
+Keep independent reply streams separate. CAN may support the
+opposite direction on separate page/topic pairs, but never make this same item
+writable in both directions.
+
 The correct publishing lane is `src/content/docs/title i`, route base `title-i`,
 active target `citizen-activist`. A broad dry-run first exposed the wrong root/
 index and malformed route before any write. Always correct route drift before

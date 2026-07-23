@@ -998,6 +998,48 @@ multi_target_implementation:
   recovery: retain_success_retry_failed_target_idempotently
   malformed_binding_state: fail_before_network
   public_export: astro-discussion-bridge/targets
+connection_job_product_doctrine:
+  public_lead: Every connection has a job
+  explicit_human_purpose: required_product_behavior_not_yet_implemented
+  visible_label_and_CTA_match_purpose: required
+  independent_replies_silently_merged: prohibited
+  primary_vs_additional: explicit
+  later_scope: [relay, promotion, summary]
+  configuration_design_status: pending_review_not_final_not_implemented
+  candidate_fields: [role_or_purpose, audience, callToAction, description, visibility_context, direction_source_ownership, presentation]
+  candidate_roles: [primary-community, public-community, chapter, internal-review, expert-feedback, source-wiki, syndication]
+bidirectional_CAN_contract:
+  directions:
+    - Astro_managed_page_to_CAN_companion_topic
+    - CAN_topic_to_Discourse_managed_or_imported_Astro_page
+  separate_page_topic_pairs: required
+  explicit_source_ownership: required
+  same_item_writable_both_directions: prohibited
+  loop_prevention: single_writer_per_item
+chapter_national_future_design:
+  status: proposed_not_implemented
+  public_frame: Local ownership. National reach.
+  topology: governed_hub_and_spoke_federation
+  supported_directions_to_design:
+    - local_topic_to_mapped_national_category
+    - national_guidance_to_selected_local_categories
+  required_fields:
+    - source_forum_and_topic
+    - source_chapter_identity
+    - parent_child_relationship
+    - mapped_source_and_destination_categories
+    - required_tags_region_chapter_metadata
+    - automatic_or_moderator_approved_promotion
+    - public_private_eligibility
+    - source_attribution_and_return_link
+    - target_specific_title_CTA_description
+    - one_way_first_post_sync_direction
+    - independent_reply_streams
+    - target_specific_failure_retry_idempotency
+    - moderation_ownership_at_both_levels
+  optional_later: post_as_chapter_identity
+  silent_merge_or_ambiguous_writeback: prohibited
+  current_full_forum_to_forum_orchestration_claim: false
 alpha_topology_proof:
   status: bounded_OBBBA_to_Citizen_Activist_live_proof_complete
   verified_at: 2026-07-22

@@ -568,6 +568,11 @@ not a Tier 1 installation requirement. The first slice is limited to
 baseline—not the full control plane, post-as-user, PM automation, or general
 many-to-many management.
 
+Current proposed CAN path is to use the existing Discourse Mermaid theme
+component for normal topics and design a bounded optional plugin slice for
+Mermaid in full-app embeds, table parity, embed-context detection, and tests.
+This remains pending design/review and does not change Tier 1 installation.
+
 Alpha scope is cumulative. Plugin and multi-target work add to every previously
 accepted Alpha gate; they do not rewrite or shorten the promise. Use the existing
 dashboard and build/launch checklists as the complete source of truth, and remove
@@ -642,6 +647,41 @@ linked or rendered; never let the bridge silently select one. If one target
 fails, keep successful bindings, report the failure, and retry only that target
 idempotently without duplicate topics. Diagnostics, previews, CLI output, and
 live checks must identify the target. General administration remains later.
+
+**Every connection has a job.** A reader should understand whether
+an additional discussion is for the public community, a chapter or region,
+internal review, subject-matter feedback, advocacy coordination, or syndication.
+Use that purpose in its visible label and call to action. Never imply that
+independent replies have been merged.
+
+Lead with the outcome: “Publish from the site. Learn in the community. Turn what
+the community knows into durable pages.” Content can begin on either side;
+discussion stays where the people are, and durable knowledge can be published
+where readers can find it. A destination-only label is not enough.
+
+Possible reader-facing patterns are **Discuss with the Citizen Activist
+Community**, **Review with the policy team**, **Discuss with your state
+chapter**, and **View the source wiki**, each followed by a short audience and
+context explanation.
+
+CAN can support Astro-to-Discourse and Discourse-to-Astro flows, but only with
+separate page/topic pairs and explicit source ownership. Stop if the same item
+would be writable in both directions; choose one writer and protect the other
+side. Relay, promotion, and summary automation are later features.
+
+Another future pattern is **Local ownership. National reach.** A chapter can
+turn local experience into network knowledge without giving up its community,
+context, or voice. The national community can discover and discuss chapter work
+while every topic remains connected to where it began. Local and national reply
+streams stay separate: one serves local coordination/context, the other national
+learning/amplification.
+
+The likely reverse path distributes national campaign guidance into selected
+chapter forums for local discussion. Before enabling either direction, require
+mapped categories, chapter/region metadata, public/private eligibility,
+moderator approval policy, source attribution/return links, explicit one-way
+updates, and clear moderation owners. General forum-to-forum orchestration is
+future design, not current capability.
 
 ## 12. Show Where Discourse-Sourced Content Came From
 
