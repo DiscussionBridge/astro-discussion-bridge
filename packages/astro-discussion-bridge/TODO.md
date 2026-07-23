@@ -107,7 +107,7 @@ quality review before Product Boss approval.
 - Keep the maintenance sync process documented as a repeatable test: confirm package version, dry-run with `--details`, live sync, verify Discourse, verify Astro, consider Cloudflare cache.
 - Add or update npm scripts in the demo for lane-specific dry runs using `--details`.
 - Decide whether `--details` should also apply to `import-existing` output.
-- Resolve or document the demo build warning: `Entry docs -> 404 was not found`.
+- File the prepared upstream Starlight issue for the documented demo build warning: `Entry docs -> 404 was not found`.
 - Keep the local package demo dependency pointed at the package directory unless a release-packaging test specifically needs a tarball.
 
 ### Recover

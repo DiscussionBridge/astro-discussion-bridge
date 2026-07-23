@@ -8,6 +8,7 @@ const discussionFields = {
   discussionCommentsDisplay: z.enum(["simple", "full", "fullInteractive"]).optional(),
   discussionSourceAuthorUsername: z.string().optional(),
   discussionSourceAuthorName: z.string().optional(),
+  discussionSourceCategoryId: z.number().int().positive().optional(),
   discussionSync: z.boolean().optional(),
 };
 

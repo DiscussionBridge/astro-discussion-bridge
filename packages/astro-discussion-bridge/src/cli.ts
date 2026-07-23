@@ -237,7 +237,8 @@ if (command === "import-existing") {
     });
 
   for (const result of results) {
-    console.log(`${result.status}: ${result.filePath} -> ${result.topicUrl}`);
+    const reason = result.reason ? ` (${result.reason})` : "";
+    console.log(`${result.status}: ${result.filePath} -> ${result.topicUrl}${reason}`);
   }
 
   const imported = results.filter((result) => result.status === "imported").length;

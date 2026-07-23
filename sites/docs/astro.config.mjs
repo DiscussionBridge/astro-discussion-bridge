@@ -21,6 +21,7 @@ export default defineConfig({
             { label: "Alpha Setup", slug: "alpha-setup" },
             { label: "Key Management", slug: "key-management" },
             { label: "Support And Feedback", slug: "support-and-feedback" },
+            { label: "Known Issues", slug: "known-issues" },
           ],
         },
         {

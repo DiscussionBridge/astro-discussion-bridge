@@ -34,6 +34,7 @@ export interface ImportedDiscourseTopic {
   topicUrl: string;
   sourceAuthorUsername?: string;
   sourceAuthorName?: string;
+  sourceCategoryId?: number;
   status: "imported" | "skipped" | "dry-run-import" | "dry-run-overwrite";
   reason?: string;
 }
@@ -77,6 +78,13 @@ export async function importExistingDiscourseTopics(
     const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl, routeBase: options.routeBase });
     const topicUrl = `${discourse.discourseUrl}/t/${slug}/${topic.id}`;
     const fileExists = await pathExists(filePath);
+    const existingMetadata = fileExists
+      ? await readExistingImportMetadata(filePath)
+      : undefined;
+    const categoryChange = sourceCategoryChangeReason(
+      existingMetadata?.sourceCategoryId,
+      topic.category_id,
+    );
 
     if (fileExists && !options.overwrite) {
       results.push({
@@ -87,8 +95,9 @@ export async function importExistingDiscourseTopics(
         topicUrl,
         sourceAuthorUsername: sourceAuthor?.username,
         sourceAuthorName: sourceAuthor?.name,
+        sourceCategoryId: topic.category_id,
         status: "skipped",
-        reason: "file already exists",
+        reason: joinReasons("file already exists", categoryChange),
       });
       continue;
     }
@@ -102,7 +111,9 @@ export async function importExistingDiscourseTopics(
         topicUrl,
         sourceAuthorUsername: sourceAuthor?.username,
         sourceAuthorName: sourceAuthor?.name,
+        sourceCategoryId: topic.category_id,
         status: fileExists ? "dry-run-overwrite" : "dry-run-import",
+        reason: categoryChange,
       });
       continue;
     }
@@ -138,6 +149,7 @@ export async function importExistingDiscourseTopics(
         sourceMode,
         sourceAuthorUsername: refreshedSourceAuthor?.username,
         sourceAuthorName: refreshedSourceAuthor?.name,
+        sourceCategoryId: topic.category_id,
         importPolicy: pruneProfiles.length
           ? `pruned:${pruneProfiles.join(",")}`
           : "unpruned",
@@ -153,7 +165,9 @@ export async function importExistingDiscourseTopics(
       topicUrl,
       sourceAuthorUsername: refreshedSourceAuthor?.username,
       sourceAuthorName: refreshedSourceAuthor?.name,
+      sourceCategoryId: topic.category_id,
       status: "imported",
+      reason: categoryChange,
     });
   }
 
@@ -234,6 +248,33 @@ function sourceAuthorForPost(post: DiscoursePost): { username: string; name: str
   if (!username) return undefined;
   const name = post.display_username?.trim() || post.name?.trim() || username;
   return { username, name };
+}
+
+async function readExistingImportMetadata(
+  filePath: string,
+): Promise<{ sourceCategoryId?: number }> {
+  const source = await fs.readFile(filePath, "utf8");
+  const frontmatter = source.match(/^(?:\uFEFF)?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1];
+  const category = frontmatter
+    ?.match(/^discussionSourceCategoryId:\s*"?(\d+)"?\s*$/m)?.[1];
+  return {
+    sourceCategoryId: category ? Number(category) : undefined,
+  };
+}
+
+function sourceCategoryChangeReason(
+  previous: number | undefined,
+  current: number | undefined,
+): string | undefined {
+  if (previous === undefined || current === undefined || previous === current) {
+    return undefined;
+  }
+  return `source category changed: ${previous} -> ${current}; Astro route/navigation unchanged`;
+}
+
+function joinReasons(...reasons: Array<string | undefined>): string | undefined {
+  const present = reasons.filter((reason): reason is string => Boolean(reason));
+  return present.length ? present.join("; ") : undefined;
 }
 
 function postBodyForImport(post: DiscoursePost, topicId: number): string {
@@ -320,6 +361,7 @@ function markdownForImportedTopic(input: {
   sourceMode: ImportSourceMode;
   sourceAuthorUsername?: string;
   sourceAuthorName?: string;
+  sourceCategoryId?: number;
   importPolicy: string;
   body: string;
 }): string {
@@ -337,6 +379,9 @@ function markdownForImportedTopic(input: {
           discussionSourceAuthorUsername: input.sourceAuthorUsername,
           discussionSourceAuthorName: input.sourceAuthorName ?? input.sourceAuthorUsername,
         }
+      : {}),
+    ...(input.sourceCategoryId !== undefined
+      ? { discussionSourceCategoryId: input.sourceCategoryId }
       : {}),
     discussionSync: false,
     discourseTopicId: input.topicId,

@@ -110,6 +110,91 @@ test("import manifest writes an explicit output only when required tags match", 
   }
 });
 
+test("import manifest preserves source category drift through preview and atomic overwrite", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-manifest-category-drift-"));
+  const output = "guides/source-mode.md";
+  const targetPath = path.join(dir, output);
+  const originalFetch = globalThis.fetch;
+  let categoryId = 6;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/t/36.json") {
+        return jsonResponse({
+          id: 36,
+          title: "How to Choose a Discussion Bridge Source Mode",
+          category_id: categoryId,
+          post_stream: {
+            posts: [{
+              id: 136,
+              post_number: 1,
+              topic_id: 36,
+              topic_slug: "how-to-choose-a-discussion-bridge-source-mode",
+              cooked: "",
+            }],
+          },
+        });
+      }
+      if (pathname === "/posts/136.json") {
+        return jsonResponse({
+          id: 136,
+          post_number: 1,
+          topic_id: 36,
+          topic_slug: "how-to-choose-a-discussion-bridge-source-mode",
+          raw: "Choose one source of truth.",
+          cooked: "",
+        });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    const options = {
+      docsDir: dir,
+      siteUrl: "https://discussionbridge.dev",
+      discourseUrl: "https://forum.discussionbridge.dev",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      overwrite: true,
+      manifest: {
+        version: 1,
+        imports: [{
+          topic: "36",
+          output,
+          sourceMode: "discourse-managed",
+          commentsDisplay: "fullInteractive",
+        }],
+      },
+    };
+
+    await importExistingDiscourseManifest(options);
+    assert.match(await readFile(targetPath, "utf8"), /discussionSourceCategoryId: 6/);
+
+    categoryId = 7;
+    const [preview] = await importExistingDiscourseManifest({ ...options, dryRun: true });
+    assert.equal(preview.status, "dry-run-overwrite");
+    assert.equal(preview.filePath, targetPath);
+    assert.equal(
+      preview.reason,
+      "source category changed: 6 -> 7; Astro route/navigation unchanged",
+    );
+
+    const [refreshed] = await importExistingDiscourseManifest(options);
+    const source = await readFile(targetPath, "utf8");
+    assert.equal(refreshed.filePath, targetPath);
+    assert.equal(
+      refreshed.reason,
+      "source category changed: 6 -> 7; Astro route/navigation unchanged",
+    );
+    assert.match(source, /discussionSourceCategoryId: 7/);
+    assert.match(source, /discussionSourceMode: "discourse-managed"/);
+    assert.match(source, /discussionSync: false/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("import manifest rejects duplicate topics and unsafe option shapes", () => {
   assert.throws(
     () => validateImportManifest({
@@ -2795,6 +2880,7 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
     assert.match(source, /discussionSourceMode: "discourse-imported"/);
     assert.match(source, /discussionSourceAuthorUsername: "editorbridgeforum"/);
     assert.match(source, /discussionSourceAuthorName: "Discussion Bridge Forum Editor"/);
+    assert.match(source, /discussionSourceCategoryId: 5/);
     assert.match(source, /discussionSync: false/);
     assert.match(source, /discourseTopicId: 21/);
     assert.match(source, /discussionImportedFrom: "https:\/\/forum\.example\.com\/t\/imported-discourse-topic\/21"/);
@@ -3298,7 +3384,13 @@ test("import-existing overwrite refreshes changed Discourse source ownership", a
       topic,
       post: {
         ...topic.post_stream.posts[0],
-        raw: "Choose one source of truth.",
+        raw: [
+          "Choose one source of truth.",
+          "",
+          "```yaml",
+          "discussionSourceCategoryId: 999",
+          "```",
+        ].join("\n"),
       },
     });
 
@@ -3318,6 +3410,7 @@ test("import-existing overwrite refreshes changed Discourse source ownership", a
     globalThis.fetch = mockDiscourseFetch([], {
       topic: {
         ...topic,
+        category_id: 7,
         post_stream: {
           posts: [{
             ...topic.post_stream.posts[0],
@@ -3335,7 +3428,7 @@ test("import-existing overwrite refreshes changed Discourse source ownership", a
         raw: "Choose one source of truth after the ownership transfer.",
       },
     });
-    await importExistingDiscourseTopics({ ...options, overwrite: true });
+    const refreshed = await importExistingDiscourseTopics({ ...options, overwrite: true });
 
     const source = await readFile(
       path.join(dir, "how-to-choose-a-discussion-bridge-source-mode.md"),
@@ -3343,10 +3436,20 @@ test("import-existing overwrite refreshes changed Discourse source ownership", a
     );
     assert.match(source, /discussionSourceAuthorUsername: "editorbridgeforum"/);
     assert.match(source, /discussionSourceAuthorName: "Discussion Bridge Forum Editor"/);
+    assert.match(source, /discussionSourceCategoryId: 7/);
     assert.doesNotMatch(source, /discourseadmin|Discourse Admin/);
     assert.match(source, /discussionSourceMode: "discourse-managed"/);
     assert.match(source, /discussionSync: false/);
     assert.match(source, /discourseTopicId: 36/);
+    assert.equal(refreshed[0].sourceCategoryId, 7);
+    assert.equal(
+      refreshed[0].reason,
+      "source category changed: 6 -> 7; Astro route/navigation unchanged",
+    );
+    assert.equal(
+      refreshed[0].pageUrl,
+      "https://discussionbridge.dev/how-to-choose-a-discussion-bridge-source-mode/",
+    );
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });

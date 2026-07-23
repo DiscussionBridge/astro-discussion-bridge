@@ -158,7 +158,9 @@ import DiscussionSource from "astro-discussion-bridge/DiscussionSource.astro";
 />
 ```
 
-For `discourse-imported`, the default notice says the page originated in Discourse and was imported for publication. For `discourse-managed`, it says the page is managed in Discourse and published in Astro for easier reading. The source link resolves from `discussionImportedFrom`, the protected source-target binding, or the legacy topic URL. When import metadata includes `discussionSourceAuthorUsername` and `discussionSourceAuthorName`, the notice also identifies and links the source author on the same Discourse installation. An explicit overwrite import refreshes those fields after a Discourse ownership or username change. `astro-managed` pages render no source notice.
+For `discourse-imported`, the default notice says the page originated in Discourse and was imported for publication. For `discourse-managed`, it says the page is managed in Discourse and published in Astro for easier reading. The source link resolves from `discussionImportedFrom`, the protected source-target binding, or the legacy topic URL. When import metadata includes `discussionSourceAuthorUsername` and `discussionSourceAuthorName`, the notice also identifies and links the source author on the same Discourse installation. An explicit overwrite import refreshes those fields after a Discourse ownership or username change.
+
+Imports also record `discussionSourceCategoryId`. When an overwrite observes a category change, CLI output reports the old and new category IDs while leaving the Astro file, public route, and navigation lane unchanged. Route/navigation movement requires an explicit reviewed category-to-output mapping; the import never moves a page merely because a Discourse user reorganized the source topic. `astro-managed` pages render no source notice.
 
 Use the `message`, `linkLabel`, and `sourceLabel` props to match the public site's voice without obscuring provenance. This notice belongs with the article content; the comments boundary remains responsible for discussion controls and Discussion Bridge credit.
 

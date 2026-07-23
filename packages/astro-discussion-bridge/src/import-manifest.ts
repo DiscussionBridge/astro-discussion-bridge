@@ -197,7 +197,15 @@ export async function importExistingDiscourseManifest(
         throw new Error(`Manifest topics resolve to the same Astro file: ${targetPath}`);
       }
       targetPaths.add(targetKey);
-      staged.push({ result: { ...result, filePath: targetPath }, stagePath: result.filePath, targetPath });
+      staged.push({
+        result: {
+          ...result,
+          filePath: targetPath,
+          reason: previewResult.reason ?? result.reason,
+        },
+        stagePath: result.filePath,
+        targetPath,
+      });
     }
 
     await commitStagedFiles(staged, options.overwrite === true);
