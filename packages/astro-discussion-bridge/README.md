@@ -451,8 +451,11 @@ If Discourse embedding already created a topic for the page URL, `publish-new` a
 Add `--notify-on-failure` to send a best-effort Discourse private message when a publish or sync run fails. This uses Discourse's normal PM notification and email behavior for the configured recipients. The CLI or build output remains the source of truth, because notification can also fail when credentials or network access are broken.
 
 ```sh
-npx astro-discussion-bridge publish-and-sync src/content/docs --notify-on-failure --notify-recipients PhilH
+npx astro-discussion-bridge publish-and-sync src/content/docs --notify-on-failure --notify-recipients FORUM_USERNAME
 ```
+
+Replace `FORUM_USERNAME` with the exact username of the Discourse account that
+should receive the private message.
 
 When a topic is created or synced, DiscussionBridge writes source-tracking metadata to frontmatter:
 
@@ -560,7 +563,7 @@ title: "LaunchLight 1.0 Release Notes"
 discussionCategoryId: 18
 discussionTags: "releases, launchlight"
 discussionUnlisted: false
-discussionNotifyRecipients: "PhilH,OpsBot"
+discussionNotifyRecipients: "forum-admin,ops-bot"
 ---
 ```
 
@@ -595,7 +598,7 @@ discussionBridge({
     },
     notifyOnFailure: {
       enabled: true,
-      recipients: ["PhilH"],
+      recipients: ["forum-admin"],
     },
     docsDir: "src/content/docs",
     categoryId: 12,

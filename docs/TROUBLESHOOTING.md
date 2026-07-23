@@ -279,7 +279,9 @@ Use `--notify-on-failure` to send a best-effort Discourse private message to con
 ```sh
 npx astro-discussion-bridge publish-and-sync src/content/docs \
   --notify-on-failure \
-  --notify-recipients PhilH
+  --notify-recipients FORUM_USERNAME
 ```
 
-Notifications use Discourse PM behavior. They are helpful, but the CLI/build log remains authoritative.
+Replace `FORUM_USERNAME` with the exact username of the Discourse account that
+should receive the private message. Notifications use Discourse PM behavior.
+They are helpful, but the CLI/build log remains authoritative.

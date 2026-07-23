@@ -928,14 +928,14 @@ test("publish failures can notify recipients by Discourse private message", asyn
         mode: "publish-new",
         notifyOnFailure: {
           enabled: true,
-          recipients: ["PhilH"],
+          recipients: ["forum-admin"],
         },
       }),
       /Discourse preflight failed/,
     );
 
     const pmCall = calls.find((call) => call.pathname === "/posts.json" && call.body?.archetype === "private_message");
-    assert.equal(pmCall.body.target_recipients, "PhilH");
+    assert.equal(pmCall.body.target_recipients, "forum-admin");
     assert.match(pmCall.body.raw, /Discourse preflight failed/);
   } finally {
     globalThis.fetch = originalFetch;
@@ -976,7 +976,7 @@ test("notification failure does not mask the original publish failure", async ()
         mode: "publish-new",
         notifyOnFailure: {
           enabled: true,
-          recipients: ["PhilH"],
+          recipients: ["forum-admin"],
         },
       }),
       /Discourse preflight failed/,
@@ -2279,7 +2279,7 @@ test("frontmatter can override lane category, tags, visibility, and failure reci
         "discussionCategoryId: 18",
         'discussionTags: "releases, launchlight"',
         "discussionUnlisted: true",
-        'discussionNotifyRecipients: "PhilH,OpsBot"',
+        'discussionNotifyRecipients: "forum-admin,ops-bot"',
         "---",
         "",
         "# Release Lane",
@@ -2866,7 +2866,7 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
       discourseUrl: "https://forum.example.com",
       apiKey: "test-key",
       apiUsername: "test-user",
-      topics: ["https://forum.example.com/t/imported-discourse-topic/21/2?u=philh"],
+      topics: ["https://forum.example.com/t/imported-discourse-topic/21/2?u=forum-admin"],
       commentsDisplay: "full",
     });
 
@@ -3470,7 +3470,7 @@ test("frontmatter failure recipients receive page-specific publish errors", asyn
       [
         "---",
         'title: "Discussion Bridge for Astro: Release Lane Failure"',
-        'discussionNotifyRecipients: "PhilH,OpsBot"',
+        'discussionNotifyRecipients: "forum-admin,ops-bot"',
         "---",
         "",
         "# Release Lane Failure",
@@ -3530,7 +3530,7 @@ test("frontmatter failure recipients receive page-specific publish errors", asyn
 
     const pmCalls = calls.filter((call) => call.pathname === "/posts.json" && call.body?.archetype === "private_message");
     assert.equal(pmCalls.length, 1);
-    assert.equal(pmCalls[0].body.target_recipients, "PhilH,OpsBot");
+    assert.equal(pmCalls[0].body.target_recipients, "forum-admin,ops-bot");
     assert.match(pmCalls[0].body.raw, /Release Lane Failure/);
   } finally {
     globalThis.fetch = originalFetch;

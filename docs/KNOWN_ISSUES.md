@@ -115,3 +115,34 @@ absence, or suppress that expected miss inside the generated 404 route.
 Before filing, reproduce once against the current Starlight release and replace
 the version ranges above with the exact installed versions.
 
+## Discourse
+
+### Failure Notification Recipients Are Site-Specific
+
+**Status:** Documentation correction included in the current source.
+
+**Impact:** Failure notifications can be sent only to usernames that exist on
+the connected Discourse site. An example copied with a real project username
+may fail on another forum or, if that username exists there, notify the wrong
+person.
+
+Use an explicit placeholder in reusable instructions:
+
+```sh
+npx astro-discussion-bridge publish-and-sync src/content/docs \
+  --notify-on-failure \
+  --notify-recipients FORUM_USERNAME
+```
+
+Replace `FORUM_USERNAME` with the exact Discourse username that should receive
+the private message. For multiple recipients, use a comma-separated list:
+
+```text
+forum-admin,ops-bot
+```
+
+Do not copy usernames from another site or project. Confirm the recipients on
+the target forum, then verify the notification path with a controlled failure
+test. The CLI or build output remains the source of truth because a notification
+can also fail when the forum, network, API credentials, or PM permissions are
+unavailable.
