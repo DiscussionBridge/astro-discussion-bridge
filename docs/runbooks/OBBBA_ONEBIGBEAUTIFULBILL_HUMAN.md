@@ -357,6 +357,20 @@ not invent or relocate that boundary in this runbook.
 
 ## 11. Recovery
 
+### Cloudflare-backed forum evidence
+
+The source forum, `forum.repealobbba.org`, is served through Cloudflare CDN.
+The completed OBBBA evidence is therefore also a production CDN compatibility
+proof for the workflows exercised here: diagnostics/API reads, imports,
+reconciliation and source-topic links, `fullInteractive` comments, signed-in
+replies, five live source disclosures, and no writeback.
+
+Do not generalize this into support for every CDN/WAF/cache configuration. Keep
+Discourse API and JSON paths, embed/full-app routes, authentication/cookies, and
+websockets intact. If an API, embed, or session result differs from direct
+origin behavior, inspect Cloudflare cache/WAF handling before retrying writes or
+changing the bridge.
+
 - If topic `434` is missing or deleted, do not recreate it automatically.
 - If the Astro page is missing, recover it from the canonical repository and
   verify its source metadata before deploying.

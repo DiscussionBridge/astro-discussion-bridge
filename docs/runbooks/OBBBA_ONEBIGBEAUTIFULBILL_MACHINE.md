@@ -626,6 +626,27 @@ rendering_boundary:
 ## 10. Known Failures And Recovery
 
 ```yaml
+cdn_backed_discourse_proof:
+  verified_at: 2026-07-22
+  forum: https://forum.repealobbba.org
+  CDN: Cloudflare
+  result: PASS_for_exercised_workflows
+  workflows:
+    - check_discourse_API_reads
+    - topic_imports
+    - target_topic_reconciliation
+    - protected_source_links
+    - fullInteractive_comments
+    - signed_in_reply
+    - five_live_source_disclosures
+    - no_writeback
+  preserve: [API_paths, JSON_endpoints, embed_full_app_routes, authentication_cookies, websockets]
+  edge_origin_difference: investigate_cache_and_WAF
+  universal_CDN_WAF_guarantee: false
+  citizen_activist_topology_gate: separate_open
+```
+
+```yaml
 failures:
   - symptom: source-mode guard missing
     recovery: restore discussionSync=false; audit changes; do not sync

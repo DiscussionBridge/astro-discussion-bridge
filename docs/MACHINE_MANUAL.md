@@ -698,6 +698,37 @@ comments_credit:
 
 ## 10. Cloudflare Pages / Domain Verification
 
+### CDN-backed Discourse compatibility evidence
+
+```yaml
+verified_at: 2026-07-22
+forum: https://forum.repealobbba.org
+forum_edge: Cloudflare_CDN
+status: PASS_for_exercised_production_workflows
+exercised:
+  - check_discourse_and_API_reads
+  - Discourse_topic_imports_to_Astro
+  - target_topic_reconciliation
+  - protected_source_topic_links
+  - fullInteractive_comments
+  - signed_in_reply_behavior
+  - five_live_source_disclosures
+  - source_and_cross_target_no_writeback
+  - canonical_Astro_production_pages
+claim_limit: no_guarantee_for_every_CDN_WAF_cache_configuration
+preserve_through_CDN:
+  - Discourse_API_paths
+  - JSON_endpoints
+  - embed_and_full_app_routes
+  - authentication_and_cookies
+  - websocket_behavior
+diagnostic_rule: compare_edge_and_direct_origin_then_investigate_cache_WAF
+```
+
+Do not record private Cloudflare account labels, rule identifiers, or access
+values. If edge and origin results differ, capture sanitized path/status/cache
+evidence and route the CDN/WAF configuration issue to Ops.
+
 Cloudflare-specific values are site inputs, not package constants. Record:
 
 ```yaml

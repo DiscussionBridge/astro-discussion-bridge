@@ -141,7 +141,12 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Verify the local Starlight demo builds from `examples/starlight-demo`.
 - [x] Verify live Astro and Starlight demos deploy from the canonical `astro-discussion-bridge` example source trees.
 - [ ] Include demo routes, comments modes, full-app embed settings, and forum category/tag/permission checks in the repeatable live smoke pass before Alpha and every release candidate.
-- [ ] Test with Cloudflare CDN in place on Discourse and document that the bridge works with a CDN-backed forum.
+- [x] Test with Cloudflare CDN in place on Discourse. Production field evidence
+      from `forum.repealobbba.org` confirms the exercised diagnostics/API,
+      import, reconciliation/source-link, `fullInteractive`, signed-in reply,
+      source-disclosure, and no-writeback workflows work through this
+      Cloudflare-CDN-backed forum. This is not a guarantee for every CDN/WAF/
+      cache-rule configuration.
 - [ ] Verify topic creation so pages from different Astro hosts do not collide or create confusing duplicate topics.
 - [ ] Confirm `embed_url` maps each Astro page to the correct companion topic across hosts.
 - [x] Verify public Alpha demo domains use the demo-lane pattern: `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, `astrostarlight.demo.discussionbridge.dev`, `stockstarlight.demo.discussionbridge.dev`, and future parallel integration hosts.

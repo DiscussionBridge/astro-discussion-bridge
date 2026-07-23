@@ -70,6 +70,21 @@ This is a living list of Discourse issues, feature needs, wishlist items, shortc
 
 ## Product Implications
 
+### Cloudflare-CDN-backed production forum
+
+Field confirmation on 2026-07-22 established that `forum.repealobbba.org` is
+served through Cloudflare CDN. Discussion Bridge successfully exercised
+`check-discourse` and API reads, Discourse-to-Astro imports, target/topic
+reconciliation, protected source links, `fullInteractive` comments, signed-in
+reply behavior, five live source disclosures, and no-writeback safety against
+that production forum.
+
+This is evidence for the tested deployment, not a universal CDN/WAF guarantee.
+Cloudflare configuration must preserve API paths, JSON endpoints, embed and
+full-app routes, authentication/cookies, and websockets. If a request behaves
+differently through the edge than at origin, inspect caching and WAF behavior
+before changing Discussion Bridge.
+
 - Tier 1 should stay API-only and useful without a Discourse plugin.
 - Tier 1 should document a practical two-key model:
   - granular or restricted publishing key for normal runtime sync where possible

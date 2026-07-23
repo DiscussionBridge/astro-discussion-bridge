@@ -461,6 +461,19 @@ topic first. Then test with a cache-bypassing request or clear only the relevant
 Cloudflare cache. Do not treat a confirmed sync as failed until cache state is
 ruled out.
 
+Discussion Bridge has now been exercised against the production
+Cloudflare-CDN-backed Discourse deployment at `forum.repealobbba.org`.
+Diagnostics/API reads, topic imports, target reconciliation and source-topic
+links, `fullInteractive` comments, signed-in replies, five live source notices,
+and no-writeback behavior all passed in that bounded environment.
+
+This proves compatibility with that production deployment, not every possible
+CDN, WAF, or cache rule. When placing Cloudflare in front of Discourse, preserve
+Discourse API paths and JSON endpoints, embed and full-app routes,
+authentication/cookies, and websocket behavior. If API or embed behavior differs
+from a direct-origin check, investigate cache and WAF handling before treating
+the bridge as broken.
+
 > **Stop if:** the deployment uses a transitional copy instead of canonical
 > source, the custom domain differs from `siteUrl`, HTTPS is invalid, or the
 > Discourse embed host does not exactly match the public hostname.

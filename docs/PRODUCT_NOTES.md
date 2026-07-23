@@ -113,6 +113,21 @@ The `forum.` hostname is deliberately literal and operationally clear; community
 meaning belongs in the forum identity and copy. Cloudflare/account ownership
 placement remains an Ops decision.
 
+## CDN-Backed Discourse Field Proof
+
+`forum.repealobbba.org` is served through Cloudflare CDN. The completed OBBBA
+work therefore proves Discussion Bridge compatibility with this production
+CDN-backed Discourse deployment across the workflows actually exercised:
+diagnostics/API reads, imports, topic reconciliation and protected source links,
+`fullInteractive` comments and signed-in replies, source disclosure, and
+no-writeback behavior.
+
+The claim is deliberately bounded. It does not guarantee every Cloudflare,
+CDN, WAF, or cache-rule combination. Operators must preserve Discourse API/JSON
+paths, embed/full-app routes, authentication and cookies, and websocket behavior.
+When edge behavior differs from direct origin, investigate cache/WAF treatment.
+The Citizen Activist multi-target live gate remains separate and open.
+
 ## Discourse Source Disclosure
 
 Source provenance is implemented and reviewed at `a9d2097` (Code Boss PASS,
