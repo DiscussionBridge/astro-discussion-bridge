@@ -357,10 +357,12 @@ migration:
     - Cloudflare ownership/account boundary
 ```
 
-The packed file is an Alpha integration artifact, not a release distribution.
-Replace it with the approved GitHub release asset when the release candidate is
-approved; update `package.json` and `package-lock.json`, then rerun the complete
-verification chain.
+The packed file is an Alpha integration artifact, not the primary public release
+distribution. After the release gates pass, replace it with the exact reviewed
+registry `astro-discussion-bridge@alpha` artifact corresponding to the GitHub
+prerelease commit; update `package.json` and `package-lock.json`, then rerun the
+complete verification chain. Keep repo/tarball installation documented as a
+development/recovery fallback.
 
 ## 9. Verification Record
 

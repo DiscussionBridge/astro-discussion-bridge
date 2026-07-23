@@ -164,7 +164,30 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Document the recommended upgrade order.
 - [ ] Keep Starlight optional.
 - [ ] Before any Alpha tag/release, run package tests, local demo build, dry-run CLI checks, and at least one live smoke sync.
-- [x] Alpha release channel decided: GitHub release plus repo-installable. Hold npm until late Beta, after the first support/docs loop survives real use.
+- [x] Alpha release channel decided: corresponding GitHub prerelease plus npm
+      prerelease for the Astro package under dist-tag `alpha`, never `latest`.
+      Repo/tarball installs remain development/recovery fallback.
+- [ ] Confirm npm package name/ownership and publisher authority.
+- [ ] Confirm npm account 2FA or trusted publishing.
+- [ ] Select the exact reviewed semver prerelease; `0.1.0-alpha.1` is an example,
+      not yet the release decision.
+- [ ] Run `npm pack --dry-run`, inspect the tarball, and prove it contains only
+      intended package files.
+- [ ] Clean-install from the packed artifact and then the registry `@alpha`
+      artifact in both plain Astro and Starlight demos.
+- [ ] Verify exports, public Astro components, CLI bin/help, import/sync,
+      comments modes, source disclosure, and multi-target helpers from the
+      consumer installs.
+- [ ] Verify LICENSE, README, repository, bugs, and homepage metadata.
+- [ ] Prove credentials, fixtures, local paths, and unintended files are absent.
+- [ ] Record Code Boss PASS and Manual Boss installation/docs review for the
+      exact package candidate.
+- [ ] Prove GitHub prerelease and npm artifact correspond to the same commit.
+- [ ] Verify `npm view`, dist-tags, and a clean consumer install by `@alpha`.
+- [ ] Document rollback, deprecation, and yank response; npm versions are
+      immutable. Do not run automatic `npm audit fix`.
+- [ ] Reserve `latest` for first stable; consciously choose `beta`, `next`, or
+      another documented prerelease channel after Alpha learning.
 - [ ] Confirm release pages, README, package metadata, and demo pages point to the same support and feedback channels after the Alpha Support category and email route are live.
 
 ## Product Roadmap Checklist
@@ -253,6 +276,11 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       as the immediate normal-topic baseline, then build the bounded optional
       plugin slice for Mermaid in full-app embeds, table presentation parity,
       embed-context detection, and tests. Do not make Tier 1 depend on it.
+- [ ] Build the plugin as a separate Boss-routed product/repository; prove it is
+      installable and removable with rollback docs on supported stock/current
+      Discourse, has no ordinary-topic regression, and passes live CAN full-app
+      embed verification. npm Alpha decisions here apply to the Astro package,
+      not Discourse plugin installation.
 - [ ] Keep the full control plane, post-as-user, PM automation, and general
       many-to-many management out of plugin v0.1 unless separately approved.
 - [x] Use logical/workspace path

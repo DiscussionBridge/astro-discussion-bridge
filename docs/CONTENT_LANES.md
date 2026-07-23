@@ -1,5 +1,10 @@
 # Content Lanes Guide
 
+Public Alpha consumers should ultimately receive lane behavior through
+`npm install astro-discussion-bridge@alpha`. Local packed artifacts and repository
+installs remain development/recovery proof paths until the npm Alpha release
+gates pass; they are not the primary public distribution story.
+
 A content lane maps a group of Astro content to Discourse behavior.
 
 One Astro or Starlight site may publish several kinds of content:

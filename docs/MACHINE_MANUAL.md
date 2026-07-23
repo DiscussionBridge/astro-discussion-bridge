@@ -975,8 +975,14 @@ tiers:
     plugin_required: false
     role: free_self_serve_floor
   optional_discourse_plugin:
-    alpha_vertical_slice_status: accepted_Alpha_pending_design_implementation_and_proof
-    v0_1: fullInteractive_Mermaid_table_parity_plus_architecture_tests
+    alpha_vertical_slice_status: accepted_Alpha_goal_pending_implementation_and_live_proof
+    product_repo: separate_from_Astro_package_per_Boss_routing
+    installability: supported_stock_current_Discourse
+    removal_and_rollback_docs: required
+    CAN_normal_topic_baseline: official_Discourse_Mermaid_theme_component
+    v0_1: [full_app_embed_Mermaid, table_parity, explicit_embed_context_detection, automated_tests]
+    ordinary_topic_regression: prohibited
+    live_proof: forum.citizenactivist.network_full_app_embed
     not_v0_1: [full_control_plane, post_as_user, PM_automation, general_many_to_many]
     tier_1_dependency: false
     logical_workspace_path: DiscussionBridge/plugins/discourse-discussion-bridge
@@ -1133,14 +1139,32 @@ alpha_topology_proof:
 
 ```yaml
 release_channel:
-  alpha: GitHub release plus repository-installable
-  npm: held until late Beta
+  Astro_package:
+    alpha: GitHub_prerelease_plus_npm_prerelease_same_commit
+    semver_example: 0.1.0-alpha.1
+    exact_first_version: release_gate_decision
+    npm_dist_tag: alpha
+    public_install: npm install astro-discussion-bridge@alpha
+    latest_reserved_for: first_stable_release
+    beta_tag: consciously_chosen_beta_next_or_other_prerelease
+    repo_tarball: development_recovery_fallback
+  Discourse_plugin:
+    npm_distribution_decision_applies: false
 support:
   formal_work: GitHub Issues
   setup_and_field_reports: Discourse Alpha Support category
   email_intake: alphasupport@discussionbridge.dev -> Discourse
   private_help: paid implementation/migration
 release_prerequisites:
+  - npm package name, ownership, and publisher authority confirmed
+  - npm account 2FA or trusted publishing confirmed
+  - exact reviewed semver prerelease selected
+  - npm pack --dry-run and tarball contents inspected
+  - clean install from packed artifact in plain Astro and Starlight
+  - clean registry install from @alpha in plain Astro and Starlight
+  - exports, Astro components, CLI bin/help, import/sync, comments, source disclosure, and multi-target helpers verified
+  - LICENSE, README, repository, bugs, and homepage metadata verified
+  - credentials, fixtures, local paths, and unintended files absent
   - Code Boss pass/fail result recorded against the exact release candidate
   - blocking code-review edits complete and re-reviewed where required
   - Bridge Boss technical verification complete
@@ -1151,6 +1175,10 @@ release_prerequisites:
   - live Alpha Support category verified
   - email route verified
   - README, docs, metadata, demos, and release notes agree
+  - GitHub prerelease and npm artifact resolve to the same commit
+  - npm view, dist-tags, and clean consumer install verified
+  - rollback, deprecation, and yank response documented for immutable versions
+  - automatic npm audit fix prohibited
   - package tests and demo build pass
   - dry-run CLI checks pass
   - at least one controlled live smoke sync passes

@@ -573,6 +573,13 @@ component for normal topics and design a bounded optional plugin slice for
 Mermaid in full-app embeds, table parity, embed-context detection, and tests.
 This remains pending design/review and does not change Tier 1 installation.
 
+The optional plugin is a separate product/repository under Boss routing. Its
+v0.1 Alpha goal is installable and removable on supported stock/current
+Discourse with documented rollback, no ordinary-topic regression, and a live
+CAN full-app proof. It must detect embed context explicitly and cover Mermaid,
+tables, and tests. Full control plane, general forum-to-forum orchestration,
+post-as-user, PM automation, and broad many-to-many administration remain out.
+
 Alpha scope is cumulative. Plugin and multi-target work add to every previously
 accepted Alpha gate; they do not rewrite or shorten the promise. Use the existing
 dashboard and build/launch checklists as the complete source of truth, and remove
@@ -734,8 +741,29 @@ Citizen Activist topology gate.
 
 ## 13. Alpha Support And Release Channel
 
-The current Alpha release decision is GitHub release plus repository-installable;
-npm publication is held until late Beta. The intended support split is:
+The intended public Alpha channel is a GitHub prerelease plus an npm prerelease
+of the same reviewed Astro-package commit. Publish a semver prerelease such as
+`0.1.0-alpha.1` under npm dist-tag `alpha`—never `latest`. The exact first
+version remains a release-gate decision. Public installation becomes:
+
+```powershell
+npm install astro-discussion-bridge@alpha
+```
+
+Reserve `latest` for the first stable release. Beta should deliberately choose
+`beta`, `next`, or another documented prerelease tag after Alpha learning; npm
+does not begin only in Beta. Repository/tarball installs remain useful for
+development, recovery, and fallback, but are not the primary public Alpha path.
+
+Do not publish until the release checklist passes package ownership/publisher
+authority, account security, exact version/content review, clean packed and
+registry installs in plain Astro and Starlight, exports/components/CLI/feature
+smokes, metadata and secret/file hygiene, Code Boss and Manual Boss review,
+GitHub/npm commit correspondence, dist-tag verification, consumer install, and
+rollback/deprecation procedure. Published npm versions are immutable. Never run
+an automatic `npm audit fix` as part of release preparation.
+
+The intended support split is:
 
 - GitHub Issues for confirmed bugs, reproducible failures, docs gaps, and
   feature work;

@@ -12,8 +12,32 @@ Discussion Bridge started with a practical need: Astro pages should have real Di
 - future Discourse plugin control-plane possibilities
 - central organization, chapter, regional, public, private, and internal community use cases
 - static publishing clarity plus community continuity
+- content lanes and explicit source ownership
+- diagnostic/runtime key boundaries
+- bidirectional but single-writer flows
+- purposeful connections where every connection has a job
+- local/national federation
+- optional Discourse-side enhancement without making Tier 1 plugin-dependent
 
 This is a WebSynergetics-style process: start with useful work, let the work expose the system, then capture the reusable pattern where it belongs.
+
+This product definition was discovered through implementation. It is not a
+retrofitted feature list: an initially undefined static-site/community
+connection problem exposed the operating model one real constraint at a time.
+
+## Public Alpha Distribution
+
+The Astro package's intended public Alpha path is a GitHub prerelease and npm
+prerelease from the same reviewed commit. Use a semver prerelease (candidate
+example `0.1.0-alpha.1`) and npm dist-tag `alpha`; never assign Alpha to
+`latest`. Public users install `astro-discussion-bridge@alpha`. Reserve `latest`
+for stable. Repo/tarball installation remains a development/recovery fallback.
+
+Actual npm publication remains open until the release gates pass. The registry
+path is itself product proof: it must expose packaging, exports, CLI bin,
+dependencies, installation, docs, and support problems before stable. Beta
+continues on a deliberately selected prerelease tag rather than being the first
+npm publication.
 
 ## Product Frame
 

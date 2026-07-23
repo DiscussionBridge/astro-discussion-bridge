@@ -70,7 +70,8 @@ The current site uses Astro 7, Starlight, Mermaid, the Cloudflare adapter, OG
 image generation, and `astro-discussion-bridge`. The Alpha integration uses the
 unique packed artifact
 `vendor/astro-discussion-bridge-0.1.0-alpha-69846cf-64a151bd.tgz`; it is not the final
-release distribution.
+public Alpha distribution. The intended public path is the exact reviewed
+registry `astro-discussion-bridge@alpha` package after release gates pass.
 
 > **Stop if:** work is pointed at the `legacy-source` directory, a copied deploy
 > tree, a different forum spelling, or a different repository without an
@@ -247,9 +248,9 @@ with reason `discussionSync is false`: 0 created, 0 updated, 1 skipped,
 0 unchanged, and 0 dry-run. The earlier `not linked` result was caused by CRLF
 frontmatter parsing and did not write to Discourse.
 
-The next pass is live behavior verification, resolution of the remaining Ops
-inputs, Code Boss review of the exact candidate, and replacement of the packed
-Alpha artifact with the approved GitHub release asset at release time.
+The release pass replaces packed integration artifacts with the exact reviewed
+registry `astro-discussion-bridge@alpha` artifact corresponding to the GitHub
+prerelease commit after all npm/GitHub release gates pass.
 
 The imported-page integration now uses a Starlight `MarkdownContent` page-boundary
 override plus an extended `docsSchema`, so custom bridge frontmatter survives and
@@ -519,8 +520,9 @@ The Alpha gate also requires a usable import discovery/queue:
 - [ ] Confirm required Discourse tags for topic `434`/the impact-analysis lane.
 - [ ] Confirm full-app embed settings and explicit-topic behavior live.
 - [x] Complete local package migration and deployment-shaped build verification.
-- [ ] Replace the packed Alpha artifact with the approved GitHub release asset
-      for the release candidate.
+- [ ] Replace the packed Alpha artifact with the exact reviewed registry
+      `astro-discussion-bridge@alpha` package corresponding to the GitHub
+      prerelease commit; retain tarball/repo install as recovery fallback.
 - [ ] Confirm Cloudflare ownership/account boundary.
 - [x] Verify live canonical proof page and Worker deployment signature.
 - [x] Verify a signed-in browser-session reply against topic `434`.
