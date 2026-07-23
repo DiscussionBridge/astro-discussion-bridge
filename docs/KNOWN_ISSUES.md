@@ -1,0 +1,117 @@
+# Known Issues
+
+This page records confirmed issues that operators may encounter while using or
+building Discussion Bridge sites. It distinguishes product defects from
+upstream framework behavior and keeps workarounds bounded.
+
+## Astro
+
+### Starlight
+
+#### 1. Build Logs `Entry docs -> 404 was not found`
+
+**Status:** Confirmed upstream Starlight behavior; GitHub issue prepared but not
+yet filed.
+
+**Impact:** Low. The message adds noise to otherwise successful builds. The
+generated site and fallback 404 page continue to work.
+
+**Observed message:**
+
+```text
+Entry docs -> 404 was not found.
+```
+
+**Confirmed reproduction:**
+
+- a clean stock Starlight control at `examples/stock-starlight`
+- Astro `^7.0.4`
+- Starlight `^0.41.2`
+- no Discussion Bridge integration or component wiring required
+- `npm run build` completes successfully and then prints the message
+
+**Likely source:**
+
+Starlight's generated 404 route checks for an optional user-authored `404`
+entry with `getEntry("docs", "404")`. When `src/content/docs/404.md` does not
+exist, Astro reports the missing entry even though Starlight correctly falls
+back to its generated 404 page.
+
+**Controls already tested:**
+
+- `disable404Route: true` removes the message, confirming that the injected
+  Starlight 404 route is involved.
+- Adding `src/content/docs/404.md` removes the missing-entry message but causes
+  a route-conflict warning because the docs catch-all also tries to render
+  `/404`. This is not a clean workaround.
+
+**Current operator guidance:**
+
+- If the build succeeds and the generated 404 page works, treat the message as
+  a known warning.
+- Do not add `src/content/docs/404.md` solely to silence it.
+- Use `disable404Route: true` only when the site deliberately supplies and
+  verifies another 404 implementation.
+
+**Possible upstream fix:**
+
+Starlight could probe for the optional custom 404 entry without emitting a
+missing-entry diagnostic for the expected absence, or otherwise suppress that
+expected miss inside its generated 404 route. The fallback behavior should
+remain unchanged.
+
+**Prepared GitHub issue:**
+
+Title:
+
+```text
+Generated 404 route logs "Entry docs -> 404 was not found" when no custom 404 entry exists
+```
+
+Body:
+
+```markdown
+### What happened?
+
+A clean Starlight build succeeds but prints:
+
+`Entry docs -> 404 was not found.`
+
+The site has no `src/content/docs/404.md`, so Starlight should use its generated
+fallback 404 page. The fallback works; the unexpected part is the missing-entry
+diagnostic during an otherwise successful build.
+
+### Reproduction
+
+1. Create a stock Starlight site using Astro `^7.0.4` and Starlight `^0.41.2`.
+2. Do not create `src/content/docs/404.md`.
+3. Run `npm run build`.
+4. Observe that the build succeeds and then logs
+   `Entry docs -> 404 was not found.`
+
+A minimal control is available in
+`examples/stock-starlight` in the DiscussionBridge/astro-discussion-bridge
+repository.
+
+### Additional findings
+
+- `disable404Route: true` removes the message.
+- Adding `src/content/docs/404.md` removes the missing-entry message but creates
+  a route conflict because the docs catch-all also attempts to render `/404`.
+- The likely source is the generated Starlight 404 route probing the optional
+  docs entry with `getEntry("docs", "404")`.
+
+### Expected behavior
+
+The generated fallback 404 route should continue to work without logging a
+missing-entry diagnostic when the optional custom `404` docs entry is absent.
+
+### Possible direction
+
+Probe for the optional entry without emitting a diagnostic for the expected
+absence, or suppress that expected miss inside the generated 404 route.
+```
+
+Before filing, reproduce once against the current Starlight release and replace
+the version ranges above with the exact installed versions.
+

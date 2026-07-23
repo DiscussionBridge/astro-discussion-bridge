@@ -214,7 +214,19 @@ construction preserves a Discourse subfolder base, so a topic under
 `https://example.com/forum/t/...` links to
 `https://example.com/forum/u/editorbridgeforum`. Regression coverage includes
 that base preservation plus real `--post-as` CLI execution and dry-run actor
-output; the package suite passes 78/78.
+output; those regressions remain covered in the current 79/79 package suite.
+
+Source category is now durable WHEREFROM metadata. Import records
+`discussionSourceCategoryId`; skip, dry-run overwrite, and live overwrite
+compare the current Discourse category with the existing opening YAML
+frontmatter. A change is reported as `source category changed: OLD -> NEW;
+Astro route/navigation unchanged`. Overwrite refreshes that source fact but
+does not move the destination file, public route, or Astro navigation lane.
+Those WHERETO decisions remain explicit and reviewable. Direct and strict
+atomic-manifest paths preserve the reason and all source/no-writeback
+protections. Opening-frontmatter parsing is LF/CRLF/BOM safe and ignores
+body/code-block lookalikes. Code Boss passed the reviewed implementation; the
+current package suite passes 79/79.
 
 Many-to-many operation must not create identical or visually ambiguous
 nonhuman identities across forums. Service identities encode role plus origin:

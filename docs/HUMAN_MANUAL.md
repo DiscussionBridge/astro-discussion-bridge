@@ -416,6 +416,18 @@ Manifest v1 keeps these as the existing flat fields—such as `topic`,
 `requiredTags`, and `output`—rather than a new nested structure. A nested
 `from`/`to` form is only a possible future evolution.
 
+If the source topic later moves to another Discourse category, Discussion
+Bridge reports:
+
+```text
+source category changed: OLD -> NEW; Astro route/navigation unchanged
+```
+
+An overwrite refreshes `discussionSourceCategoryId`, but it does not silently
+move the Astro file, public route, or Astro navigation lane. WHEREFROM changed;
+WHERETO remains an explicit operator or manifest decision. Review and change
+the destination separately only when that is the intended publishing decision.
+
 > **Never use:** `bumped_at`, last reply, or latest activity for queue order.
 > Community participation must not reorder publishing candidates.
 

@@ -2,6 +2,13 @@
 
 This document records the public Alpha attribution, ownership, and licensing posture for DiscussionBridge and Discussion Bridge for Astro.
 
+**Why Alpha:** attribution and licensing principles are not temporary, but the
+exact package contents, public surfaces, third-party references, and release
+evidence can still change before a stable release. Naming the current release
+stage keeps this record tied to what has actually been reviewed. Every later
+release candidate must refresh the automated checks and semantic review; the
+stable release will publish the corresponding stable posture.
+
 It adapts the WebSynergetics legal and ownership governance working notes for this public repository. The WebSynergetics-level legal/governance records remain the master operating source; this file is the project-facing public version.
 
 ## Public Summary

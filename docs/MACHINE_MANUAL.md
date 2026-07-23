@@ -1302,8 +1302,28 @@ source_author_provenance:
 request_actor_regressions:
   - real_CLI_execution_with_--post-as
   - dry-run_actor_output
-package_suite: 78/78
+package_suite: 79/79
 category_contract:
+  generated_source_field: discussionSourceCategoryId
+  comparison_source: existing_opening_YAML_frontmatter_only
+  parser_safety: [LF, CRLF, BOM, ignore_body_and_code_block_lookalikes]
+  change_reason: "source category changed: OLD -> NEW; Astro route/navigation unchanged"
+  evaluated_during:
+    - existing_file_skip
+    - dry_run_overwrite
+    - live_overwrite
+  overwrite_effect:
+    WHEREFROM: refresh_source_category_metadata
+    WHERETO: preserve_output_file_public_route_and_Astro_navigation_lane
+  manifest_contract:
+    - direct_and_strict_atomic_flows
+    - preserve_reason_in_dry_run_and_live_overwrite
+    - preserve_stable_output_path
+    - preserve_source_mode
+    - preserve_discussionSync_false
+    - preserve_topic_ID_and_source_protections
+  CLI: print_change_reason
+  example_schemas: [Astro, Starlight]
   astro_managed:
     configured_category: authoritative_sync_corrects_drift
     no_configured_category: preserve_manual_Discourse_category

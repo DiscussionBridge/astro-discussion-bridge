@@ -27,6 +27,7 @@ Keep commercial strategy, pricing, services positioning, and private brand plann
 - [Alpha Setup Guide](./ALPHA_SETUP.md)
 - [Key Management Guide](./KEY_MANAGEMENT.md)
 - [Support And Feedback](./SUPPORT_AND_FEEDBACK.md)
+- [Known Issues](./KNOWN_ISSUES.md)
 - [Comments Display Guide](./COMMENTS_DISPLAY.md)
 - [Content Lanes Guide](./CONTENT_LANES.md)
 - [Presets And Placement](./PRESETS_AND_PLACEMENT.md)

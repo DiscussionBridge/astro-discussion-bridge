@@ -164,7 +164,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Add or update demo npm scripts for lane-specific dry runs using `--details`.
 - [ ] Decide whether `--details` should also apply to `import-existing` output.
 - [x] Document the demo build warning: `Entry docs -> 404 was not found`.
-- [ ] Prepare and file a Starlight GitHub issue for the stock Starlight `Entry docs -> 404 was not found` finding; include the likely `getEntry('docs', '404')` source, `disable404Route: true` confirmation, and custom `docs/404.md` route-conflict result.
+- [x] Prepare a Starlight GitHub issue write-up for the stock Starlight `Entry docs -> 404 was not found` finding; include the likely `getEntry('docs', '404')` source, `disable404Route: true` confirmation, and custom `docs/404.md` route-conflict result.
+- [ ] Reproduce against the current Starlight release and file the prepared GitHub issue.
 - [x] Keep the local package demo dependency pointed at the package directory unless a release-packaging test specifically needs a tarball.
 
 ### Recover
@@ -385,7 +386,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       `DISCOURSE_POST_AS`, and lane/default `postAs`/`postAsEnv`, with legacy
       API-username controls as fallbacks and the resolved actor sent as
       `Api-Username`. A real CLI execution regression covers `--post-as` and
-      dry-run actor output. Package suite 78/78.
+      dry-run actor output. Current package suite 79/79.
 - [x] Document independent Discourse key User Level and Scope behavior:
       `All Users` may act for supplied `Api-Username`; `Single User` is bound
       to its selected user; Scope controls endpoints separately.
@@ -403,6 +404,11 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       explicit overwrite refresh; render safe same-forum source-author profile
       attribution while preserving the forum's subfolder base, source mode,
       no-writeback, and topic ID.
+- [x] Persist `discussionSourceCategoryId` and report source-category changes
+      from opening frontmatter only. Overwrite refreshes WHEREFROM metadata
+      without moving the Astro file, public route, or navigation lane; direct
+      and strict atomic-manifest coverage includes LF, CRLF, BOM, and body/code
+      lookalikes. Package suite 79/79; Code Boss PASS.
 - [ ] Design an explicit existing-topic owner-transfer operation separately
       from `postAs` and normal sync; neither may silently change ownership.
 - [x] Document category authority: configured categories are authoritative for
