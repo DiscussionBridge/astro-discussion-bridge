@@ -158,7 +158,7 @@ import DiscussionSource from "astro-discussion-bridge/DiscussionSource.astro";
 />
 ```
 
-For `discourse-imported`, the default notice says the page originated in Discourse and was imported for publication. For `discourse-managed`, it says the page is managed in Discourse and published in Astro for easier reading. The source link resolves from `discussionImportedFrom`, the protected source-target binding, or the legacy topic URL. `astro-managed` pages render no source notice.
+For `discourse-imported`, the default notice says the page originated in Discourse and was imported for publication. For `discourse-managed`, it says the page is managed in Discourse and published in Astro for easier reading. The source link resolves from `discussionImportedFrom`, the protected source-target binding, or the legacy topic URL. When import metadata includes `discussionSourceAuthorUsername` and `discussionSourceAuthorName`, the notice also identifies and links the source author on the same Discourse installation. An explicit overwrite import refreshes those fields after a Discourse ownership or username change. `astro-managed` pages render no source notice.
 
 Use the `message`, `linkLabel`, and `sourceLabel` props to match the public site's voice without obscuring provenance. This notice belongs with the article content; the comments boundary remains responsible for discussion controls and Discussion Bridge credit.
 
@@ -279,11 +279,13 @@ Add environment variables to the Astro project that contains your docs.
 ```sh
 DISCOURSE_URL=https://forum.example.com
 DISCOURSE_API_KEY=your-api-key
-DISCOURSE_API_USERNAME=system
+DISCOURSE_POST_AS=discussionbridge-editor
 DISCOURSE_CATEGORY_ID=12
 DISCOURSE_TAGS=docs,starlight
 SITE_URL=https://docs.example.com
 ```
+
+`DISCOURSE_POST_AS`, CLI `--post-as`, and build-lane `postAs`/`postAsEnv` are the preferred request-actor controls. Existing `DISCOURSE_API_USERNAME`, `--api-username`, `apiUsername`, and `apiUsernameEnv` settings remain supported as backward-compatible fallbacks. Selecting a different actor affects new API writes; it does not silently transfer ownership of an existing Discourse topic.
 
 For create-and-sync workflows, the API user/key must be able to:
 
@@ -528,6 +530,7 @@ discussionBridge({
       {
         name: "docs",
         docsDir: "src/content/docs",
+        postAsEnv: "DISCOURSE_DOCS_POST_AS",
         categoryId: 12,
         tags: ["docs"],
       },
@@ -536,6 +539,7 @@ discussionBridge({
         targetName: "community",
         docsDir: "src/content/releases",
         routeBase: "releases",
+        postAsEnv: "DISCOURSE_RELEASES_POST_AS",
         categoryId: 18,
         tags: ["releases", "starlog"],
       },
@@ -560,7 +564,7 @@ discussionNotifyRecipients: "PhilH,OpsBot"
 
 Supported per-page overrides:
 
-- `discussionCategoryId`: Discourse category ID for this page's companion topic.
+- `discussionCategoryId`: Discourse category ID for this page's companion topic. When configured, Astro-managed sync corrects category drift to this value. When no page or lane category is configured, existing manual Discourse placement is left alone. Imported and Discourse-managed source topics remain protected from category writeback.
 - `discussionCommentsDisplay`: `simple` for the Discourse embed, `full` for bridge-rendered replies with like counts, or `fullInteractive` for Discourse's full app embed.
 - `discussionTags`: comma-separated tags used for this page's companion topic. When tags are configured for a page or lane, existing-topic sync reconciles the Discourse topic tags to match. When tags are omitted, DiscussionBridge leaves existing Discourse tags alone.
 - `discussionUnlisted`: `true` hides this page's companion topic from category discovery after create/sync.

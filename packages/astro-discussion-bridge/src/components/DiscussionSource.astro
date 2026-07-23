@@ -11,6 +11,8 @@ interface Props {
   linkLabel?: string;
   message?: string;
   mode?: DiscussionSourceMode;
+  sourceAuthorName?: string;
+  sourceAuthorUsername?: string;
   sourceLabel?: string;
   sourceUrl?: string;
   targetBindings?: DiscussionTargetBindings | string;
@@ -21,6 +23,10 @@ const notice = resolveDiscussionSourceNotice({
   mode: Astro.props.mode ?? stringValue(frontmatter?.discussionSourceMode),
   sourceLabel: Astro.props.sourceLabel ?? stringValue(frontmatter?.discussionSourceLabel),
   sourceUrl: Astro.props.sourceUrl,
+  sourceAuthorUsername: Astro.props.sourceAuthorUsername
+    ?? stringValue(frontmatter?.discussionSourceAuthorUsername),
+  sourceAuthorName: Astro.props.sourceAuthorName
+    ?? stringValue(frontmatter?.discussionSourceAuthorName),
   importedFrom: stringValue(frontmatter?.discussionImportedFrom),
   sourceTarget: stringValue(frontmatter?.discussionSourceTarget),
   legacyTarget: stringValue(frontmatter?.discussionTarget),
@@ -49,6 +55,16 @@ function bindingValue(value: unknown): DiscussionTargetBindings | string | undef
     <p>
       <strong>Source:</strong> {message}
       {notice.sourceUrl && <> <a href={notice.sourceUrl}>{linkLabel}</a>.</>}
+      {notice.sourceAuthorUsername && (
+        <>
+          {" "}
+          <span class="discussion-bridge-source-author">
+            Source author: {notice.sourceAuthorProfileUrl
+              ? <a href={notice.sourceAuthorProfileUrl}>{notice.sourceAuthorName}</a>
+              : notice.sourceAuthorName} (@{notice.sourceAuthorUsername}).
+          </span>
+        </>
+      )}
     </p>
   </aside>
 )}

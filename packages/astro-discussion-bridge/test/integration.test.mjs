@@ -33,6 +33,7 @@ test("publishOnBuild lanes can publish one page to independent Discourse targets
   const originalFetch = globalThis.fetch;
   const originalCommunityKey = process.env.TEST_COMMUNITY_DISCOURSE_KEY;
   const originalRegionalKey = process.env.TEST_REGIONAL_DISCOURSE_KEY;
+  const originalCommunityPostAs = process.env.TEST_COMMUNITY_POST_AS;
   const originalUsername = process.env.TEST_BRIDGE_USERNAME;
   const calls = [];
 
@@ -55,6 +56,7 @@ test("publishOnBuild lanes can publish one page to independent Discourse targets
 
     process.env.TEST_COMMUNITY_DISCOURSE_KEY = "community-secret";
     process.env.TEST_REGIONAL_DISCOURSE_KEY = "regional-secret";
+    process.env.TEST_COMMUNITY_POST_AS = "community-editor";
     process.env.TEST_BRIDGE_USERNAME = "bridge-bot";
 
     globalThis.fetch = async (url, init = {}) => {
@@ -90,7 +92,7 @@ test("publishOnBuild lanes can publish one page to independent Discourse targets
             targetName: "community",
             discourseUrl: "https://community.example.com",
             apiKeyEnv: "TEST_COMMUNITY_DISCOURSE_KEY",
-            apiUsernameEnv: "TEST_BRIDGE_USERNAME",
+            postAsEnv: "TEST_COMMUNITY_POST_AS",
           },
           {
             name: "regional",
@@ -113,7 +115,7 @@ test("publishOnBuild lanes can publish one page to independent Discourse targets
     assert.deepEqual(
       calls.map((call) => [call.hostname, call.apiKey, call.apiUsername]),
       [
-        ["community.example.com", "community-secret", "bridge-bot"],
+        ["community.example.com", "community-secret", "community-editor"],
         ["regional.example.com", "regional-secret", "bridge-bot"],
       ],
     );
@@ -127,6 +129,7 @@ test("publishOnBuild lanes can publish one page to independent Discourse targets
     globalThis.fetch = originalFetch;
     restoreEnv("TEST_COMMUNITY_DISCOURSE_KEY", originalCommunityKey);
     restoreEnv("TEST_REGIONAL_DISCOURSE_KEY", originalRegionalKey);
+    restoreEnv("TEST_COMMUNITY_POST_AS", originalCommunityPostAs);
     restoreEnv("TEST_BRIDGE_USERNAME", originalUsername);
     await rm(projectRoot, { force: true, recursive: true });
   }

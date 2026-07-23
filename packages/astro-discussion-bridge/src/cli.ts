@@ -46,7 +46,10 @@ const siteUrl = args.values.get("site-url") ?? process.env.SITE_URL;
 const routeBase = args.values.get("route-base");
 const targetName = args.values.get("target") ?? process.env.DISCUSSION_TARGET;
 const apiKey = args.values.get("api-key") ?? process.env.DISCOURSE_API_KEY;
-const apiUsername = args.values.get("api-username") ?? process.env.DISCOURSE_API_USERNAME;
+const apiUsername = args.values.get("post-as")
+  ?? process.env.DISCOURSE_POST_AS
+  ?? args.values.get("api-username")
+  ?? process.env.DISCOURSE_API_USERNAME;
 const diagnosticsApiKey = args.values.get("diagnostics-api-key") ?? process.env.DISCOURSE_DIAGNOSTICS_API_KEY;
 const importApiKey = diagnosticsApiKey ?? apiKey;
 const categoryId = numberFromValue(args.values.get("category-id") ?? process.env.DISCOURSE_CATEGORY_ID);
@@ -86,7 +89,9 @@ const missing = [
   ...(!siteUrl && command !== "check-discourse" ? ["SITE_URL or --site-url"] : []),
   ...(!dryRun && command !== "check-discourse" && command !== "import-existing" && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
   ...(!dryRun && command === "import-existing" && !importApiKey ? ["DISCOURSE_DIAGNOSTICS_API_KEY, DISCOURSE_API_KEY, --diagnostics-api-key, or --api-key"] : []),
-  ...(!dryRun && command !== "check-discourse" && !apiUsername ? ["DISCOURSE_API_USERNAME or --api-username"] : []),
+  ...(!dryRun && command !== "check-discourse" && !apiUsername
+    ? ["DISCOURSE_POST_AS, --post-as, DISCOURSE_API_USERNAME, or --api-username"]
+    : []),
   ...(command === "import-existing" && topics.length === 0 && !manifestPath ? ["--topic URL[,URL], --topic-id ID[,ID], or --manifest FILE"] : []),
   ...(command === "import-existing" && manifestPath && hasDirectImportOptions ? ["use --manifest without --topic, --comments-display, --hero-image, --hero-alt, --prune-profile, or --source-mode"] : []),
   ...(command !== "import-existing" && manifestPath ? ["--manifest is only valid with import-existing"] : []),
@@ -111,6 +116,7 @@ if (command === "check-discourse") {
   });
 
   console.log(`Discourse URL: ${discourseUrl}`);
+  console.log(`Request actor: ${apiUsername ?? "anonymous"}`);
   console.log(`Site settings: ${result.settingsAvailable ? "available" : "unavailable"}`);
   if (result.settingsError) console.log(`Site settings error: ${oneLine(result.settingsError)}`);
   console.log(`Site capabilities: ${result.capabilitiesAvailable ? "available" : "unavailable"}`);
@@ -196,6 +202,7 @@ if (command === "import-existing") {
   if (!dryRun) {
     console.log("Importing existing Discourse topics into Astro Markdown files.");
   }
+  if (apiUsername) console.log(`Post as: ${apiUsername}`);
 
   const manifest = manifestPath ? await loadImportManifest(manifestPath.trim()) : undefined;
   const results = manifest
@@ -240,6 +247,7 @@ if (command === "import-existing") {
   process.exit(0);
 }
 
+if (apiUsername) console.log(`Post as: ${apiUsername}`);
 const results = await syncDiscourseTopics({
   docsDir,
   siteUrl: siteUrl!,
@@ -420,7 +428,8 @@ function printUsage(error?: string) {
   console.error("  --route-base PATH          Public route prefix for this content lane, such as blog or releases.");
   console.error("  --discourse-url URL        Discourse base URL, or DISCOURSE_URL.");
   console.error("  --site-url URL             Public Astro site URL, or SITE_URL.");
-  console.error("  --api-username USER        Discourse API username, or DISCOURSE_API_USERNAME.");
+  console.error("  --post-as USER             Preferred Discourse request actor, or DISCOURSE_POST_AS.");
+  console.error("  --api-username USER        Backward-compatible alias/fallback using DISCOURSE_API_USERNAME.");
   console.error("  --api-key KEY              Discourse API key, or DISCOURSE_API_KEY.");
   console.error("  --tags TAG[,TAG]           Discourse topic tags for this lane.");
   console.error("  --category-id ID           Discourse category ID for created/updated topics.");

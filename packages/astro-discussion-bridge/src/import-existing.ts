@@ -32,6 +32,8 @@ export interface ImportedDiscourseTopic {
   pageUrl: string;
   topicId: number;
   topicUrl: string;
+  sourceAuthorUsername?: string;
+  sourceAuthorName?: string;
   status: "imported" | "skipped" | "dry-run-import" | "dry-run-overwrite";
   reason?: string;
 }
@@ -66,6 +68,7 @@ export async function importExistingDiscourseTopics(
     if (!firstPostSummary) {
       throw new Error(`Could not find first post for Discourse topic ${topicRef.topicId}.`);
     }
+    const sourceAuthor = sourceAuthorForPost(firstPostSummary);
 
     const slug = topicRef.slug ?? firstPostSummary.topic_slug ?? slugify(topic.title);
     const filePath = options.outputFile
@@ -82,6 +85,8 @@ export async function importExistingDiscourseTopics(
         pageUrl,
         topicId: topic.id,
         topicUrl,
+        sourceAuthorUsername: sourceAuthor?.username,
+        sourceAuthorName: sourceAuthor?.name,
         status: "skipped",
         reason: "file already exists",
       });
@@ -95,6 +100,8 @@ export async function importExistingDiscourseTopics(
         pageUrl,
         topicId: topic.id,
         topicUrl,
+        sourceAuthorUsername: sourceAuthor?.username,
+        sourceAuthorName: sourceAuthor?.name,
         status: fileExists ? "dry-run-overwrite" : "dry-run-import",
       });
       continue;
@@ -112,6 +119,7 @@ export async function importExistingDiscourseTopics(
       pruneProfiles,
       topic.id,
     );
+    const refreshedSourceAuthor = sourceAuthorForPost(firstPost);
     const sourceHash = hashDiscussionSource({ title: topic.title, pageUrl, content: body });
 
     await fs.mkdir(path.dirname(filePath), { recursive: true });
@@ -128,6 +136,8 @@ export async function importExistingDiscourseTopics(
         heroImage,
         heroAlt,
         sourceMode,
+        sourceAuthorUsername: refreshedSourceAuthor?.username,
+        sourceAuthorName: refreshedSourceAuthor?.name,
         importPolicy: pruneProfiles.length
           ? `pruned:${pruneProfiles.join(",")}`
           : "unpruned",
@@ -141,6 +151,8 @@ export async function importExistingDiscourseTopics(
       pageUrl,
       topicId: topic.id,
       topicUrl,
+      sourceAuthorUsername: refreshedSourceAuthor?.username,
+      sourceAuthorName: refreshedSourceAuthor?.name,
       status: "imported",
     });
   }
@@ -215,6 +227,13 @@ function parseTopicRef(value: string, discourseUrl: string): { topicId: number; 
 
 function firstPostForTopic(topic: TopicResponse): DiscoursePost | undefined {
   return topic.post_stream.posts.find((post) => post.post_number === 1);
+}
+
+function sourceAuthorForPost(post: DiscoursePost): { username: string; name: string } | undefined {
+  const username = post.username?.trim();
+  if (!username) return undefined;
+  const name = post.display_username?.trim() || post.name?.trim() || username;
+  return { username, name };
 }
 
 function postBodyForImport(post: DiscoursePost, topicId: number): string {
@@ -299,6 +318,8 @@ function markdownForImportedTopic(input: {
   heroImage?: string;
   heroAlt?: string;
   sourceMode: ImportSourceMode;
+  sourceAuthorUsername?: string;
+  sourceAuthorName?: string;
   importPolicy: string;
   body: string;
 }): string {
@@ -311,6 +332,12 @@ function markdownForImportedTopic(input: {
         }
       : {}),
     discussionSourceMode: input.sourceMode,
+    ...(input.sourceAuthorUsername
+      ? {
+          discussionSourceAuthorUsername: input.sourceAuthorUsername,
+          discussionSourceAuthorName: input.sourceAuthorName ?? input.sourceAuthorUsername,
+        }
+      : {}),
     discussionSync: false,
     discourseTopicId: input.topicId,
     discourseTopicUrl: input.topicUrl,

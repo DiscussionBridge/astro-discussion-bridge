@@ -2763,6 +2763,9 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
       },
       post: {
         id: 101,
+        name: "Discussion Bridge Forum Editor",
+        username: "editorbridgeforum",
+        display_username: "Discussion Bridge Forum Editor",
         post_number: 1,
         topic_id: 21,
         topic_slug: "imported-discourse-topic",
@@ -2790,6 +2793,8 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
     const source = await readFile(path.join(docsDir, "imported-discourse-topic.md"), "utf8");
     assert.match(source, /title: "Imported Discourse Topic"/);
     assert.match(source, /discussionSourceMode: "discourse-imported"/);
+    assert.match(source, /discussionSourceAuthorUsername: "editorbridgeforum"/);
+    assert.match(source, /discussionSourceAuthorName: "Discussion Bridge Forum Editor"/);
     assert.match(source, /discussionSync: false/);
     assert.match(source, /discourseTopicId: 21/);
     assert.match(source, /discussionImportedFrom: "https:\/\/forum\.example\.com\/t\/imported-discourse-topic\/21"/);
@@ -3260,6 +3265,88 @@ test("import-existing skips existing files unless overwrite is enabled", async (
 
     assert.equal(overwritten[0].status, "imported");
     assert.match(await readFile(filePath, "utf8"), /Replacement\./);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing overwrite refreshes changed Discourse source ownership", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-owner-refresh-"));
+  const originalFetch = globalThis.fetch;
+  const topic = {
+    id: 36,
+    title: "How to Choose a Discussion Bridge Source Mode",
+    category_id: 6,
+    visible: true,
+    post_stream: {
+      posts: [{
+        id: 136,
+        name: "Discourse Admin",
+        username: "discourseadmin",
+        display_username: "Discourse Admin",
+        post_number: 1,
+        topic_id: 36,
+        topic_slug: "how-to-choose-a-discussion-bridge-source-mode",
+        cooked: "<p>Choose one source of truth.</p>",
+      }],
+    },
+  };
+
+  try {
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic,
+      post: {
+        ...topic.post_stream.posts[0],
+        raw: "Choose one source of truth.",
+      },
+    });
+
+    const options = {
+      docsDir: dir,
+      siteUrl: "https://discussionbridge.dev",
+      targetName: "community",
+      discourseUrl: "https://forum.discussionbridge.dev",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["36"],
+      sourceMode: "discourse-managed",
+      commentsDisplay: "fullInteractive",
+    };
+    await importExistingDiscourseTopics(options);
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        ...topic,
+        post_stream: {
+          posts: [{
+            ...topic.post_stream.posts[0],
+            name: "Discussion Bridge Forum Editor",
+            username: "editorbridgeforum",
+            display_username: "Discussion Bridge Forum Editor",
+          }],
+        },
+      },
+      post: {
+        ...topic.post_stream.posts[0],
+        name: "Discussion Bridge Forum Editor",
+        username: "editorbridgeforum",
+        display_username: "Discussion Bridge Forum Editor",
+        raw: "Choose one source of truth after the ownership transfer.",
+      },
+    });
+    await importExistingDiscourseTopics({ ...options, overwrite: true });
+
+    const source = await readFile(
+      path.join(dir, "how-to-choose-a-discussion-bridge-source-mode.md"),
+      "utf8",
+    );
+    assert.match(source, /discussionSourceAuthorUsername: "editorbridgeforum"/);
+    assert.match(source, /discussionSourceAuthorName: "Discussion Bridge Forum Editor"/);
+    assert.doesNotMatch(source, /discourseadmin|Discourse Admin/);
+    assert.match(source, /discussionSourceMode: "discourse-managed"/);
+    assert.match(source, /discussionSync: false/);
+    assert.match(source, /discourseTopicId: 36/);
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });

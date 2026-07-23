@@ -59,8 +59,10 @@ export interface PublishOnBuildLaneOptions {
   targetName?: string;
   discourseUrl?: string;
   apiKey?: string;
+  postAs?: string;
   apiUsername?: string;
   apiKeyEnv?: string;
+  postAsEnv?: string;
   apiUsernameEnv?: string;
   syncExisting?: boolean;
   unlistSyncedTopics?: boolean;
@@ -110,6 +112,7 @@ interface ResolvedOptions extends PublicOptions {
   publishOnBuild: {
     enabled: boolean;
     apiKey?: string;
+    postAs?: string;
     apiUsername?: string;
     lanes: ResolvedPublishLane[];
   };
@@ -122,8 +125,10 @@ interface ResolvedPublishLane {
   targetName?: string;
   discourseUrl?: string;
   apiKey?: string;
+  postAs?: string;
   apiUsername?: string;
   apiKeyEnv?: string;
+  postAsEnv?: string;
   apiUsernameEnv?: string;
   syncExisting: boolean;
   unlistSyncedTopics: boolean;
@@ -171,14 +176,14 @@ export default function discussionBridge(
           const apiKey = lane.apiKey
             ?? valueFromNamedEnv(lane.apiKeyEnv)
             ?? process.env.DISCOURSE_API_KEY;
-          const apiUsername = lane.apiUsername
-            ?? valueFromNamedEnv(lane.apiUsernameEnv)
-            ?? process.env.DISCOURSE_API_USERNAME;
-          if (!apiKey || !apiUsername) {
+          const postAs = resolvePostAs(lane);
+          if (!apiKey || !postAs) {
             const expectedKey = lane.apiKeyEnv ?? "DISCOURSE_API_KEY";
-            const expectedUsername = lane.apiUsernameEnv ?? "DISCOURSE_API_USERNAME";
+            const expectedActor = lane.postAsEnv
+              ?? lane.apiUsernameEnv
+              ?? "DISCOURSE_POST_AS or DISCOURSE_API_USERNAME";
             throw new Error(
-              `publishOnBuild lane "${lane.name}" requires credentials via apiKey/apiUsername or ${expectedKey}/${expectedUsername}.`,
+              `publishOnBuild lane "${lane.name}" requires an API key and posting actor via apiKey/postAs or ${expectedKey}/${expectedActor}.`,
             );
           }
 
@@ -189,7 +194,7 @@ export default function discussionBridge(
             discourseUrl,
             activeTarget: resolvedOptions.activeTarget ?? process.env.DISCUSSION_TARGET,
             apiKey,
-            apiUsername,
+            apiUsername: postAs,
             logger,
           });
         }
@@ -260,6 +265,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
     publishOnBuild: {
       enabled: options.publishOnBuild?.enabled ?? false,
       apiKey: options.publishOnBuild?.apiKey,
+      postAs: options.publishOnBuild?.postAs,
       apiUsername: options.publishOnBuild?.apiUsername,
       lanes: resolvePublishLanes({
         preset,
@@ -289,8 +295,10 @@ function resolvePublishLanes(input: {
         ? normalizeBaseUrl(defaults.discourseUrl)
         : undefined,
     apiKey: lane.apiKey ?? defaults?.apiKey,
+    postAs: lane.postAs ?? defaults?.postAs,
     apiUsername: lane.apiUsername ?? defaults?.apiUsername,
     apiKeyEnv: lane.apiKeyEnv ?? defaults?.apiKeyEnv,
+    postAsEnv: lane.postAsEnv ?? defaults?.postAsEnv,
     apiUsernameEnv: lane.apiUsernameEnv ?? defaults?.apiUsernameEnv,
     syncExisting: lane.syncExisting ?? defaults?.syncExisting ?? false,
     unlistSyncedTopics: lane.unlistSyncedTopics ?? defaults?.unlistSyncedTopics ?? false,
@@ -302,6 +310,15 @@ function resolvePublishLanes(input: {
     tags: lane.tags ?? defaults?.tags,
     dryRun: lane.dryRun ?? defaults?.dryRun ?? false,
   }));
+}
+
+function resolvePostAs(lane: ResolvedPublishLane): string | undefined {
+  return nonEmptyValue(lane.postAs)
+    ?? valueFromNamedEnv(lane.postAsEnv)
+    ?? nonEmptyValue(process.env.DISCOURSE_POST_AS)
+    ?? nonEmptyValue(lane.apiUsername)
+    ?? valueFromNamedEnv(lane.apiUsernameEnv)
+    ?? nonEmptyValue(process.env.DISCOURSE_API_USERNAME);
 }
 
 async function publishLane(input: {
@@ -388,7 +405,12 @@ function tagsFromEnv(name: string): string[] | undefined {
 
 function valueFromNamedEnv(name: string | undefined): string | undefined {
   if (!name) return undefined;
-  return process.env[name];
+  return nonEmptyValue(process.env[name]);
+}
+
+function nonEmptyValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed || undefined;
 }
 
 function virtualConfigPlugin(options: PublicOptions): Plugin {

@@ -50,6 +50,51 @@ test("managed pages resolve the protected source target binding", () => {
   );
 });
 
+test("source notices expose a safe Discourse source-author profile", () => {
+  assert.deepEqual(
+    resolveDiscussionSourceNotice({
+      mode: "discourse-managed",
+      sourceUrl: "https://forum.example.com/t/managed-guide/36",
+      sourceAuthorUsername: "editorbridgeforum",
+      sourceAuthorName: "Discussion Bridge Forum Editor",
+    }),
+    {
+      mode: "discourse-managed",
+      message: "This page is managed in Discourse and published here for easier reading.",
+      sourceUrl: "https://forum.example.com/t/managed-guide/36",
+      sourceAuthorUsername: "editorbridgeforum",
+      sourceAuthorName: "Discussion Bridge Forum Editor",
+      sourceAuthorProfileUrl: "https://forum.example.com/u/editorbridgeforum",
+    },
+  );
+});
+
+test("source notices discard unsafe source-author usernames", () => {
+  const notice = resolveDiscussionSourceNotice({
+    mode: "discourse-managed",
+    sourceUrl: "https://forum.example.com/t/managed-guide/36",
+    sourceAuthorUsername: "../admin",
+    sourceAuthorName: "Not safe",
+  });
+
+  assert.equal(notice?.sourceAuthorUsername, undefined);
+  assert.equal(notice?.sourceAuthorProfileUrl, undefined);
+});
+
+test("source-author profiles preserve a Discourse subfolder base path", () => {
+  const notice = resolveDiscussionSourceNotice({
+    mode: "discourse-managed",
+    sourceUrl: "https://example.com/forum/t/managed-guide/36",
+    sourceAuthorUsername: "editorbridgeforum",
+    sourceAuthorName: "Discussion Bridge Forum Editor",
+  });
+
+  assert.equal(
+    notice?.sourceAuthorProfileUrl,
+    "https://example.com/forum/u/editorbridgeforum",
+  );
+});
+
 test("source notices reject active URL schemes and use the next safe candidate", () => {
   assert.deepEqual(
     resolveDiscussionSourceNotice({

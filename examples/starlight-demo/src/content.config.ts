@@ -8,6 +8,8 @@ const companionTopicFields = z.object({
   discourseTopicUrl: z.string().url().optional(),
   discussionEmbedUrl: z.string().url().optional(),
   discussionCommentsDisplay: z.enum(["simple", "full", "fullInteractive"]).optional(),
+  discussionSourceAuthorUsername: z.string().optional(),
+  discussionSourceAuthorName: z.string().optional(),
   discussionSync: z.boolean().optional(),
 });
 
