@@ -1192,9 +1192,33 @@ discussionbridge_dev_dogfood:
     destination_route: /guides/how-to-choose-a-discussion-bridge-source-mode/
     status: passed
   live_gate:
-    credentialed_import: open
-    build_deploy: open
-    canonical_verification: open
+    status: complete_bounded_two_direction_proof
+    apex_commit: d68ffc4
+    code_boss: PASS
+    clean_detached_build_routes: 5
+    deployed_at: 2026-07-23T09:00:47-07:00
+    apex_http: 200
+    pages_hostname: https://discussionbridge-dev.pages.dev
+    pages_hostname_redirect: 301_to_apex
+    blog:
+      route: /blog/every-connection-has-a-job/
+      http: 200
+      topic_id: 37
+      category_id: 5
+      wiki: false
+      tags: [discussionbridge, community, product]
+    guide:
+      route: /guides/how-to-choose-a-discussion-bridge-source-mode/
+      http: 200
+      topic_id: 36
+      category_id: 6
+      wiki: true
+      tags: [discussionbridge, source-mode, guide]
+      source_disclosure: verified
+      primary_comments: fullInteractive
+      sync_existing_dry_run: skipped_discourse_managed_no_writeback
+    npm_audit: { high: 1, automatic_fix: prohibited_not_run }
+    known_warning: Mermaid_chunk_over_500k
   direction_1:
     source: discussionbridge.dev_Astro_managed_blog
     destination: forum.discussionbridge.dev_public_companion_topic

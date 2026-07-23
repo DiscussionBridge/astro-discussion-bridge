@@ -632,10 +632,24 @@ The public outcome is: “The site starts conversations. The community develops
 durable knowledge. The site publishes what the community learns.”
 
 Implementation and Code Boss review are complete at `1731547` with 72/72 tests.
-A public dry run of `forum.discussionbridge.dev` topic `36` resolved the planned
-guide route
-`/guides/how-to-choose-a-discussion-bridge-source-mode/`. The credentialed
-import, build, deployment, and live guide verification remain open.
+Apex adoption commit `d68ffc4` also received Code Boss PASS, passed a clean
+detached install/build with five routes, and was deployed on 2026-07-23.
+
+Live verification shows:
+
+- `/blog/every-connection-has-a-job/` returns 200 and binds its independent
+  public companion discussion to topic `37`;
+- `/guides/how-to-choose-a-discussion-bridge-source-mode/` returns 200, shows
+  source disclosure, and renders source wiki topic `36` as the primary
+  fullInteractive discussion;
+- a deliberate guide `sync-existing --dry-run` skips with the
+  `discourse-managed` no-writeback reason;
+- the raw Pages hostname redirects to the canonical apex.
+
+This closes the bounded two-direction dogfood gate. It does not claim merged
+reply streams or general forum-to-forum orchestration. The clean install still
+reported one high-severity npm audit finding, and the Mermaid chunk remains
+larger than 500 kB; neither was hidden or changed with an automatic audit fix.
 
 ### Alpha Topology Proof
 

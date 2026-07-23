@@ -41,25 +41,28 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       `forum.discussionbridge.dev` topic `36` to
       `/guides/how-to-choose-a-discussion-bridge-source-mode/`; verify the
       Discourse-managed frontmatter and deterministic destination preview.
-- [ ] Perform the credentialed import, exact Astro build/deploy, and canonical
-      live guide/source/discussion verification. This remains open; the dry run
-      and reviewed package do not close the live gate.
-- [ ] Publish an Astro-managed `discussionbridge.dev` blog post to a public
+- [x] Complete the credentialed import, exact clean Astro build/deploy, and
+      canonical live guide/source/discussion verification in apex commit
+      `d68ffc4` (Code Boss PASS), deployed 2026-07-23.
+- [x] Publish an Astro-managed `discussionbridge.dev` blog post to a public
       companion discussion on `forum.discussionbridge.dev`; verify the page,
       topic, declared connection purpose, comments presentation, and
-      site-to-forum single-writer direction.
-- [ ] Select a community wiki/how-to on `forum.discussionbridge.dev` and
+      site-to-forum single-writer direction. Live route
+      `/blog/every-connection-has-a-job/` binds independent topic `37`.
+- [x] Select a community wiki/how-to on `forum.discussionbridge.dev` and
       deterministically import/refresh it as a durable public guide on
-      `discussionbridge.dev`.
-- [ ] For the wiki lane, prove `discussionSourceMode: discourse-managed`,
+      `discussionbridge.dev`; live topic `36` is a category-6 wiki.
+- [x] For the wiki lane, prove `discussionSourceMode: discourse-managed`,
       `discussionSync: false`, explicit source provenance, preserved source
       topic identity, deterministic output, public route, and Astro navigation
       lane.
-- [ ] Keep the source forum topic as the primary discussion; make comments
+- [x] Keep the source forum topic as the primary discussion; make comments
       behavior explicit and verify that edits originate in the wiki topic while
-      the site republishes reviewed source without site-to-source writeback.
-- [ ] State clearly that separate topic reply streams are not merged.
-- [ ] Use the public outcome: “The site starts conversations. The community
+      the site republishes reviewed source without site-to-source writeback. A
+      deliberate `sync-existing --dry-run` skipped with the
+      `discourse-managed` no-writeback reason.
+- [x] State clearly that separate topic reply streams are not merged.
+- [x] Use the public outcome: “The site starts conversations. The community
       develops durable knowledge. The site publishes what the community
       learns.”
 

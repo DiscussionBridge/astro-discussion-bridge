@@ -23,6 +23,13 @@ refreshes deterministically and keeps the source topic as its primary
 discussion. Wiki edits happen in Discourse; the site republishes reviewed
 source. These lanes do not merge reply streams.
 
+Live dogfood verification completed in apex commit `d68ffc4`: the blog route
+`/blog/every-connection-has-a-job/` binds public companion topic `37`, while
+the guide route `/guides/how-to-choose-a-discussion-bridge-source-mode/`
+discloses and renders wiki source topic `36` as its primary fullInteractive
+discussion. A deliberate guide sync dry run skipped under the
+`discourse-managed` no-writeback rule.
+
 One Astro or Starlight site may publish several kinds of content:
 
 - docs

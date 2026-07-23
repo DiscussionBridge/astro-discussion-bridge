@@ -10,6 +10,11 @@ Companion: [OBBBA Machine Runbook](./OBBBA_ONEBIGBEAUTIFULBILL_MACHINE.md)
 > behavior, or be approved explicitly as a scope change. The separate
 > DiscussionBridge.dev dogfood gate does not replace an OBBBA gate.
 
+The separate DiscussionBridge.dev two-direction dogfood gate is now complete at
+apex commit `d68ffc4`: Astro-managed blog topic `37` and Discourse-managed wiki
+topic `36` were independently verified live. This evidence does not change or
+close any remaining OBBBA-specific gate.
+
 This runbook covers the first real OBBBA Discussion Bridge lane:
 
 Current package import behavior also supports explicit `--source-mode

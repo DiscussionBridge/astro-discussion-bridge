@@ -14,6 +14,12 @@ alpha_feature_lock:
     - fix_exercised_behavior
     - explicitly_approved_scope_change
   discussionbridge_dev_dogfood_gate: separate_not_a_replacement
+  discussionbridge_dev_dogfood_status:
+    status: complete_bounded_proof
+    apex_commit: d68ffc4
+    astro_managed_blog_topic: 37
+    discourse_managed_guide_topic: 36
+    OBBBA_gate_effect: none
 source_mode_import_update:
   implementation: 1731547
   tests: 72/72

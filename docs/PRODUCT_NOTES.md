@@ -432,8 +432,20 @@ The reviewed artifact is
 `7d8951d15f4b0a4a4f14e238665bc41c28255c6f2cdcb1979105926ba6f4affb`.
 The apex guide schema now retains import metadata while allowing imported
 guides without hand-authored `description`/`pubDate`, and the Astro 7 engine
-contract is Node `>=22.12.0`. Credentialed import, build, deployment, and live
-guide verification remain open.
+contract is Node `>=22.12.0`.
+
+Apex commit `d68ffc4` completed the bounded two-direction dogfood proof with
+Code Boss PASS, a clean detached install/build producing five routes, push, and
+live Cloudflare deployment on 2026-07-23. The Astro-managed blog route binds
+independent public topic `37`. The Discourse-managed guide discloses and renders
+wiki topic `36` as its primary fullInteractive discussion. A deliberate guide
+sync dry run skipped for no-writeback, and the raw Pages hostname redirects to
+the canonical apex.
+
+The claim is limited to these two separate single-writer connections; it does
+not merge reply streams or prove general forum-to-forum orchestration. One high
+npm audit finding and the Mermaid >500 kB chunk warning remain recorded; no
+automatic audit fix was run.
 
 ### After Alpha
 
