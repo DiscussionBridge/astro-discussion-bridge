@@ -720,7 +720,10 @@ writeback. Actor configuration alone does not complete this test.
 
 Imported pages may now show `Source author: Display Name (@username)` when
 Discourse exposes safe author data. The username links only to the same forum's
-safe `/u/username` profile. Unsafe usernames are omitted rather than linked.
+safe `/u/username` profile, preserving a Discourse subfolder base when present:
+`https://example.com/forum/t/...` becomes
+`https://example.com/forum/u/editorbridgeforum`. Unsafe usernames are omitted
+rather than linked.
 An explicit overwrite refresh updates `discussionSourceAuthorUsername` and
 `discussionSourceAuthorName` while preserving source mode,
 `discussionSync: false`, and topic ID.

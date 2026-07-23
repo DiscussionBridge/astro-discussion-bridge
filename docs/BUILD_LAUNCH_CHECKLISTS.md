@@ -384,7 +384,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Implement and document preferred request actor controls: `--post-as`,
       `DISCOURSE_POST_AS`, and lane/default `postAs`/`postAsEnv`, with legacy
       API-username controls as fallbacks and the resolved actor sent as
-      `Api-Username`. Package suite 76/76.
+      `Api-Username`. A real CLI execution regression covers `--post-as` and
+      dry-run actor output. Package suite 78/78.
 - [x] Document independent Discourse key User Level and Scope behavior:
       `All Users` may act for supplied `Api-Username`; `Single User` is bound
       to its selected user; Scope controls endpoints separately.
@@ -400,7 +401,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       no Astro writeback.
 - [x] Persist Discourse first-post author username/name during import and
       explicit overwrite refresh; render safe same-forum source-author profile
-      attribution while preserving source mode, no-writeback, and topic ID.
+      attribution while preserving the forum's subfolder base, source mode,
+      no-writeback, and topic ID.
 - [ ] Design an explicit existing-topic owner-transfer operation separately
       from `postAs` and normal sync; neither may silently change ownership.
 - [x] Document category authority: configured categories are authoritative for

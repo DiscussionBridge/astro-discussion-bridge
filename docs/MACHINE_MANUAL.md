@@ -1294,8 +1294,15 @@ source_author_provenance:
     - discussionSync_false
     - discourseTopicId
   rendered_notice: "Source author: Display Name (@username)"
-  profile_link: same_forum_safe_/u/username
+  profile_link: same_forum_base_preserving_safe_/u/username
+  subfolder_example:
+    topic: https://example.com/forum/t/example/123
+    profile: https://example.com/forum/u/editorbridgeforum
   unsafe_username_behavior: omit_author_metadata_and_link
+request_actor_regressions:
+  - real_CLI_execution_with_--post-as
+  - dry-run_actor_output
+package_suite: 78/78
 category_contract:
   astro_managed:
     configured_category: authoritative_sync_corrects_drift

@@ -209,7 +209,12 @@ endpoints.
 `postAs` does not silently transfer ownership of an existing topic. Owner
 transfer remains a separate future operation. Imported source-author metadata
 now follows the current Discourse first-post author during explicit overwrite
-refresh and renders only through a safe same-forum profile link.
+refresh and renders only through a safe same-forum profile link. Profile URL
+construction preserves a Discourse subfolder base, so a topic under
+`https://example.com/forum/t/...` links to
+`https://example.com/forum/u/editorbridgeforum`. Regression coverage includes
+that base preservation plus real `--post-as` CLI execution and dry-run actor
+output; the package suite passes 78/78.
 
 Many-to-many operation must not create identical or visually ambiguous
 nonhuman identities across forums. Service identities encode role plus origin:
