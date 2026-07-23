@@ -171,7 +171,7 @@ Test `fullInteractive` on a page with enough article body to push comments below
 When reporting a comments issue, include:
 
 - display mode
-- topic URL
+- Discourse topic URL
 - Astro page URL
 - whether the user is logged in to Discourse
 - browser and device
