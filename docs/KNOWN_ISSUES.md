@@ -117,32 +117,43 @@ the version ranges above with the exact installed versions.
 
 ## Discourse
 
-### Failure Notification Recipients Are Site-Specific
+### Granular API Keys Cannot Read Every Diagnostics Endpoint
 
-**Status:** Documentation correction included in the current source.
+**Status:** Confirmed with the currently available Discourse granular API-key
+scopes. Discussion Bridge provides a bounded fallback.
 
-**Impact:** Failure notifications can be sent only to usernames that exist on
-the connected Discourse site. An example copied with a real project username
-may fail on another forum or, if that username exists there, notify the wrong
-person.
+**Impact:** A least-privilege granular publishing key can perform normal
+publishing work but may receive `403 Forbidden` from site-level endpoints used
+by `check-discourse`. One granular key therefore cannot currently provide every
+publishing and setup-diagnostics capability that Discussion Bridge needs.
 
-Use an explicit placeholder in reusable instructions:
+In the exercised configuration, the granular publishing key could read
+`/categories.json` and `/tags.json`, but could not read all of:
 
-```sh
-npx astro-discussion-bridge publish-and-sync src/content/docs \
-  --notify-on-failure \
-  --notify-recipients FORUM_USERNAME
-```
+- `/site/settings.json`
+- `/site.json`
+- `/embed/info`
+- exact page-URL reconciliation search
 
-Replace `FORUM_USERNAME` with the exact Discourse username that should receive
-the private message. For multiple recipients, use a comma-separated list:
+This affects automatic discovery of authoring limits, user-specific tag
+capabilities, and some existing-topic reconciliation checks. It does not mean
+routine publishing must use a global key.
 
-```text
-forum-admin,ops-bot
-```
+**Current operator guidance:**
 
-Do not copy usernames from another site or project. Confirm the recipients on
-the target forum, then verify the notification path with a controlled failure
-test. The CLI or build output remains the source of truth because a notification
-can also fail when the forum, network, API credentials, or PM permissions are
-unavailable.
+- Use a granular publishing key for `publish-new`, `sync-existing`, and
+  `publish-and-sync`.
+- Use a separate global/admin-capable diagnostics key only for
+  `check-discourse` setup checks that require the unavailable reads.
+- Keep the diagnostics key out of ordinary publishing builds and CI unless its
+  use is explicit and protected.
+- When a broader diagnostics key is unavailable, configure known authoring
+  limits explicitly and treat unavailable capability checks as unresolved.
+
+The desired future state is a granular diagnostics/read key that can access the
+required metadata and reconciliation endpoints. Until Discourse exposes or
+confirms those scopes, the documented publishing-key plus diagnostics-key
+model remains the least-privilege operational fallback.
+
+Background and upstream clarification:
+[Confirming API access to authoring-limit site settings](https://meta.discourse.org/t/confirming-api-access-to-authoring-limit-site-settings/407937).
