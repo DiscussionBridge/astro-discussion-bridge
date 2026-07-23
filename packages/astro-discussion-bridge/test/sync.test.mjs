@@ -22,6 +22,7 @@ test("import manifest preserves curated order and per-topic policies", () => {
       {
         topic: "https://forum.example.com/t/section-10102/747",
         commentsDisplay: "fullInteractive",
+        sourceMode: "discourse-managed",
       },
       {
         topic: 751,
@@ -43,6 +44,7 @@ test("import manifest preserves curated order and per-topic policies", () => {
     "751",
     "752",
   ]);
+  assert.equal(manifest.imports[0].sourceMode, "discourse-managed");
   assert.equal(manifest.imports[1].heroAlt, "Descriptive hero");
   assert.equal(manifest.imports[1].output, "title-i/10103-impact.mdx");
   assert.deepEqual(manifest.imports[1].requiredTags, ["TITLE-I"]);
@@ -159,6 +161,14 @@ test("import manifest rejects duplicate topics and unsafe option shapes", () => 
       imports: [{ topic: 754, requiredTags: ["TITLE-I", "title-i"] }],
     }),
     /requiredTags contains duplicates/,
+  );
+
+  assert.throws(
+    () => validateImportManifest({
+      version: 1,
+      imports: [{ topic: 755, sourceMode: "astro-managed" }],
+    }),
+    /sourceMode must be discourse-imported or discourse-managed/,
   );
 });
 
@@ -2849,6 +2859,65 @@ test("import-existing can label imported frontmatter with a discussion target", 
   }
 });
 
+test("import-existing can preserve Discourse as the managed source", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-managed-"));
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 36,
+        title: "How to Choose a Discussion Bridge Source Mode",
+        category_id: 6,
+        visible: true,
+        post_stream: {
+          posts: [{
+            id: 136,
+            post_number: 1,
+            topic_id: 36,
+            topic_slug: "how-to-choose-a-discussion-bridge-source-mode",
+            cooked: "<p>Choose one source of truth.</p>",
+          }],
+        },
+      },
+      post: {
+        id: 136,
+        post_number: 1,
+        topic_id: 36,
+        topic_slug: "how-to-choose-a-discussion-bridge-source-mode",
+        raw: "Choose one source of truth.",
+        cooked: "<p>Choose one source of truth.</p>",
+      },
+    });
+
+    await importExistingDiscourseTopics({
+      docsDir: dir,
+      siteUrl: "https://discussionbridge.dev",
+      targetName: "community",
+      discourseUrl: "https://forum.discussionbridge.dev",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["36"],
+      sourceMode: "discourse-managed",
+      commentsDisplay: "fullInteractive",
+    });
+
+    const source = await readFile(
+      path.join(dir, "how-to-choose-a-discussion-bridge-source-mode.md"),
+      "utf8",
+    );
+    assert.match(source, /discussionSourceMode: "discourse-managed"/);
+    assert.match(source, /discussionSync: false/);
+    assert.match(source, /discussionTarget: "community"/);
+    assert.match(source, /discussionSourceTarget: "community"/);
+    assert.match(source, /discourseTopicId: 36/);
+    assert.match(source, /discussionCommentsDisplay: "fullInteractive"/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("import-existing adds a leading hero image with alt text", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-hero-"));
   const docsDir = path.join(dir, "blog");
@@ -3284,22 +3353,24 @@ function mockDiscourseFetch(calls, { topic, createdTopic, post, updatedTopic }) 
     const parsed = new URL(url);
     const method = init.method ?? "GET";
     const body = init.body ? JSON.parse(String(init.body)) : undefined;
+    const topicId = topic?.id ?? 21;
+    const postId = post?.id ?? topic?.post_stream?.posts?.[0]?.id ?? 101;
     calls.push({ pathname: parsed.pathname, method, body });
 
-    if (method === "GET" && parsed.pathname === "/t/21.json") {
+    if (method === "GET" && parsed.pathname === `/t/${topicId}.json`) {
       return jsonResponse(topic);
     }
 
-    if (method === "GET" && parsed.pathname === "/posts/101.json") {
+    if (method === "GET" && parsed.pathname === `/posts/${postId}.json`) {
       return jsonResponse(post ?? topic?.post_stream?.posts?.[0]);
     }
 
-    if (method === "PUT" && parsed.pathname === "/posts/101.json") {
-      return jsonResponse({ post: { id: 101, post_number: 1 } });
+    if (method === "PUT" && parsed.pathname === `/posts/${postId}.json`) {
+      return jsonResponse({ post: { id: postId, post_number: 1 } });
     }
 
-    if (method === "PUT" && parsed.pathname === "/t/-/21.json") {
-      return jsonResponse(updatedTopic ?? { basic_topic: { id: 21, title: body.title, category_id: body.category_id } });
+    if (method === "PUT" && parsed.pathname === `/t/-/${topicId}.json`) {
+      return jsonResponse(updatedTopic ?? { basic_topic: { id: topicId, title: body.title, category_id: body.category_id } });
     }
 
     if (method === "PUT" && /^\/t\/\d+\/status\.json$/.test(parsed.pathname)) {

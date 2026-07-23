@@ -5,6 +5,7 @@ import {
   type ImportedDiscourseTopic,
   type ImportExistingDiscourseTopicsOptions,
   type ImportPruneProfile,
+  type ImportSourceMode,
 } from "./import-existing.js";
 
 export interface ImportManifestEntry {
@@ -15,6 +16,7 @@ export interface ImportManifestEntry {
   pruneProfiles?: ImportPruneProfile[];
   output?: string;
   requiredTags?: string[];
+  sourceMode?: ImportSourceMode;
 }
 
 export interface ImportManifest {
@@ -22,12 +24,12 @@ export interface ImportManifest {
   imports: ImportManifestEntry[];
 }
 
-const entryKeys = new Set(["topic", "commentsDisplay", "heroImage", "heroAlt", "pruneProfiles", "output", "requiredTags"]);
+const entryKeys = new Set(["topic", "commentsDisplay", "heroImage", "heroAlt", "pruneProfiles", "output", "requiredTags", "sourceMode"]);
 const rootKeys = new Set(["version", "imports"]);
 
 export interface ImportManifestRunOptions extends Omit<
   ImportExistingDiscourseTopicsOptions,
-  "topics" | "commentsDisplay" | "heroImage" | "heroAlt" | "pruneProfiles" | "outputFile" | "requiredTags"
+  "topics" | "commentsDisplay" | "heroImage" | "heroAlt" | "pruneProfiles" | "outputFile" | "requiredTags" | "sourceMode"
 > {
   manifest: ImportManifest;
 }
@@ -73,6 +75,11 @@ export function validateImportManifest(value: unknown, source = "import manifest
       throw new Error(`${label}.commentsDisplay must be simple, full, or fullInteractive.`);
     }
 
+    const sourceMode = optionalString(entry.sourceMode, `${label}.sourceMode`);
+    if (sourceMode && !["discourse-imported", "discourse-managed"].includes(sourceMode)) {
+      throw new Error(`${label}.sourceMode must be discourse-imported or discourse-managed.`);
+    }
+
     const heroImage = optionalString(entry.heroImage, `${label}.heroImage`);
     const heroAlt = optionalString(entry.heroAlt, `${label}.heroAlt`);
     if (heroImage && !heroAlt) throw new Error(`${label}.heroAlt is required when heroImage is configured.`);
@@ -114,6 +121,7 @@ export function validateImportManifest(value: unknown, source = "import manifest
       ...(pruneProfiles ? { pruneProfiles } : {}),
       ...(output ? { output } : {}),
       ...(requiredTags ? { requiredTags } : {}),
+      ...(sourceMode ? { sourceMode: sourceMode as ImportSourceMode } : {}),
     };
   });
 
@@ -138,6 +146,7 @@ export async function importExistingDiscourseManifest(
       pruneProfiles: entry.pruneProfiles,
       outputFile: entry.output,
       requiredTags: entry.requiredTags,
+      sourceMode: entry.sourceMode,
       dryRun: true,
     });
     previews.push({ entry, result });
@@ -169,6 +178,7 @@ export async function importExistingDiscourseManifest(
         pruneProfiles: entry.pruneProfiles,
         outputFile: entry.output,
         requiredTags: entry.requiredTags,
+        sourceMode: entry.sourceMode,
         dryRun: false,
         overwrite: true,
       });

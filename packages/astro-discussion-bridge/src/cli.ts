@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 import path from "node:path";
 import { checkDiscourse } from "./check-discourse.js";
-import { importExistingDiscourseTopics, type ImportPruneProfile } from "./import-existing.js";
+import {
+  importExistingDiscourseTopics,
+  type ImportPruneProfile,
+  type ImportSourceMode,
+} from "./import-existing.js";
 import { importExistingDiscourseManifest, loadImportManifest } from "./import-manifest.js";
 import { syncDiscourseTopics, type DiscoursePreflightLimits, type SyncMode } from "./sync/index.js";
 
@@ -63,17 +67,20 @@ const commentsDisplay = commentsDisplayFromValue(args.values.get("comments-displ
 const heroImage = args.values.get("hero-image");
 const heroAlt = args.values.get("hero-alt");
 const pruneProfiles = pruneProfilesFromValue(args.values.get("prune-profile"));
+const sourceMode = sourceModeFromValue(args.values.get("source-mode"));
 const manifestPath = args.values.get("manifest");
-const hasDirectImportOptions = topics.length > 0 || commentsDisplay !== undefined || heroImage !== undefined || heroAlt !== undefined || pruneProfiles !== undefined;
+const hasDirectImportOptions = topics.length > 0 || commentsDisplay !== undefined || heroImage !== undefined || heroAlt !== undefined || pruneProfiles !== undefined || sourceMode !== undefined;
 
 const missing = [
   ...(args.flags.has("hero-image") ? ["a value after --hero-image"] : []),
   ...(args.flags.has("hero-alt") ? ["a value after --hero-alt"] : []),
   ...(args.flags.has("prune-profile") ? ["a value after --prune-profile"] : []),
+  ...(args.flags.has("source-mode") ? ["a value after --source-mode"] : []),
   ...(args.flags.has("manifest") ? ["a value after --manifest"] : []),
   ...(args.values.has("hero-image") && !heroImage?.trim() ? ["a non-empty --hero-image value"] : []),
   ...(args.values.has("hero-alt") && !heroAlt?.trim() ? ["a non-empty --hero-alt value"] : []),
   ...(args.values.has("prune-profile") && !args.values.get("prune-profile")?.trim() ? ["a non-empty --prune-profile value"] : []),
+  ...(args.values.has("source-mode") && !args.values.get("source-mode")?.trim() ? ["a non-empty --source-mode value"] : []),
   ...(args.values.has("manifest") && !manifestPath?.trim() ? ["a non-empty --manifest value"] : []),
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
   ...(!siteUrl && command !== "check-discourse" ? ["SITE_URL or --site-url"] : []),
@@ -81,7 +88,7 @@ const missing = [
   ...(!dryRun && command === "import-existing" && !importApiKey ? ["DISCOURSE_DIAGNOSTICS_API_KEY, DISCOURSE_API_KEY, --diagnostics-api-key, or --api-key"] : []),
   ...(!dryRun && command !== "check-discourse" && !apiUsername ? ["DISCOURSE_API_USERNAME or --api-username"] : []),
   ...(command === "import-existing" && topics.length === 0 && !manifestPath ? ["--topic URL[,URL], --topic-id ID[,ID], or --manifest FILE"] : []),
-  ...(command === "import-existing" && manifestPath && hasDirectImportOptions ? ["use --manifest without --topic, --comments-display, --hero-image, --hero-alt, or --prune-profile"] : []),
+  ...(command === "import-existing" && manifestPath && hasDirectImportOptions ? ["use --manifest without --topic, --comments-display, --hero-image, --hero-alt, --prune-profile, or --source-mode"] : []),
   ...(command !== "import-existing" && manifestPath ? ["--manifest is only valid with import-existing"] : []),
   ...(command === "import-existing" && heroImage && !heroAlt?.trim() ? ["--hero-alt TEXT when --hero-image is used"] : []),
   ...(command === "import-existing" && heroAlt && !heroImage ? ["--hero-image PATH when --hero-alt is used"] : []),
@@ -219,6 +226,7 @@ if (command === "import-existing") {
       heroImage,
       heroAlt,
       pruneProfiles,
+      sourceMode,
     });
 
   for (const result of results) {
@@ -338,6 +346,13 @@ function pruneProfilesFromValue(value: string | undefined): ImportPruneProfile[]
   return profiles as ImportPruneProfile[];
 }
 
+function sourceModeFromValue(value: string | undefined): ImportSourceMode | undefined {
+  if (!value) return undefined;
+  if (value === "discourse-imported" || value === "discourse-managed") return value;
+  printUsage(`Invalid --source-mode value: ${value}. Importing cannot promote content to astro-managed.`);
+  process.exit(1);
+}
+
 function preflightLimitsFromArgs(values: Map<string, string>): DiscoursePreflightLimits {
   return {
     minTopicTitleLength: numberFromValue(
@@ -394,7 +409,7 @@ function printUsage(error?: string) {
   console.error("  publish-new       Create missing Discourse companion topics; skip pages already linked.");
   console.error("  sync-existing     Rewrite/update already linked companion topics; skip pages without discourseTopicId.");
   console.error("  publish-and-sync  Create missing topics and sync existing linked topics in one explicit run.");
-  console.error("  import-existing   Import existing Discourse topics into editable Astro Markdown.");
+  console.error("  import-existing   Import or mirror existing Discourse topics into Astro Markdown.");
   console.error("  check-discourse   Read target forum settings/capabilities before live writes.");
   console.error("  sync              Backward-compatible alias for publish-new.");
   console.error("");
@@ -426,12 +441,13 @@ function printUsage(error?: string) {
   console.error("Import options:");
   console.error("  --topic URL[,URL]          Discourse topic URL or ID to import.");
   console.error("  --topic-id ID[,ID]         Discourse topic ID to import.");
-  console.error("  --manifest FILE            Ordered JSON imports with per-topic output/tag/hero/prune/comments policies.");
+  console.error("  --manifest FILE            Ordered JSON imports with per-topic output/tag/hero/prune/comments/source policies.");
   console.error("  --overwrite                Replace existing imported Markdown files.");
   console.error("  --comments-display MODE    simple, full, or fullInteractive.");
   console.error("  --hero-image PATH          Add a leading imported-page image using this asset path or URL.");
   console.error("  --hero-alt TEXT            Required non-empty alt text when --hero-image is used.");
   console.error("  --prune-profile NAME       Opt-in trailing boilerplate rule; currently community-call-to-action.");
+  console.error("  --source-mode MODE         discourse-imported (default) or discourse-managed; never astro-managed.");
   console.error("");
   console.error("Diagnostics options:");
   console.error("  --diagnostics-api-key KEY  Use a broader/read-capable key for check-discourse and raw imports.");

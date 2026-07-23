@@ -4,6 +4,7 @@ import path from "node:path";
 import { createDiscourseClient, type DiscoursePost, type TopicResponse } from "./discourse/client.js";
 
 export type ImportPruneProfile = "community-call-to-action";
+export type ImportSourceMode = "discourse-imported" | "discourse-managed";
 
 export interface ImportExistingDiscourseTopicsOptions {
   docsDir: string;
@@ -22,6 +23,7 @@ export interface ImportExistingDiscourseTopicsOptions {
   pruneProfiles?: ImportPruneProfile[];
   outputFile?: string;
   requiredTags?: string[];
+  sourceMode?: ImportSourceMode;
 }
 
 export interface ImportedDiscourseTopic {
@@ -40,6 +42,7 @@ export async function importExistingDiscourseTopics(
   const heroImage = options.heroImage?.trim();
   const heroAlt = options.heroAlt?.trim();
   validateHeroOptions({ heroImage, heroAlt });
+  const sourceMode = validateImportSourceMode(options.sourceMode);
   const pruneProfiles = validateImportPruneProfiles(options.pruneProfiles ?? []);
   const requiredTags = normalizeRequiredTags(options.requiredTags ?? []);
   if (options.outputFile && options.topics.length !== 1) {
@@ -124,6 +127,7 @@ export async function importExistingDiscourseTopics(
         commentsDisplay: options.commentsDisplay,
         heroImage,
         heroAlt,
+        sourceMode,
         importPolicy: pruneProfiles.length
           ? `pruned:${pruneProfiles.join(",")}`
           : "unpruned",
@@ -142,6 +146,12 @@ export async function importExistingDiscourseTopics(
   }
 
   return results;
+}
+
+function validateImportSourceMode(sourceMode: ImportSourceMode | undefined): ImportSourceMode {
+  if (sourceMode === undefined || sourceMode === "discourse-imported") return "discourse-imported";
+  if (sourceMode === "discourse-managed") return sourceMode;
+  throw new Error(`Unsupported import source mode: ${String(sourceMode)}`);
 }
 
 function validateHeroOptions(options: Pick<ImportExistingDiscourseTopicsOptions, "heroImage" | "heroAlt">): void {
@@ -288,6 +298,7 @@ function markdownForImportedTopic(input: {
   commentsDisplay?: "simple" | "full" | "fullInteractive";
   heroImage?: string;
   heroAlt?: string;
+  sourceMode: ImportSourceMode;
   importPolicy: string;
   body: string;
 }): string {
@@ -299,7 +310,7 @@ function markdownForImportedTopic(input: {
           discussionSourceTarget: input.targetName,
         }
       : {}),
-    discussionSourceMode: "discourse-imported",
+    discussionSourceMode: input.sourceMode,
     discussionSync: false,
     discourseTopicId: input.topicId,
     discourseTopicUrl: input.topicUrl,
