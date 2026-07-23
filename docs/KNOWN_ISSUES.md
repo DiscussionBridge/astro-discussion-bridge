@@ -119,15 +119,16 @@ the version ranges above with the exact installed versions.
 
 ### Granular API Keys Cannot Read Every Diagnostics Endpoint
 
-**Status:** Confirmed with the currently available Discourse granular API-key
-scopes. Discussion Bridge provides a bounded fallback.
+**Status:** Confirmed in Discussion Bridge field testing. The upstream question
+about a supported granular scope for these site-level reads remains open.
+Discussion Bridge provides a bounded fallback.
 
 **Impact:** A least-privilege granular publishing key can perform normal
 publishing work but may receive `403 Forbidden` from site-level endpoints used
 by `check-discourse`. One granular key therefore cannot currently provide every
 publishing and setup-diagnostics capability that Discussion Bridge needs.
 
-In the exercised configuration, the granular publishing key could read
+With the exercised granular key configuration, the publishing key could read
 `/categories.json` and `/tags.json`, but could not read all of:
 
 - `/site/settings.json`
@@ -157,3 +158,5 @@ model remains the least-privilege operational fallback.
 
 Background and upstream clarification:
 [Confirming API access to authoring-limit site settings](https://meta.discourse.org/t/confirming-api-access-to-authoring-limit-site-settings/407937).
+The thread confirms the public/client endpoint pattern; its granular-scope
+follow-up has not yet received an upstream answer.
