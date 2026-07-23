@@ -1368,7 +1368,7 @@ attribution_and_licensing:
       regression: passed
   full_package_gate:
     command: npm run check:attribution
-    included_in_package_suite: 73/73
+    included_in_package_suite: exact_candidate_total_required
     status: PASS
     checks:
       - root_package_MIT_parity_and_holder
@@ -1382,8 +1382,8 @@ attribution_and_licensing:
     command: npm run check:attribution --docs-scope
     required_status: PASS (docs scope)
     npm_package_contents: SKIPPED (requires built release candidate)
-    docs_result: 20_synced_sources_21_HTML_pages
-  reporting_invariant: package_73_of_73_and_docs_20_of_21_are_not_interchangeable
+    docs_result: exact_candidate_synced_source_and_HTML_counts_required
+  reporting_invariant: full_package_gate_and_docs_scope_gate_are_not_interchangeable
   manual_boss:
     required_result: "Attribution and Licensing: PASS / FAIL / N/A"
     reviewed_paths: required

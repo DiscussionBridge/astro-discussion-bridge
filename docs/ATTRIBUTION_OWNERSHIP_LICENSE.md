@@ -130,12 +130,14 @@ A package-test or docs-build total is not, by itself, an attribution/licensing r
 
 ## Automated Gate Reporting
 
-The full package suite includes the full attribution gate. A passing 73/73 run
-therefore proves the objective package checks for that candidate: root/package
-MIT parity and holder, package metadata, production dependency licenses against
-the explicit allowlist or reviewed override evidence, required npm package
-contents, README/non-affiliation and rendered links, tracked-media provenance,
-and protected-path scanning.
+The full package suite includes the full attribution gate. A passing
+exact-candidate run therefore proves the objective package checks for that
+candidate: root/package MIT parity and holder, package metadata, production
+dependency licenses against the explicit allowlist or reviewed override
+evidence, required npm package contents, README/non-affiliation and rendered
+links, tracked-media provenance, and protected-path scanning. Record the suite
+total in the candidate-specific evidence rather than treating a template count
+as permanent.
 
 The readable docs build runs only the bounded docs gate. Its required report is:
 
@@ -144,10 +146,10 @@ Attribution and licensing gate: PASS (docs scope)
 npm package contents: SKIPPED (requires built release candidate)
 ```
 
-The 20 synchronized docs sources / 21 generated HTML pages count proves
-synchronization and rendering plus that bounded docs-scope check. It does not
-prove npm package contents and does not substitute for the full 73/73 package
-gate.
+The synchronized-source and generated-HTML counts prove synchronization and
+rendering plus that bounded docs-scope check. Record their exact values with
+the candidate evidence. They do not prove npm package contents and do not
+substitute for the full package gate.
 
 Neither automated result is Manual Boss approval. Every exact release requires
 a separate Manual Boss result written as `Attribution and Licensing: PASS /

@@ -920,12 +920,13 @@ an automatic `npm audit fix` as part of release preparation.
 
 ### Attribution And Licensing Gate
 
-Run the full package suite against the exact built release candidate. Its 73/73
-result includes the automated full attribution gate, covering root/package MIT
-parity and holder, package metadata, production dependency licenses against the
-explicit allowlist or reviewed override evidence, required npm package
-contents, README/non-affiliation and rendered links, tracked-media provenance,
-and protected-path scanning.
+Run the full package suite against the exact built release candidate. Its
+passing result includes the automated full attribution gate, covering
+root/package MIT parity and holder, package metadata, production dependency
+licenses against the explicit allowlist or reviewed override evidence,
+required npm package contents, README/non-affiliation and rendered links,
+tracked-media provenance, and protected-path scanning. Record the exact suite
+total in the candidate-specific evidence.
 
 The readable docs build runs a narrower gate. You should see:
 
@@ -934,9 +935,10 @@ Attribution and licensing gate: PASS (docs scope)
 npm package contents: SKIPPED (requires built release candidate)
 ```
 
-The docs total—20 synchronized sources and 21 HTML pages—means synchronization,
-rendering, and this bounded docs-scope check passed. It does not verify the
-release tarball and does not replace the full gate inside 73/73.
+The synchronized-source and generated-HTML totals mean synchronization,
+rendering, and this bounded docs-scope check passed. Record the exact totals in
+the candidate-specific evidence. This result does not verify the release
+tarball and does not replace the full package gate.
 
 > **Stop if:** either gate fails, the results are conflated, generated
 > attribution output was not regenerated on a fresh checkout, or a
