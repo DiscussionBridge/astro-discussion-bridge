@@ -63,6 +63,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
+    "check:attribution": "node ../../scripts/check-attribution.mjs",
     "test": "npm run build && node --test test/*.test.mjs",
     "sync": "astro-discussion-bridge sync",
     "publish-new": "astro-discussion-bridge publish-new",

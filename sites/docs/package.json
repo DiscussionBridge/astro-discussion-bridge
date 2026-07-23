@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "sync-content": "node ../../scripts/sync-docs-site-content.mjs",
+    "check:attribution": "node ../../scripts/check-attribution.mjs --docs-scope",
     "predev": "npm run sync-content",
     "dev": "astro dev",
-    "prebuild": "npm run sync-content",
+    "prebuild": "npm run sync-content && npm run check:attribution",
     "build": "astro build",
     "preview": "astro preview"
   },

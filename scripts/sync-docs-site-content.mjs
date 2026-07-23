@@ -67,6 +67,14 @@ function rewriteLinks(markdown, sourceFile) {
     /\]\(\.\.\/LICENSE\)/g,
     "](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/LICENSE)",
   );
+  next = next.replace(
+    /\]\(\.\.\/packages\/astro-discussion-bridge\/LICENSE\)/g,
+    "](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/packages/astro-discussion-bridge/LICENSE)",
+  );
+  next = next.replace(
+    /\]\(\.\/THIRD_PARTY_PROVENANCE\.json\)/g,
+    "](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/THIRD_PARTY_PROVENANCE.json)",
+  );
 
   return next;
 }

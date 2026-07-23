@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "packageName": "astro-discussion-bridge",
+  "projectLicense": "MIT",
+  "approvedDependencyLicenses": [
+    "MIT",
+    "Apache-2.0",
+    "ISC",
+    "BSD-3-Clause",
+    "(MPL-2.0 OR Apache-2.0)",
+    "Unlicense"
+  ],
+  "dependencyLicenseOverrides": [
+    {
+      "name": "khroma",
+      "version": "2.1.0",
+      "license": "MIT",
+      "evidence": "docs/third-party-licenses/khroma-2.1.0-MIT.txt",
+      "evidenceContains": "The MIT License (MIT)",
+      "reason": "The package lock metadata omits the license expression; the installed package includes its MIT license file."
+    }
+  ],
+  "referencedProjects": [
+    {
+      "name": "Astro",
+      "relationship": "Supported framework and peer dependency",
+      "source": "https://github.com/withastro/astro",
+      "copiedMaterial": false
+    },
+    {
+      "name": "Starlight",
+      "relationship": "Supported documentation framework and optional peer dependency",
+      "source": "https://github.com/withastro/starlight",
+      "copiedMaterial": false
+    },
+    {
+      "name": "Discourse",
+      "relationship": "Supported community platform and API integration target",
+      "source": "https://github.com/discourse/discourse",
+      "copiedMaterial": false
+    },
+    {
+      "name": "Mermaid",
+      "relationship": "Runtime dependency for Astro-rendered Mermaid diagrams",
+      "source": "https://github.com/mermaid-js/mermaid",
+      "copiedMaterial": false
+    },
+    {
+      "name": "Ghost, WordPress, Coding Horror, and Astro Starlog",
+      "relationship": "Public behavioral or presentation references only",
+      "source": "See ATTRIBUTION_OWNERSHIP_LICENSE.md",
+      "copiedMaterial": false
+    }
+  ],
+  "adaptedMaterials": [],
+  "mediaAssets": []
+}
