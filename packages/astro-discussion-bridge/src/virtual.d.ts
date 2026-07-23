@@ -4,6 +4,10 @@ declare module "virtual:discussion-bridge/config" {
     preset: "astro" | "starlight";
     discourseUrl: string;
     siteUrl?: string;
+    connections: {
+      requireExplicit: boolean;
+      jobs: import("./targets.js").DiscussionConnectionJobs;
+    };
     comments: {
       enabled: boolean;
       display: "simple" | "full" | "fullInteractive";

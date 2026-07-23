@@ -6,6 +6,26 @@ import { pathToFileURL } from "node:url";
 import test from "node:test";
 import discussionBridge from "../dist/index.js";
 
+test("invalid site-level connection jobs fail during integration setup", () => {
+  assert.throws(
+    () => discussionBridge({
+      discourseUrl: "https://community.example.com",
+      connections: {
+        jobs: {
+          community: {
+            purpose: "product support",
+            audience: "Discussion Bridge Community",
+            callToAction: "Ask the Discussion Bridge Community",
+            description: "Get implementation help.",
+            unsupported: undefined,
+          },
+        },
+      },
+    }),
+    /Invalid connections\.jobs: connection job for target "community" has unsupported field\(s\): unsupported/,
+  );
+});
+
 test("publishOnBuild lanes can publish one page to independent Discourse targets", async () => {
   const projectRoot = await mkdtemp(path.join(tmpdir(), "discussion-bridge-build-targets-"));
   const docsDir = path.join(projectRoot, "src", "content", "blog");

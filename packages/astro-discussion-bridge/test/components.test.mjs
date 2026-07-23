@@ -19,6 +19,9 @@ test("native embeds pass an existing topic ID to Discourse", async () => {
   assert.match(discussion, /topicId=\{topicId\}/);
   assert.match(discussion, /resolveDiscussionPresentation/);
   assert.match(discussion, /aria-label="Additional discussions"/);
+  assert.match(discussion, /discussionConnectionJobs/);
+  assert.match(discussion, /job\?\.callToAction/);
+  assert.match(discussion, /discussion-bridge-additional__description/);
   assert.match(discussion, /discourseUrl=\{discourseUrl\}/);
   assert.match(
     discourseDiscussion,

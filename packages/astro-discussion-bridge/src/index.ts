@@ -2,6 +2,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
 import { syncDiscourseTopics, type DiscoursePreflightLimits, type NotifyOnFailureOptions } from "./sync/index.js";
+import {
+  parseDiscussionConnectionJobs,
+  type DiscussionConnectionJobs,
+} from "./targets.js";
 
 type DiscussionBridgeIntegration = {
   name: string;
@@ -26,6 +30,10 @@ export interface DiscussionBridgeOptions {
   discourseUrl: string;
   siteUrl?: string;
   activeTarget?: string;
+  connections?: {
+    requireExplicit?: boolean;
+    jobs?: DiscussionConnectionJobs;
+  };
   comments?: {
     enabled?: boolean;
     display?: DiscussionBridgeCommentsDisplay;
@@ -77,6 +85,10 @@ interface PublicOptions {
   discourseUrl: string;
   siteUrl?: string;
   activeTarget?: string;
+  connections: {
+    requireExplicit: boolean;
+    jobs: DiscussionConnectionJobs;
+  };
   comments: {
     enabled: boolean;
     display: DiscussionBridgeCommentsDisplay;
@@ -191,6 +203,7 @@ export { checkDiscourse } from "./check-discourse.js";
 export { syncDiscourseTopics } from "./sync/index.js";
 export {
   discussionTargetLabel,
+  parseDiscussionConnectionJobs,
   parseDiscussionTargetBindings,
   resolveDiscussionPresentation,
 } from "./targets.js";
@@ -198,6 +211,8 @@ export { resolveDiscussionSourceNotice } from "./source.js";
 export type { CheckDiscourseOptions, CheckDiscourseResult } from "./check-discourse.js";
 export type { DiscoursePreflightLimits, SyncDiscourseTopicsOptions, SyncedPage } from "./sync/index.js";
 export type {
+  DiscussionConnectionJob,
+  DiscussionConnectionJobs,
   DiscussionPresentation,
   DiscussionTargetBinding,
   DiscussionTargetBindings,
@@ -223,6 +238,10 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
     discourseUrl: normalizeBaseUrl(options.discourseUrl),
     siteUrl: options.siteUrl ? normalizeBaseUrl(options.siteUrl) : undefined,
     activeTarget: options.activeTarget,
+    connections: {
+      requireExplicit: options.connections?.requireExplicit ?? false,
+      jobs: parseDiscussionConnectionJobs(options.connections?.jobs, "connections.jobs"),
+    },
     comments: {
       enabled: options.comments?.enabled ?? true,
       display: options.comments?.display ?? "simple",
@@ -342,6 +361,7 @@ function toPublicOptions(options: ResolvedOptions): PublicOptions {
     discourseUrl: options.discourseUrl,
     siteUrl: options.siteUrl,
     activeTarget: options.activeTarget,
+    connections: options.connections,
     comments: options.comments,
     replies: options.replies,
   };

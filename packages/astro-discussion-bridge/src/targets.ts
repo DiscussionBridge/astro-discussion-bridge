@@ -10,9 +10,19 @@ export interface DiscussionTargetBinding {
 
 export type DiscussionTargetBindings = Record<string, DiscussionTargetBinding>;
 
+export interface DiscussionConnectionJob {
+  purpose: string;
+  audience: string;
+  callToAction: string;
+  description: string;
+}
+
+export type DiscussionConnectionJobs = Record<string, DiscussionConnectionJob>;
+
 export interface ResolvedDiscussionTarget extends DiscussionTargetBinding {
   name: string;
   discourseUrl?: string;
+  connectionJob?: DiscussionConnectionJob;
 }
 
 export interface DiscussionPresentation {
@@ -77,13 +87,66 @@ export function parseDiscussionTargetBindings(
   }
 }
 
+export function parseDiscussionConnectionJobs(
+  value: DiscussionConnectionJobs | string | undefined,
+  context = "discussionConnectionJobs",
+): DiscussionConnectionJobs {
+  if (!value) return {};
+
+  let parsed: unknown = value;
+  try {
+    if (typeof value === "string") parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("expected a JSON object keyed by target name");
+    }
+
+    const jobs: DiscussionConnectionJobs = {};
+    for (const [targetName, rawJob] of Object.entries(parsed)) {
+      if (!targetName.trim()) throw new Error("target names cannot be empty");
+      if (!rawJob || typeof rawJob !== "object" || Array.isArray(rawJob)) {
+        throw new Error(`connection job for target "${targetName}" must be an object`);
+      }
+
+      const job = rawJob as Record<string, unknown>;
+      for (const field of ["purpose", "audience", "callToAction", "description"] as const) {
+        if (typeof job[field] !== "string" || !job[field].trim()) {
+          throw new Error(`${field} for target "${targetName}" must be a non-empty string`);
+        }
+      }
+
+      const unknownFields = Object.keys(job).filter(
+        (field) => !["purpose", "audience", "callToAction", "description"].includes(field),
+      );
+      if (unknownFields.length > 0) {
+        throw new Error(
+          `connection job for target "${targetName}" has unsupported field(s): ${unknownFields.join(", ")}`,
+        );
+      }
+
+      jobs[targetName] = {
+        purpose: (job.purpose as string).trim(),
+        audience: (job.audience as string).trim(),
+        callToAction: (job.callToAction as string).trim(),
+        description: (job.description as string).trim(),
+      };
+    }
+    return jobs;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Invalid ${context}: ${detail}`);
+  }
+}
+
 export function resolveDiscussionPresentation(input: {
   bindings?: DiscussionTargetBindings | string;
+  connectionJobs?: DiscussionConnectionJobs | string;
   primaryTarget?: string;
+  requireConnectionJobs?: boolean;
   sourceTarget?: string;
   sourceBinding?: DiscussionTargetBinding;
 }): DiscussionPresentation {
   const bindings = parseDiscussionTargetBindings(input.bindings);
+  const connectionJobs = parseDiscussionConnectionJobs(input.connectionJobs);
   const sourceHasTopic = Boolean(input.sourceBinding?.topicId || input.sourceBinding?.topicUrl);
   if (input.sourceTarget && sourceHasTopic) {
     bindings[input.sourceTarget] = {
@@ -98,9 +161,20 @@ export function resolveDiscussionPresentation(input: {
       name,
       ...binding,
       discourseUrl: discourseUrlFromTopicUrl(binding.topicUrl),
+      connectionJob: connectionJobs[name],
     }));
 
   if (targets.length === 0) return { additional: [] };
+  if (input.requireConnectionJobs) {
+    const missingJobs = targets
+      .filter((target) => !target.connectionJob)
+      .map((target) => target.name);
+    if (missingJobs.length > 0) {
+      throw new Error(
+        `Linked discussion target(s) require an explicit connection job: ${missingJobs.join(", ")}.`,
+      );
+    }
+  }
   if (targets.length > 1 && !input.primaryTarget) {
     throw new Error(
       `Multiple discussion targets are linked (${targets.map((target) => target.name).join(", ")}); set discussionPrimaryTarget explicitly.`,
