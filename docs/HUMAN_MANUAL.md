@@ -81,6 +81,30 @@ imported file by itself is not promotion.
 6. Create a separate diagnostics key for setup checks when granular reads are
    insufficient.
 
+When creating either key, show its complete purpose block with the setup
+instructions and copy that block into the respective protected credential file
+above the secret value.
+
+Publishing key record:
+
+```text
+Purpose: Runtime publishing granular key
+Use: publish-new, sync-existing, publish-and-sync, check-discourse basic limits
+Bot user role: Admin currently; intended future runtime posture is non-admin or least-privilege
+Key scope: Granular
+Operational rule: Use this to validate the minimum permissions needed for normal bridge publishing.
+```
+
+Diagnostics key record:
+
+```text
+Purpose: Diagnostics/setup key
+Use: check-discourse only
+Bot user role: Admin
+Key scope: Global or admin-read capable
+Operational rule: Do not use in CI/build unless explicitly intended
+```
+
 The settled publishing scopes are:
 
 ```text
@@ -103,6 +127,10 @@ runtime or deployment path.
 Store key values only in a credential vault, session environment, or hosting
 provider secret store. Never place them in source files, screenshots, issues,
 chat, or build logs.
+
+See [Key Management](./KEY_MANAGEMENT.md) for the complete credential-file
+templates, including description, scope, granular permissions, and the secret
+placeholder.
 
 > **Stop if:** the routine publishing key is broader than intended without a
 > recorded reason, the diagnostics key is configured as the normal publishing

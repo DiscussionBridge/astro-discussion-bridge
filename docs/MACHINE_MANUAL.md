@@ -106,13 +106,44 @@ moderator capability even when the key has the matching endpoint scope.
 
 ### Diagnostics Key
 
-Current fallback: global/admin-capable, read-oriented setup key. Use for
-`check-discourse`, site metadata/capability reads, and controlled reconciliation
-when the granular publishing key returns `403` or insufficient data. Do not put
-this key in routine runtime/deploy paths.
+Current fallback: global/admin-capable, read-oriented setup key. Use through
+`check-discourse` only; that command performs the applicable site metadata,
+capability, and setup reads. Do not use this key for publishing, reconciliation,
+or routine runtime/deploy paths.
 
 Target future state: a granular diagnostics/read key after required Discourse
 site metadata scopes are confirmed.
+
+### Required Credential Record Blocks
+
+Every key-creation interaction MUST present the applicable block with the key
+description, user, scope, and permissions. The operator MUST copy the block
+into the respective protected credential file above the secret value. Never
+request, echo, log, or write the real key outside the protected credential
+store.
+
+Publishing key:
+
+```text
+Purpose: Runtime publishing granular key
+Use: publish-new, sync-existing, publish-and-sync, check-discourse basic limits
+Bot user role: Admin currently; intended future runtime posture is non-admin or least-privilege
+Key scope: Granular
+Operational rule: Use this to validate the minimum permissions needed for normal bridge publishing.
+```
+
+Diagnostics key:
+
+```text
+Purpose: Diagnostics/setup key
+Use: check-discourse only
+Bot user role: Admin
+Key scope: Global or admin-read capable
+Operational rule: Do not use in CI/build unless explicitly intended
+```
+
+The complete credential-file templates, including the settled publishing
+scopes and secret placeholder, are in `docs/KEY_MANAGEMENT.md`.
 
 ### Environment Variables
 

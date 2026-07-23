@@ -164,6 +164,12 @@ discussionbridge-forum-discussbridge-bot-diagnostics-key-YYYYMMDD.txt
 
 Use the same structure for every stored Discourse API key. Keep the human-readable purpose and scope above the key value.
 
+Whenever setup instructions ask an operator to create a key, present the
+matching metadata block together with the key description, user, scope, and
+granular permissions. Copy that metadata into the respective protected
+credential file above the secret value. The manual and setup interaction show
+the placeholder only; they never show or request the real key.
+
 ### Publishing Granular Key File
 
 ```text
@@ -171,10 +177,13 @@ Purpose: Runtime publishing granular key
 Use: publish-new, sync-existing, publish-and-sync, check-discourse basic limits
 Bot user role: Admin currently; intended future runtime posture is non-admin or least-privilege
 Key scope: Granular
-Operational rule: Use this for normal bridge publishing/runtime operations. Diagnostics/setup work belongs on the diagnostics key.
+Operational rule: Use this to validate the minimum permissions needed for normal bridge publishing.
 
 Description
 {site-or-project} publishing granular key
+
+User
+{bot-username}
 
 Scope
 Granular
@@ -199,16 +208,22 @@ Key
 
 ```text
 Purpose: Diagnostics/setup key
-Use: check-discourse, setup verification, site settings/capability reads, embed/topic reconciliation when the granular publishing key cannot read the required endpoints
-Bot user role: Admin currently; diagnostics key is admin-capable by design
-Key scope: Global
-Operational rule: Keep this key out of runtime/deploy paths. Use only for setup checks, diagnostics, and controlled troubleshooting.
+Use: check-discourse only
+Bot user role: Admin
+Key scope: Global or admin-read capable
+Operational rule: Do not use in CI/build unless explicitly intended
 
 Description
 {site-or-project} diagnostics key
 
+User
+{admin-bot-username}
+
 Scope
-Global
+Global or admin-read capable
+
+Permissions
+check-discourse only; global or admin-read capability as required by setup checks
 
 Key
 {paste key here}
