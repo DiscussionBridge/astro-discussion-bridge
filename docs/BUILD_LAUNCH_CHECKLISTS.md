@@ -107,18 +107,26 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Document when to use `discussionSummary`.
 - [ ] Document and test the distinction between Astro/template content tags and Discourse `discussionTags`.
 - [ ] Run the repeatable live smoke pass before Alpha and before each release candidate. It covers publish/sync; docs, releases, blog, news, and comments demo routes; `simple`, `full`, and `fullInteractive` comments modes; full-app embed Discourse settings; and `forum.discussionbridge.dev` category, tags, and permissions.
-- [ ] Enforce source modes before Alpha: `astro-managed`, `discourse-managed`, and `discourse-imported` are documented, and `discussionSync: false` is enforced, but `import-existing` does not yet add the writeback guard automatically or persist an enforced source-mode field.
+- [x] Enforce source modes before Alpha: `import-existing` persists
+      `discussionSourceMode: discourse-imported` and `discussionSync: false`;
+      sync preflight protects `discourse-imported` and `discourse-managed`
+      source targets from writeback.
 
 ### Import
 
-- [ ] Add explicit manifest input for curated production imports while preserving caller-supplied topic order.
+- [x] Add strict explicit manifest input for curated production imports,
+      preserving caller-supplied topic order and providing validated, atomic
+      staging/write/rollback behavior (`a646c6b`, reviewed package suite 49/49).
 - [ ] Add a category selector that discovers/lists available categories and accepts category ID or an unambiguous slug/name, including subcategories.
 - [ ] Add deterministic "next in selected category" behavior: oldest Discourse `created_at` first, with topic ID as the stable tie-breaker.
 - [ ] Add import filters for tags, created-date range, open/closed status, and limit.
 - [ ] Add optional oldest/newest ordering by Discourse `created_at` and natural topic-title ordering for numbered source collections.
 - [ ] Ensure import sequencing never uses `bumped_at`, last reply, or latest activity.
 - [ ] Preview discovered candidates before import and prevent already imported topics from being selected again.
-- [ ] Add optional imported-page hero placement and require non-empty alt text whenever a hero image is configured.
+- [x] Add optional imported-page hero placement and require non-empty alt text
+      whenever a hero image is configured (`729d85f`, reviewed package suite
+      38/38); reject missing, empty, whitespace-only, or unpaired values before
+      write.
 
 ### Diagnose
 
@@ -243,7 +251,11 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Add an unobtrusive, configurable comments-boundary credit such as `Discussion connection by Discussion Bridge` or `Discourse connection by Discussion Bridge`; verify wording, link destination, accessibility, and behavior across `simple`, `full`, and `fullInteractive` modes.
 - [ ] Consider optional mapping from Astro/template content tags to Discourse topic tags.
 - [ ] Package the setup/diagnostics/docs workflow for self-serve users and paid assisted setup.
-- [ ] Use the OBBBA implementation lane as a real-world Discourse-to-Astro proof path: import/prune a `forum.repealobbba.org` topic into `onebigbeautifulbill.us`, keep it `discourse-imported` until explicit promotion, and feed lessons back into Discussion Bridge.
+- [x] Use the OBBBA implementation lane as a real-world Discourse-to-Astro
+      proof path: the reviewed manifest imported/pruned five
+      `forum.repealobbba.org` topics into `onebigbeautifulbill.us`, preserved
+      `discourse-imported` plus no-writeback, and passed clean build, deployment,
+      and canonical live route/topic verification.
 - [ ] Preserve the Citizen Activist structured-document path: Discourse wiki topics as source material, Astro as polished public act/section pages, with status, last-edit context, source topic links, comments, and no accidental writeback.
 - [ ] Preserve the OBBBA many-to-one topology: `onebigbeautifulbill.us` / `OBBBA.us`, `repealobbba.org`, `repealobbbaact.us`, and possibly `repealobbbapledge.us` can all connect to `forum.repealobbba.org`, with source direction varying by site or lane.
 - [x] Explicitly verify selected `onebigbeautifulbill.us` pages remain bound to
@@ -291,10 +303,16 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Implement and test recoverable partial success: retain successful
       bindings, report the failed target, and retry idempotently without
       duplicate topics.
-- [ ] Record the completed Alpha proof as one-page multi-forum capability plus
+- [x] Record the completed Alpha proof as one-page multi-forum capability plus
       multiple-sites-to-one-forum convergence, without claiming the future
-      general many-to-many administration plane.
-- [ ] Prove import layers sequentially before Alpha end-stage: no image/no prune, image only, prune only, then image plus prune.
+      general many-to-many administration plane. The bounded live OBBBA/CAN
+      proof, independent bindings, retry behavior, source no-writeback, and
+      additional-discussion interaction are recorded in Product Notes and the
+      paired OBBBA runbooks.
+- [x] Prove import layers sequentially before Alpha end-stage: no image/no
+      prune (`747`), image only (`751`), prune only (`752`), then image plus
+      prune (`753`); the reviewed four-case manifest passed source comparison,
+      production-shaped build, deployment, and live verification.
 - [ ] Use `repealobbbaact.us` as an Alpha end-stage package-installed test for Discourse-source structured pages, source-mode safety, comments rendering, and Cloudflare deployment.
 - [x] Phil confirmed the optional Discourse plugin vertical slice belongs in
       cumulative Alpha scope.
