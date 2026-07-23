@@ -46,12 +46,31 @@
       "copiedMaterial": false
     },
     {
-      "name": "Ghost, WordPress, Coding Horror, and Astro Starlog",
-      "relationship": "Public behavioral or presentation references only",
-      "source": "See ATTRIBUTION_OWNERSHIP_LICENSE.md",
+      "name": "WordPress",
+      "relationship": "Publisher-to-Discourse integration reference",
+      "source": "https://github.com/discourse/wp-discourse",
+      "copiedMaterial": false
+    },
+    {
+      "name": "Coding Horror",
+      "relationship": "Public publisher-to-Discourse behavior and presentation reference",
+      "source": "https://blog.codinghorror.com/thank-you-for-being-a-friend/",
+      "copiedMaterial": false
+    },
+    {
+      "name": "Astro Starlog",
+      "relationship": "Release-note content-lane reference",
+      "source": "https://github.com/withastro/astro/tree/main/examples/starlog",
       "copiedMaterial": false
     }
   ],
-  "adaptedMaterials": [],
+  "adaptedMaterials": [
+    {
+      "name": "WebSynergetics legal and ownership governance working notes",
+      "relationship": "Sanitized first-party project-facing adaptation",
+      "source": "Private first-party governance source; protected path intentionally omitted",
+      "rightsBasis": "First-party material maintained by WebSynergetics"
+    }
+  ],
   "mediaAssets": []
 }

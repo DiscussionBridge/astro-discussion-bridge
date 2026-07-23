@@ -2,7 +2,7 @@
 
 DiscussionBridge is a Discourse-first integration toolkit for connecting websites, docs, and content pages to Discourse discussions. The first framework integration is Astro, and Starlight is one Astro preset rather than the whole architecture.
 
-It is modeled after the Ghost and WordPress Discourse integrations:
+It is modeled after established publisher-to-Discourse integrations:
 
 - Astro owns the page.
 - Discourse owns the discussion thread.
@@ -13,7 +13,7 @@ It is modeled after the Ghost and WordPress Discourse integrations:
 
 ## Reference Behavior
 
-A good live example is Coding Horror's Ghost-to-Discourse setup:
+A good live example is Coding Horror's publisher-to-Discourse setup:
 
 - Source post: https://blog.codinghorror.com/thank-you-for-being-a-friend/
 - Companion topic: https://discourse.codinghorror.com/t/thank-you-for-being-a-friend/10372
@@ -42,7 +42,7 @@ Start with the public Alpha docs when wiring a real site:
 - [Attribution, Ownership, And Licensing](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/ATTRIBUTION_OWNERSHIP_LICENSE.md)
 - [Build/Launch Checklists](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/BUILD_LAUNCH_CHECKLISTS.md)
 
-Built by Phil Henry / WebSynergetics with AI-assisted development. DiscussionBridge is independent and is not affiliated with, sponsored by, endorsed by, or officially connected to Astro, Starlight, Discourse, Ghost, WordPress, Coding Horror, or the Astro Starlog example.
+Built by Phil Henry / WebSynergetics with AI-assisted development. DiscussionBridge is independent and is not affiliated with, sponsored by, endorsed by, or officially connected to Astro, Starlight, Discourse, WordPress, Coding Horror, or the Astro Starlog example.
 
 ## Configure Astro
 

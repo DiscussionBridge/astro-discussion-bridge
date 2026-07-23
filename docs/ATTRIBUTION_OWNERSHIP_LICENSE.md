@@ -74,11 +74,11 @@ This project integrates with and documents use of third-party projects and produ
 - Astro is a project of its respective owners and contributors.
 - Starlight is an Astro documentation theme/project of its respective owners and contributors.
 - Discourse is a project and product of its respective owners and contributors.
-- Ghost and WordPress are referenced as examples of existing publisher-to-Discourse integration patterns.
-- Coding Horror is referenced as a public example of a Ghost-to-Discourse publishing/discussion pattern.
+- WordPress is referenced as an example of an existing publisher-to-Discourse integration pattern.
+- Coding Horror is referenced as a public example of a publisher-to-Discourse publishing/discussion pattern.
 - Starlog is referenced as an Astro example pattern for release-note style content.
 
-DiscussionBridge is not affiliated with, sponsored by, endorsed by, or officially connected to Astro, Starlight, Discourse, Ghost, WordPress, Coding Horror, or the Astro Starlog example unless a future written agreement says otherwise.
+DiscussionBridge is not affiliated with, sponsored by, endorsed by, or officially connected to Astro, Starlight, Discourse, WordPress, Coding Horror, or the Astro Starlog example unless a future written agreement says otherwise.
 
 ## References And Examples
 
