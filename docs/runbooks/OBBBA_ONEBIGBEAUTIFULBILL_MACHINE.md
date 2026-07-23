@@ -14,6 +14,15 @@ alpha_feature_lock:
     - fix_exercised_behavior
     - explicitly_approved_scope_change
   discussionbridge_dev_dogfood_gate: separate_not_a_replacement
+source_mode_import_update:
+  implementation: 1731547
+  tests: 72/72
+  accepted: [discourse-imported, discourse-managed]
+  default: discourse-imported
+  rejected: [astro-managed]
+  manifest_field: sourceMode
+  discussionSync: false
+  OBBBA_policy_change: none
 ```
 
 ## 1. Resolved System Inputs

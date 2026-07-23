@@ -12,6 +12,12 @@ Companion: [OBBBA Machine Runbook](./OBBBA_ONEBIGBEAUTIFULBILL_MACHINE.md)
 
 This runbook covers the first real OBBBA Discussion Bridge lane:
 
+Current package import behavior also supports explicit `--source-mode
+discourse-imported|discourse-managed` and per-manifest `sourceMode` (`1731547`,
+Code Boss PASS, 72/72). Existing OBBBA entries remain
+`discourse-imported`; this capability does not change their ownership or
+authorize writeback.
+
 - public site: `https://onebigbeautifulbill.us`
 - community/source forum: `https://forum.repealobbba.org`
 - proof page: `https://onebigbeautifulbill.us/title-i/10101-impact/`

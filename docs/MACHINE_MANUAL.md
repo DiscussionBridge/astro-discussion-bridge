@@ -348,6 +348,7 @@ Use only after checking that every non-Astro-managed page in the directory has
 ```sh
 npx astro-discussion-bridge import-existing src/content/docs \
   --topic https://forum.example.com/t/example/123 \
+  --source-mode discourse-managed \
   --site-url https://docs.example.com \
   --comments-display full \
   --dry-run
@@ -406,7 +407,10 @@ success_metadata:
 Accepted topic references: numeric ID or URL whose host matches
 `DISCOURSE_URL`. Expected statuses: `dry-run-import`, `dry-run-overwrite`,
 `imported`, `skipped`. Existing files are skipped unless `--overwrite` is used.
-After live import, apply the source-mode guard described above.
+`--source-mode` accepts `discourse-imported` or `discourse-managed`, defaults to
+imported, and rejects `astro-managed`. Generated frontmatter always includes the
+selected `discussionSourceMode` and `discussionSync: false`. Manifest entries
+use `sourceMode`; the same validation is applied before write.
 
 ### Alpha Import Discovery / Queue Contract
 
@@ -1170,6 +1174,27 @@ alpha_feature_lock:
     - consulting
   third_party_infrastructure: operator_paid
 discussionbridge_dev_dogfood:
+  reviewed_import_support:
+    commit: 1731547
+    code_boss: PASS
+    tests: 72/72
+    source_modes: [discourse-imported, discourse-managed]
+    default: discourse-imported
+    rejected: [astro-managed]
+    manifest_field: sourceMode
+    discussionSync: false
+    artifact: astro-discussion-bridge-0.1.0-alpha-1731547-7d8951d1.tgz
+    sha256: 7d8951d15f4b0a4a4f14e238665bc41c28255c6f2cdcb1979105926ba6f4affb
+    node_engine: ">=22.12.0"
+  guide_dry_run:
+    source_forum: https://forum.discussionbridge.dev
+    source_topic_id: 36
+    destination_route: /guides/how-to-choose-a-discussion-bridge-source-mode/
+    status: passed
+  live_gate:
+    credentialed_import: open
+    build_deploy: open
+    canonical_verification: open
   direction_1:
     source: discussionbridge.dev_Astro_managed_blog
     destination: forum.discussionbridge.dev_public_companion_topic

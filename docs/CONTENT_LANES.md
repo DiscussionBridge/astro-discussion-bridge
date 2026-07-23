@@ -16,11 +16,12 @@ The Alpha dogfood proof uses two separate single-writer lanes:
 - `forum.discussionbridge.dev` community wiki/how-to -> a durable public guide
   and Astro navigation lane on `discussionbridge.dev`.
 
-The wiki lane is `discourse-managed` with `discussionSync: false`. It preserves
-source provenance and topic identity, imports or refreshes deterministically,
-and keeps the source topic as its primary discussion. Wiki edits happen in
-Discourse; the site republishes reviewed source. These lanes do not merge reply
-streams.
+The wiki lane is imported with `--source-mode discourse-managed`. The generated
+page preserves `discussionSourceMode: discourse-managed`,
+`discussionSync: false`, source provenance, and topic identity; it imports or
+refreshes deterministically and keeps the source topic as its primary
+discussion. Wiki edits happen in Discourse; the site republishes reviewed
+source. These lanes do not merge reply streams.
 
 One Astro or Starlight site may publish several kinds of content:
 
@@ -158,10 +159,12 @@ Source-mode operating vocabulary:
 
 Safety rule: never write back across a source-of-truth boundary unless the user explicitly changes or promotes the source mode.
 
-Current Alpha enforcement detail: the CLI enforces `discussionSync: false`, not
-the source-mode names themselves. Add that guard to every `discourse-managed`
-or `discourse-imported` page. `import-existing` does not add the guard
-automatically yet, so add and review it immediately after import.
+Current Alpha enforcement: `import-existing` accepts only
+`discourse-imported` or `discourse-managed` through `--source-mode`, defaults to
+`discourse-imported`, and rejects `astro-managed`. It writes the selected
+`discussionSourceMode` plus `discussionSync: false`; sync also enforces
+no-writeback for both Discourse-source modes. Manifest entries may select the
+same contract with `sourceMode`.
 
 For Discourse-to-Astro workflows, support both editorial paths:
 

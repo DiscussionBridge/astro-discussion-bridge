@@ -32,6 +32,18 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 ### DiscussionBridge.dev Two-Direction Dogfood Gate
 
+- [x] Implement and review explicit import source selection in `1731547`
+      (Code Boss PASS, 72/72): `--source-mode
+      discourse-imported|discourse-managed`, imported default, rejected
+      `astro-managed`, persistent `discussionSync: false`, and per-manifest-entry
+      `sourceMode`.
+- [x] Complete the public credential-free dry run for
+      `forum.discussionbridge.dev` topic `36` to
+      `/guides/how-to-choose-a-discussion-bridge-source-mode/`; verify the
+      Discourse-managed frontmatter and deterministic destination preview.
+- [ ] Perform the credentialed import, exact Astro build/deploy, and canonical
+      live guide/source/discussion verification. This remains open; the dry run
+      and reviewed package do not close the live gate.
 - [ ] Publish an Astro-managed `discussionbridge.dev` blog post to a public
       companion discussion on `forum.discussionbridge.dev`; verify the page,
       topic, declared connection purpose, comments presentation, and

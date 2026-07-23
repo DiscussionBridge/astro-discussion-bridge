@@ -280,19 +280,25 @@ commands when separating creation from maintenance makes review easier.
 ```sh
 npx astro-discussion-bridge import-existing src/content/docs \
   --topic https://forum.example.com/t/example-topic/123 \
+  --source-mode discourse-managed \
   --site-url https://docs.example.com \
   --dry-run
 ```
 
-After reviewing the destination, run the command without `--dry-run`, then add:
+Choose `discourse-managed` when edits continue in the source topic. Omit
+`--source-mode` or use `discourse-imported` for the imported-copy default.
+`astro-managed` is rejected because import is a Discourse-to-Astro operation.
 
 ```yaml
+discussionSourceMode: discourse-managed
 discussionSync: false
 ```
 
-You should see a Markdown file linked to the original topic. Review the imported
-body and frontmatter before building or editing. Avoid `--overwrite` unless the
-replacement is intentional and recoverable.
+You should see the selected source mode and `discussionSync: false` generated
+with a Markdown file linked to the original topic. Review the imported body and
+frontmatter before building or editing. Avoid `--overwrite` unless replacement
+is intentional and recoverable. A manifest entry may use `sourceMode` to make
+the same selection per topic.
 
 > **Stop if:** a dry run shows an unexpected page URL, topic ID, target,
 > category, managing page, overwrite, or writeback-eligible imported page.
@@ -624,6 +630,12 @@ replies from separate topics are merged.
 
 The public outcome is: “The site starts conversations. The community develops
 durable knowledge. The site publishes what the community learns.”
+
+Implementation and Code Boss review are complete at `1731547` with 72/72 tests.
+A public dry run of `forum.discussionbridge.dev` topic `36` resolved the planned
+guide route
+`/guides/how-to-choose-a-discussion-bridge-source-mode/`. The credentialed
+import, build, deployment, and live guide verification remain open.
 
 ### Alpha Topology Proof
 

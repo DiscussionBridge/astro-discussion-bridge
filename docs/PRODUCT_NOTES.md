@@ -419,6 +419,22 @@ described or presented as merged.
 The reader-facing outcome is: “The site starts conversations. The community
 develops durable knowledge. The site publishes what the community learns.”
 
+Package commit `1731547` closes the explicit import-mode implementation gap.
+Code Boss passed the change with 72/72 tests. `import-existing` now selects
+`discourse-imported` or `discourse-managed`, defaults to imported, rejects
+`astro-managed`, always retains `discussionSync: false`, and supports per-entry
+manifest `sourceMode`. A public dry run of forum topic `36` passed for the
+planned guide route
+`/guides/how-to-choose-a-discussion-bridge-source-mode/`.
+
+The reviewed artifact is
+`astro-discussion-bridge-0.1.0-alpha-1731547-7d8951d1.tgz` with SHA256
+`7d8951d15f4b0a4a4f14e238665bc41c28255c6f2cdcb1979105926ba6f4affb`.
+The apex guide schema now retains import metadata while allowing imported
+guides without hand-authored `description`/`pubDate`, and the Astro 7 engine
+contract is Node `>=22.12.0`. Credentialed import, build, deployment, and live
+guide verification remain open.
+
 ### After Alpha
 
 Beta primarily refines exercised usability, compatibility, reliability,
