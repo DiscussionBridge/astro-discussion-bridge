@@ -17,6 +17,22 @@ For Alpha, the practical model is:
 
 Established product rule: when documenting or requesting a granular publishing key, provide the exact Discourse scope settings. Do not describe the publishing key as "similar", "roughly", or "mostly" once a product key model has been settled.
 
+Discourse API keys have two independent controls:
+
+- **User Level:** `All Users` or `Single User`;
+- **Scope:** `Global`, `Read-only`, or `Granular`.
+
+With `All Users`, Discourse allows the request to act on behalf of the username
+sent in `Api-Username`. With `Single User`, the key is bound to the selected
+user. Scope separately controls which endpoints/actions are available. See
+[Discourse Meta: Create and configure an API key](https://meta.discourse.org/t/create-and-configure-an-api-key/230124).
+
+Discussion Bridge currently selects the request actor through
+`DISCOURSE_API_USERNAME`, CLI `--api-username`, or a `publishOnBuild` lane's
+`apiUsername`/`apiUsernameEnv`. The client sends that value as Discourse
+`Api-Username`. This is the implemented actor control; there is no separate
+implemented `postAs` option.
+
 When Discourse supports or confirms granular diagnostics/read scopes for the required endpoints, move to a two-key model:
 
 - granular publishing key for runtime sync
@@ -176,6 +192,7 @@ the placeholder only; they never show or request the real key.
 Purpose: Runtime publishing granular key
 Use: publish-new, sync-existing, publish-and-sync, check-discourse basic limits
 Bot user role: Admin currently; intended future runtime posture is non-admin or least-privilege
+Key user level: Record All Users or Single User; prefer Single User for a fixed runtime actor
 Key scope: Granular
 Operational rule: Use this to validate the minimum permissions needed for normal bridge publishing.
 
@@ -184,6 +201,9 @@ Description
 
 User
 {bot-username}
+
+User Level
+{Single User or All Users; if Single User, record the selected user}
 
 Scope
 Granular
@@ -210,6 +230,7 @@ Key
 Purpose: Diagnostics/setup key
 Use: check-discourse only
 Bot user role: Admin
+Key user level: Record All Users or Single User and the selected user/actor relationship
 Key scope: Global or admin-read capable
 Operational rule: Do not use in CI/build unless explicitly intended
 
@@ -218,6 +239,9 @@ Description
 
 User
 {admin-bot-username}
+
+User Level
+{Single User or All Users; if Single User, record the selected user}
 
 Scope
 Global or admin-read capable
@@ -264,31 +288,36 @@ For rotation:
 
 ## Delegated Posting Investigation
 
-Future multisite or agency use cases may need one trusted Discussion Bridge control-plane bot to publish notices, admin messages, or dashboard updates across multiple Discourse users, channels, or client forums.
+Do not document a hypothetical `postAs` or `discussionPostAs` field as current
+behavior. Today the configured API username is the request actor. Whether that
+username may differ from the key's selected user depends on the key's **User
+Level**, while endpoint authority depends on **Scope**.
 
-Before supporting that pattern, confirm:
+Before a write, record and verify the key User Level, its selected user when
+`Single User`, the configured `Api-Username` actor, the key Scope/granular
+permissions, and the actor's category/tag/staff permissions.
 
-- whether Discourse allows an admin/bot API key to post or message as another user
-- which endpoint, scope, or plugin capability controls that behavior
-- how actions are audited in Discourse
-- whether the feature should require a separate diagnostics/control-plane key
-- whether the behavior belongs in the API-only package, an optional Discourse plugin, or both
+### Nonhuman Identity Inventory
 
-Possible future configuration shape:
+Across connected forums, no two nonhuman accounts may have the same—or
+visually ambiguous—username/display-name combination. Encode both role and
+origin system.
 
-```js
-discussionBridge({
-  postAs: "admin-team",
-});
-```
+| Origin | Candidate username | Candidate public name |
+| --- | --- | --- |
+| Discussion Bridge Forum | `editorbridgeforum` | Discussion Bridge Forum Editor |
+| Citizen Activist Network Forum | `editorcanforum` | CAN Forum Editor |
 
-```yaml
-discussionPostAs: "chapter-admin"
-```
+Discourse normalizes username case. Check the exact final username against each
+site's length rules and availability before creation. Astro-origin publishing
+accounts should identify the originating site/brand rather than only the
+destination forum. Preserve established `obbba-bot` as the OBBBA source
+identity.
 
-Default behavior should remain posting as the API key user, usually the Discussion Bridge bot. Any delegated posting should be explicitly configured, never inferred. CLI and diagnostics output should make the distinction visible, for example: `posting as chapter-admin via key user discussbridge-bot`.
-
-Treat delegated posting as a high-trust feature. It should never be enabled as a casual default for routine companion-topic publishing.
+Create a `special-admin` custom group on each forum as the visible inventory
+home for nonhuman admin/service accounts. Group membership is organizational
+only: it does **not** grant Discourse admin status, category permissions, or API
+rights. Assign those separately.
 
 ## Build Logs
 

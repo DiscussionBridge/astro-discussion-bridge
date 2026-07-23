@@ -174,6 +174,49 @@ Resolution behavior:
 - live publish/sync/import requires `DISCOURSE_API_USERNAME` and
   `DISCOURSE_API_KEY`.
 
+```yaml
+request_actor:
+  implemented_inputs:
+    environment: DISCOURSE_API_USERNAME
+    cli: --api-username
+    publishOnBuild_lane: [apiUsername, apiUsernameEnv]
+  request_header: Api-Username
+  separate_postAs_option: not_implemented
+api_key_authority:
+  user_level:
+    All_Users: may_act_for_supplied_Api_Username
+    Single_User: bound_to_selected_user
+  scope:
+    values: [Global, Read-only, Granular]
+    purpose: endpoint_and_action_authority
+  invariant: user_level_and_scope_are_independent
+service_identity:
+  collision_rule: no_actual_or_visually_ambiguous_nonhuman_identity_across_forums
+  naming_rule: role_plus_origin_system
+  candidates:
+    - { username: editorbridgeforum, public_name: Discussion Bridge Forum Editor }
+    - { username: editorcanforum, public_name: CAN Forum Editor }
+  verify_before_create: [normalized_username, site_length_limits, availability]
+  preserved_source_identity: obbba-bot
+  inventory_group:
+    name: special-admin
+    grants_admin_status: false
+    grants_API_rights: false
+    grants_category_permissions: false
+discourse_mermaid:
+  official_existing_option:
+    type: theme_component
+    meta: https://meta.discourse.org/t/discourse-mermaid/218242
+    repository: https://github.com/discourse/discourse-mermaid-theme-component
+  distinct_paths:
+    - existing_official_theme_component
+    - fork_or_extension_of_theme_component
+    - separate_Discussion_Bridge_for_Discourse_plugin
+    - upstream_Discourse_change
+  forbidden_term: Discussion_Bridge_Mermaid_plugin
+  tier_1_API_only_dependency: none
+```
+
 ## 4. Source-Mode Contract
 
 | Source mode | Required operational guard | Writable by publish/sync? |
@@ -1219,6 +1262,15 @@ discussionbridge_dev_dogfood:
       sync_existing_dry_run: skipped_discourse_managed_no_writeback
     npm_audit: { high: 1, automatic_fix: prohibited_not_run }
     known_warning: Mermaid_chunk_over_500k
+  topic_36_editor_ownership_acceptance:
+    status: open
+    required:
+      - change_first_post_owner_from_discourseadmin_to_selected_bridge_forum_editor
+      - edit_wiki_as_selected_editor
+      - import_refresh_discourse_managed_guide_with_overwrite
+      - verify_content_and_source_ownership
+      - build_deploy_and_verify_live_markers
+      - prove_no_Astro_writeback
     evidence_record: docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md
     count_boundary:
       apex_generated_public_routes: 5

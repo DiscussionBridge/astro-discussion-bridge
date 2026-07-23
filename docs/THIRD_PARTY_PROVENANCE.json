@@ -40,6 +40,18 @@
       "copiedMaterial": false
     },
     {
+      "name": "Discourse API key configuration documentation",
+      "relationship": "Authoritative reference for independent API key User Level and Scope behavior",
+      "source": "https://meta.discourse.org/t/create-and-configure-an-api-key/230124",
+      "copiedMaterial": false
+    },
+    {
+      "name": "Discourse Mermaid theme component",
+      "relationship": "Official normal-topic Mermaid theme component and terminology reference",
+      "source": "https://github.com/discourse/discourse-mermaid-theme-component",
+      "copiedMaterial": false
+    },
+    {
       "name": "Mermaid",
       "relationship": "Runtime dependency for Astro-rendered Mermaid diagrams",
       "source": "https://github.com/mermaid-js/mermaid",

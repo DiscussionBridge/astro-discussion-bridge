@@ -81,6 +81,13 @@ imported file by itself is not promotion.
 6. Create a separate diagnostics key for setup checks when granular reads are
    insufficient.
 
+For each key, choose **User Level** and **Scope** independently. `All Users`
+allows the request to act for the supplied `Api-Username`; `Single User` binds
+the key to its selected user. Scope separately limits endpoints. Discussion
+Bridge supplies the request actor from `DISCOURSE_API_USERNAME`,
+`--api-username`, or lane `apiUsername`/`apiUsernameEnv`, and sends
+`Api-Username`. There is no separate implemented `postAs` option.
+
 When creating either key, show its complete purpose block with the setup
 instructions and copy that block into the respective protected credential file
 above the secret value.
@@ -91,6 +98,7 @@ Publishing key record:
 Purpose: Runtime publishing granular key
 Use: publish-new, sync-existing, publish-and-sync, check-discourse basic limits
 Bot user role: Admin currently; intended future runtime posture is non-admin or least-privilege
+Key user level: Record All Users or Single User; prefer Single User for a fixed runtime actor
 Key scope: Granular
 Operational rule: Use this to validate the minimum permissions needed for normal bridge publishing.
 ```
@@ -101,6 +109,7 @@ Diagnostics key record:
 Purpose: Diagnostics/setup key
 Use: check-discourse only
 Bot user role: Admin
+Key user level: Record All Users or Single User and the selected user/actor relationship
 Key scope: Global or admin-read capable
 Operational rule: Do not use in CI/build unless explicitly intended
 ```
@@ -137,7 +146,18 @@ placeholder.
 > key, or a real key appears in a file or screenshot.
 
 **Screenshot placeholder:** Discourse granular-key screen showing only the
-settled publishing scopes and no visible key value.
+settled User Level and publishing scopes, with no visible key value.
+
+Create a `special-admin` custom group as the visible inventory for nonhuman
+admin/service accounts. Then assign actual admin, category, and API authority
+separately; group membership grants none of those by itself.
+
+For connected forums, prevent actual and visually ambiguous service-account
+collisions. Candidate forum-source editors are `editorbridgeforum` /
+**Discussion Bridge Forum Editor** and `editorcanforum` / **CAN Forum Editor**.
+Verify normalized username length and availability before creation.
+Astro-origin actors should identify the source site or brand; keep established
+`obbba-bot` as the OBBBA source identity.
 
 ## 4. Install And Configure Astro
 
@@ -585,6 +605,13 @@ component for normal topics and design a bounded optional plugin slice for
 Mermaid in full-app embeds, table parity, embed-context detection, and tests.
 This remains pending design/review and does not change Tier 1 installation.
 
+Discourse Mermaid is the official **theme component** documented at
+[Meta topic 218242](https://meta.discourse.org/t/discourse-mermaid/218242) and
+[discourse/discourse-mermaid-theme-component](https://github.com/discourse/discourse-mermaid-theme-component).
+It is not a plugin. Keep it distinct from a fork/extension of that theme
+component, the separate optional `Discussion Bridge for Discourse` plugin, and
+an upstream Discourse change.
+
 The optional plugin is a separate product/repository under Boss routing. Its
 v0.1 Alpha goal is installable and removable on supported stock/current
 Discourse with documented rollback, no ordinary-topic regression, and a live
@@ -672,6 +699,13 @@ larger than 500 kB; neither was hidden or changed with an automatic audit fix.
 See the
 [sanitized verification record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md)
 for the live markers and claim boundary.
+
+The topic-36 editor-ownership acceptance test remains open. A human operator
+must change the wiki first-post owner from `discourseadmin` to the selected
+Discussion Bridge Forum editor, edit the wiki while signed in as that editor,
+re-import/refresh the `discourse-managed` guide with overwrite, then verify
+content and source ownership, build/deploy/live markers, and no Astro
+writeback. Actor configuration alone does not complete this test.
 
 ### Alpha Topology Proof
 

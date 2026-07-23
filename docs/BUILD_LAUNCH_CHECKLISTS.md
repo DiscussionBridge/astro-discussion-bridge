@@ -357,6 +357,14 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       as the immediate normal-topic baseline, then build the bounded optional
       plugin slice for Mermaid in full-app embeds, table presentation parity,
       embed-context detection, and tests. Do not make Tier 1 depend on it.
+- [x] Correct Mermaid terminology: Discourse Mermaid is the official
+      **theme component** documented at Meta topic `218242` and repository
+      `discourse/discourse-mermaid-theme-component`, never the Discussion Bridge
+      plugin.
+- [ ] Choose explicitly among the existing official theme component, a
+      fork/extension of that theme component, the separate optional Discussion
+      Bridge for Discourse plugin, or an upstream Discourse change for
+      full-app-embed parity.
 - [ ] Build the plugin as a separate Boss-routed product/repository; prove it is
       installable and removable with rollback docs on supported stock/current
       Discourse, has no ordinary-topic regression, and passes live CAN full-app
@@ -367,5 +375,20 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Use logical/workspace path
       `DiscussionBridge/plugins/discourse-discussion-bridge` for the proposed
       plugin; leave physical GitHub repo naming/placement to Boss/folder review.
-- [ ] Investigate Discourse API/plugin support for delegated posting or notifications as configured users in multisite/multichannel agency scenarios, including possible `postAs` or `discussionPostAs` configuration.
+- [x] Document the implemented request actor: `DISCOURSE_API_USERNAME`,
+      `--api-username`, or lane `apiUsername`/`apiUsernameEnv` supplies
+      `Api-Username`; no separate `postAs` option exists.
+- [x] Document independent Discourse key User Level and Scope behavior:
+      `All Users` may act for supplied `Api-Username`; `Single User` is bound
+      to its selected user; Scope controls endpoints separately.
+- [ ] Create and inventory `special-admin` on each connected forum; verify
+      separately assigned admin/category/API authority because group membership
+      grants none.
+- [ ] Finalize and availability-check collision-safe role+origin identities.
+      Current candidates: `editorbridgeforum` / Discussion Bridge Forum Editor
+      and `editorcanforum` / CAN Forum Editor. Preserve `obbba-bot`.
+- [ ] Complete topic-36 editor-ownership acceptance: transfer first-post
+      ownership from `discourseadmin`, edit as the selected editor, overwrite
+      refresh the Discourse-managed guide, build/deploy/live verify, and prove
+      no Astro writeback.
 - [ ] Design future integration lanes for Statamic and other frameworks.

@@ -134,6 +134,24 @@ Tradeoffs:
 - sign-in behavior depends on cookie and same-site settings
 - visual styling belongs mostly to Discourse
 
+Discourse Mermaid is an official **theme component**, not a plugin:
+
+- [Discourse Meta topic 218242](https://meta.discourse.org/t/discourse-mermaid/218242)
+- [discourse/discourse-mermaid-theme-component](https://github.com/discourse/discourse-mermaid-theme-component)
+
+Keep four possible paths distinct:
+
+1. use the existing official theme component for supported normal-topic
+   behavior;
+2. fork or extend that theme component;
+3. build the separate optional `Discussion Bridge for Discourse` plugin for
+   bounded full-app embed context/table/Mermaid parity;
+4. pursue an upstream Discourse change.
+
+Never call the official theme component the “Discussion Bridge Mermaid plugin.”
+The optional Discussion Bridge plugin is separate, and Tier 1 API-only operation
+must remain fully functional without either extension.
+
 Recommended Discourse settings:
 
 - `Embed full app`: yes

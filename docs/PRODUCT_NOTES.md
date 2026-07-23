@@ -197,6 +197,25 @@ Independent replies remain independent; the bridge must not silently merge
 them. Primary versus additional presentation stays explicit. Relay, promotion,
 or summary behavior is later scope and requires its own contract.
 
+### Every Automated Actor Has An Origin
+
+The current Astro-to-Discourse actor is the configured API username, sent as
+`Api-Username`; it is not a separate `postAs` feature. Discourse key User Level
+controls whether a key is bound to one user or may act for a supplied username,
+while key Scope independently controls endpoints.
+
+Many-to-many operation must not create identical or visually ambiguous
+nonhuman identities across forums. Service identities encode role plus origin:
+candidate forum-source editors are `editorbridgeforum` / **Discussion Bridge
+Forum Editor** and `editorcanforum` / **CAN Forum Editor**, subject to each
+forum's normalized username rules and availability. Astro-origin actors name
+their source site/brand; established `obbba-bot` remains the OBBBA source
+identity.
+
+Each forum should use a `special-admin` custom group as the visible inventory
+for nonhuman admin/service accounts. That group is not an authorization
+mechanism and grants no admin status, category permissions, or API rights.
+
 Citizen Activist Network supports both directions through separate page/topic
 pairs with explicit ownership. Astro-managed `citizenactivist.network` content
 may publish companion topics to `forum.citizenactivist.network`; selected forum
@@ -372,6 +391,13 @@ not loaded there. Tables parse but need stronger embedded styling. The immediate
 supported table path is Discourse `common/embedded.scss`, targeted with the new
 embed class hook. Mermaid remains open pending a Discourse embed extension,
 plugin, or upstream answer; it is not fixed by the `full` implementation.
+
+The official Discourse Mermaid offering is specifically the official
+**Discourse Mermaid theme component**, not a plugin. Keep four paths distinct:
+use the existing theme component, fork/extend that theme component, build the
+separate optional `Discussion Bridge for Discourse` plugin, or pursue an
+upstream Discourse change. Never call the official theme component the
+“Discussion Bridge Mermaid plugin.” Tier 1 remains API-only and independent.
 
 Commit `d7800d7` passed Code Boss review and 51/51 package tests plus plain Astro
 and Starlight production builds. This implementation pass made no OBBBA content
