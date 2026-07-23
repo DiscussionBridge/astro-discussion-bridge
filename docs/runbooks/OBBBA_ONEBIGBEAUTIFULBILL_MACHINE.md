@@ -37,9 +37,10 @@ attribution_gate_reuse:
   results_interchangeable: false
   manual_boss_semantic_result:
     format: "Attribution and Licensing: PASS / FAIL / N/A"
-    current: not_yet_passed
+    current: PASS
+    exact_candidate: b09dbce
     reviewed_paths: required
-    sanitized_exact_release_record: required
+    sanitized_exact_release_record: docs/evidence/ATTRIBUTION_LICENSING_REVIEW_B09DBCE_2026-07-23.md
 ```
 
 ## 1. Resolved System Inputs

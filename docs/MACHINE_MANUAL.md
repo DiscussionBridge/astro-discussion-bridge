@@ -1276,7 +1276,11 @@ attribution_and_licensing:
     required_result: "Attribution and Licensing: PASS / FAIL / N/A"
     reviewed_paths: required
     sanitized_exact_release_record: required
-    current_status: not_yet_passed
+    current_status: PASS
+    exact_candidate: b09dbce
+    commit_chain: [7127eb1, 462b3ae, b09dbce]
+    remaining_findings: 0
+    record: docs/evidence/ATTRIBUTION_LICENSING_REVIEW_B09DBCE_2026-07-23.md
 release_prerequisites:
   - npm package name, ownership, and publisher authority confirmed
   - npm account 2FA or trusted publishing confirmed

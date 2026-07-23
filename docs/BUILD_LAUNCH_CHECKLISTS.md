@@ -195,10 +195,11 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Run the bounded docs-scope attribution gate before the readable docs
       build. Require the exact distinctions `PASS (docs scope)` and
       `npm package contents: SKIPPED (requires built release candidate)`.
-- [ ] Obtain Manual Boss semantic attribution/licensing review for the exact
-      Alpha release. Record `Attribution and Licensing: PASS / FAIL / N/A`,
-      reviewed paths, and a sanitized exact-release review record. Automated
-      73/73 and docs 20/21 results do not satisfy this item.
+- [x] Obtain Manual Boss semantic attribution/licensing review for the exact
+      candidate through `b09dbce` atop `7127eb1` + `462b3ae`. Result:
+      `Attribution and Licensing: PASS`; reviewed paths and corrections are in
+      the [sanitized exact-candidate record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/ATTRIBUTION_LICENSING_REVIEW_B09DBCE_2026-07-23.md).
+      Automated 73/73 and docs 20/21 remain separate results.
 
 ## Alpha Demo Checklist
 

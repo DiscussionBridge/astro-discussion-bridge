@@ -146,3 +146,8 @@ Neither automated result is Manual Boss approval. Every exact release requires
 a separate Manual Boss result written as `Attribution and Licensing: PASS /
 FAIL / N/A`, the paths reviewed, and a sanitized review record tied to the
 exact release commit. No Manual Boss PASS is recorded until that review occurs.
+
+For the exact candidate through `b09dbce` atop `7127eb1` and `462b3ae`, Manual
+Boss recorded **`Attribution and Licensing: PASS`** with no remaining findings
+or blockers. See the
+[sanitized exact-candidate review record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/ATTRIBUTION_LICENSING_REVIEW_B09DBCE_2026-07-23.md).

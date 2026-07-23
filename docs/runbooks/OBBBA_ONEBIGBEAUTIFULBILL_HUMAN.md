@@ -19,8 +19,9 @@ close any remaining OBBBA-specific gate.
 For release reuse, distinguish the full automated attribution gate inside
 package 73/73 from the bounded docs-scope gate inside the 20-source/21-page
 docs build. Neither records Manual Boss semantic approval. The exact release
-still needs `Attribution and Licensing: PASS / FAIL / N/A`, reviewed paths, and
-a sanitized review record.
+still needs its own `Attribution and Licensing: PASS / FAIL / N/A`, reviewed
+paths, and sanitized review record. Candidate `b09dbce` has that separate PASS;
+see its [sanitized record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/ATTRIBUTION_LICENSING_REVIEW_B09DBCE_2026-07-23.md).
 
 This runbook covers the first real OBBBA Discussion Bridge lane:
 

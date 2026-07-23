@@ -56,7 +56,11 @@ require the built release candidate. Its 20/21 result is therefore not the full
 Both automated gates remain distinct from Manual Boss semantic judgment.
 Release requires an exact `Attribution and Licensing: PASS / FAIL / N/A`,
 reviewed paths, and a sanitized record tied to the release commit. That Manual
-Boss result is not yet PASS.
+Boss result is now PASS for the corrected exact candidate through `b09dbce`
+atop `7127eb1` and `462b3ae`, with no remaining findings. The
+[sanitized review record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/ATTRIBUTION_LICENSING_REVIEW_B09DBCE_2026-07-23.md)
+records reviewed paths and the correction history. Later candidates require a
+new semantic review.
 
 ## Product Frame
 

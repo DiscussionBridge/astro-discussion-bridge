@@ -879,7 +879,13 @@ Automation cannot decide whether attribution is adequate or whether copied,
 adapted, branded, or sourced material is appropriate. Before release, Manual
 Boss must record `Attribution and Licensing: PASS / FAIL / N/A`, list the paths
 reviewed, and create a sanitized review record tied to the exact release
-commit. No Manual Boss PASS has been recorded yet.
+commit.
+
+For candidate `b09dbce` atop `7127eb1` and `462b3ae`, Manual Boss recorded
+`Attribution and Licensing: PASS` with no remaining findings or blockers. Read
+the [sanitized exact-candidate review record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/ATTRIBUTION_LICENSING_REVIEW_B09DBCE_2026-07-23.md).
+This PASS applies only to that exact candidate; it does not pre-approve later
+release changes.
 
 The intended support split is:
 
