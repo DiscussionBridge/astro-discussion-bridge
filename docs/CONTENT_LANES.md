@@ -182,12 +182,12 @@ topology proof remains open. The same selected page uses an explicit ordered lis
 `forum.repealobbba.org` and `forum.citizenactivist.network`. General many-to-many
 administration remains outside this gate.
 
-Current external prerequisite (verified 2026-07-22):
-`forum.citizenactivist.network` does not resolve, and the checked protected
-by-site vault locations contain no Citizen Activist credential lane. Boss/Ops
-owns forum/DNS/TLS/ownership provisioning under task
-`019f42a5-bd80-77a2-98bc-af5b57db0d8a`. Treat the live proof as blocked on that
-prerequisite, not failed in Discussion Bridge.
+The bounded live lane is now proven on the 10101 page. Its protected source is
+Repeal OBBBA topic 434 and its additional Citizen Activist publication is topic
+9. The correct publishing lane is `src/content/docs/title i` with route base
+`title-i` and active target `citizen-activist`. A broader root produced a wrong
+index/route preview and was rejected before any write; always review the
+target-specific dry-run before publication.
 
 Required matrix:
 
@@ -229,7 +229,8 @@ discussion publication.
 
 The implementation is complete at `a9d2097`. OBBBA adopted it at `aa7846d` and
 verified the protected Repeal OBBBA source disclosure across all five live Title
-I routes. This does not close the separate Citizen Activist multi-target gate.
+I routes. The later bounded Citizen Activist multi-target proof completed at
+`36df91c`; provenance still follows the protected Repeal OBBBA source.
 
 ## Content Tags And Discourse Tags
 

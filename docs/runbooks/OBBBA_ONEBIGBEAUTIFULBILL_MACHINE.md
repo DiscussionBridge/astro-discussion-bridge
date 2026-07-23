@@ -689,16 +689,18 @@ post_gate_demo:
     pages: selected_and_clearly_labeled
     target_selection: member_of_explicit_ordered_page_target_list
   alpha_topology_claim: one_page_multi_forum_plus_many_sites_one_forum
-  status: blocked_on_explicit_Ops_prerequisite
-  bridge_code_failure: false
-  blocker_evidence:
+  status: bounded_live_proof_complete
+  live_evidence:
     verified_at: 2026-07-22
-    hostname: forum.citizenactivist.network
-    dns_result: unresolved_curl_error_6
-    protected_by_site_credential_lane_found: false
-    routed_owner: Boss_Ops
-    routed_task: 019f42a5-bd80-77a2-98bc-af5b57db0d8a
-    secret_values_allowed_here: false
+    adoption_commit: 36df91c98a35251edd6ddd657cca42ddf0acdafa
+    Code_Boss: PASS
+    clean_detached_build: PASS
+    worker_version: 632db326-bc0d-4047-b74b-7e74d3588dbf
+    canonical_page_HTTP: 200
+    adoption_files:
+      - src/components/MarkdownContent.astro
+      - src/content.config.ts
+      - src/content/docs/title i/10101-impact.mdx
   implementation:
     commit: 60e41e1
     review: Code_Boss_PASS
@@ -740,16 +742,32 @@ post_gate_demo:
       malformed_bindings: fail_before_network
   later_scope: general_many_to_many_administration
   completed_gate: [design_review, implementation, Code_Boss_review, package_tests, partial_failure_retry_tests]
-  resume_order:
-    - verify_forum_DNS_TLS_and_target_diagnostics
-    - choose_and_label_one_OBBBA_page
-    - preserve_repeal_OBBBA_as_protected_source
-    - configure_citizen_activist_as_explicit_publication_target
-    - run_target_specific_dry_run
-    - publish_and_verify_independent_bindings
-    - prove_failed_target_only_idempotent_retry
-    - clean_exact_candidate_build_deploy_live_checks
-    - verify_no_source_or_cross_target_writeback
+  proof:
+    diagnostics: PASS
+    source_topic: { target: repeal-obbba, topic_id: 434, posts: 12, source_mode: discourse-imported, discussionSync: false }
+    primary_comments: { mode: fullInteractive, fullApp: true, topic_id: 434 }
+    publication_topic:
+      target: citizen-activist
+      topic_id: 9
+      url: https://forum.citizenactivist.network/t/sec-10101-re-evaluation-of-thrifty-food-plan-impact/9
+      category: { id: 5, name: One Big Beautiful Bill, slug: one-big-beautiful-bill, public: true }
+      visible: true
+      tags: [discussionbridge, obbba, impact, title-i]
+    retry: unchanged_no_duplicate
+    additional_navigation_links: 1
+    source_writeback: none
+  lane:
+    docsDir: src/content/docs/title i
+    route_base: title-i
+    active_target: citizen-activist
+    earlier_broad_dry_run: rejected_before_write_wrong_root_index_and_route
+  dependency_audit: { total: 10, low: 1, moderate: 1, high: 8, resolved: false, action: manual_dependency_review }
+  known_notices: [Starlight_docs_to_404, chunk_size, punycode_deprecation]
+  temporary_detached_worktree: removed_after_deployment
+  protected_credentials:
+    records_exist: true
+    copy_paths_account_values_or_secrets_here: prohibited
+    legacy_format_cleanup: protected_vault_task
 source_disclosure:
   implementation_commit: a9d2097
   review: Code_Boss_PASS

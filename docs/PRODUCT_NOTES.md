@@ -56,13 +56,19 @@ proof remains an open release gate:
 - bounded demo/credit pages connect to `forum.discussionbridge.dev`;
 - multiple Astro/public sites converge on `forum.repealobbba.org`;
 
-Live-gate status verified 2026-07-22: `forum.citizenactivist.network` does not
-resolve (`curl` error 6), and no Citizen Activist forum credential lane was found
-in the protected by-site vault locations checked. The forum, DNS, TLS, ownership,
-and non-secret operational coordinates are an explicit Boss/Ops prerequisite,
-routed to task `019f42a5-bd80-77a2-98bc-af5b57db0d8a`. This is not a Bridge code
-failure. Do not mark the topology gate complete until provisioning and live proof
-both succeed.
+The bounded OBBBA → Citizen Activist live proof completed at adoption commit
+`36df91c98a35251edd6ddd657cca42ddf0acdafa`. The live 10101 page preserves
+Repeal OBBBA topic 434 as protected source and primary `fullInteractive`
+discussion, while accessible Additional discussions navigation links to Citizen
+Activist topic 9. Target diagnostics, target-specific dry-run, publication,
+unchanged retry, clean build, deployment, live binding checks, and no-writeback
+checks passed.
+
+This proves the exercised same-page two-forum topology, not a general
+many-to-many administration plane. Credential records remain protected; their
+format cleanup is a vault task, not public documentation. Dependency review is
+still required for the exact install's 10 audit findings (1 low, 1 moderate,
+8 high); do not run an automatic audit fix.
 
 The CitizenActivist.Network forum is publicly described as “A community of
 activists.”
@@ -126,7 +132,8 @@ The claim is deliberately bounded. It does not guarantee every Cloudflare,
 CDN, WAF, or cache-rule combination. Operators must preserve Discourse API/JSON
 paths, embed/full-app routes, authentication and cookies, and websocket behavior.
 When edge behavior differs from direct origin, investigate cache/WAF treatment.
-The Citizen Activist multi-target live gate remains separate and open.
+The bounded Citizen Activist multi-target live gate is complete; wider matrix
+edges and general administration remain separate scope.
 
 ## Discourse Source Disclosure
 
@@ -152,8 +159,8 @@ OBBBA adoption is complete at `aa7846d` using reviewed artifact
 detached install/build passed, deployment succeeded, and all five canonical
 Title I routes showed exactly one correctly labeled source aside/link to their
 protected Repeal OBBBA topics while preserving the discussion boundary. No
-Discourse write occurred. Citizen Activist topology remains a separate open
-gate.
+Discourse write occurred. The later Citizen Activist publication preserved this
+protected source and did not write back to it.
 
 ## Alpha Import Queue Principle
 

@@ -399,30 +399,23 @@ page/lane-level target selection from the many-to-one convergence proof.
 The Alpha proof must use the same selected OBBBA page for both
 `forum.repealobbba.org` and `forum.citizenactivist.network` through an explicit
 ordered target list. The package design and implementation are reviewed and
-complete at `60e41e1`; the OBBBA live proof is still pending. It claims real
-one-page multi-forum operation, but not the future
+complete at `60e41e1`; bounded OBBBA live adoption completed at `36df91c`. It
+claims real one-page multi-forum operation, but not the future
 general administration plane. The planned comments-boundary
 credit must remain configurable, secondary, accessible, and outside site content.
 Its final wording and default remain undecided.
 
-Live-gate stop condition verified 2026-07-22:
-`forum.citizenactivist.network` does not resolve (`curl` error 6), and no
-Citizen Activist credential lane was found in the protected by-site vault
-locations checked. Boss/Ops task `019f42a5-bd80-77a2-98bc-af5b57db0d8a` owns
-forum/DNS/TLS/ownership provisioning. Do not substitute another credential lane
-or classify this as a Bridge failure.
+Live verification on the canonical 10101 page passed: protected source and
+primary discussion remain Repeal OBBBA topic 434; exactly one accessible
+Additional discussions navigation links Citizen Activist topic 9. Topic 9 is
+visible in public category 5 with the Bridge-created tags. Exact retry returned
+unchanged, so no duplicate was created. Source topic 434 retained 12 posts and
+its first-post update time, proving no source writeback.
 
-When Ops returns non-secret coordinates, resume in this order:
-
-1. Verify forum DNS, TLS, and target diagnostics.
-2. Choose and visibly label one selected OBBBA page.
-3. Preserve `forum.repealobbba.org` as the protected source target.
-4. Add `forum.citizenactivist.network` as an explicit publication target.
-5. Run a target-specific dry-run.
-6. Publish and verify independent target bindings.
-7. Prove failed-target-only idempotent retry.
-8. Build the clean exact candidate, deploy it, and check live page/topic paths.
-9. Verify no source or cross-target writeback.
+The correct publishing lane is `src/content/docs/title i`, route base `title-i`,
+active target `citizen-activist`. A broad dry-run first exposed the wrong root/
+index and malformed route before any write. Always correct route drift before
+publication.
 
 For the proof page, use `discussionTargets` as the ordered target list,
 `discussionPublishTargets` as the writable subset, and
@@ -447,8 +440,14 @@ Live verification passed on all five canonical Title I routes. Each contains
 exactly one **Content source** aside, one **View the source discussion** link to
 the correct `forum.repealobbba.org` topic, exact imported wording with the
 `Repeal OBBBA Forum` label, and the existing discussion boundary. No Discourse
-write occurred. Source-disclosure adoption is complete; Citizen Activist
-multi-target topology remains separately open.
+write occurred. Source-disclosure adoption and the bounded Citizen Activist
+multi-target proof are complete; wider topology and administration remain
+separate scope.
+
+The exact detached install reported 10 dependency audit findings: 1 low,
+1 moderate, and 8 high. Route dependency review separately; do not run an
+automatic audit fix. Credential record cleanup remains inside protected storage
+and must not expose paths or values here.
 
 For the exact OBBBA release candidate:
 

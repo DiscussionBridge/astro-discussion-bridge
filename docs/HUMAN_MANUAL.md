@@ -575,8 +575,8 @@ an item only when Phil explicitly directs that change.
 
 ### Alpha Topology Proof
 
-The Alpha multi-target model is implemented and reviewed; its live topology
-proof must still show all four edges:
+The Alpha multi-target model is implemented and reviewed. The first two edges
+of the bounded live topology proof are complete; the wider matrix still tracks:
 
 - the same selected `onebigbeautifulbill.us` page → `forum.repealobbba.org`;
 - that same selected page → `forum.citizenactivist.network`;
@@ -588,20 +588,24 @@ last proves many sites can converge on one forum. Citizen Activist
 Network's forum identity is “A community of activists.” Its Cloudflare/account
 ownership placement remains an Ops decision.
 
-As verified 2026-07-22, `forum.citizenactivist.network` does not yet resolve and
-no Citizen Activist credential lane was found in the protected by-site vault
-locations checked. Stop here: do not invent coordinates, copy another forum's
-credentials, or mark the live proof complete. Boss/Ops task
-`019f42a5-bd80-77a2-98bc-af5b57db0d8a` owns the forum, DNS, TLS, ownership, and
-credential-lane prerequisite. This is an external setup blocker, not a Bridge
-code failure.
+Live adoption commit `36df91c98a35251edd6ddd657cca42ddf0acdafa` proves the
+same 10101 page can retain Repeal OBBBA topic 434 as protected source and primary
+`fullInteractive` discussion while linking an independent Citizen Activist
+topic 9 under accessible **Additional discussions** navigation. Diagnostics,
+target-specific dry-run, publication, unchanged retry, clean build, deployment,
+live checks, and no-source-writeback verification passed.
 
-After Ops supplies non-secret coordinates, verify DNS/TLS and diagnostics first;
-then choose and label one OBBBA page, preserve Repeal OBBBA as its protected
-source, add Citizen Activist as an explicit publication target, dry-run that
-target, publish and inspect both bindings, prove failed-target-only retry, build
-and deploy the exact candidate, verify both live page/topic paths, and finally
-confirm no source or cross-target writeback.
+Use the narrowest correct content root. For this lane it is
+`src/content/docs/title i` with route base `title-i` and active target
+`citizen-activist`. An earlier broad dry-run exposed a wrong root/index and a
+malformed `title-i/title i` route before any write. Treat previewed route drift
+as a stop condition, correct the lane, and rerun dry-run.
+
+Keep credentials in protected storage. Do not copy storage paths, account
+values, or secrets into public docs. Existing record-format cleanup belongs in
+the protected vault. The exact clean install reported 10 dependency audit
+findings (1 low, 1 moderate, 8 high); route them for dependency review and do not
+apply an automatic `npm audit fix`.
 
 The page must distinguish its protected source target from its ordered
 publication/discussion targets. Review each target's forum, topic binding, sync

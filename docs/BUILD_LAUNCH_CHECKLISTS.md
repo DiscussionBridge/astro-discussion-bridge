@@ -25,13 +25,10 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 #### Phil/Ops Prerequisites Before Alpha Can Be Public
 
-- [ ] Provision `forum.citizenactivist.network`, including DNS, TLS, confirmed
-      ownership/Cloudflare placement, and a protected non-secret credential lane
-      reference. As verified 2026-07-22, the hostname does not resolve and no
-      Citizen Activist forum lane was present in the checked by-site vault
-      locations. Routed to Boss/Ops task
-      `019f42a5-bd80-77a2-98bc-af5b57db0d8a`; this blocks the bounded live
-      topology proof but is not a Bridge code failure.
+- [x] Provision the operational `forum.citizenactivist.network` prerequisite:
+      DNS/TLS, public target category, and protected credential records are
+      usable for the bounded OBBBA proof. Keep any broader ownership/Cloudflare
+      placement decision in Ops; do not expose protected paths or values.
 
 - [ ] Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
 - [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain.
@@ -174,8 +171,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 - [x] Keep Tier 1 API-only and useful without a Discourse plugin.
 - [x] Complete implementation and Code Boss review for Alpha multi-target pages
-      (`60e41e1`, package suite 62/62); keep the separate live topology proof
-      open.
+      (`60e41e1`, package suite 62/62) and the bounded OBBBA → Citizen Activist
+      live proof (`36df91c`).
 - [x] Keep multiple content lanes first-class through config and frontmatter.
 - [x] Keep one package with two clear presets: `starlight` and `astro`.
 - [x] Keep the Starlight preset focused on Starlight conventions.
@@ -196,18 +193,18 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Use the OBBBA implementation lane as a real-world Discourse-to-Astro proof path: import/prune a `forum.repealobbba.org` topic into `onebigbeautifulbill.us`, keep it `discourse-imported` until explicit promotion, and feed lessons back into Discussion Bridge.
 - [ ] Preserve the Citizen Activist structured-document path: Discourse wiki topics as source material, Astro as polished public act/section pages, with status, last-edit context, source topic links, comments, and no accidental writeback.
 - [ ] Preserve the OBBBA many-to-one topology: `onebigbeautifulbill.us` / `OBBBA.us`, `repealobbba.org`, `repealobbbaact.us`, and possibly `repealobbbapledge.us` can all connect to `forum.repealobbba.org`, with source direction varying by site or lane.
-- [ ] Explicitly verify selected `onebigbeautifulbill.us` pages remain bound to
+- [x] Explicitly verify selected `onebigbeautifulbill.us` pages remain bound to
       `forum.repealobbba.org` as the first edge of the topology matrix.
 - [x] Use canonical hostname `forum.citizenactivist.network` and public
       description “A community of activists”; keep Cloudflare/account ownership
       placement as a separate Ops decision.
-- [ ] Configure that forum as an explicit Discussion Bridge target and select
+- [x] Configure that forum as an explicit Discussion Bridge target and select
       clearly labeled `onebigbeautifulbill.us` proof pages without changing the
       production OBBBA lanes on `forum.repealobbba.org`.
-- [ ] Prove the same selected `onebigbeautifulbill.us` page uses an explicit
+- [x] Prove the same selected `onebigbeautifulbill.us` page uses an explicit
       ordered target list for `forum.repealobbba.org` and
       `forum.citizenactivist.network`.
-- [ ] Run target-specific diagnostics and dry-run, build, deploy, and verify
+- [x] Run target-specific diagnostics and dry-run, build, deploy, and verify
       each live page/topic binding; prove source-target no-writeback and no
       unintended writes to any other target.
 - [ ] Add one or two clearly labeled Discussion Bridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages as part of the bounded many-to-many proof without claiming a general administration plane.

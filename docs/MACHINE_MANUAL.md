@@ -999,16 +999,18 @@ multi_target_implementation:
   malformed_binding_state: fail_before_network
   public_export: astro-discussion-bridge/targets
 alpha_topology_proof:
-  status: blocked_on_explicit_Ops_prerequisite
-  bridge_implementation_failure: false
+  status: bounded_OBBBA_to_Citizen_Activist_live_proof_complete
   verified_at: 2026-07-22
-  blocker:
-    hostname: forum.citizenactivist.network
-    dns_result: unresolved_curl_error_6
-    protected_by_site_credential_lane_found: false
-    owner: Boss_Ops
-    task: 019f42a5-bd80-77a2-98bc-af5b57db0d8a
-    secrets_in_manuals: prohibited
+  adoption_commit: 36df91c98a35251edd6ddd657cca42ddf0acdafa
+  adoption_files:
+    - src/components/MarkdownContent.astro
+    - src/content.config.ts
+    - src/content/docs/title i/10101-impact.mdx
+  Code_Boss_review: PASS
+  clean_detached_build: PASS
+  worker_version: 632db326-bc0d-4047-b74b-7e74d3588dbf
+  canonical_page: https://onebigbeautifulbill.us/title-i/10101-impact/
+  canonical_page_HTTP: 200
   production_obbba_target: https://forum.repealobbba.org
   citizen_activist_target:
     canonical: https://forum.citizenactivist.network
@@ -1037,14 +1039,46 @@ alpha_topology_proof:
     retry: target_specific_idempotent_no_duplicate_topics
     target_specific_surfaces: [diagnostics, dry_run, CLI_output, manuals, live_proof]
   required_gate:
-    - receive_non_secret_forum_coordinates_from_Ops
-    - verify_DNS_TLS_and_target_diagnostics
-    - configure_named_target
-    - select_clearly_labeled_pages
-    - run_target_diagnostics
-    - verify_build_and_live_page_topic_binding
-    - prove_no_cross_target_writeback
-  claim: topology_many_to_many_across_sites_pages_forums
+    - { target_diagnostics: PASS }
+    - { target_specific_dry_run: PASS }
+    - { publish_and_independent_bindings: PASS }
+    - { unchanged_idempotent_retry: PASS }
+    - { clean_build_deploy_live_binding: PASS }
+    - { protected_source_no_writeback: PASS }
+  exercised_binding:
+    source_target: repeal-obbba
+    source_topic_id: 434
+    source_mode: discourse-imported
+    discussionSync: false
+    primary_display: fullInteractive
+    primary_fullApp: true
+    publication_target: citizen-activist
+    publication_topic_id: 9
+    publication_topic_url: https://forum.citizenactivist.network/t/sec-10101-re-evaluation-of-thrifty-food-plan-impact/9
+    publication_category: { id: 5, name: One Big Beautiful Bill, slug: one-big-beautiful-bill, public: true }
+    publication_tags: [discussionbridge, obbba, impact, title-i]
+    additional_presentation: one_accessible_link
+    source_post_count: 12
+    source_first_post_updated_at: 2026-07-01T01:35:12Z
+  lane:
+    docsDir: src/content/docs/title i
+    route_base: title-i
+    active_target: citizen-activist
+    broad_root_dry_run: rejected_before_write_due_to_wrong_index_and_route
+  dependency_audit:
+    total: 10
+    low: 1
+    moderate: 1
+    high: 8
+    resolved: false
+    action: dependency_review_no_automatic_audit_fix
+  known_notices: [Starlight_docs_to_404, chunk_size, punycode_deprecation]
+  temporary_detached_worktree: removed_after_deployment
+  protected_credentials:
+    records_exist: true
+    public_paths_or_values: prohibited
+    legacy_record_format_cleanup: protected_vault_task
+  claim: bounded_same_page_OBBBA_to_Citizen_Activist_topology
   later_scope: general_many_to_many_administration
 ```
 
