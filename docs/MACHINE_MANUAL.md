@@ -476,9 +476,12 @@ selection_modes:
     input: explicit topics or manifest
     ordering: preserve caller-supplied order
   next_in_category:
+    command: discover-imports
+    operation: read_only_preview
     category_discovery: list available categories and subcategories
     category_selector: ID or unambiguous slug/name
     category_selection: required before queue preview
+    include_descendants: optional
     default_order: created_at ascending
     tie_breaker: topic ID ascending
 filters_optional:
@@ -497,7 +500,34 @@ forbidden_order_fields:
 pre_import:
   preview_selected_category_queue: required
   preview_candidates: required
-  exclude_already_imported_topics: required
+  exclude_already_imported_topics:
+    recursive_fields: [discourseTopicId, discussionTargetBindings.topicId]
+manifest_output:
+  option: --manifest-out FILE
+  format: strict_v1
+  overwrite: refused
+  default_sourceMode: discourse-imported
+  selectable_sourceMode: [discourse-imported, discourse-managed]
+  selectable_commentsDisplay: [simple, full, fullInteractive]
+other_output:
+  JSON: --json
+public_category_requirements:
+  site_URL: not_required
+  credentials: not_required
+review_status:
+  implementation: complete
+  package_suite: 83/83
+  live_read_only_CDN_proof:
+    forum: https://forum.repealobbba.org
+    category: 18
+    tags: [TITLE-I]
+    order: natural-title
+    limit: 10
+    scanned: 320
+    excluded_already_imported: 5
+    candidates: [754, 755, 756, 757, 758, 759, 761, 762, 763, 764]
+    files_written: 0
+  Code_Boss: pending
 alpha_requirement: true
 ```
 

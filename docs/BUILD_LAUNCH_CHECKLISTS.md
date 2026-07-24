@@ -139,12 +139,22 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Add strict explicit manifest input for curated production imports,
       preserving caller-supplied topic order and providing validated, atomic
       staging/write/rollback behavior (`a646c6b`, reviewed package suite 49/49).
-- [ ] Add a category selector that discovers/lists available categories and accepts category ID or an unambiguous slug/name, including subcategories.
-- [ ] Add deterministic "next in selected category" behavior: oldest Discourse `created_at` first, with topic ID as the stable tie-breaker.
-- [ ] Add import filters for tags, created-date range, open/closed status, and limit.
-- [ ] Add optional oldest/newest ordering by Discourse `created_at` and natural topic-title ordering for numbered source collections.
-- [ ] Ensure import sequencing never uses `bumped_at`, last reply, or latest activity.
-- [ ] Preview discovered candidates before import and prevent already imported topics from being selected again.
+- [x] Implement read-only `discover-imports` category listing/selection by exact
+      ID, slug, or name, with optional descendant subcategories.
+- [x] Implement deterministic "next in selected category" behavior: oldest
+      Discourse `created_at` first, with topic ID as the stable tie-breaker.
+- [x] Add discovery filters for tags, created-date range, open/closed status,
+      and limit.
+- [x] Add oldest/newest `created_at` ordering and natural topic-title ordering
+      for numbered source collections.
+- [x] Enforce that import discovery never sequences by `bumped_at`, last reply,
+      or latest activity.
+- [x] Preview candidates and recursively exclude locally imported
+      `discourseTopicId` and target-binding topic IDs.
+- [x] Add optional non-overwriting `--manifest-out` for a new strict v1
+      manifest, with selectable source mode/comments display and JSON output.
+- [ ] Obtain Code Boss review for the 83/83 discovery candidate; implementation
+      and live read-only CDN-backed evidence are complete, but review is not.
 - [x] Add optional imported-page hero placement and require non-empty alt text
       whenever a hero image is configured (`729d85f`, reviewed package suite
       38/38); reject missing, empty, whitespace-only, or unpaired values before

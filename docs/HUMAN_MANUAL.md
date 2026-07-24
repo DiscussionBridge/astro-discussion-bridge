@@ -392,6 +392,38 @@ This never permits ordering by latest activity.
 Always preview the candidate list before importing and exclude topics already
 represented by imported Astro pages.
 
+Use the read-only discovery command before import:
+
+```text
+npx astro-discussion-bridge discover-imports src/content/docs \
+  --category TITLE-I \
+  --tags TITLE-I \
+  --order natural-title \
+  --limit 10 \
+  --discourse-url https://forum.example.com
+```
+
+Use `--list-categories` first when you need IDs, exact slugs, names, parent
+relationships, and topic counts. Add `--include-subcategories` only when the
+selected lane should include descendants. Other optional controls are
+`--created-from`, `--created-to`, `--status all|open|closed`, `--order
+oldest|newest|natural-title`, `--limit`, and `--json`.
+
+The command previews only; it never imports. It recursively excludes topic IDs
+already present as local `discourseTopicId` values or target bindings. Add
+`--manifest-out FILE` to save the reviewed order as a new strict v1 manifest;
+the command refuses to overwrite an existing file. Generated entries default
+to `discourse-imported`, with optional `discourse-managed` source mode and an
+explicit comments display. Public categories need neither a site URL nor
+credentials.
+
+Current implementation evidence is 83/83 tests plus a live read-only run
+against the Cloudflare-CDN-backed Repeal OBBBA forum: category 18, `TITLE-I`,
+natural-title order, and limit 10 scanned 320 topics, excluded five already
+imported topics, and previewed topics 754, 755, 756, 757, 758, 759, 761, 762,
+763, and 764. No file was written. Code Boss review is still pending, so do not
+treat this evidence as final review approval.
+
 For deterministic refresh of pages with different policies, use the reviewed
 Alpha import manifest rather than a blanket update-all operation. Its strict
 JSON contains only `version` and ordered `imports`. Each topic entry retains its

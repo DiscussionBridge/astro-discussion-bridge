@@ -351,6 +351,21 @@ For numbered legislative or structured collections, natural topic-title/name
 ordering is also an Alpha option when creation dates are muddled. This is still
 editorial ordering, never latest-activity ordering.
 
+The read-only `discover-imports` implementation now turns that principle into
+an operator workflow. It lists and selects categories by exact ID, slug, or
+name; optionally includes descendants; filters by tags, created range,
+open/closed state, and limit; and orders oldest/newest by `created_at` with a
+topic-ID tie-break or by natural title. It recursively excludes local source
+and target-binding topic IDs, previews candidates, supports JSON, and may write
+a new—but never overwrite an existing—strict v1 manifest. Public-category
+discovery requires no site URL or credentials.
+
+The current candidate passes 83/83 tests. A live read-only CDN-backed
+TITLE-I/category-18 run scanned 320 topics, excluded five already imported
+topics, and returned the next ten natural-title candidates beginning with topic
+754 (Section 10106); it wrote no files. This closes implementation and live
+read-only proof, but Code Boss review remains open and must not be implied.
+
 ## Accessible Hero Imports
 
 Alpha supports an optional leading hero during `import-existing`, but image and
