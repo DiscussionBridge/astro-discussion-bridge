@@ -84,7 +84,9 @@ function rewriteLinks(markdown, sourceFile) {
 }
 
 function sourceHash(markdown) {
-  return createHash("sha256").update(markdown, "utf8").digest("hex");
+  return createHash("sha256")
+    .update(markdown.replace(/\r\n/g, "\n"), "utf8")
+    .digest("hex");
 }
 
 async function readMetadata() {

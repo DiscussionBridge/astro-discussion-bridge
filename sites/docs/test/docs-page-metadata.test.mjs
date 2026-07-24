@@ -37,7 +37,9 @@ test("the metadata ledger covers and matches every synchronized docs source", as
 
   for (const file of listedFiles) {
     const markdown = await readFile(path.join(repoRoot, "docs", file), "utf8");
-    const hash = createHash("sha256").update(markdown, "utf8").digest("hex");
+    const hash = createHash("sha256")
+      .update(markdown.replace(/\r\n/g, "\n"), "utf8")
+      .digest("hex");
     assert.equal(metadata.pages[file].sourceSha256, hash, file);
   }
 });
