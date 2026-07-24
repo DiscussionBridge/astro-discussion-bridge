@@ -973,15 +973,16 @@ official_navigation_adoption:
   package:
     implementation: e775af3
     correction: bc8acb5
-    tests: 106/106
-    typecheck: PASS
-    artifact: astro-discussion-bridge-0.1.0-alpha-bc8acb5-1c6d4827.tgz
-    SHA256: 1c6d482769380e8aca57c56a3ec056d95883b897d9b7e17ad6c2c31414413e42
+    legal_case_correction: db1c57a
+    tests: 107/107
+    npm_run_check: PASS
+    artifact: astro-discussion-bridge-0.1.0-alpha-db1c57a-17b3dba9.tgz
+    SHA256: 17b3dba90891f8a5222389dd351bfb5904ab8c5a32e53dd86745233dda452eb4
     files: 52
-    bytes: 86870
+    bytes: 86864
   OBBBA:
-    commit: dd9c100
-    review: Code_Boss_PASS_exact_25_file_slice
+    commit: 5a455f1
+    review: Code_Boss_PASS_exact_3_file_refresh_slice
     clean_build: { status: PASS, HTML_routes: 18 }
     tag_groups: 18
     local_bindings: 16
@@ -993,6 +994,8 @@ official_navigation_adoption:
       discussionSync: false
       Discourse_wiki: false
       official_comparison: presentation-only
+      case_normalization: preserved
+      capitalization_only_result: substantive-difference
       citation: 139 Stat. 80-81
       reciprocal_impact_topic: 434
     post_deploy_topic_identity_GET:
@@ -1008,6 +1011,7 @@ official_navigation_adoption:
         first_poster: editor
         posts_count: 12
         last_posted_at: 2026-07-22T05:14:56.195Z
+        wiki: true
       writes: 0
   visual:
     desktop_1440: PASS
@@ -1016,7 +1020,7 @@ official_navigation_adoption:
     horizontal_overflow: false
     page_errors: 0
   deployment:
-    Worker: ebce4f27-f39e-4e4f-b95d-7049c5ffd313
+    Worker: 8dc5a047-feb5-45e1-8c40-b1425cfd63c4
     official_route_HTTP: 200
     impact_route_HTTP: 200
     publishOnBuild: false

@@ -421,8 +421,10 @@ contracts: strict `us-public-law`, source-tag provenance, stable `sectionId`,
 reciprocal links, a many-to-many Stories graph, and adapter-neutral virtual
 manifests. One section can list many Stories, and one Story can reference many
 sections.
-Correction `bc8acb5` completes bounded 429 handling. OBBBA adoption `dd9c100`
-proves one OBBBA Text route, 15 Impact routes, preserved topic-34 source
+Correction `bc8acb5` completes bounded 429 handling; `db1c57a` preserves legal
+case and routes capitalization-only differences through substantive review.
+OBBBA refresh `5a455f1` proves one OBBBA Text route, 15 Impact routes,
+preserved topic-34 source
 metadata, and reciprocal Section 10101 relations live. The bounded Section
 10101 comparison remains evidence for one source pair only; broader batch
 comparison is open, and Law as Amended is outside current Astro adoption.

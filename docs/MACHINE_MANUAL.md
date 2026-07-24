@@ -1497,8 +1497,8 @@ production secrets.
 
 ## 16. Navigation/Taxonomy Manifest
 
-Status: package at `e775af3` plus correction `bc8acb5`; Code Boss final PASS;
-OBBBA live adoption `dd9c100` complete for current hierarchy.
+Status: package at `e775af3` plus corrections `bc8acb5` and `db1c57a`; Code
+Boss final PASS; OBBBA live refresh `5a455f1` complete for current hierarchy.
 
 ```yaml
 navigation_taxonomy_contract:
@@ -1564,7 +1564,8 @@ implementation_evidence:
     adapters: [Starlight_sidebar, plain_Astro]
     browser_checks: [desktop_PASS, mobile_PASS, no_horizontal_overflow]
   OBBBA_adoption:
-    commit: dd9c100
+    initial_commit: dd9c100
+    current_refresh: 5a455f1
     tag_groups: 18
     local_bindings: 16
     OBBBA_Text: { category: 5, index_topic: 12, nodes: 381, local_routes: 1 }
@@ -1587,8 +1588,9 @@ adapter-neutral manifest before framework-specific rendering.
 
 ## 17. Official-Source Enrichment And Relations
 
-Status: package implemented at `e775af3` plus `bc8acb5`; bounded Section 10101
-adopted live at OBBBA `dd9c100`; broader batch comparison open.
+Status: package implemented at `e775af3` plus `bc8acb5` and `db1c57a`;
+bounded Section 10101 refreshed live at OBBBA `5a455f1`; broader batch
+comparison open.
 
 ```yaml
 official_source_enrichment:
@@ -1621,9 +1623,10 @@ official_source_enrichment:
     - official_side_notes
   presentation_only_must_preserve: [substantive_wording, numbering]
   capitalization_only:
-    default: review_required
+    normalized_case: preserved
+    classification: substantive-difference
+    path: review_or_explicit_per_entry_override
     reason: may_identify_legal_defined_terms_or_identifiers
-    exception: narrower_explicitly_safe_case_rule
   batch_mode: { report_all_result_counts: true, content_writes: 0 }
 bounded_field_evidence:
   Discourse: { topic_id: 34, post_id: 40 }
@@ -1655,14 +1658,14 @@ implementation_evidence:
   source_tags_field: discussionSourceTags_JSON_scalar
   component: DiscussionRelations
   relationship_manifest: virtual_rebuild_time
-  package_tests: 106/106
-  typecheck: PASS
+  package_tests: 107/107
+  npm_run_check: PASS
   npm_pack:
     files: 52
-    bytes: 86870
+    bytes: 86864
   artifact:
-    file: astro-discussion-bridge-0.1.0-alpha-bc8acb5-1c6d4827.tgz
-    SHA256: 1c6d482769380e8aca57c56a3ec056d95883b897d9b7e17ad6c2c31414413e42
+    file: astro-discussion-bridge-0.1.0-alpha-db1c57a-17b3dba9.tgz
+    SHA256: 17b3dba90891f8a5222389dd351bfb5904ab8c5a32e53dd86745233dda452eb4
   core_Astro_build: { status: PASS, public_routes: 3 }
   importer_fixture: non_routed_scalar_frontmatter_validated
   open:
@@ -1672,9 +1675,9 @@ implementation_evidence:
     - broader_Title_VII_scale_and_accessibility_as_content_expands
     - dependency_vulnerability_review
 OBBBA_live:
-  commit: dd9c100
+  commit: 5a455f1
   clean_build: { status: PASS, public_HTML_routes: 18 }
-  Worker: ebce4f27-f39e-4e4f-b95d-7049c5ffd313
+  Worker: 8dc5a047-feb5-45e1-8c40-b1425cfd63c4
   official_route_HTTP: 200
   impact_route_HTTP: 200
   publishOnBuild: false

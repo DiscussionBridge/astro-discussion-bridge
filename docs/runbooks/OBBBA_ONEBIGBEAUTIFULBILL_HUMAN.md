@@ -592,9 +592,9 @@ propagation 404s on topics 758 and 759 resolved to 200. The homepage shows
 
 ## 12B. Official Text Navigation Adoption
 
-OBBBA adopted reviewed artifact
-`astro-discussion-bridge-0.1.0-alpha-bc8acb5-1c6d4827.tgz` at commit
-`dd9c100`. Code Boss passed the exact 25-file slice; unrelated local changes
+OBBBA now uses reviewed artifact
+`astro-discussion-bridge-0.1.0-alpha-db1c57a-17b3dba9.tgz` at refresh commit
+`5a455f1`. Code Boss passed the exact three-file refresh slice; unrelated local changes
 and old artifacts were excluded. A clean detached install/build produced 18
 public routes.
 
@@ -610,7 +610,7 @@ Stat. 80–81. Its page links to Impact 10101; Impact links back to the enacted
 text. Desktop 1440 and mobile 390 checks passed with no overflow/errors. Deep
 Title VII opened progressively while 87 summary nodes stayed collapsed.
 
-Live Worker `ebce4f27-f39e-4e4f-b95d-7049c5ffd313` serves both reciprocal
+Live Worker `8dc5a047-feb5-45e1-8c40-b1425cfd63c4` serves both reciprocal
 Section 10101 routes with their correct topic boundaries. `publishOnBuild` was
 false and there were no Discourse writes.
 
@@ -621,6 +621,11 @@ posts. Topic 34 reports `wiki=false`; do not call this specific source a
 Discourse wiki. Its protection comes from `discussionSourceMode:
 discourse-managed` and `discussionSync: false`. The verification created no
 post or write.
+
+Topic 434 reports `wiki=true`; that optional characteristic does not change
+the independent topic or relationship model. The comparator now preserves
+legal case and sends capitalization-only differences to substantive review;
+`IN GENERAL` versus `In general` is the regression example.
 
 Keep broader batch comparisons, additional OBBBA Text/lens imports, Law as
 Amended, expanding Title VII accessibility proof, and dependency review open.

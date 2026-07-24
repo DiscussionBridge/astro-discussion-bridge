@@ -256,8 +256,9 @@ publication loops.
 The public promise is: **Publish from the site. Learn in the community. Turn
 what the community knows into durable pages.** One site and one community can
 work in both directions: an Astro apex blog post can start discussion on the CAN
-forum, while a community-authored Discourse wiki/how-to can become a durable
-page on the apex site without losing its forum source or history.
+forum, while a protected community-authored Discourse source topic or how-to
+can become a durable page on the apex site without losing its forum source or
+history. Wiki status is optional.
 
 Candidate implementation vocabulary—pending design review, not final or
 implemented—is `role`/`purpose`, `audience`, `callToAction`, `description`, a
@@ -616,8 +617,9 @@ configuration names. Proposed OBBBA destinations are
 at this stage.
 
 Package implementation is complete at `e775af3`, with bounded public-field
-429 handling corrected at `bc8acb5`. Code Boss final PASS and 106/106 tests
-plus typecheck passed. `discover-navigation` builds the strict adapter-neutral
+429 handling corrected at `bc8acb5` and legal case-comparison safety corrected
+at `db1c57a`. Code Boss final PASS and 107/107 tests plus `npm run check`
+passed. `discover-navigation` builds the strict adapter-neutral
 navigation manifest read-only from category, exact tag-group, and index-topic
 authority. `DiscussionNavigation` provides progressive presentation, and the
 Starlight sidebar adapter plus plain Astro demo consume the result. Authored
@@ -631,8 +633,9 @@ Core Astro built exactly three public routes; the non-routed importer fixture
 validated generated scalar provenance. Desktop/mobile browser checks passed
 without horizontal overflow and showed navigation plus reciprocal links.
 
-OBBBA adopted the corrected artifact at `dd9c100`. Exact clean install/build
-passed with 18 public HTML routes. Read-only discovery produced 18 exact
+OBBBA initially adopted the navigation artifact at `dd9c100` and refreshed the
+case-safe artifact at `5a455f1`. Exact clean install/build passed with 18 public
+HTML routes. Read-only discovery produced 18 exact
 hierarchy tag groups and 16 local bindings: OBBBA Text category 5/index topic
 12 contained 381 nodes and one local route; Impact category 18/index topic 435
 contained 317 nodes and 15 local routes. The progressive sidebar places OBBBA
@@ -674,9 +677,9 @@ text.
 Presentation-only normalization may remove Markdown link syntax, whitespace
 and line-wrap differences, typographic punctuation, official page furniture,
 and official side notes, but it must preserve substantive wording and
-numbering. Case-only differences require review because legal capitalization
-can identify defined terms or identifiers, unless a narrower explicitly safe
-case rule applies.
+numbering. The comparator preserves case. Capitalization-only differences are
+`substantive-difference` and use the review/explicit-override path because legal
+capitalization can identify defined terms or identifiers.
 
 The first bounded field proof compared forum topic 34/post 40, Section 10101,
 with USLM identifier `/us/pl/119/21/tI/stA/s10101`. After bounded
@@ -722,8 +725,9 @@ source author/category/tags preserved, official comparison
 `contentLens: impact` and stable `sectionId`; reciprocal Section 10101 links
 render in both directions.
 
-Live deployment of `dd9c100` is Worker
-`ebce4f27-f39e-4e4f-b95d-7049c5ffd313`. The official-text and Impact routes
+OBBBA refreshed the corrected comparator at `5a455f1`; its clean 18-route build
+passed and exact deployment is Worker
+`8dc5a047-feb5-45e1-8c40-b1425cfd63c4`. The official-text and Impact routes
 both return 200 with the expected provenance, citation, relation, and topic
 markers; live sidebar order is OBBBA Text before Impact. `publishOnBuild` was
 false and no Discourse publication/sync occurred.
@@ -732,7 +736,8 @@ Post-deploy read-only GETs confirmed both independent Discourse identities:
 source topic 34 remains category 5 with first poster `editor`, one post,
 `last_posted_at` `2025-07-14T17:03:43.795Z`; Impact topic 434 remains category
 18 with first poster `editor`, 12 posts, `last_posted_at`
-`2026-07-22T05:14:56.195Z`. Topic 34 currently reports `wiki=false`; do not
+`2026-07-22T05:14:56.195Z` and `wiki=true`. Topic 34 currently reports
+`wiki=false`; do not
 describe this specific topic as a wiki. It remains the protected
 `discourse-managed` source under the Bridge source-mode contract. These GETs
 produced no post or write.
@@ -745,6 +750,11 @@ Public Discourse 429 handling uses sequential tag-group reads, retries only
 429, allows at most three retries, honors bounded `Retry-After` seconds/date or
 fallback delay, and cancels rejected bodies with a 50 ms bound. It never
 retries 403.
+
+The reviewed package artifact is
+`astro-discussion-bridge-0.1.0-alpha-db1c57a-17b3dba9.tgz`, SHA256
+`17b3dba90891f8a5222389dd351bfb5904ab8c5a32e53dd86745233dda452eb4`,
+with 52 files and 86,864 bytes.
 
 ### After Alpha
 

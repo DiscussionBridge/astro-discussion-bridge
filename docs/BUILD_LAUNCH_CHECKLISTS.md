@@ -448,7 +448,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       from Discourse content-lens categories, hierarchy tag groups, and
       authored index topics. Index topics—not tag-group member order—must
       control labels, landing pages, and navigation order. Commits `e775af3`
-      and `bc8acb5`; Code Boss final PASS; package 106/106 plus typecheck.
+      and `bc8acb5`; legal case-safety correction `db1c57a`; Code Boss final
+      PASS; package 107/107 and `npm run check` PASS.
 - [x] Preserve source tags as provenance while explicitly excluding workflow
       tags from automatic public navigation. Do not require redundant Title
       tags on index topics or reshape a sound forum taxonomy for the bridge.
@@ -456,7 +457,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       show lenses and Titles globally; expand the active lens, Title, and
       Subtitle/Chapter/Subchapter/Part branch; leave other branches collapsed
       but user-expandable; use index pages as the complete browse surface.
-      OBBBA adoption completed at `dd9c100`.
+      OBBBA adoption completed at `dd9c100` and case-safe refresh at `5a455f1`.
 - [ ] Provide breadcrumbs, index-authored previous/next, and search. Avoid
       rendering hundreds of inactive Title VII section links on every page,
       preferably including avoidance of unnecessary inactive DOM content.
@@ -471,7 +472,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Broaden Title VII responsive/accessibility proof across laptop/tablet,
       keyboard, and screen-reader use as additional content is imported.
 - [x] Prove OBBBA routes `/obbba-text/title-i/...` and
-      `/impact/title-i/...` in exact adoption `dd9c100` and live deployment.
+      `/impact/title-i/...` in exact refresh `5a455f1` and live deployment.
 - [x] Record the bounded Section 10101 comparison: topic 34/post 40 matched
       USLM `/us/pl/119/21/tI/stA/s10101`; bounded normalization produced 608
       tokens and 3,148 characters on both sides with zero substantive
@@ -499,10 +500,14 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Render accessible Content source, Official text, and Related actions in
       Starlight and plain Astro demo evidence from one adapter-neutral manifest.
 - [x] Adopt reviewed artifact
-      `astro-discussion-bridge-0.1.0-alpha-bc8acb5-1c6d4827.tgz` in OBBBA at
-      `dd9c100`; clean-build 18 routes, deploy Worker
-      `ebce4f27-f39e-4e4f-b95d-7049c5ffd313`, and live-verify navigation,
+      `astro-discussion-bridge-0.1.0-alpha-db1c57a-17b3dba9.tgz` in OBBBA at
+      `5a455f1`; clean-build 18 routes, deploy Worker
+      `8dc5a047-feb5-45e1-8c40-b1425cfd63c4`, and live-verify navigation,
       official-source disclosure, citation, reciprocal relations, and topics.
+- [x] Preserve legal case in official comparison. Classify capitalization-only
+      differences as `substantive-difference` and require the normal
+      review/explicit-override path; regression covers `IN GENERAL` versus
+      `In general`.
 - [x] Handle public Discourse tag-group 429s sequentially: retry only 429,
       maximum three retries, bounded `Retry-After` seconds/date or fallback,
       rejected-body cancellation within 50 ms, and never retry 403.

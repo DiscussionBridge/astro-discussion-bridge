@@ -1060,13 +1060,14 @@ provide breadcrumbs, authored previous/next, and search.
 > or screen-reader navigation fails; workflow tags leak into public
 > navigation; or tag-group response order overrides authored index order.
 
-Commits `e775af3` and `bc8acb5` implement the canonical taxonomy manifest,
+Commits `e775af3`, `bc8acb5`, and `db1c57a` implement the canonical taxonomy
+manifest,
 `discover-navigation`, progressive navigation, a Starlight sidebar adapter,
 and plain Astro static demo. Desktop/mobile browser checks passed without
 horizontal overflow. Read-only OBBBA discovery found 381 OBBBA Text nodes and
 317 Impact nodes, each with Titles I–X, and performed no writes.
 
-OBBBA adoption `dd9c100` passed a clean 18-route build and live deployment.
+OBBBA refresh `5a455f1` passed a clean 18-route build and live deployment.
 The sidebar shows OBBBA Text before Impact. Desktop 1440 and mobile 390 checks
 opened deep Title VII progressively, kept 87 summary nodes collapsed, produced
 no overflow or page errors, and kept the mobile menu usable with body scroll
@@ -1103,9 +1104,10 @@ Before publishing a comparison:
 
 Presentation-only comparison may ignore Markdown links, wrapping/whitespace,
 typographic punctuation, page furniture, and official side notes. It must not
-normalize away changed words or numbering. Review capitalization-only
-differences because legal capitalization may identify defined terms or
-identifiers, unless a narrower explicitly safe case-normalization rule applies.
+normalize away changed words or numbering. The comparator preserves case:
+capitalization-only differences are substantive and require the normal
+review/explicit-override path because legal capitalization may identify defined
+terms or identifiers.
 
 > **Bounded evidence:** OBBBA topic 34/post 40, Section 10101, matched USLM
 > `/us/pl/119/21/tI/stA/s10101`. Both normalized forms had 608 tokens and 3,148
@@ -1151,6 +1153,11 @@ If public tag-group discovery returns 429, the corrected client reads groups
 sequentially and retries only 429 up to three times. It honors bounded
 `Retry-After` seconds/date or fallback delay and cancels rejected response
 bodies promptly. A 403 is not retryable; correct permissions instead.
+
+The current reviewed artifact is
+`astro-discussion-bridge-0.1.0-alpha-db1c57a-17b3dba9.tgz` (SHA256
+`17b3dba90891f8a5222389dd351bfb5904ab8c5a32e53dd86745233dda452eb4`).
+The refreshed live Worker is `8dc5a047-feb5-45e1-8c40-b1425cfd63c4`.
 
 ## Related Guides
 
