@@ -5,9 +5,273 @@ import path from "node:path";
 import test from "node:test";
 import { checkDiscourse } from "../dist/check-discourse.js";
 import { createDiscourseClient } from "../dist/discourse/client.js";
+import {
+  discoverDiscourseImports,
+  selectCategory,
+  writeImportDiscoveryManifest,
+} from "../dist/import-discovery.js";
 import { importExistingDiscourseTopics } from "../dist/import-existing.js";
 import { importExistingDiscourseManifest, validateImportManifest } from "../dist/import-manifest.js";
 import { syncDiscourseTopics, validateDiscourseTopicTitle } from "../dist/sync/index.js";
+
+test("import discovery selects categories by ID or exact unambiguous name/slug", () => {
+  const categories = [
+    { id: 18, name: "OBBBA - Impact", slug: "obbba-impact" },
+    { id: 19, name: "Guides", slug: "guides" },
+    { id: 20, name: "GUIDES", slug: "other-guides" },
+  ];
+
+  assert.equal(selectCategory(categories, "18").id, 18);
+  assert.equal(selectCategory(categories, "obbba-impact").id, 18);
+  assert.throws(() => selectCategory(categories, "guides"), /ambiguous.*19, 20/i);
+  assert.throws(() => selectCategory(categories, "missing"), /not found/i);
+});
+
+test("import discovery filters a paginated category and never sequences by latest activity", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-discovery-"));
+  try {
+    await mkdir(path.join(dir, "nested"), { recursive: true });
+    await writeFile(
+      path.join(dir, "legacy.md"),
+      "---\ndiscourseTopicId: 434\n---\n\nAlready imported.\n",
+    );
+    await writeFile(
+      path.join(dir, "nested", "targeted.mdx"),
+      [
+        "---",
+        "discussionTargetBindings: '{\"national\":{\"topicId\":748,\"topicUrl\":\"https://forum.example.com/t/x/748\"}}'",
+        "analytics: '{\"topicId\":751}'",
+        "---",
+        "",
+        "Already linked through a target binding.",
+        "",
+      ].join("\n"),
+    );
+
+    const responses = new Map([
+      ["/categories.json", {
+        category_list: {
+          categories: [
+            { id: 18, name: "OBBBA - Impact", slug: "obbba-impact", topic_count: 7 },
+            { id: 21, name: "Title I", slug: "title-i", parent_category_id: 18, topic_count: 1 },
+          ],
+        },
+      }],
+      ["/c/obbba-impact/18.json", {
+        topic_list: {
+          more_topics_url: "/c/obbba-impact/18?page=1",
+          topics: [
+            topicListItem(434, "Sec. 10101. Imported", "2025-07-27T00:41:14.868Z", {
+              bumpedAt: "2026-07-22T05:14:56.195Z",
+              tags: ["Impact", "TITLE-I"],
+            }),
+            topicListItem(751, "Sec. 10103. Later", "2025-07-28T00:00:00.000Z", {
+              bumpedAt: "2025-07-28T00:00:01.000Z",
+              tags: [{ name: "title-i" }],
+            }),
+            topicListItem(747, "Sec. 10102. First tie", "2025-07-27T12:00:00.000Z", {
+              bumpedAt: "2026-07-23T00:00:00.000Z",
+              tags: ["TITLE-I"],
+            }),
+            topicListItem(748, "Sec. 10102A. Targeted import", "2025-07-27T12:00:00.000Z", {
+              tags: ["TITLE-I"],
+            }),
+            topicListItem(752, "Sec. 10104. Closed", "2025-07-29T00:00:00.000Z", {
+              closed: true,
+              tags: ["TITLE-I"],
+            }),
+            topicListItem(900, "Sec. 90000. Wrong tag", "2025-07-26T00:00:00.000Z", {
+              tags: ["TITLE-II"],
+            }),
+          ],
+        },
+      }],
+      ["/c/obbba-impact/18?page=1", {
+        topic_list: {
+          topics: [
+            topicListItem(747, "Sec. 10102. First tie", "2025-07-27T12:00:00.000Z", {
+              tags: ["TITLE-I"],
+            }),
+            topicListItem(753, "Sec. 10105. Child category", "2025-07-27T12:00:00.000Z", {
+              categoryId: 21,
+              tags: ["Impact", "TITLE-I"],
+            }),
+          ],
+        },
+      }],
+      ["/c/title-i/21.json", {
+        topic_list: {
+          topics: [
+            topicListItem(753, "Sec. 10105. Child category", "2025-07-27T12:00:00.000Z", {
+              categoryId: 21,
+              tags: ["Impact", "TITLE-I"],
+            }),
+          ],
+        },
+      }],
+    ]);
+
+    const fetcher = async (url) => {
+      const parsed = new URL(url);
+      const key = `${parsed.pathname}${parsed.search}`;
+      const body = responses.get(key);
+      return body
+        ? jsonResponse(body)
+        : new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    const result = await discoverDiscourseImports({
+      docsDir: dir,
+      discourseUrl: "https://forum.example.com",
+      category: "obbba-impact",
+      includeSubcategories: true,
+      tags: ["TITLE-I"],
+      status: "open",
+      order: "oldest",
+      sourceMode: "discourse-managed",
+      commentsDisplay: "fullInteractive",
+      fetch: fetcher,
+    });
+
+    assert.equal(result.scannedTopics, 7);
+    assert.equal(result.excludedAlreadyImported, 2);
+    assert.deepEqual(result.includedCategoryIds, [18, 21]);
+    assert.deepEqual(result.candidates.map((candidate) => candidate.topicId), [747, 753, 751]);
+    assert.deepEqual(result.manifest.imports, [
+      {
+        topic: "https://forum.example.com/t/sec.-10102.-first-tie/747",
+        commentsDisplay: "fullInteractive",
+        requiredTags: ["TITLE-I"],
+        sourceMode: "discourse-managed",
+      },
+      {
+        topic: "https://forum.example.com/t/sec.-10105.-child-category/753",
+        commentsDisplay: "fullInteractive",
+        requiredTags: ["TITLE-I"],
+        sourceMode: "discourse-managed",
+      },
+      {
+        topic: "https://forum.example.com/t/sec.-10103.-later/751",
+        commentsDisplay: "fullInteractive",
+        requiredTags: ["TITLE-I"],
+        sourceMode: "discourse-managed",
+      },
+    ]);
+  } finally {
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import discovery supports natural-title ordering, exact category boundaries, and limits", async () => {
+  const fetcher = async (url) => {
+    const pathname = new URL(url).pathname;
+    if (pathname === "/categories.json") {
+      return jsonResponse({
+        category_list: {
+          categories: [
+            { id: 18, name: "Impact", slug: "impact" },
+            { id: 21, name: "Child", slug: "child", parent_category_id: 18 },
+          ],
+        },
+      });
+    }
+    if (pathname === "/c/impact/18.json") {
+      return jsonResponse({
+        topic_list: {
+          topics: [
+            topicListItem(10, "Sec. 10110. Ten", "2025-01-01T00:00:00Z", { tags: ["TITLE-I"] }),
+            topicListItem(2, "Sec. 10102. Two", "2025-01-03T00:00:00Z", { tags: ["TITLE-I"] }),
+            topicListItem(3, "Sec. 10103. Child", "2025-01-02T00:00:00Z", {
+              categoryId: 21,
+              tags: ["TITLE-I"],
+            }),
+          ],
+        },
+      });
+    }
+    return new Response("Not found", { status: 404, statusText: "Not Found" });
+  };
+
+  const result = await discoverDiscourseImports({
+    docsDir: path.join(tmpdir(), "discussion-bridge-no-existing-directory"),
+    discourseUrl: "https://forum.example.com",
+    category: "Impact",
+    tags: ["title-i"],
+    order: "natural-title",
+    limit: 1,
+    fetch: fetcher,
+  });
+
+  assert.deepEqual(result.candidates.map((candidate) => candidate.topicId), [2]);
+  assert.deepEqual(result.includedCategoryIds, [18]);
+});
+
+test("discovery manifest output is create-only and rejects an empty candidate set", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-discovery-manifest-"));
+  const filePath = path.join(dir, "imports", "reviewed.json");
+  try {
+    const resolved = await writeImportDiscoveryManifest(filePath, {
+      version: 1,
+      imports: [{ topic: "https://forum.example.com/t/topic/21", sourceMode: "discourse-imported" }],
+    });
+    assert.equal(resolved, path.resolve(filePath));
+    assert.match(await readFile(filePath, "utf8"), /"version": 1/);
+    await assert.rejects(
+      writeImportDiscoveryManifest(filePath, {
+        version: 1,
+        imports: [{ topic: "https://forum.example.com/t/topic/22" }],
+      }),
+      /already exists/i,
+    );
+    await assert.rejects(
+      writeImportDiscoveryManifest(path.join(dir, "empty.json"), { version: 1, imports: [] }),
+      /non-empty imports array/i,
+    );
+    await assert.rejects(
+      writeImportDiscoveryManifest(path.join(dir, "invalid.json"), {
+        version: 1,
+        imports: [{ topic: "21", unsupported: true }],
+      }),
+      /unknown field.*unsupported/i,
+    );
+    const secretPath = path.join(dir, "not-created", "secret.json");
+    await assert.rejects(
+      writeImportDiscoveryManifest(secretPath, {
+        version: 1,
+        imports: [{ topic: "21" }],
+        apiKey: "must-not-be-written",
+      }),
+      /unknown root field.*apiKey/i,
+    );
+    await assert.rejects(readFile(secretPath, "utf8"), /ENOENT/);
+  } finally {
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import discovery rejects invalid runtime manifest options before network access", async () => {
+  let calls = 0;
+  const fetcher = async () => {
+    calls += 1;
+    return jsonResponse({});
+  };
+  const common = {
+    docsDir: path.join(tmpdir(), "discussion-bridge-invalid-discovery-options"),
+    discourseUrl: "https://forum.example.com",
+    category: "guides",
+    fetch: fetcher,
+  };
+
+  await assert.rejects(
+    discoverDiscourseImports({ ...common, sourceMode: "astro-managed" }),
+    /invalid discovery source mode.*astro-managed/i,
+  );
+  await assert.rejects(
+    discoverDiscourseImports({ ...common, commentsDisplay: "everything" }),
+    /invalid discovery comments display.*everything/i,
+  );
+  assert.equal(calls, 0);
+});
 
 test("validates titles before publishing to Discourse", () => {
   assert.deepEqual(validateDiscourseTopicTitle("Discussion Bridge for Astro"), []);
@@ -3622,6 +3886,21 @@ function jsonResponse(value) {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+function topicListItem(id, title, createdAt, options = {}) {
+  return {
+    id,
+    title,
+    slug: title.toLowerCase().replace(/\s+/g, "-"),
+    category_id: options.categoryId ?? 18,
+    created_at: createdAt,
+    bumped_at: options.bumpedAt ?? createdAt,
+    closed: options.closed ?? false,
+    archived: options.archived ?? false,
+    visible: options.visible ?? true,
+    tags: options.tags ?? [],
+  };
 }
 
 function targetBindingsFromSource(source) {

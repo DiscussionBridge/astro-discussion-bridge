@@ -35,6 +35,10 @@
       "types": "./dist/import-manifest.d.ts",
       "import": "./dist/import-manifest.js"
     },
+    "./import-discovery": {
+      "types": "./dist/import-discovery.d.ts",
+      "import": "./dist/import-discovery.js"
+    },
     "./sync": {
       "types": "./dist/sync/index.d.ts",
       "import": "./dist/sync/index.js"
@@ -69,7 +73,8 @@
     "publish-new": "astro-discussion-bridge publish-new",
     "sync-existing": "astro-discussion-bridge sync-existing",
     "publish-and-sync": "astro-discussion-bridge publish-and-sync",
-    "import-existing": "astro-discussion-bridge import-existing"
+    "import-existing": "astro-discussion-bridge import-existing",
+    "discover-imports": "astro-discussion-bridge discover-imports"
   },
   "keywords": [
     "astro",

@@ -468,6 +468,34 @@ discussionLastSyncedAt: "2026-07-16T00:00:00.000Z"
 
 By default, DiscussionBridge syncs the full Markdown or MDX body into the managed first post. Add `discussionSummary` frontmatter when a page should use a curated companion summary instead of the full source body. Configure `maxPostLength` or `DISCOURSE_MAX_POST_LENGTH` when you want local preflight to catch overlong companion bodies before Discourse rejects them.
 
+### Discover Existing Topics
+
+`discover-imports` reads a Discourse category and previews a deterministic import queue. It never imports topics or changes Astro content. Public categories can be inspected without an API key; restricted categories require an appropriate read-capable key and request actor.
+
+List the available categories first:
+
+```sh
+npx astro-discussion-bridge discover-imports src/content/docs \
+  --list-categories \
+  --discourse-url https://forum.example.com
+```
+
+Then preview a bounded queue:
+
+```sh
+npx astro-discussion-bridge discover-imports src/content/docs \
+  --category impact \
+  --tags TITLE-I \
+  --status open \
+  --order natural-title \
+  --limit 10 \
+  --discourse-url https://forum.example.com
+```
+
+The category selector accepts an ID or an exact unambiguous slug/name. Add `--include-subcategories` when descendant categories belong in the same queue. Date filters use `--created-from` and `--created-to`. Ordering is `oldest`, `newest`, or `natural-title`; oldest/newest use Discourse `created_at` plus topic ID as a stable tie-breaker. Replies and `bumped_at` never reorder the queue.
+
+The command recursively scans existing Markdown/MDX frontmatter and excludes topics already linked through `discourseTopicId` or `discussionTargetBindings`. Save the reviewed result with `--manifest-out imports/reviewed.json`; the command creates a strict v1 manifest and refuses to overwrite an existing file. Running `import-existing --manifest ...` remains a separate explicit step.
+
 ### Import Existing Topics
 
 `import-existing` is for the reverse onboarding case: the topic already exists in Discourse, and you want Astro to become the source page for it.

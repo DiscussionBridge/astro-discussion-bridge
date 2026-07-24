@@ -6,6 +6,13 @@ import {
   type ImportPruneProfile,
   type ImportSourceMode,
 } from "./import-existing.js";
+import {
+  discoverDiscourseImports,
+  listDiscourseImportCategories,
+  writeImportDiscoveryManifest,
+  type ImportDiscoveryOrder,
+  type ImportDiscoveryStatus,
+} from "./import-discovery.js";
 import { importExistingDiscourseManifest, loadImportManifest } from "./import-manifest.js";
 import { syncDiscourseTopics, type DiscoursePreflightLimits, type SyncMode } from "./sync/index.js";
 
@@ -22,7 +29,15 @@ async function main() {
   }
 
   const command = rawCommand;
-  const validCommands = new Set(["sync", "publish-new", "sync-existing", "publish-and-sync", "import-existing", "check-discourse"]);
+  const validCommands = new Set([
+    "sync",
+    "publish-new",
+    "sync-existing",
+    "publish-and-sync",
+    "import-existing",
+    "discover-imports",
+    "check-discourse",
+  ]);
 
   if (!validCommands.has(command)) {
     printUsage(`Unknown command: ${command}`);
@@ -72,6 +87,14 @@ const heroAlt = args.values.get("hero-alt");
 const pruneProfiles = pruneProfilesFromValue(args.values.get("prune-profile"));
 const sourceMode = sourceModeFromValue(args.values.get("source-mode"));
 const manifestPath = args.values.get("manifest");
+const manifestOutPath = args.values.get("manifest-out");
+const discoveryCategory = args.values.get("category");
+const listCategories = args.flags.has("list-categories");
+const discoveryStatus = (args.values.get("status") ?? "all") as ImportDiscoveryStatus;
+const discoveryOrder = (args.values.get("order") ?? "oldest") as ImportDiscoveryOrder;
+const discoveryLimit = numberFromValue(args.values.get("limit"));
+const discoveryCreatedFrom = args.values.get("created-from");
+const discoveryCreatedTo = args.values.get("created-to");
 const hasDirectImportOptions = topics.length > 0 || commentsDisplay !== undefined || heroImage !== undefined || heroAlt !== undefined || pruneProfiles !== undefined || sourceMode !== undefined;
 
 const missing = [
@@ -80,21 +103,35 @@ const missing = [
   ...(args.flags.has("prune-profile") ? ["a value after --prune-profile"] : []),
   ...(args.flags.has("source-mode") ? ["a value after --source-mode"] : []),
   ...(args.flags.has("manifest") ? ["a value after --manifest"] : []),
+  ...(args.flags.has("manifest-out") ? ["a value after --manifest-out"] : []),
+  ...(args.flags.has("category") ? ["a value after --category"] : []),
+  ...(args.flags.has("status") ? ["a value after --status"] : []),
+  ...(args.flags.has("order") ? ["a value after --order"] : []),
+  ...(args.flags.has("limit") ? ["a value after --limit"] : []),
+  ...(args.flags.has("created-from") ? ["a value after --created-from"] : []),
+  ...(args.flags.has("created-to") ? ["a value after --created-to"] : []),
   ...(args.values.has("hero-image") && !heroImage?.trim() ? ["a non-empty --hero-image value"] : []),
   ...(args.values.has("hero-alt") && !heroAlt?.trim() ? ["a non-empty --hero-alt value"] : []),
   ...(args.values.has("prune-profile") && !args.values.get("prune-profile")?.trim() ? ["a non-empty --prune-profile value"] : []),
   ...(args.values.has("source-mode") && !args.values.get("source-mode")?.trim() ? ["a non-empty --source-mode value"] : []),
   ...(args.values.has("manifest") && !manifestPath?.trim() ? ["a non-empty --manifest value"] : []),
+  ...(args.values.has("manifest-out") && !manifestOutPath?.trim() ? ["a non-empty --manifest-out value"] : []),
+  ...(args.values.has("category") && !discoveryCategory?.trim() ? ["a non-empty --category value"] : []),
+  ...(args.values.has("limit") && discoveryLimit === undefined ? ["a numeric --limit value"] : []),
+  ...(args.values.has("created-from") && !discoveryCreatedFrom?.trim() ? ["a non-empty --created-from value"] : []),
+  ...(args.values.has("created-to") && !discoveryCreatedTo?.trim() ? ["a non-empty --created-to value"] : []),
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
-  ...(!siteUrl && command !== "check-discourse" ? ["SITE_URL or --site-url"] : []),
-  ...(!dryRun && command !== "check-discourse" && command !== "import-existing" && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
+  ...(!siteUrl && command !== "check-discourse" && command !== "discover-imports" ? ["SITE_URL or --site-url"] : []),
+  ...(!dryRun && !["check-discourse", "import-existing", "discover-imports"].includes(command) && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
   ...(!dryRun && command === "import-existing" && !importApiKey ? ["DISCOURSE_DIAGNOSTICS_API_KEY, DISCOURSE_API_KEY, --diagnostics-api-key, or --api-key"] : []),
-  ...(!dryRun && command !== "check-discourse" && !apiUsername
+  ...(!dryRun && !["check-discourse", "discover-imports"].includes(command) && !apiUsername
     ? ["DISCOURSE_POST_AS, --post-as, DISCOURSE_API_USERNAME, or --api-username"]
     : []),
   ...(command === "import-existing" && topics.length === 0 && !manifestPath ? ["--topic URL[,URL], --topic-id ID[,ID], or --manifest FILE"] : []),
   ...(command === "import-existing" && manifestPath && hasDirectImportOptions ? ["use --manifest without --topic, --comments-display, --hero-image, --hero-alt, --prune-profile, or --source-mode"] : []),
   ...(command !== "import-existing" && manifestPath ? ["--manifest is only valid with import-existing"] : []),
+  ...(command !== "discover-imports" && manifestOutPath ? ["--manifest-out is only valid with discover-imports"] : []),
+  ...(command === "discover-imports" && !listCategories && !discoveryCategory ? ["--category ID|SLUG|NAME or --list-categories"] : []),
   ...(command === "import-existing" && heroImage && !heroAlt?.trim() ? ["--hero-alt TEXT when --hero-image is used"] : []),
   ...(command === "import-existing" && heroAlt && !heroImage ? ["--hero-image PATH when --hero-alt is used"] : []),
 ];
@@ -102,6 +139,64 @@ const missing = [
 if (missing.length > 0) {
   printMissingConfiguration({ command, missing, dryRun });
   process.exit(1);
+}
+
+if (command === "discover-imports") {
+  if (listCategories) {
+    const categories = await listDiscourseImportCategories({
+      discourseUrl: discourseUrl!,
+      apiKey: importApiKey,
+      apiUsername,
+    });
+    console.log(`Discourse categories: ${discourseUrl}`);
+    for (const category of categories) {
+      const parent = category.parent_category_id ? `; parent ${category.parent_category_id}` : "";
+      const count = category.topic_count === undefined ? "" : `; ${category.topic_count} topics`;
+      console.log(`- ${category.id}: ${category.name} (${category.slug ?? "no slug"}${parent}${count})`);
+    }
+    process.exit(0);
+  }
+
+  const result = await discoverDiscourseImports({
+    docsDir,
+    discourseUrl: discourseUrl!,
+    apiKey: importApiKey,
+    apiUsername,
+    category: discoveryCategory!,
+    includeSubcategories: args.flags.has("include-subcategories"),
+    tags,
+    createdFrom: discoveryCreatedFrom,
+    createdTo: discoveryCreatedTo,
+    status: discoveryStatus,
+    order: discoveryOrder,
+    limit: discoveryLimit,
+    commentsDisplay,
+    sourceMode,
+  });
+
+  console.log("Discourse import discovery (read-only)");
+  console.log(`Category: ${result.category.id}: ${result.category.name} (${result.category.slug ?? "no slug"})`);
+  console.log(`Included category IDs: ${result.includedCategoryIds.join(", ")}`);
+  console.log(`Scanned topics: ${result.scannedTopics}`);
+  console.log(`Excluded already imported: ${result.excludedAlreadyImported}`);
+  console.log(`Candidates: ${result.candidates.length}`);
+  for (const candidate of result.candidates) {
+    const state = candidate.closed ? "closed" : candidate.archived ? "archived" : "open";
+    console.log(`- ${candidate.topicId} | ${candidate.createdAt.slice(0, 10)} | ${state} | ${candidate.title}`);
+    console.log(`  ${candidate.topicUrl}`);
+    if (candidate.tags.length) console.log(`  tags: ${candidate.tags.join(", ")}`);
+  }
+  if (manifestOutPath) {
+    const writtenPath = await writeImportDiscoveryManifest(manifestOutPath, result.manifest);
+    console.log(`Manifest written: ${writtenPath}`);
+  } else if (args.flags.has("json") && result.manifest.imports.length) {
+    console.log(JSON.stringify(result.manifest, null, 2));
+  } else if (args.flags.has("json")) {
+    console.log("No import manifest was generated because no candidates matched.");
+  } else {
+    console.log("No files were written. Use --manifest-out FILE to save this reviewed candidate order.");
+  }
+  process.exit(0);
 }
 
 if (command === "check-discourse") {
@@ -411,6 +506,7 @@ function printUsage(error?: string) {
   console.error("  astro-discussion-bridge publish-new [docsDir] [options]");
   console.error("  astro-discussion-bridge sync-existing [docsDir] [options]");
   console.error("  astro-discussion-bridge publish-and-sync [docsDir] [options]");
+  console.error("  astro-discussion-bridge discover-imports [docsDir] --category ID|SLUG|NAME [options]");
   console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [options]");
   console.error("  astro-discussion-bridge check-discourse [options]");
   console.error("");
@@ -418,6 +514,7 @@ function printUsage(error?: string) {
   console.error("  publish-new       Create missing Discourse companion topics; skip pages already linked.");
   console.error("  sync-existing     Rewrite/update already linked companion topics; skip pages without discourseTopicId.");
   console.error("  publish-and-sync  Create missing topics and sync existing linked topics in one explicit run.");
+  console.error("  discover-imports  Read a Discourse category and preview an ordered import manifest; never imports.");
   console.error("  import-existing   Import or mirror existing Discourse topics into Astro Markdown.");
   console.error("  check-discourse   Read target forum settings/capabilities before live writes.");
   console.error("  sync              Backward-compatible alias for publish-new.");
@@ -459,12 +556,26 @@ function printUsage(error?: string) {
   console.error("  --prune-profile NAME       Opt-in trailing boilerplate rule; currently community-call-to-action.");
   console.error("  --source-mode MODE         discourse-imported (default) or discourse-managed; never astro-managed.");
   console.error("");
+  console.error("Import discovery options:");
+  console.error("  --list-categories          List category IDs, names, slugs, parents, and topic counts.");
+  console.error("  --category ID|SLUG|NAME    Select one category by ID or exact unambiguous slug/name.");
+  console.error("  --include-subcategories    Include topics from descendant categories.");
+  console.error("  --tags TAG[,TAG]           Require every listed tag; matching is case-insensitive.");
+  console.error("  --created-from DATE        Include topics created on/after this ISO date or timestamp.");
+  console.error("  --created-to DATE          Include topics created on/before this ISO date or timestamp.");
+  console.error("  --status STATUS            all (default), open, or closed/archived.");
+  console.error("  --order ORDER              oldest (default), newest, or natural-title.");
+  console.error("  --limit N                  Keep the first N candidates after deterministic ordering.");
+  console.error("  --manifest-out FILE        Save a new strict v1 manifest; refuses to overwrite.");
+  console.error("  --json                     Print the generated manifest after the human preview.");
+  console.error("");
   console.error("Diagnostics options:");
   console.error("  --diagnostics-api-key KEY  Use a broader/read-capable key for check-discourse and raw imports.");
   console.error("  --page-url URL             Test existing-topic reconciliation for one Astro page URL.");
   console.error("");
   console.error("Examples:");
   console.error("  astro-discussion-bridge check-discourse --category-id 5 --tags discussionbridge,docs --discourse-url https://forum.example.com");
+  console.error("  astro-discussion-bridge discover-imports src/content/docs --category guides --tags guide --order oldest --limit 10 --manifest-out imports/guides.json --discourse-url https://forum.example.com");
   console.error("  astro-discussion-bridge publish-new src/content/docs --dry-run --details --discourse-url https://forum.example.com --site-url https://docs.example.com");
   console.error("  astro-discussion-bridge sync-existing src/content/blog --route-base blog --force --details");
 }

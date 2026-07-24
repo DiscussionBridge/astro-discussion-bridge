@@ -32,6 +32,29 @@ export interface DiscourseCategory {
   name: string;
   slug?: string;
   read_restricted?: boolean;
+  parent_category_id?: number | null;
+  topic_count?: number;
+}
+
+export interface CategoryTopicsResponse {
+  topic_list?: {
+    more_topics_url?: string | null;
+    per_page?: number;
+    topics?: DiscourseTopicListItem[];
+  };
+}
+
+export interface DiscourseTopicListItem {
+  id: number;
+  title: string;
+  slug?: string;
+  category_id?: number;
+  created_at: string;
+  bumped_at?: string;
+  closed?: boolean;
+  archived?: boolean;
+  visible?: boolean;
+  tags?: Array<DiscourseTag | string>;
 }
 
 export interface TagsResponse {
@@ -295,6 +318,9 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
     },
     categories() {
       return request<CategoriesResponse>("/categories.json");
+    },
+    categoryTopics(pathname: string) {
+      return request<CategoryTopicsResponse>(pathname);
     },
     tags() {
       return request<TagsResponse>("/tags.json");

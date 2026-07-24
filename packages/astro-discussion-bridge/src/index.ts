@@ -205,6 +205,12 @@ export default function discussionBridge(
 
 export { createDiscourseClient } from "./discourse/client.js";
 export { checkDiscourse } from "./check-discourse.js";
+export {
+  discoverDiscourseImports,
+  listDiscourseImportCategories,
+  selectCategory,
+  writeImportDiscoveryManifest,
+} from "./import-discovery.js";
 export { syncDiscourseTopics } from "./sync/index.js";
 export {
   discussionTargetLabel,
@@ -214,6 +220,13 @@ export {
 } from "./targets.js";
 export { resolveDiscussionSourceNotice } from "./source.js";
 export type { CheckDiscourseOptions, CheckDiscourseResult } from "./check-discourse.js";
+export type {
+  DiscoverImportOptions,
+  ImportDiscoveryCandidate,
+  ImportDiscoveryOrder,
+  ImportDiscoveryResult,
+  ImportDiscoveryStatus,
+} from "./import-discovery.js";
 export type { DiscoursePreflightLimits, SyncDiscourseTopicsOptions, SyncedPage } from "./sync/index.js";
 export type {
   DiscussionConnectionJob,

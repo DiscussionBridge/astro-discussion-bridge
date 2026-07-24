@@ -45,7 +45,7 @@ quality review before Product Boss approval.
 
 ### Publish
 
-- Confirmed final CLI command names and help output are clear: `publish-new`, `sync-existing`, `publish-and-sync`, `import-existing`, and `check-discourse`.
+- Confirmed final CLI command names and help output are clear: `publish-new`, `sync-existing`, `publish-and-sync`, `discover-imports`, `import-existing`, and `check-discourse`.
 - Decide whether to add a configurable topic title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
 - Keep local preflight validation available for dry runs and unauthenticated checks.
 - Confirmed title/body/tag preflight messages are friendly enough for non-package authors.
@@ -71,14 +71,14 @@ quality review before Product Boss approval.
 
 ### Import
 
-- Add an import-discovery/queue workflow in Alpha with these selection modes:
+- Implemented the read-only `discover-imports` queue workflow with:
   - explicit topic or manifest for curated production imports, preserving caller-supplied order
   - category selector that discovers/lists available categories and accepts category ID or an unambiguous slug/name, including subcategories
   - next in the selected category, defaulting to oldest Discourse `created_at` first with topic ID as the stable tie-breaker
   - optional filters for tags, created-date range, open/closed status, and limit
   - optional oldest/newest ordering by Discourse `created_at`, or natural topic-title ordering for numbered source collections such as `Sec. 10102`, `Sec. 10103`, and `Sec. 10104`
-- Never sequence imports by `bumped_at`, last reply, or latest activity. Community discussion must not reorder the publishing queue.
-- Preview discovered candidates before import and persist enough checkpoint/link state to avoid duplicate imports.
+- Enforced that discovery never sequences by `bumped_at`, last reply, or latest activity. Community discussion cannot reorder the publishing queue.
+- Preview discovered candidates before import, exclude existing source/target topic links from local frontmatter, and optionally create a new non-overwriting strict v1 manifest.
 
 - Keep `import-existing` safe by default: preserve topic ID and URL, write an editable Astro copy, and avoid automatic sync back to Discourse.
 - Add optional imported-page hero placement with required non-empty alt text.
