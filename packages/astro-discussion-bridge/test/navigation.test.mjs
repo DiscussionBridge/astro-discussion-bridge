@@ -212,6 +212,154 @@ test("navigation discovery rejects category drift and missing tag groups", async
   );
 });
 
+test("navigation discovery retries a rate-limited read without changing request order", async () => {
+  const requests = [];
+  let rateLimited = true;
+  const manifest = await discoverDiscourseNavigation({
+    discourseUrl: "https://forum.example.com",
+    generatedAt: "2026-07-23T00:00:00.000Z",
+    hierarchyTagGroups: ["OBBBA TITLE"],
+    lenses: [{
+      key: "impact",
+      label: "Impact",
+      categoryId: 18,
+      indexTopicId: 435,
+    }],
+    fetch: async (url) => {
+      requests.push(String(url));
+      if (String(url).includes("tag_groups")) {
+        if (rateLimited) {
+          rateLimited = false;
+          return new Response("Rate limited", {
+            status: 429,
+            statusText: "Too Many Requests",
+            headers: { "Retry-After": "0" },
+          });
+        }
+        return jsonResponse({
+          results: [{ name: "OBBBA TITLE", tags: [{ slug: "title-i" }] }],
+        });
+      }
+      return jsonResponse({
+        id: 435,
+        category_id: 18,
+        post_stream: {
+          posts: [{
+            post_number: 1,
+            cooked: '<a href="https://forum.example.com/t/title-i/15">TITLE I</a>',
+          }],
+        },
+      });
+    },
+  });
+
+  assert.equal(manifest.lenses[0].nodes[0].label, "TITLE I");
+  assert.deepEqual(requests, [
+    "https://forum.example.com/tag_groups/filter/search.json?q=OBBBA+TITLE",
+    "https://forum.example.com/tag_groups/filter/search.json?q=OBBBA+TITLE",
+    "https://forum.example.com/t/435.json",
+  ]);
+});
+
+test("navigation discovery bounds persistent rate limits and does not retry other failures", async () => {
+  let rateLimitedRequests = 0;
+  await assert.rejects(
+    discoverDiscourseNavigation({
+      discourseUrl: "https://forum.example.com",
+      hierarchyTagGroups: ["OBBBA TITLE"],
+      lenses: [{
+        key: "impact",
+        label: "Impact",
+        categoryId: 18,
+        indexTopicId: 435,
+      }],
+      fetch: async () => {
+        rateLimitedRequests += 1;
+        return new Response("Rate limited", {
+          status: 429,
+          statusText: "Too Many Requests",
+          headers: { "Retry-After": "0" },
+        });
+      },
+    }),
+    /after 3 retries/,
+  );
+  assert.equal(rateLimitedRequests, 4);
+
+  let forbiddenRequests = 0;
+  await assert.rejects(
+    discoverDiscourseNavigation({
+      discourseUrl: "https://forum.example.com",
+      hierarchyTagGroups: ["OBBBA TITLE"],
+      lenses: [{
+        key: "impact",
+        label: "Impact",
+        categoryId: 18,
+        indexTopicId: 435,
+      }],
+      fetch: async () => {
+        forbiddenRequests += 1;
+        return new Response("Forbidden", {
+          status: 403,
+          statusText: "Forbidden",
+        });
+      },
+    }),
+    /403 Forbidden/,
+  );
+  assert.equal(forbiddenRequests, 1);
+});
+
+test("navigation discovery does not hang when a rejected response body cannot cancel", async () => {
+  let requests = 0;
+  const result = await Promise.race([
+    discoverDiscourseNavigation({
+      discourseUrl: "https://forum.example.com",
+      hierarchyTagGroups: ["OBBBA TITLE"],
+      lenses: [{
+        key: "impact",
+        label: "Impact",
+        categoryId: 18,
+        indexTopicId: 435,
+      }],
+      fetch: async (url) => {
+        requests += 1;
+        if (requests === 1) {
+          return {
+            ok: false,
+            status: 429,
+            statusText: "Too Many Requests",
+            headers: new Headers({ "Retry-After": "0" }),
+            body: { cancel: () => new Promise(() => {}) },
+          };
+        }
+        if (String(url).includes("tag_groups")) {
+          return jsonResponse({
+            results: [{ name: "OBBBA TITLE", tags: [{ slug: "title-i" }] }],
+          });
+        }
+        return jsonResponse({
+          id: 435,
+          category_id: 18,
+          post_stream: {
+            posts: [{
+              post_number: 1,
+              cooked: '<a href="https://forum.example.com/t/title-i/15">TITLE I</a>',
+            }],
+          },
+        });
+      },
+    }),
+    new Promise((_, reject) => setTimeout(
+      () => reject(new Error("Navigation retry hung while cancelling a response body.")),
+      500,
+    )),
+  ]);
+
+  assert.equal(result.lenses[0].nodes[0].label, "TITLE I");
+  assert.equal(requests, 3);
+});
+
 test("navigation config rejects unknown root, lens, and content-source fields", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-navigation-strict-"));
   const base = {

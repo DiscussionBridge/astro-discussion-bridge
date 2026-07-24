@@ -92,7 +92,8 @@ export async function discoverDiscourseNavigation(input: {
   const requestedGroups = normalizeUniqueStrings(input.hierarchyTagGroups, "hierarchy tag group");
   const fetcher = input.fetch ?? globalThis.fetch;
   const headers = requestHeaders(input.apiKey, input.apiUsername);
-  const selectedGroups = await Promise.all(requestedGroups.map(async (name) => {
+  const selectedGroups: NavigationTagGroup[] = [];
+  for (const name of requestedGroups) {
     const url = new URL("tag_groups/filter/search.json", discourseUrl);
     url.searchParams.set("q", name);
     const groups = parseTagGroups(await requestJson(url.href, fetcher, headers));
@@ -100,8 +101,8 @@ export async function discoverDiscourseNavigation(input: {
       candidate.name.localeCompare(name, "en", { sensitivity: "base" }) === 0
     );
     if (!group) throw new Error(`Discourse hierarchy tag group was not found: ${name}.`);
-    return group;
-  }));
+    selectedGroups.push(group);
+  }
   const contentEntries = Array.isArray(input.content)
     ? input.content
     : input.content?.entries ?? [];
@@ -575,11 +576,48 @@ async function requestJson(
   fetcher: typeof globalThis.fetch,
   headers: Record<string, string>,
 ): Promise<unknown> {
-  const response = await fetcher(url, { headers });
-  if (!response.ok) {
-    throw new Error(`Discourse navigation request failed: ${response.status} ${response.statusText} (${url}).`);
+  const maxRateLimitRetries = 3;
+  for (let attempt = 0; attempt <= maxRateLimitRetries; attempt += 1) {
+    const response = await fetcher(url, { headers });
+    if (response.ok) return response.json();
+    if (response.status === 429 && attempt < maxRateLimitRetries) {
+      await releaseResponseBody(response);
+      await delay(rateLimitDelayMs(response.headers.get("retry-after"), attempt));
+      continue;
+    }
+    throw new Error(
+      `Discourse navigation request failed: ${response.status} ${response.statusText} (${url})`
+      + (response.status === 429 ? ` after ${attempt} retries.` : "."),
+    );
   }
-  return response.json();
+  throw new Error(`Discourse navigation request failed after retrying ${url}.`);
+}
+
+function rateLimitDelayMs(retryAfter: string | null, attempt: number): number {
+  if (retryAfter?.trim()) {
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds * 1000, 30_000);
+    const date = Date.parse(retryAfter);
+    if (Number.isFinite(date)) return Math.min(Math.max(date - Date.now(), 0), 30_000);
+  }
+  return Math.min(1000 * (2 ** attempt), 8000);
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function releaseResponseBody(response: Response): Promise<void> {
+  try {
+    if (response.body) {
+      await Promise.race([
+        response.body.cancel(),
+        delay(50),
+      ]);
+    }
+  } catch {
+    // The retry is still bounded if a custom fetch implementation cannot cancel its body.
+  }
 }
 
 function requestHeaders(apiKey?: string, apiUsername?: string): Record<string, string> {
