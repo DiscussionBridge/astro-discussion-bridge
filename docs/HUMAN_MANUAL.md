@@ -1159,6 +1159,40 @@ The current reviewed artifact is
 `17b3dba90891f8a5222389dd351bfb5904ab8c5a32e53dd86745233dda452eb4`).
 The refreshed live Worker is `8dc5a047-feb5-45e1-8c40-b1425cfd63c4`.
 
+## Verified Documentation Dates
+
+Readable docs display **Last updated** and
+**Applies to: Discussion Bridge Alpha** directly under the page title. The
+footer repeats only Last updated and provides an edit link to the exact
+canonical Markdown source on GitHub.
+
+Last updated records a verified change to that canonical source. It is not the
+date of the latest docs build or deployment.
+
+After editing any canonical file under `docs/`:
+
+```powershell
+cd sites/docs
+npm run refresh-metadata
+npm run build
+```
+
+The refresh updates `docs/DOCS_PAGE_METADATA.json`: unchanged pages keep their
+dates, changed pages receive the refresh date, new pages are initialized, and
+removed pages leave the ledger. The build checks exact source coverage and
+byte-level hashes before syncing content.
+
+> **You should see:** metadata tests 2/2, a successful readable build, the
+> correct title row on desktop/mobile, and an edit link resolving to the page's
+> canonical source.
+
+> **Stop if:** metadata is missing or stale, a source hash differs, membership
+> is not exact, a date is inferred from Git/build/deploy time, or the edit link
+> points to generated content instead of the canonical source.
+
+Metadata verification does not replace Manual Boss semantic and presentation
+review.
+
 ## Related Guides
 
 - [Machine Manual](./MACHINE_MANUAL.md)

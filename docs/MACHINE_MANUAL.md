@@ -1695,7 +1695,52 @@ The public-accountability chain is official record → structured section →
 legal/practical analysis → human consequences → community scrutiny/correction.
 Do not claim implementation completion from the single-section comparison.
 
-## 18. Durable Update Rule
+## 18. Verified Docs Page Metadata
+
+```yaml
+docs_page_metadata:
+  implementation_commit: 02206f7
+  ledger: docs/DOCS_PAGE_METADATA.json
+  ledger_entry: [lastUpdated, SHA-256]
+  membership: exact_synchronized_source_set
+  date_meaning: canonical_source_last_verified_change
+  prohibited_date_sources: [build_timestamp, deploy_timestamp, Git_history]
+  normal_build:
+    refreshes_dates: false
+    fail_closed: [missing_entry, stale_extra_entry, byte_hash_mismatch]
+  explicit_refresh:
+    cwd: sites/docs
+    command: npm run refresh-metadata
+    unchanged_source: preserve_date
+    changed_source: update_date_and_hash
+    new_source: initialize_entry
+    removed_source: remove_entry
+  prebuild_order:
+    - metadata_tests
+    - sync_content
+    - attribution_docs_scope
+  rendered_contract:
+    title_row:
+      - "Last updated: verified source date"
+      - "Applies to: Discussion Bridge Alpha"
+    footer:
+      - Last_updated_only
+      - exact_canonical_GitHub_edit_link
+    responsive: [desktop_1440_PASS, mobile_390_PASS]
+  verification:
+    metadata_tests: 2/2
+    docs_sources: 21
+    HTML_pages: 22
+    attribution_docs_scope: PASS
+  semantic_review_replaced: false
+```
+
+Run refresh only after intentional canonical documentation edits. Commit the
+changed canonical docs and ledger together. Do not treat synchronized site
+content as the source of truth, and do not use metadata verification as a
+substitute for Manual Boss review.
+
+## 19. Durable Update Rule
 
 When implementation confirms or changes a command, field, scope, endpoint,
 failure, recovery path, or deployment invariant:

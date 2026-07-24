@@ -513,4 +513,17 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       rejected-body cancellation within 50 ms, and never retry 403.
 - [ ] Review OBBBA npm findings (1 low, 1 moderate, 6 high) without automatic
       `npm audit fix`.
+- [x] Implement verified docs update metadata at `02206f7`: title row shows
+      Last updated plus `Applies to: Discussion Bridge Alpha`; footer repeats
+      only Last updated and links the exact canonical GitHub source. Desktop
+      1440 and mobile 390 visual/DOM checks passed.
+- [x] Track exact synchronized-source membership, `lastUpdated`, and SHA-256 in
+      `docs/DOCS_PAGE_METADATA.json`; normal builds fail closed on missing,
+      stale, or hash-mismatched metadata without deriving dates from Git.
+- [x] Require explicit `npm run refresh-metadata` after canonical docs edits;
+      preserve unchanged dates, update changed pages, initialize new entries,
+      and rebuild exact ledger membership. Metadata tests passed 2/2.
+- [ ] For each release docs candidate, run metadata refresh, metadata tests,
+      readable build, source/rendered checks, and Manual Boss review. Do not
+      report Last updated as a build/deploy timestamp.
 - [ ] Design future integration lanes for Statamic and other frameworks.

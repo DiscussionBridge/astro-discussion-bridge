@@ -8,11 +8,11 @@
     },
     "HUMAN_MANUAL.md": {
       "lastUpdated": "2026-07-24",
-      "sourceSha256": "73f82d65b89b2f62cc1dc1448ede3539d0b01bd9cb2fefc3247316d0b5af3d9b"
+      "sourceSha256": "a19f701b32a0f769523242c2514e3bd6f98714b27ff2c6dbc0d1813051bb1964"
     },
     "MACHINE_MANUAL.md": {
       "lastUpdated": "2026-07-24",
-      "sourceSha256": "69c2b6c3ab4068c7d8d3e4399624b627fd1f37c493fa9274dd144262f3c6e9d5"
+      "sourceSha256": "3f7c42c1ca06c4a72d83349889879e4dc9f9fdfd994a392959557aedbaf29411"
     },
     "SITE_RUNBOOK_HUMAN_TEMPLATE.md": {
       "lastUpdated": "2026-07-21",
@@ -72,7 +72,7 @@
     },
     "BUILD_LAUNCH_CHECKLISTS.md": {
       "lastUpdated": "2026-07-24",
-      "sourceSha256": "673a6c721958b243041a19cc4fad2730102b807472b866f437e21ebfb6d37859"
+      "sourceSha256": "a4a0f8f7256bd88235ebb6ff4e9a5334356494ec3c7618b362a6442311c1f16e"
     },
     "DEMO_PLAN.md": {
       "lastUpdated": "2026-07-23",
@@ -84,7 +84,7 @@
     },
     "PRODUCT_NOTES.md": {
       "lastUpdated": "2026-07-24",
-      "sourceSha256": "d402df0e2ea0aa4ed982f0b41b69fa4d1d978f350708c8dc86adc2d14546688b"
+      "sourceSha256": "5a8676533459849a0f6ec948af99afeb19ba49882df07e4b0689e01b2b7116aa"
     }
   }
 }

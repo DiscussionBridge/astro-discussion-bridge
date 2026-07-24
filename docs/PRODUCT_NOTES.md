@@ -756,6 +756,29 @@ The reviewed package artifact is
 `17b3dba90891f8a5222389dd351bfb5904ab8c5a32e53dd86745233dda452eb4`,
 with 52 files and 86,864 bytes.
 
+### Verified Documentation Update Metadata
+
+Docs-site commit `02206f7` implements verified page-update metadata. Each
+readable page shows **Last updated** and
+**Applies to: Discussion Bridge Alpha** directly below its title. The footer
+repeats only Last updated and links to the exact canonical source on GitHub.
+Desktop 1440 and mobile 390 visual/DOM checks passed.
+
+Last updated means the canonical documentation source changed; it is not a
+build or deployment timestamp. The tracked
+`docs/DOCS_PAGE_METADATA.json` ledger stores one date and SHA-256 for every
+synchronized source. Normal builds do not consult Git history. They fail closed
+when a source is missing, membership is stale, or a byte-level hash differs.
+
+After intentionally editing canonical files under `docs/`, run
+`npm run refresh-metadata` from `sites/docs`. The explicit refresh preserves
+unchanged dates, updates changed pages, initializes new entries, and rebuilds
+exact source membership. Prebuild runs metadata tests before synchronization
+and the bounded attribution check.
+
+This verifies update metadata and source correspondence. It does not replace
+semantic review, attribution/licensing review, or release approval.
+
 ### After Alpha
 
 Beta primarily refines exercised usability, compatibility, reliability,
