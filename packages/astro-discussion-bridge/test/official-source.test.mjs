@@ -49,11 +49,11 @@ const officialXml = `<?xml version="1.0" encoding="UTF-8"?>
   </title>
 </law>`;
 
-const communityText = `(a) In general.—Section 3 of the Food and Nutrition Act of 2008 ([7 U.S.C. 2012](https://uscode.house.gov/)) is amended.
+const communityText = `(a) In General.—Section 3 of the Food and Nutrition Act of 2008 ([7 U.S.C. 2012](https://uscode.house.gov/)) is amended.
 
-“(1) IN GENERAL.—The official wording remains the same.
+“(1) In general.—The official wording remains the same.
 
-“(2) HOUSEHOLD ADJUSTMENTS.—The Secretary shall make household adjustments.`;
+“(2) Household adjustments.—The Secretary shall make household adjustments.`;
 
 const officialText = `[[Page 139 STAT. 80]]
 SEC. 10101. RE-EVALUATION OF THRIFTY FOOD PLAN.
@@ -117,6 +117,20 @@ test("official source comparison separates presentation from substance", async (
   assert.match(substantive.firstDifference.communityContext, /official wording was materially changed/);
 });
 
+test("case-only legal differences require substantive review", async () => {
+  const comparison = await compareOfficialSource({
+    source: profile,
+    sectionId: "10101",
+    communityText: communityText.replace("In general", "IN GENERAL"),
+    fetch: async () => new Response(officialXml, { status: 200 }),
+  });
+
+  assert.equal(comparison.metadata.comparison, "substantive-difference");
+  assert.ok(comparison.firstDifference);
+  assert.match(comparison.firstDifference.officialContext, /In general/);
+  assert.match(comparison.firstDifference.communityContext, /IN GENERAL/);
+});
+
 test("official TXT fallback extracts one section and records its source format", async () => {
   const section = extractUsPublicLawSectionFromText(officialText, "10101");
   assert.equal(section.heading, "RE-EVALUATION OF THRIFTY FOOD PLAN.");
@@ -136,7 +150,7 @@ test("official TXT fallback extracts one section and records its source format",
     },
   });
   assert.equal(comparison.metadata.sourceFormat, "txt");
-  assert.equal(comparison.metadata.comparison, "presentation-only");
+  assert.equal(comparison.metadata.comparison, "exact");
   assert.deepEqual(calls, [profile.xmlUrl, profile.textUrl]);
 });
 

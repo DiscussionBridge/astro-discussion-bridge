@@ -350,7 +350,6 @@ export function extractUsPublicLawSectionFromText(
 export function normalizeLegalText(value: string): string {
   return value
     .normalize("NFKD")
-    .toLocaleLowerCase("en-US")
     .replace(/[\u2018\u2019\u201A\u201B\u201C\u201D\u201E\u201F`'"]/g, "")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/g, " ")
