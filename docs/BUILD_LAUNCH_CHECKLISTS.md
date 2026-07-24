@@ -367,7 +367,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       prune (`753`); the reviewed four-case manifest passed source comparison,
       production-shaped build, deployment, and live verification.
 - [x] Review and dry-run the next OBBBA Title I batch manifest for topics
-      `754`–`764` in natural numbered-title order with uniform
+      `754`, `755`, `756`, `757`, `758`, `759`, `761`, `762`, `763`, and `764`
+      in natural numbered-title order with uniform
       source/comments/tag/hero/alt/prune policy; strict v1 validation passed,
       dry-run reported 0 imported / 0 skipped / 10 dry-run, and
       `generatedPages=0`.
