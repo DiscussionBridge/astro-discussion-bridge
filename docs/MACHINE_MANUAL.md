@@ -555,7 +555,7 @@ site_specific_dry_run_example:
   completed_followup:
     granular_attempt:
       topic_endpoint: { path: /t/754.json, HTTP: 200, first_post_raw: absent }
-      raw_post_fallback: { path: /posts/761.json, HTTP: 403 }
+      raw_post_fallback: { path: /posts/761.json, resource: first_post_of_topic_754, identifier_kind: post_id, HTTP: 403 }
       result: stopped_pre_write_invalid_access
     operational_rule: use_protected_diagnostics_global_key_for_controlled_import_source_reads_when_granular_raw_post_access_fails
     live_import: { imported: 10, skipped: 0, dry_run: 0, Discourse_writes: 0 }

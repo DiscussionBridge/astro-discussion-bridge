@@ -376,8 +376,9 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       batch, clean build, corrected deployment, and per-route verification:
       content commit `5cfc99a`, cleanup commit `a5f5df9`, 17-file clean build,
       ten live HTTP-200 routes, and three stock routes verified 404.
-- [x] Record the raw-post permission boundary: the granular publishing key can
-      read `/t/754.json` but not the required `/posts/761.json` raw fallback;
+- [x] Record the raw-post permission boundary: topic 754 is readable at
+      `/t/754.json`, but its first post lacks raw Markdown. Fetching that first
+      post by post ID at `/posts/761.json` returns 403 with the granular key;
       controlled `import-existing` source reads may use the protected
       diagnostics/global key in memory while CI/build/runtime publishing and
       deployment use remain prohibited.

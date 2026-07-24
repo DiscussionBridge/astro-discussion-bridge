@@ -439,9 +439,11 @@ skipped, 10 dry-run, and `generatedPages=0`.
 
 The live gate later passed for those exact ten topics: 10 Astro files imported,
 zero Discourse writes, clean build, corrected deployment, ten live HTTP-200
-routes, and three removed stock routes returning 404. The first granular-key
-attempt stopped before writing because the required raw-post fallback returned
-403; the controlled retry used the protected diagnostics key in memory. Keep
+routes, and three removed stock routes returning 404. Topic 754 was readable at
+`/t/754.json`, but its first post lacked raw Markdown. Fetching that first post
+by post ID at `/posts/761.json` returned 403 with the granular key; `761` in
+that endpoint is the post ID, not the separate topic 761 in the batch. The
+controlled retry used the protected diagnostics key in memory. Keep
 that key out of CI/build/runtime publishing and deployment configuration.
 
 For deterministic refresh of pages with different policies, use the reviewed

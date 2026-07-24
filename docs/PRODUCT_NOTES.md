@@ -374,10 +374,12 @@ topics, and returned the next ten natural-title candidates beginning with topic
 754 (Section 10106); it wrote no files. Implementation, live read-only proof,
 and Code Boss review are complete.
 
-The next OBBBA Title I batch also proved a key-model boundary. The granular
-publishing key could read `/t/754.json`, but that response lacked first-post raw
-and `/posts/761.json` returned 403. The diagnostics/global key could read the
-required raw endpoint. Until Discourse exposes or identifies a suitable
+The next OBBBA Title I batch also proved a key-model boundary. Topic 754 was
+readable at `/t/754.json`, but its first post lacked raw Markdown. Fetching that
+first post by post ID at `/posts/761.json` returned 403 with the granular key;
+`761` in that endpoint is the post ID, not the separate topic 761 in the batch.
+The diagnostics/global key could read the required raw endpoint. Until
+Discourse exposes or identifies a suitable
 granular raw-post scope, controlled `import-existing` source reads may use the
 protected diagnostics key in memory. It remains prohibited from CI/build,
 runtime publishing, and deployment configuration.

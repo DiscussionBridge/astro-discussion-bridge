@@ -934,8 +934,8 @@ next_title_i_batch:
     unrelated_worktree_changes: preserved
   granular_source_read_limit:
     actor: obbba-bot
-    topic_endpoint: { path: /t/754.json, publishing_HTTP: 200, diagnostics_HTTP: 200, first_post_raw: absent }
-    raw_post_endpoint: { path: /posts/761.json, publishing_HTTP: 403, diagnostics_read: PASS }
+    topic_endpoint: { path: /t/754.json, topic_id: 754, publishing_HTTP: 200, diagnostics_HTTP: 200, first_post_raw: absent }
+    raw_post_endpoint: { path: /posts/761.json, post_id: 761, first_post_of_topic_id: 754, publishing_HTTP: 403, diagnostics_read: PASS }
     first_attempt: stopped_pre_write_invalid_access
     Discourse_writes: 0
     operational_rule: diagnostics_global_capability_required_for_controlled_import_source_reads_when_granular_raw_post_access_is_unavailable

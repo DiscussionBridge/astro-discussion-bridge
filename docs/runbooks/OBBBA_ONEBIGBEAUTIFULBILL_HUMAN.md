@@ -564,10 +564,12 @@ write occurred, no secret was printed, and unrelated OBBBA worktree changes
 were preserved.
 
 The exact ten-topic gate is now complete. The first live attempt used the
-granular publishing key and stopped before writing with `403 invalid_access`:
-`/t/754.json` was readable, but the first-post raw was absent and the required
-fallback `/posts/761.json` was forbidden. The diagnostics/global key could read
-that raw-post endpoint. Current `import-existing` source reads therefore need
+granular publishing key and stopped before writing with `403 invalid_access`.
+Topic 754 was readable at `/t/754.json`, but its first post lacked raw Markdown.
+Fetching that first post by post ID at `/posts/761.json` returned 403; `761` in
+that endpoint is the post ID, not the separate topic 761 in the batch. The
+diagnostics/global key could read that raw-post endpoint. Current
+`import-existing` source reads therefore need
 diagnostics/global capability when no suitable granular raw-post scope is
 available.
 
