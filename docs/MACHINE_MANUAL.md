@@ -1497,8 +1497,8 @@ production secrets.
 
 ## 16. Navigation/Taxonomy Manifest
 
-Status: package/demo implemented at `e775af3`; Code Boss PASS; OBBBA adoption
-and full Title VII scale proof open.
+Status: package at `e775af3` plus correction `bc8acb5`; Code Boss final PASS;
+OBBBA live adoption `dd9c100` complete for current hierarchy.
 
 ```yaml
 navigation_taxonomy_contract:
@@ -1563,9 +1563,20 @@ implementation_evidence:
     component: DiscussionNavigation
     adapters: [Starlight_sidebar, plain_Astro]
     browser_checks: [desktop_PASS, mobile_PASS, no_horizontal_overflow]
-  adoption_open:
-    - OBBBA_artifact_install
-    - full_Title_VII_responsive_accessibility_scale
+  OBBBA_adoption:
+    commit: dd9c100
+    tag_groups: 18
+    local_bindings: 16
+    OBBBA_Text: { category: 5, index_topic: 12, nodes: 381, local_routes: 1 }
+    Impact: { category: 18, index_topic: 435, nodes: 317, local_routes: 15 }
+    hierarchy_visual:
+      desktop_1440: PASS
+      mobile_390: PASS
+      deep_Title_VII_summary_nodes_collapsed: 87
+      horizontal_overflow: false
+      page_errors: 0
+  open:
+    - broader_responsive_accessibility_as_content_expands
     - Law_as_Amended
 ```
 
@@ -1576,8 +1587,8 @@ adapter-neutral manifest before framework-specific rendering.
 
 ## 17. Official-Source Enrichment And Relations
 
-Status: package/demo implemented at `e775af3`; bounded Section 10101 field
-evidence retained; broader batch comparison and OBBBA adoption open.
+Status: package implemented at `e775af3` plus `bc8acb5`; bounded Section 10101
+adopted live at OBBBA `dd9c100`; broader batch comparison open.
 
 ```yaml
 official_source_enrichment:
@@ -1634,21 +1645,37 @@ implementation_evidence:
   source_tags_field: discussionSourceTags_JSON_scalar
   component: DiscussionRelations
   relationship_manifest: virtual_rebuild_time
-  package_tests: 103/103
+  package_tests: 106/106
+  typecheck: PASS
   npm_pack:
     files: 52
-    packed_kB: 86.4
-    unpacked_kB: 381.3
+    bytes: 86870
   artifact:
-    file: astro-discussion-bridge-0.1.0-alpha-e775af3-97cfd631.tgz
-    SHA256: 97cfd631e4a4dfda2bfc4e3ee37ec853320b610a078c62912cf1ae4db6011dd4
+    file: astro-discussion-bridge-0.1.0-alpha-bc8acb5-1c6d4827.tgz
+    SHA256: 1c6d482769380e8aca57c56a3ec056d95883b897d9b7e17ad6c2c31414413e42
   core_Astro_build: { status: PASS, public_routes: 3 }
   importer_fixture: non_routed_scalar_frontmatter_validated
   open:
-    - OBBBA_artifact_adoption_and_live_proof
-    - full_Title_VII_scale_proof
     - batch_official_source_comparison
+    - additional_OBBBA_Text_and_lenses
     - Law_as_Amended_adoption
+    - broader_Title_VII_scale_and_accessibility_as_content_expands
+    - dependency_vulnerability_review
+OBBBA_live:
+  commit: dd9c100
+  clean_build: { status: PASS, public_HTML_routes: 18 }
+  Worker: ebce4f27-f39e-4e4f-b95d-7049c5ffd313
+  official_route_HTTP: 200
+  impact_route_HTTP: 200
+  publishOnBuild: false
+  Discourse_writes: 0
+public_429_policy:
+  tag_group_reads: sequential
+  retry_statuses: [429]
+  max_retries: 3
+  Retry_After: [seconds_capped, date_capped, fallback_delay]
+  rejected_body_cancel_bound_ms: 50
+  retry_403: false
 ```
 
 The public-accountability chain is official record → structured section →

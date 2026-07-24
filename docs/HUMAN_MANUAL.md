@@ -1060,15 +1060,20 @@ provide breadcrumbs, authored previous/next, and search.
 > or screen-reader navigation fails; workflow tags leak into public
 > navigation; or tag-group response order overrides authored index order.
 
-Commit `e775af3` implements the canonical taxonomy manifest,
+Commits `e775af3` and `bc8acb5` implement the canonical taxonomy manifest,
 `discover-navigation`, progressive navigation, a Starlight sidebar adapter,
 and plain Astro static demo. Desktop/mobile browser checks passed without
 horizontal overflow. Read-only OBBBA discovery found 381 OBBBA Text nodes and
 317 Impact nodes, each with Titles I–X, and performed no writes.
 
-> **Adoption boundary:** OBBBA has not installed this artifact in this pass.
-> Full Title VII desktop/laptop/tablet/mobile responsive and accessibility
-> scale proof remains open. Law as Amended is not in current Astro adoption.
+OBBBA adoption `dd9c100` passed a clean 18-route build and live deployment.
+The sidebar shows OBBBA Text before Impact. Desktop 1440 and mobile 390 checks
+opened deep Title VII progressively, kept 87 summary nodes collapsed, produced
+no overflow or page errors, and kept the mobile menu usable with body scroll
+locked.
+
+> **Still open:** broader laptop/tablet, keyboard, and screen-reader proof as
+> more content is imported. Law as Amended is not in current Astro adoption.
 
 ## Official Text, Community Source, And Related Pages
 
@@ -1128,8 +1133,19 @@ per-entry override.
 > provenance, reciprocal cross-lens links, and static navigation with no
 > build-time network requirement.
 
-> **Still open:** OBBBA artifact adoption and live proof, full Title VII scale
-> testing, and batch official-source comparison beyond Section 10101.
+OBBBA topic 34 now renders the Content source, linked source author, official
+Public Law 119-21/Title I/Section 10101 citation, Impact relation, and topic 34
+discussion. Impact 10101 links back to the official-text route and retains topic
+434. No Discourse writes occurred.
+
+> **Still open:** batch official-source comparison beyond Section 10101,
+> additional OBBBA Text/lens imports, Law as Amended, broader scale/a11y proof,
+> and dependency-vulnerability review.
+
+If public tag-group discovery returns 429, the corrected client reads groups
+sequentially and retries only 429 up to three times. It honors bounded
+`Retry-After` seconds/date or fallback delay and cancels rejected response
+bodies promptly. A 403 is not retryable; correct permissions instead.
 
 ## Related Guides
 

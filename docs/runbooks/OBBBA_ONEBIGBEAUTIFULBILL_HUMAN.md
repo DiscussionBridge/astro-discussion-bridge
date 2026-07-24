@@ -590,6 +590,41 @@ topic, hero, Content source disclosure, and discussion marker. Temporary
 propagation 404s on topics 758 and 759 resolved to 200. The homepage shows
 **One Big Beautiful Bill Impact**, and all three stock routes return 404.
 
+## 12B. Official Text Navigation Adoption
+
+OBBBA adopted reviewed artifact
+`astro-discussion-bridge-0.1.0-alpha-bc8acb5-1c6d4827.tgz` at commit
+`dd9c100`. Code Boss passed the exact 25-file slice; unrelated local changes
+and old artifacts were excluded. A clean detached install/build produced 18
+public routes.
+
+Read-only discovery found 18 exact hierarchy tag groups and 16 local bindings.
+OBBBA Text contains 381 authored nodes with one local route; Impact contains
+317 nodes with 15 local routes. The sidebar places OBBBA Text before Impact.
+Unimported items fall back to their forum locations; imported items use
+canonical Astro routes.
+
+Topic 34 is `discourse-managed` with `discussionSync: false`, preserved source
+author/category/tags, presentation-only official comparison, and citation 139
+Stat. 80–81. Its page links to Impact 10101; Impact links back to the enacted
+text. Desktop 1440 and mobile 390 checks passed with no overflow/errors. Deep
+Title VII opened progressively while 87 summary nodes stayed collapsed.
+
+Live Worker `ebce4f27-f39e-4e4f-b95d-7049c5ffd313` serves both reciprocal
+Section 10101 routes with their correct topic boundaries. `publishOnBuild` was
+false and there were no Discourse writes.
+
+Post-deploy read-only checks confirmed topic 34 is still the independent
+category-5 source with first poster `editor` and one post, while topic 434 is
+still the category-18 Impact discussion with first poster `editor` and 12
+posts. Topic 34 reports `wiki=false`; do not call this specific source a
+Discourse wiki. Its protection comes from `discussionSourceMode:
+discourse-managed` and `discussionSync: false`. The verification created no
+post or write.
+
+Keep broader batch comparisons, additional OBBBA Text/lens imports, Law as
+Amended, expanding Title VII accessibility proof, and dependency review open.
+
 ## 13. Current Open Inputs
 
 - [ ] Confirm the Discourse category ID for the proof lane.

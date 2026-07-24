@@ -615,8 +615,9 @@ configuration names. Proposed OBBBA destinations are
 `/obbba-text/title-i/...` and `/impact/title-i/...`; redirects are not required
 at this stage.
 
-Package implementation is complete at `e775af3` with Code Boss PASS and
-103/103 tests. `discover-navigation` builds the strict adapter-neutral
+Package implementation is complete at `e775af3`, with bounded public-field
+429 handling corrected at `bc8acb5`. Code Boss final PASS and 106/106 tests
+plus typecheck passed. `discover-navigation` builds the strict adapter-neutral
 navigation manifest read-only from category, exact tag-group, and index-topic
 authority. `DiscussionNavigation` provides progressive presentation, and the
 Starlight sidebar adapter plus plain Astro demo consume the result. Authored
@@ -630,10 +631,20 @@ Core Astro built exactly three public routes; the non-routed importer fixture
 validated generated scalar provenance. Desktop/mobile browser checks passed
 without horizontal overflow and showed navigation plus reciprocal links.
 
-This is package/demo implementation evidence, not OBBBA adoption. The OBBBA
-site has not installed this artifact in this pass; full Title VII responsive
-and accessibility scale proof remains open; Law as Amended is not in the
-current Astro adoption.
+OBBBA adopted the corrected artifact at `dd9c100`. Exact clean install/build
+passed with 18 public HTML routes. Read-only discovery produced 18 exact
+hierarchy tag groups and 16 local bindings: OBBBA Text category 5/index topic
+12 contained 381 nodes and one local route; Impact category 18/index topic 435
+contained 317 nodes and 15 local routes. The progressive sidebar places OBBBA
+Text before Impact; unimported nodes use forum fallbacks and local nodes use
+canonical Astro routes.
+
+Desktop 1440 and mobile 390 checks passed with no overflow or page errors.
+Deep Title VII opened progressively while 87 summary nodes remained collapsed;
+the mobile menu was usable and locked body scroll while open. This closes the
+current full-hierarchy desktop/mobile adoption proof. Broader responsive and
+accessibility verification remains open as more content is imported. Law as
+Amended remains outside current Astro adoption.
 
 ### Official-Source Enrichment And Cross-Lens Relations
 
@@ -698,10 +709,36 @@ Congress.gov hosts, including final redirects; USLM XML is primary, official
 TXT is fallback, and PDF is optional visual evidence. Only an explicit
 per-entry override permits a substantive comparison result.
 
-No-overwrite imports skip before raw-post or official-source reads. Batch
-official-source comparison beyond the bounded Section 10101 evidence remains
-open, as do OBBBA artifact adoption and live rendering. Law as Amended remains
-outside current Astro adoption.
+No-overwrite imports skip before raw-post or official-source reads. OBBBA topic
+34 is now locally imported as `discourse-managed` with `discussionSync: false`,
+source author/category/tags preserved, official comparison
+`presentation-only`, and citation 139 Stat. 80–81. All 15 Impact pages carry
+`contentLens: impact` and stable `sectionId`; reciprocal Section 10101 links
+render in both directions.
+
+Live deployment of `dd9c100` is Worker
+`ebce4f27-f39e-4e4f-b95d-7049c5ffd313`. The official-text and Impact routes
+both return 200 with the expected provenance, citation, relation, and topic
+markers; live sidebar order is OBBBA Text before Impact. `publishOnBuild` was
+false and no Discourse publication/sync occurred.
+
+Post-deploy read-only GETs confirmed both independent Discourse identities:
+source topic 34 remains category 5 with first poster `editor`, one post,
+`last_posted_at` `2025-07-14T17:03:43.795Z`; Impact topic 434 remains category
+18 with first poster `editor`, 12 posts, `last_posted_at`
+`2026-07-22T05:14:56.195Z`. Topic 34 currently reports `wiki=false`; do not
+describe this specific topic as a wiki. It remains the protected
+`discourse-managed` source under the Bridge source-mode contract. These GETs
+produced no post or write.
+
+Batch official-source comparison beyond Section 10101, additional OBBBA Text
+imports/lenses, Law as Amended, broader scale/accessibility proof, and the
+reported dependency vulnerabilities remain open.
+
+Public Discourse 429 handling uses sequential tag-group reads, retries only
+429, allows at most three retries, honors bounded `Retry-After` seconds/date or
+fallback delay, and cancels rejected bodies with a 50 ms bound. It never
+retries 403.
 
 ### After Alpha
 

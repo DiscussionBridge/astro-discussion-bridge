@@ -966,6 +966,76 @@ next_title_i_batch:
     unrelated_changes: preserved
 ```
 
+## 11B. Official Source Navigation Adoption
+
+```yaml
+official_navigation_adoption:
+  package:
+    implementation: e775af3
+    correction: bc8acb5
+    tests: 106/106
+    typecheck: PASS
+    artifact: astro-discussion-bridge-0.1.0-alpha-bc8acb5-1c6d4827.tgz
+    SHA256: 1c6d482769380e8aca57c56a3ec056d95883b897d9b7e17ad6c2c31414413e42
+    files: 52
+    bytes: 86870
+  OBBBA:
+    commit: dd9c100
+    review: Code_Boss_PASS_exact_25_file_slice
+    clean_build: { status: PASS, HTML_routes: 18 }
+    tag_groups: 18
+    local_bindings: 16
+    OBBBA_Text: { category: 5, index_topic: 12, nodes: 381, local_routes: 1 }
+    Impact: { category: 18, index_topic: 435, nodes: 317, local_routes: 15 }
+    Section_10101:
+      source_topic: 34
+      source_mode: discourse-managed
+      discussionSync: false
+      Discourse_wiki: false
+      official_comparison: presentation-only
+      citation: 139 Stat. 80-81
+      reciprocal_impact_topic: 434
+    post_deploy_topic_identity_GET:
+      topic_34:
+        title: Sec. 10101. Re-evaluation of thrifty food plan
+        category: 5
+        first_poster: editor
+        posts_count: 1
+        last_posted_at: 2025-07-14T17:03:43.795Z
+        wiki: false
+      topic_434:
+        category: 18
+        first_poster: editor
+        posts_count: 12
+        last_posted_at: 2026-07-22T05:14:56.195Z
+      writes: 0
+  visual:
+    desktop_1440: PASS
+    mobile_390: PASS
+    deep_Title_VII_collapsed_summaries: 87
+    horizontal_overflow: false
+    page_errors: 0
+  deployment:
+    Worker: ebce4f27-f39e-4e4f-b95d-7049c5ffd313
+    official_route_HTTP: 200
+    impact_route_HTTP: 200
+    publishOnBuild: false
+    Discourse_writes: 0
+  public_429:
+    reads: sequential_tag_groups
+    retry_only: 429
+    max_retries: 3
+    Retry_After: capped_seconds_or_date_with_fallback
+    rejected_body_cancel_ms_max: 50
+    retry_403: false
+  open:
+    - batch_comparisons_beyond_Section_10101
+    - additional_OBBBA_Text_and_lenses
+    - Law_as_Amended
+    - broader_Title_VII_accessibility_as_content_expands
+    - npm_findings_1_low_1_moderate_6_high
+```
+
 ## 12. Durable Feedback Rule
 
 When the OBBBA lane confirms package behavior, embed settings, category/tags,

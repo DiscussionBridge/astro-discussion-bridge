@@ -447,8 +447,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Design, implement, and review a canonical navigation/taxonomy manifest generated
       from Discourse content-lens categories, hierarchy tag groups, and
       authored index topics. Index topics—not tag-group member order—must
-      control labels, landing pages, and navigation order. Commit `e775af3`;
-      Code Boss PASS; package 103/103.
+      control labels, landing pages, and navigation order. Commits `e775af3`
+      and `bc8acb5`; Code Boss final PASS; package 106/106 plus typecheck.
 - [x] Preserve source tags as provenance while explicitly excluding workflow
       tags from automatic public navigation. Do not require redundant Title
       tags on index topics or reshape a sound forum taxonomy for the bridge.
@@ -456,21 +456,22 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       show lenses and Titles globally; expand the active lens, Title, and
       Subtitle/Chapter/Subchapter/Part branch; leave other branches collapsed
       but user-expandable; use index pages as the complete browse surface.
-      OBBBA site adoption remains open.
+      OBBBA adoption completed at `dd9c100`.
 - [ ] Provide breadcrumbs, index-authored previous/next, and search. Avoid
       rendering hundreds of inactive Title VII section links on every page,
       preferably including avoidance of unnecessary inactive DOM content.
-- [ ] Verify the navigation adapter on desktop, laptop, tablet, and mobile,
-      including Title VII scale, active-branch drawer behavior, keyboard use,
-      screen-reader use, and appropriate expansion-state preservation.
+- [x] Verify the current full OBBBA hierarchy on desktop 1440 and mobile 390:
+      deep Title VII opens progressively, 87 summary nodes remain collapsed,
+      mobile navigation is usable with body-scroll lock, and no overflow/page
+      errors occur.
 - [x] Generate and review Starlight and plain Astro presentation adapters from
       the canonical manifest. Treat progressive/complete/compact as candidate
       concepts only. Starlight adapter and plain Astro static demo passed;
       browser checks passed on desktop/mobile without horizontal overflow.
-- [ ] Complete full Title VII desktop/laptop/tablet/mobile responsive and
-      accessibility scale proof after OBBBA adoption.
-- [ ] Prove proposed OBBBA routes `/obbba-text/title-i/...` and
-      `/impact/title-i/...`. Redirects are not required for this design stage.
+- [ ] Broaden Title VII responsive/accessibility proof across laptop/tablet,
+      keyboard, and screen-reader use as additional content is imported.
+- [x] Prove OBBBA routes `/obbba-text/title-i/...` and
+      `/impact/title-i/...` in exact adoption `dd9c100` and live deployment.
 - [x] Record the bounded Section 10101 comparison: topic 34/post 40 matched
       USLM `/us/pl/119/21/tI/stA/s10101`; bounded normalization produced 608
       tokens and 3,148 characters on both sides with zero substantive
@@ -496,8 +497,14 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       reimport or manual per-page links.
 - [x] Render accessible Content source, Official text, and Related actions in
       Starlight and plain Astro demo evidence from one adapter-neutral manifest.
-- [ ] Adopt reviewed artifact
-      `astro-discussion-bridge-0.1.0-alpha-e775af3-97cfd631.tgz` in OBBBA,
-      then build/deploy/live-verify navigation, official-source disclosure,
-      and reciprocal relations without expanding the bounded comparison claim.
+- [x] Adopt reviewed artifact
+      `astro-discussion-bridge-0.1.0-alpha-bc8acb5-1c6d4827.tgz` in OBBBA at
+      `dd9c100`; clean-build 18 routes, deploy Worker
+      `ebce4f27-f39e-4e4f-b95d-7049c5ffd313`, and live-verify navigation,
+      official-source disclosure, citation, reciprocal relations, and topics.
+- [x] Handle public Discourse tag-group 429s sequentially: retry only 429,
+      maximum three retries, bounded `Retry-After` seconds/date or fallback,
+      rejected-body cancellation within 50 ms, and never retry 403.
+- [ ] Review OBBBA npm findings (1 low, 1 moderate, 6 high) without automatic
+      `npm audit fix`.
 - [ ] Design future integration lanes for Statamic and other frameworks.

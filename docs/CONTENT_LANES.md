@@ -418,9 +418,11 @@ Provenance/authority disclosures remain separate from Related links.
 Commit `e775af3` implements the package/demo enrichment and relationship
 contracts: strict `us-public-law`, source-tag provenance, stable `sectionId`,
 reciprocal links, one-to-many Stories, and adapter-neutral virtual manifests.
-This is not yet OBBBA site adoption. The bounded Section 10101 comparison
-remains evidence for one source pair only; broader batch comparison is open,
-and Law as Amended is outside current Astro adoption.
+Correction `bc8acb5` completes bounded 429 handling. OBBBA adoption `dd9c100`
+proves one OBBBA Text route, 15 Impact routes, preserved topic-34 source
+metadata, and reciprocal Section 10101 relations live. The bounded Section
+10101 comparison remains evidence for one source pair only; broader batch
+comparison is open, and Law as Amended is outside current Astro adoption.
 
 ## Listing Behavior
 
