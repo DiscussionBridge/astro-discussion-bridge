@@ -78,8 +78,8 @@ imported file by itself is not promotion.
 3. Create the planned tags, or confirm the bot can create them.
 4. Add the exact Astro hostname as an allowed embedding host.
 5. Create a granular publishing key for routine publish and sync operations.
-6. Create a separate diagnostics key for setup checks when granular reads are
-   insufficient.
+6. Create a separate diagnostics key for setup checks and controlled import
+   source reads when granular access is insufficient.
 
 For each key, choose **User Level** and **Scope** independently. `All Users`
 allows the request to act for the supplied `Api-Username`; `Single User` binds
@@ -110,8 +110,8 @@ Operational rule: Use this to validate the minimum permissions needed for normal
 Diagnostics key record:
 
 ```text
-Purpose: Diagnostics/setup key
-Use: check-discourse only
+Purpose: Diagnostics/setup and protected source-read key
+Use: check-discourse; controlled import-existing source reads when granular raw-post access fails
 Bot user role: Admin
 Key user level: Record All Users or Single User and the selected user/actor relationship
 Key selected user: Record when User Level is Single User
@@ -136,8 +136,11 @@ topics:status
 ```
 
 The diagnostics key is currently a global/admin-capable fallback for
-`check-discourse` and controlled troubleshooting. Do not place it in the normal
-runtime or deployment path.
+`check-discourse`, controlled troubleshooting, and controlled
+`import-existing` source reads when the granular key cannot read the required
+raw first post. Do not place it in CI, builds, runtime publishing, or deployment
+configuration. Load it only into the controlled operator session, never print
+it, and remove it after the read/import operation.
 
 Store key values only in a credential vault, session environment, or hosting
 provider secret store. Never place them in source files, screenshots, issues,
@@ -432,9 +435,14 @@ imported topics, and previewed topics 754, 755, 756, 757, 758, 759, 761, 762,
 The OBBBA worked example then saved those ten candidates as a tracked strict v1
 manifest, applied a uniform source/comments/tag/hero/alt/prune policy, and ran a
 credentialed read-only manifest dry-run. Expected evidence was 0 imported, 0
-skipped, 10 dry-run, and `generatedPages=0`. Treat that as candidate-policy and
-dry-run approval only; live import, build, deploy, and route verification remain
-separate gates.
+skipped, 10 dry-run, and `generatedPages=0`.
+
+The live gate later passed for those exact ten topics: 10 Astro files imported,
+zero Discourse writes, clean build, corrected deployment, ten live HTTP-200
+routes, and three removed stock routes returning 404. The first granular-key
+attempt stopped before writing because the required raw-post fallback returned
+403; the controlled retry used the protected diagnostics key in memory. Keep
+that key out of CI/build/runtime publishing and deployment configuration.
 
 For deterministic refresh of pages with different policies, use the reviewed
 Alpha import manifest rather than a blanket update-all operation. Its strict

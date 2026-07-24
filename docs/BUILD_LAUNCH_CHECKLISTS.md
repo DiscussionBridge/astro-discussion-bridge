@@ -372,8 +372,15 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       source/comments/tag/hero/alt/prune policy; strict v1 validation passed,
       dry-run reported 0 imported / 0 skipped / 10 dry-run, and
       `generatedPages=0`.
-- [ ] Run the approved live import for the next OBBBA Title I batch, then pass
-      exact build, deployment, and per-route live verification.
+- [x] Complete the approved live import for the exact ten-topic OBBBA Title I
+      batch, clean build, corrected deployment, and per-route verification:
+      content commit `5cfc99a`, cleanup commit `a5f5df9`, 17-file clean build,
+      ten live HTTP-200 routes, and three stock routes verified 404.
+- [x] Record the raw-post permission boundary: the granular publishing key can
+      read `/t/754.json` but not the required `/posts/761.json` raw fallback;
+      controlled `import-existing` source reads may use the protected
+      diagnostics/global key in memory while CI/build/runtime publishing and
+      deployment use remain prohibited.
 - [ ] Use `repealobbbaact.us` as an Alpha end-stage package-installed test for Discourse-source structured pages, source-mode safety, comments rendering, and Cloudflare deployment.
 - [x] Phil confirmed the optional Discourse plugin vertical slice belongs in
       cumulative Alpha scope.

@@ -374,6 +374,21 @@ topics, and returned the next ten natural-title candidates beginning with topic
 754 (Section 10106); it wrote no files. Implementation, live read-only proof,
 and Code Boss review are complete.
 
+The next OBBBA Title I batch also proved a key-model boundary. The granular
+publishing key could read `/t/754.json`, but that response lacked first-post raw
+and `/posts/761.json` returned 403. The diagnostics/global key could read the
+required raw endpoint. Until Discourse exposes or identifies a suitable
+granular raw-post scope, controlled `import-existing` source reads may use the
+protected diagnostics key in memory. It remains prohibited from CI/build,
+runtime publishing, and deployment configuration.
+
+The exact ten-topic manifest then completed live import, clean build, corrected
+deployment, and per-route verification. Ten Astro files were created with zero
+Discourse writes; all ten canonical routes are live with their expected source,
+hero, disclosure, and discussion boundary. This is bounded OBBBA field
+evidence, not a claim that every Discourse permission model or CDN/WAF policy
+behaves identically.
+
 ## Accessible Hero Imports
 
 Alpha supports an optional leading hero during `import-existing`, but image and

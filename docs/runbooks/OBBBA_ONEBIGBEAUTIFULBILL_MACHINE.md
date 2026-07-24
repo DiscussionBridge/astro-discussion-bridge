@@ -904,8 +904,7 @@ or tied to a different release candidate.
 
 ```yaml
 next_title_i_batch:
-  status: candidate_manifest_and_dry_run_complete
-  live_import_build_deploy: pending
+  status: live_import_build_deploy_and_route_verification_complete
   OBBBA_commits: [308d751, 30d8abe]
   manifest: discussionbridge-imports-title-i-10106-10306.json
   order: natural_numbered_title
@@ -933,11 +932,38 @@ next_title_i_batch:
     Astro_content_writes: 0
     secret_output: none
     unrelated_worktree_changes: preserved
-  remaining_gate:
-    - approved_live_import
-    - exact_build
-    - deployment
-    - per_route_live_verification
+  granular_source_read_limit:
+    actor: obbba-bot
+    topic_endpoint: { path: /t/754.json, publishing_HTTP: 200, diagnostics_HTTP: 200, first_post_raw: absent }
+    raw_post_endpoint: { path: /posts/761.json, publishing_HTTP: 403, diagnostics_read: PASS }
+    first_attempt: stopped_pre_write_invalid_access
+    Discourse_writes: 0
+    operational_rule: diagnostics_global_capability_required_for_controlled_import_source_reads_when_granular_raw_post_access_is_unavailable
+  live_import:
+    credential_handling: protected_diagnostics_key_in_memory
+    actor: obbba-bot
+    imported: 10
+    skipped: 0
+    dry_run: 0
+    Discourse_writes: 0
+    Astro_files_created: 10
+    content_commit: 5cfc99a
+    generated_contract_review: Code_Boss_PASS
+  cleanup_and_deploy:
+    first_worker_version_with_stock_routes: cb6802b9-fd9a-4103-9c2c-77a0adac7427
+    cleanup_commit: a5f5df9
+    cleanup_review: Code_Boss_PASS
+    clean_detached_build: PASS
+    HTML_files: 17
+    intended_new_routes_and_OG_routes: 10
+    stock_content_routes_in_build: 0
+    corrected_worker_version: 2fa24e22-2f79-4053-9f3b-436cf9f776b4
+    canonical_routes_HTTP_200: 10
+    propagation_404_resolved_topics: [758, 759]
+    homepage_marker: One Big Beautiful Bill Impact
+    stock_routes_HTTP_404: 3
+    origin_main_equals_local_HEAD: a5f5df9
+    unrelated_changes: preserved
 ```
 
 ## 12. Durable Feedback Rule

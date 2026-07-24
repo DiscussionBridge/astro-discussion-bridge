@@ -107,10 +107,10 @@ moderator capability even when the key has the matching endpoint scope.
 
 ### Diagnostics Key
 
-Current fallback: global/admin-capable, read-oriented setup key. Use through
-`check-discourse` only; that command performs the applicable site metadata,
-capability, and setup reads. Do not use this key for publishing, reconciliation,
-or routine runtime/deploy paths.
+Current fallback: global/admin-capable, read-oriented setup/source key. Use for
+`check-discourse` and controlled `import-existing` source reads when the
+granular key cannot read the required raw post. Do not use this key for
+publishing, reconciliation, CI/build, or routine runtime/deploy paths.
 
 Target future state: a granular diagnostics/read key after required Discourse
 site metadata scopes are confirmed.
@@ -136,8 +136,8 @@ Operational rule: Use this to validate the minimum permissions needed for normal
 Diagnostics key:
 
 ```text
-Purpose: Diagnostics/setup key
-Use: check-discourse only
+Purpose: Diagnostics/setup and protected source-read key
+Use: check-discourse; controlled import-existing source reads when granular raw-post access fails
 Bot user role: Admin
 Key scope: Global or admin-read capable
 Operational rule: Do not use in CI/build unless explicitly intended
@@ -552,8 +552,20 @@ site_specific_dry_run_example:
   route_base: title-i
   result: { imported: 0, skipped: 0, dry_run: 10, generatedPages: 0 }
   writes: { Discourse: 0, Astro_content: 0 }
-  proven_gate: candidate_manifest_policy_and_dry_run
-  still_open: [live_import, build, deploy, live_route_verification]
+  completed_followup:
+    granular_attempt:
+      topic_endpoint: { path: /t/754.json, HTTP: 200, first_post_raw: absent }
+      raw_post_fallback: { path: /posts/761.json, HTTP: 403 }
+      result: stopped_pre_write_invalid_access
+    operational_rule: use_protected_diagnostics_global_key_for_controlled_import_source_reads_when_granular_raw_post_access_fails
+    live_import: { imported: 10, skipped: 0, dry_run: 0, Discourse_writes: 0 }
+    content_commit: 5cfc99a
+    cleanup_commit: a5f5df9
+    clean_build_HTML: 17
+    corrected_worker_version: 2fa24e22-2f79-4053-9f3b-436cf9f776b4
+    live_routes: { expected: 10, HTTP_200: 10 }
+    stock_routes: { expected_404: 3, verified_404: 3 }
+  proven_gate: live_import_build_deploy_and_per_route_verification
 alpha_requirement: true
 ```
 

@@ -563,8 +563,30 @@ filesystem check confirmed `generatedPages=0`. No Discourse or Astro content
 write occurred, no secret was printed, and unrelated OBBBA worktree changes
 were preserved.
 
-> **Still open:** perform the approved live import, exact build, deployment,
-> and per-route live verification. This dry-run does not close those gates.
+The exact ten-topic gate is now complete. The first live attempt used the
+granular publishing key and stopped before writing with `403 invalid_access`:
+`/t/754.json` was readable, but the first-post raw was absent and the required
+fallback `/posts/761.json` was forbidden. The diagnostics/global key could read
+that raw-post endpoint. Current `import-existing` source reads therefore need
+diagnostics/global capability when no suitable granular raw-post scope is
+available.
+
+The controlled retry loaded the diagnostics key in memory and imported all ten
+Astro files: 10 imported, 0 skipped, 0 dry-run, and zero Discourse writes. Code
+Boss passed the uniform generated contract. OBBBA commit `5cfc99a` contains the
+ten imported files.
+
+The first deployment briefly exposed three tracked stock starter routes because
+the intended cleanup was still unstaged. Code Boss reviewed that exact
+four-file cleanup, committed as `a5f5df9`. A clean detached build at `a5f5df9`
+produced 17 HTML files, the ten intended routes and OG routes, and no stock
+content routes. The corrected Worker version is
+`2fa24e22-2f79-4053-9f3b-436cf9f776b4`.
+
+All ten canonical routes now return HTTP 200 with the matching Repeal OBBBA
+topic, hero, Content source disclosure, and discussion marker. Temporary
+propagation 404s on topics 758 and 759 resolved to 200. The homepage shows
+**One Big Beautiful Bill Impact**, and all three stock routes return 404.
 
 ## 13. Current Open Inputs
 

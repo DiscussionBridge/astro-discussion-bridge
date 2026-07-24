@@ -7,13 +7,16 @@ DiscussionBridge uses Discourse API keys to publish, sync, diagnose, and recover
 Use separate keys when possible:
 
 - publishing key: normal `publish-new`, `sync-existing`, and `publish-and-sync` runs
-- diagnostics key: setup checks with `check-discourse`
+- diagnostics key: setup checks with `check-discourse` and controlled
+  `import-existing` source reads when the granular key cannot read raw posts
 - recovery/admin key: rare repair operations that need broader authority
 
 For Alpha, the practical model is:
 
 - use a granular publishing key when it can create topics/posts, read linked topics/posts, update managed first posts, update topic metadata, update tags, and unlist when needed
-- use a global/admin-capable diagnostics key when granular keys cannot read the site metadata or reconciliation endpoints needed by `check-discourse`
+- use a global/admin-capable diagnostics key when granular keys cannot read the
+  site metadata, reconciliation endpoints, or raw source posts needed by
+  `check-discourse` or controlled `import-existing`
 
 Established product rule: when documenting or requesting a granular publishing key, provide the exact Discourse scope settings. Do not describe the publishing key as "similar", "roughly", or "mostly" once a product key model has been settled.
 
@@ -115,7 +118,9 @@ topics status
 
 ## Required Diagnostics Capabilities
 
-`check-discourse` is read-only, but useful diagnostics may require endpoints that granular keys cannot always read.
+`check-discourse` and controlled import source reads are read-oriented, but
+useful diagnostics and first-post raw may require endpoints that granular keys
+cannot always read.
 
 It may inspect:
 
@@ -123,6 +128,8 @@ It may inspect:
 - `/site.json` for user-specific capabilities such as tag permissions
 - `/categories.json` for category existence
 - `/tags.json` for tag inventory
+- `/posts/{id}.json` when `import-existing` must fall back from topic JSON to
+  retrieve first-post raw
 - `/embed/info?embed_url=...` for existing embedded-topic reconciliation
 - exact URL search as a fallback reconciliation check
 
@@ -239,8 +246,8 @@ Key
 ### Diagnostics Key File
 
 ```text
-Purpose: Diagnostics/setup key
-Use: check-discourse only
+Purpose: Diagnostics/setup and protected source-read key
+Use: check-discourse; controlled import-existing source reads when granular raw-post access fails
 Bot user role: Admin
 Key user level: Record All Users or Single User and the selected user/actor relationship
 Key scope: Global or admin-read capable
@@ -262,7 +269,7 @@ Scope
 Global or admin-read capable
 
 Permissions
-check-discourse only; global or admin-read capability as required by setup checks
+read-only diagnostics and controlled import-existing source reads; global or admin-read capability as required
 
 Key
 {paste key here}
