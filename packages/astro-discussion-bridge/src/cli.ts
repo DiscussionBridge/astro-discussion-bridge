@@ -14,6 +14,13 @@ import {
   type ImportDiscoveryStatus,
 } from "./import-discovery.js";
 import { importExistingDiscourseManifest, loadImportManifest } from "./import-manifest.js";
+import {
+  buildNavigationContentBindings,
+  discoverDiscourseNavigation,
+  loadNavigationDiscoveryConfig,
+  writeNavigationManifest,
+  type NavigationNode,
+} from "./navigation.js";
 import { syncDiscourseTopics, type DiscoursePreflightLimits, type SyncMode } from "./sync/index.js";
 
 main().catch((error: unknown) => {
@@ -36,6 +43,7 @@ async function main() {
     "publish-and-sync",
     "import-existing",
     "discover-imports",
+    "discover-navigation",
     "check-discourse",
   ]);
 
@@ -88,6 +96,7 @@ const pruneProfiles = pruneProfilesFromValue(args.values.get("prune-profile"));
 const sourceMode = sourceModeFromValue(args.values.get("source-mode"));
 const manifestPath = args.values.get("manifest");
 const manifestOutPath = args.values.get("manifest-out");
+const navigationConfigPath = args.values.get("config");
 const discoveryCategory = args.values.get("category");
 const listCategories = args.flags.has("list-categories");
 const discoveryStatus = (args.values.get("status") ?? "all") as ImportDiscoveryStatus;
@@ -104,6 +113,7 @@ const missing = [
   ...(args.flags.has("source-mode") ? ["a value after --source-mode"] : []),
   ...(args.flags.has("manifest") ? ["a value after --manifest"] : []),
   ...(args.flags.has("manifest-out") ? ["a value after --manifest-out"] : []),
+  ...(args.flags.has("config") ? ["a value after --config"] : []),
   ...(args.flags.has("category") ? ["a value after --category"] : []),
   ...(args.flags.has("status") ? ["a value after --status"] : []),
   ...(args.flags.has("order") ? ["a value after --order"] : []),
@@ -116,21 +126,30 @@ const missing = [
   ...(args.values.has("source-mode") && !args.values.get("source-mode")?.trim() ? ["a non-empty --source-mode value"] : []),
   ...(args.values.has("manifest") && !manifestPath?.trim() ? ["a non-empty --manifest value"] : []),
   ...(args.values.has("manifest-out") && !manifestOutPath?.trim() ? ["a non-empty --manifest-out value"] : []),
+  ...(args.values.has("config") && !navigationConfigPath?.trim() ? ["a non-empty --config value"] : []),
   ...(args.values.has("category") && !discoveryCategory?.trim() ? ["a non-empty --category value"] : []),
   ...(args.values.has("limit") && discoveryLimit === undefined ? ["a numeric --limit value"] : []),
   ...(args.values.has("created-from") && !discoveryCreatedFrom?.trim() ? ["a non-empty --created-from value"] : []),
   ...(args.values.has("created-to") && !discoveryCreatedTo?.trim() ? ["a non-empty --created-to value"] : []),
   ...(!discourseUrl ? ["DISCOURSE_URL or --discourse-url"] : []),
-  ...(!siteUrl && command !== "check-discourse" && command !== "discover-imports" ? ["SITE_URL or --site-url"] : []),
-  ...(!dryRun && !["check-discourse", "import-existing", "discover-imports"].includes(command) && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
+  ...(!siteUrl && !["check-discourse", "discover-imports"].includes(command) ? ["SITE_URL or --site-url"] : []),
+  ...(!dryRun && !["check-discourse", "import-existing", "discover-imports", "discover-navigation"].includes(command) && !apiKey ? ["DISCOURSE_API_KEY or --api-key"] : []),
   ...(!dryRun && command === "import-existing" && !importApiKey ? ["DISCOURSE_DIAGNOSTICS_API_KEY, DISCOURSE_API_KEY, --diagnostics-api-key, or --api-key"] : []),
-  ...(!dryRun && !["check-discourse", "discover-imports"].includes(command) && !apiUsername
+  ...(!dryRun && !["check-discourse", "discover-imports", "discover-navigation"].includes(command) && !apiUsername
     ? ["DISCOURSE_POST_AS, --post-as, DISCOURSE_API_USERNAME, or --api-username"]
+    : []),
+  ...(command === "discover-navigation" && Boolean(importApiKey) !== Boolean(apiUsername)
+    ? ["both a diagnostics/API key and posting actor when authenticated navigation discovery is used"]
     : []),
   ...(command === "import-existing" && topics.length === 0 && !manifestPath ? ["--topic URL[,URL], --topic-id ID[,ID], or --manifest FILE"] : []),
   ...(command === "import-existing" && manifestPath && hasDirectImportOptions ? ["use --manifest without --topic, --comments-display, --hero-image, --hero-alt, --prune-profile, or --source-mode"] : []),
   ...(command !== "import-existing" && manifestPath ? ["--manifest is only valid with import-existing"] : []),
-  ...(command !== "discover-imports" && manifestOutPath ? ["--manifest-out is only valid with discover-imports"] : []),
+  ...(!["discover-imports", "discover-navigation"].includes(command) && manifestOutPath
+    ? ["--manifest-out is only valid with discover-imports or discover-navigation"]
+    : []),
+  ...(command === "discover-navigation" && !navigationConfigPath ? ["--config FILE"] : []),
+  ...(command === "discover-navigation" && !manifestOutPath ? ["--manifest-out FILE"] : []),
+  ...(command !== "discover-navigation" && navigationConfigPath ? ["--config is only valid with discover-navigation"] : []),
   ...(command === "discover-imports" && !listCategories && !discoveryCategory ? ["--category ID|SLUG|NAME or --list-categories"] : []),
   ...(command === "import-existing" && heroImage && !heroAlt?.trim() ? ["--hero-alt TEXT when --hero-image is used"] : []),
   ...(command === "import-existing" && heroAlt && !heroImage ? ["--hero-image PATH when --hero-alt is used"] : []),
@@ -139,6 +158,37 @@ const missing = [
 if (missing.length > 0) {
   printMissingConfiguration({ command, missing, dryRun });
   process.exit(1);
+}
+
+if (command === "discover-navigation") {
+  const config = await loadNavigationDiscoveryConfig(navigationConfigPath!.trim());
+  const content = await buildNavigationContentBindings({
+    projectRoot: process.cwd(),
+    siteUrl: siteUrl!,
+    sources: config.contentSources,
+  });
+  const manifest = await discoverDiscourseNavigation({
+    discourseUrl: discourseUrl!,
+    apiKey: importApiKey,
+    apiUsername,
+    hierarchyTagGroups: config.hierarchyTagGroups,
+    lenses: config.lenses,
+    content,
+  });
+  const output = await writeNavigationManifest(manifestOutPath!.trim(), manifest);
+  console.log("Discourse navigation discovery (read-only)");
+  console.log(`Discourse URL: ${manifest.discourseUrl}`);
+  console.log(`Hierarchy tag groups: ${manifest.hierarchyTagGroups.length}`);
+  console.log(`Content bindings: ${content.length}`);
+  for (const lens of manifest.lenses) {
+    console.log(
+      `- ${lens.label}: category ${lens.categoryId}; index topic ${lens.indexTopicId}; `
+      + `${countNavigationNodes(lens.nodes)} authored nodes`,
+    );
+  }
+  console.log(`Manifest written: ${output}`);
+  console.log("No Discourse topics or Astro content files were changed.");
+  process.exit(0);
 }
 
 if (command === "discover-imports") {
@@ -334,12 +384,32 @@ if (command === "import-existing") {
   for (const result of results) {
     const reason = result.reason ? ` (${result.reason})` : "";
     console.log(`${result.status}: ${result.filePath} -> ${result.topicUrl}${reason}`);
+    if (result.officialSourceComparison) {
+      console.log(
+        `  official source: ${result.officialSourceComparison}`
+        + `${result.officialCitation ? ` (${result.officialCitation})` : ""}`,
+      );
+    }
   }
 
   const imported = results.filter((result) => result.status === "imported").length;
   const skipped = results.filter((result) => result.status === "skipped").length;
   const previewed = results.filter((result) => result.status.startsWith("dry-run")).length;
+  const officialComparisons = results.reduce<Record<string, number>>((counts, result) => {
+    if (result.officialSourceComparison) {
+      counts[result.officialSourceComparison] = (counts[result.officialSourceComparison] ?? 0) + 1;
+    }
+    return counts;
+  }, {});
   console.log(`Done: ${imported} imported, ${skipped} skipped, ${previewed} dry-run.`);
+  if (Object.keys(officialComparisons).length) {
+    console.log(
+      "Official-source comparison: "
+      + ["exact", "presentation-only", "substantive-difference", "unresolved"]
+        .map((outcome) => `${outcome} ${officialComparisons[outcome] ?? 0}`)
+        .join(", "),
+    );
+  }
   process.exit(0);
 }
 
@@ -497,6 +567,13 @@ function oneLine(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
+function countNavigationNodes(nodes: NavigationNode[]): number {
+  return nodes.reduce(
+    (count, node) => count + 1 + countNavigationNodes(node.children),
+    0,
+  );
+}
+
 function printUsage(error?: string) {
   if (error) console.error(error);
   if (error) console.error("");
@@ -507,6 +584,7 @@ function printUsage(error?: string) {
   console.error("  astro-discussion-bridge sync-existing [docsDir] [options]");
   console.error("  astro-discussion-bridge publish-and-sync [docsDir] [options]");
   console.error("  astro-discussion-bridge discover-imports [docsDir] --category ID|SLUG|NAME [options]");
+  console.error("  astro-discussion-bridge discover-navigation --config FILE --manifest-out FILE [options]");
   console.error("  astro-discussion-bridge import-existing [docsDir] --topic URL[,URL] [options]");
   console.error("  astro-discussion-bridge check-discourse [options]");
   console.error("");
@@ -515,6 +593,7 @@ function printUsage(error?: string) {
   console.error("  sync-existing     Rewrite/update already linked companion topics; skip pages without discourseTopicId.");
   console.error("  publish-and-sync  Create missing topics and sync existing linked topics in one explicit run.");
   console.error("  discover-imports  Read a Discourse category and preview an ordered import manifest; never imports.");
+  console.error("  discover-navigation  Generate public navigation from authored Discourse index topics; never writes to Discourse.");
   console.error("  import-existing   Import or mirror existing Discourse topics into Astro Markdown.");
   console.error("  check-discourse   Read target forum settings/capabilities before live writes.");
   console.error("  sync              Backward-compatible alias for publish-new.");
@@ -569,6 +648,11 @@ function printUsage(error?: string) {
   console.error("  --manifest-out FILE        Save a new strict v1 manifest; refuses to overwrite.");
   console.error("  --json                     Print the generated manifest after the human preview.");
   console.error("");
+  console.error("Navigation discovery options:");
+  console.error("  --config FILE              Strict JSON lens, index-topic, tag-group, and content-source configuration.");
+  console.error("  --manifest-out FILE        Create a navigation manifest; refuses to overwrite.");
+  console.error("  --diagnostics-api-key KEY  Optional read-capable key when public endpoints are restricted.");
+  console.error("");
   console.error("Diagnostics options:");
   console.error("  --diagnostics-api-key KEY  Use a broader/read-capable key for check-discourse and raw imports.");
   console.error("  --page-url URL             Test existing-topic reconciliation for one Astro page URL.");
@@ -576,6 +660,7 @@ function printUsage(error?: string) {
   console.error("Examples:");
   console.error("  astro-discussion-bridge check-discourse --category-id 5 --tags discussionbridge,docs --discourse-url https://forum.example.com");
   console.error("  astro-discussion-bridge discover-imports src/content/docs --category guides --tags guide --order oldest --limit 10 --manifest-out imports/guides.json --discourse-url https://forum.example.com");
+  console.error("  astro-discussion-bridge discover-navigation --config navigation.config.json --manifest-out src/generated/navigation.json --discourse-url https://forum.example.com --site-url https://example.com");
   console.error("  astro-discussion-bridge publish-new src/content/docs --dry-run --details --discourse-url https://forum.example.com --site-url https://docs.example.com");
   console.error("  astro-discussion-bridge sync-existing src/content/blog --route-base blog --force --details");
 }

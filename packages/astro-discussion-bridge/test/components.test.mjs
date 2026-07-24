@@ -57,7 +57,38 @@ test("source disclosure is accessible and links to the source discussion", async
   );
 
   assert.match(source, /aria-label="Content source"/);
-  assert.match(source, /<strong>Source:<\/strong>/);
+  assert.match(source, /<strong>Content source:<\/strong>/);
   assert.match(source, /View the source discussion/);
   assert.match(source, /resolveDiscussionSourceNotice/);
+  assert.match(source, /<strong>Official text:<\/strong>/);
+  assert.match(source, /parseOfficialTextMetadata/);
+});
+
+test("related content renders an accessible cross-lens navigation boundary", async () => {
+  const relations = await readFile(
+    new URL("../src/components/DiscussionRelations.astro", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(relations, /aria-label="Related content"/);
+  assert.match(relations, /resolveContentRelationships/);
+  assert.match(relations, /virtual:discussion-bridge\/relationships/);
+  assert.match(relations, /relationship\.entries\.length === 1/);
+});
+
+test("progressive navigation renders accessible nested details and active-page state", async () => {
+  const navigation = await readFile(
+    new URL("../src/components/DiscussionNavigation.astro", import.meta.url),
+    "utf8",
+  );
+  const branch = await readFile(
+    new URL("../src/components/DiscussionNavigationBranch.astro", import.meta.url),
+    "utf8",
+  );
+  assert.match(navigation, /aria-label="Content navigation"/);
+  assert.match(navigation, /activeNavigationBranch/);
+  assert.match(navigation, /<details/);
+  assert.match(branch, /<Astro\.self/);
+  assert.match(branch, /aria-current=/);
+  assert.match(branch, /node\.url \?\? node\.sourceUrl/);
 });

@@ -1,7 +1,56 @@
 ---
 import { getCollection } from "astro:content";
+import DiscussionNavigation from "astro-discussion-bridge/DiscussionNavigation.astro";
+import type { DiscussionNavigationManifest } from "astro-discussion-bridge";
 
 const posts = await getCollection("blog");
+const navigationManifest = {
+  version: 1,
+  generatedAt: "2026-07-23T00:00:00.000Z",
+  discourseUrl: "https://forum.discussionbridge.dev",
+  hierarchyTagGroups: [
+    { name: "Demo structure", tags: ["guide", "impact"] },
+  ],
+  lenses: [
+    {
+      key: "guide",
+      label: "Guides",
+      categoryId: 6,
+      indexTopicId: 36,
+      indexSourceUrl: "https://forum.discussionbridge.dev/t/how-to-choose-a-discussion-bridge-source-mode/36",
+      nodes: [
+        {
+          id: "guide-core",
+          topicId: 34,
+          label: "Core Astro",
+          kind: "section",
+          sourceUrl: "https://forum.discussionbridge.dev/t/core-astro-discussion-bridge-demo/34",
+          url: "https://astro.demo.discussionbridge.dev/blog/core-astro-bridge/",
+          sourceTags: ["discussionbridge", "guide"],
+          children: [],
+        },
+      ],
+    },
+    {
+      key: "impact",
+      label: "Impact",
+      categoryId: 5,
+      indexTopicId: 37,
+      indexSourceUrl: "https://forum.discussionbridge.dev/t/every-connection-has-a-job/37",
+      nodes: [
+        {
+          id: "impact-core",
+          topicId: 37,
+          label: "Community continuity",
+          kind: "section",
+          sourceUrl: "https://forum.discussionbridge.dev/t/every-connection-has-a-job/37",
+          sourceTags: ["discussionbridge", "impact"],
+          children: [],
+        },
+      ],
+    },
+  ],
+} satisfies DiscussionNavigationManifest;
 ---
 
 <!doctype html>
@@ -23,6 +72,12 @@ const posts = await getCollection("blog");
       <ul>
         {posts.map((post) => <li><a href={`/blog/${post.id}/`}>{post.data.title}</a></li>)}
       </ul>
+      <h2>Progressive content navigation</h2>
+      <p>
+        The same manifest can drive plain Astro navigation or a Starlight sidebar without
+        treating source tags as public presentation.
+      </p>
+      <DiscussionNavigation manifest={navigationManifest} />
     </main>
   </body>
 </html>

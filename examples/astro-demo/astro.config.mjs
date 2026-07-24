@@ -15,6 +15,20 @@ export default defineConfig({
       replies: {
         refreshEndpoint: "/api/discourse/topics/{topicId}.json",
       },
+      relationships: {
+        enabled: true,
+        sources: [{ docsDir: "src/content/blog", routeBase: "blog" }],
+        lenses: {
+          guide: {
+            label: "Guides",
+            singularCallToAction: "Read the guide",
+          },
+          impact: {
+            label: "Impact",
+            singularCallToAction: "Read about the impact",
+          },
+        },
+      },
       publishOnBuild: {
         enabled: false,
         lanes: [

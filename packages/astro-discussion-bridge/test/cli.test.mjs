@@ -55,3 +55,36 @@ test("CLI accepts --post-as and reports the selected request actor", async () =>
     await rm(dir, { force: true, recursive: true });
   }
 });
+
+test("anonymous navigation discovery asks for config/output without requiring publishing credentials", async () => {
+  await assert.rejects(
+    execFileAsync(
+      process.execPath,
+      [
+        path.resolve("dist/cli.js"),
+        "discover-navigation",
+        "--discourse-url",
+        "https://forum.example.com",
+        "--site-url",
+        "https://example.com",
+      ],
+      {
+        cwd: path.resolve("."),
+        env: {
+          ...process.env,
+          DISCOURSE_API_KEY: "",
+          DISCOURSE_DIAGNOSTICS_API_KEY: "",
+          DISCOURSE_POST_AS: "",
+          DISCOURSE_API_USERNAME: "",
+        },
+      },
+    ),
+    (error) => {
+      assert.match(error.stderr, /--config FILE/);
+      assert.match(error.stderr, /--manifest-out FILE/);
+      assert.doesNotMatch(error.stderr, /DISCOURSE_API_KEY or --api-key/);
+      assert.doesNotMatch(error.stderr, /DISCOURSE_POST_AS/);
+      return true;
+    },
+  );
+});

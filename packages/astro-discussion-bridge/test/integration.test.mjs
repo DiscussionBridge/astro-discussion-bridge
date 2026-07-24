@@ -26,6 +26,59 @@ test("invalid site-level connection jobs fail during integration setup", () => {
   );
 });
 
+test("Astro integration exposes a rebuild-time relationship manifest", async () => {
+  const projectRoot = await mkdtemp(path.join(tmpdir(), "discussion-bridge-relationship-integration-"));
+  const docsDir = path.join(projectRoot, "src", "content", "docs");
+  let plugins = [];
+
+  try {
+    await mkdir(path.join(docsDir, "impact"), { recursive: true });
+    await writeFile(
+      path.join(docsDir, "impact", "section-10101.md"),
+      [
+        "---",
+        'title: "Section 10101 Impact"',
+        'contentLens: "impact"',
+        'sectionId: "10101"',
+        "---",
+        "",
+        "Impact.",
+      ].join("\n"),
+    );
+    const integration = discussionBridge({
+      preset: "starlight",
+      discourseUrl: "https://forum.example.com",
+      siteUrl: "https://example.com",
+      relationships: {
+        enabled: true,
+        lenses: {
+          impact: {
+            label: "Impact",
+            callToAction: "Explore the impact",
+          },
+        },
+      },
+    });
+    await integration.hooks["astro:config:setup"]({
+      config: { root: pathToFileURL(`${projectRoot}${path.sep}`) },
+      updateConfig(config) {
+        plugins = config.vite?.plugins ?? [];
+      },
+    });
+    assert.equal(plugins.length, 1);
+    const resolved = plugins[0].resolveId("virtual:discussion-bridge/relationships");
+    const source = plugins[0].load(resolved);
+    assert.equal(typeof source, "string");
+    const manifest = JSON.parse(source.replace(/^export default /, "").replace(/;$/, ""));
+    assert.equal(manifest.entries.length, 1);
+    assert.equal(manifest.entries[0].url, "https://example.com/impact/section-10101/");
+    assert.deepEqual(manifest.entries[0].sectionIds, ["10101"]);
+    assert.equal(manifest.lenses.impact.callToAction, "Explore the impact");
+  } finally {
+    await rm(projectRoot, { force: true, recursive: true });
+  }
+});
+
 test("publishOnBuild lanes can publish one page to independent Discourse targets", async () => {
   const projectRoot = await mkdtemp(path.join(tmpdir(), "discussion-bridge-build-targets-"));
   const docsDir = path.join(projectRoot, "src", "content", "blog");

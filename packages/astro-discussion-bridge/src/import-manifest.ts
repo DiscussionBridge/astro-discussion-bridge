@@ -7,6 +7,10 @@ import {
   type ImportPruneProfile,
   type ImportSourceMode,
 } from "./import-existing.js";
+import {
+  validateOfficialSourceProfile,
+  type OfficialSourceProfile,
+} from "./official-source.js";
 
 export interface ImportManifestEntry {
   topic: string;
@@ -17,19 +21,39 @@ export interface ImportManifestEntry {
   output?: string;
   requiredTags?: string[];
   sourceMode?: ImportSourceMode;
+  sectionId?: string;
+  contentLens?: string;
+  officialSource?: string;
+  allowSubstantiveDifference?: boolean;
 }
 
 export interface ImportManifest {
-  version: 1;
+  version: 1 | 2;
+  officialSources?: Record<string, OfficialSourceProfile>;
   imports: ImportManifestEntry[];
 }
 
-const entryKeys = new Set(["topic", "commentsDisplay", "heroImage", "heroAlt", "pruneProfiles", "output", "requiredTags", "sourceMode"]);
-const rootKeys = new Set(["version", "imports"]);
+const entryKeys = new Set([
+  "topic",
+  "commentsDisplay",
+  "heroImage",
+  "heroAlt",
+  "pruneProfiles",
+  "output",
+  "requiredTags",
+  "sourceMode",
+  "sectionId",
+  "contentLens",
+  "officialSource",
+  "allowSubstantiveDifference",
+]);
+const rootKeys = new Set(["version", "officialSources", "imports"]);
 
 export interface ImportManifestRunOptions extends Omit<
   ImportExistingDiscourseTopicsOptions,
   "topics" | "commentsDisplay" | "heroImage" | "heroAlt" | "pruneProfiles" | "outputFile" | "requiredTags" | "sourceMode"
+  | "sectionId" | "contentLens" | "officialSource" | "officialSourceDocumentCache"
+  | "allowSubstantiveDifference"
 > {
   manifest: ImportManifest;
 }
@@ -51,7 +75,11 @@ export function validateImportManifest(value: unknown, source = "import manifest
   if (!isRecord(value)) throw new Error(`${source} must contain a JSON object.`);
   const unknownRootKeys = Object.keys(value).filter((key) => !rootKeys.has(key));
   if (unknownRootKeys.length) throw new Error(`${source} contains unknown root field(s): ${unknownRootKeys.join(", ")}.`);
-  if (value.version !== 1) throw new Error(`${source} must use version 1.`);
+  if (value.version !== 1 && value.version !== 2) throw new Error(`${source} must use version 1 or 2.`);
+  if (value.version === 1 && value.officialSources !== undefined) {
+    throw new Error(`${source} must use version 2 when officialSources are configured.`);
+  }
+  const officialSources = validateOfficialSources(value.officialSources, source);
   if (!Array.isArray(value.imports) || value.imports.length === 0) {
     throw new Error(`${source} must contain a non-empty imports array.`);
   }
@@ -78,6 +106,31 @@ export function validateImportManifest(value: unknown, source = "import manifest
     const sourceMode = optionalString(entry.sourceMode, `${label}.sourceMode`);
     if (sourceMode && !["discourse-imported", "discourse-managed"].includes(sourceMode)) {
       throw new Error(`${label}.sourceMode must be discourse-imported or discourse-managed.`);
+    }
+    const sectionId = optionalString(entry.sectionId, `${label}.sectionId`);
+    if (sectionId && !/^[A-Za-z0-9.-]+$/.test(sectionId)) {
+      throw new Error(`${label}.sectionId is invalid.`);
+    }
+    const contentLens = optionalString(entry.contentLens, `${label}.contentLens`);
+    if (contentLens && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(contentLens)) {
+      throw new Error(`${label}.contentLens must be a lowercase slug.`);
+    }
+    if (Boolean(sectionId) !== Boolean(contentLens)) {
+      throw new Error(`${label}.sectionId and contentLens must be configured together.`);
+    }
+    const officialSource = optionalString(entry.officialSource, `${label}.officialSource`);
+    const allowSubstantiveDifference = optionalBoolean(
+      entry.allowSubstantiveDifference,
+      `${label}.allowSubstantiveDifference`,
+    );
+    if ((sectionId || contentLens || officialSource) && value.version !== 2) {
+      throw new Error(`${label} must use manifest version 2 for relationship or official-source fields.`);
+    }
+    if (officialSource && !sectionId) {
+      throw new Error(`${label}.sectionId is required when officialSource is configured.`);
+    }
+    if (officialSource && !officialSources[officialSource]) {
+      throw new Error(`${label}.officialSource references unknown profile: ${officialSource}.`);
     }
 
     const heroImage = optionalString(entry.heroImage, `${label}.heroImage`);
@@ -122,10 +175,18 @@ export function validateImportManifest(value: unknown, source = "import manifest
       ...(output ? { output } : {}),
       ...(requiredTags ? { requiredTags } : {}),
       ...(sourceMode ? { sourceMode: sourceMode as ImportSourceMode } : {}),
+      ...(sectionId ? { sectionId } : {}),
+      ...(contentLens ? { contentLens } : {}),
+      ...(officialSource ? { officialSource } : {}),
+      ...(allowSubstantiveDifference !== undefined ? { allowSubstantiveDifference } : {}),
     };
   });
 
-  return { version: 1, imports };
+  return {
+    version: value.version,
+    ...(Object.keys(officialSources).length ? { officialSources } : {}),
+    imports,
+  };
 }
 
 export async function importExistingDiscourseManifest(
@@ -134,6 +195,7 @@ export async function importExistingDiscourseManifest(
   const docsDir = path.resolve(options.docsDir);
   const manifest = validateImportManifest(options.manifest, "import manifest runner input");
   const previews: Array<{ entry: ImportManifestEntry; result: ImportedDiscourseTopic }> = [];
+  const officialSourceDocumentCache = new Map<string, Promise<string>>();
 
   for (const entry of manifest.imports) {
     const [result] = await importExistingDiscourseTopics({
@@ -147,6 +209,13 @@ export async function importExistingDiscourseManifest(
       outputFile: entry.output,
       requiredTags: entry.requiredTags,
       sourceMode: entry.sourceMode,
+      sectionId: entry.sectionId,
+      contentLens: entry.contentLens,
+      officialSource: entry.officialSource
+        ? manifest.officialSources?.[entry.officialSource]
+        : undefined,
+      officialSourceDocumentCache,
+      allowSubstantiveDifference: entry.allowSubstantiveDifference,
       dryRun: true,
     });
     previews.push({ entry, result });
@@ -155,6 +224,28 @@ export async function importExistingDiscourseManifest(
   validateManifestResultPaths(previews.map(({ result }) => result), docsDir);
 
   if (options.dryRun) return previews.map(({ result }) => result);
+
+  const unresolved = previews.filter(({ result }) =>
+    result.officialSourceComparison === "unresolved"
+  );
+  if (unresolved.length) {
+    throw new Error(
+      `Official source comparison is unresolved for topic(s): ${
+        unresolved.map(({ result }) => result.topicId).join(", ")
+      }. No destination files were changed.`,
+    );
+  }
+  const blockedDifferences = previews.filter(({ entry, result }) =>
+    result.officialSourceComparison === "substantive-difference"
+    && entry.allowSubstantiveDifference !== true
+  );
+  if (blockedDifferences.length) {
+    throw new Error(
+      `Official source comparison found substantive differences for topic(s): ${
+        blockedDifferences.map(({ result }) => result.topicId).join(", ")
+      }. Review the dry-run results before explicitly allowing any difference. No destination files were changed.`,
+    );
+  }
 
   const skipped = previews.filter(({ result }) => result.status === "skipped").map(({ result }) => result);
   const candidates = previews.filter(({ result }) => result.status !== "skipped");
@@ -179,6 +270,13 @@ export async function importExistingDiscourseManifest(
         outputFile: entry.output,
         requiredTags: entry.requiredTags,
         sourceMode: entry.sourceMode,
+        sectionId: entry.sectionId,
+        contentLens: entry.contentLens,
+        officialSource: entry.officialSource
+          ? manifest.officialSources?.[entry.officialSource]
+          : undefined,
+        officialSourceDocumentCache,
+        allowSubstantiveDifference: entry.allowSubstantiveDifference,
         dryRun: false,
         overwrite: true,
       });
@@ -303,6 +401,12 @@ function optionalString(value: unknown, label: string): string | undefined {
   return value.trim();
 }
 
+function optionalBoolean(value: unknown, label: string): boolean | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "boolean") throw new Error(`${label} must be true or false.`);
+  return value;
+}
+
 function validateManifestOutput(value: string, label: string): void {
   const normalized = path.normalize(value);
   if (path.isAbsolute(value) || normalized === ".." || normalized.startsWith(`..${path.sep}`)) {
@@ -311,6 +415,28 @@ function validateManifestOutput(value: string, label: string): void {
   if (!/\.(?:md|mdx)$/i.test(normalized)) {
     throw new Error(`${label} must name a .md or .mdx file.`);
   }
+}
+
+function validateOfficialSources(
+  value: unknown,
+  source: string,
+): Record<string, OfficialSourceProfile> {
+  if (value === undefined) return {};
+  if (!isRecord(value) || Object.keys(value).length === 0) {
+    throw new Error(`${source}.officialSources must be a non-empty object.`);
+  }
+  const profiles: Record<string, OfficialSourceProfile> = {};
+  for (const [name, profile] of Object.entries(value)) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
+      throw new Error(`${source}.officialSources key must be a lowercase slug: ${name}.`);
+    }
+    try {
+      profiles[name] = validateOfficialSourceProfile(profile);
+    } catch (error) {
+      throw new Error(`${source}.officialSources.${name}: ${errorMessage(error)}`);
+    }
+  }
+  return profiles;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

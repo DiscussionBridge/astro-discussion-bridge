@@ -23,9 +23,17 @@ declare module "virtual:discussion-bridge/config" {
       showLikes: boolean;
       refreshOnPageLoad: boolean;
     };
+    relationships: {
+      enabled: boolean;
+    };
   };
 
   export default config;
+}
+
+declare module "virtual:discussion-bridge/relationships" {
+  const manifest: import("./relationships.js").ContentRelationshipManifest;
+  export default manifest;
 }
 
 interface Window {

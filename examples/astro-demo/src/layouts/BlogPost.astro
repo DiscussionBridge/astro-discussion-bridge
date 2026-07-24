@@ -1,5 +1,6 @@
 ---
 import Discussion from "astro-discussion-bridge/Discussion.astro";
+import DiscussionRelations from "astro-discussion-bridge/DiscussionRelations.astro";
 import DiscussionSource from "astro-discussion-bridge/DiscussionSource.astro";
 
 interface Props {
@@ -50,6 +51,7 @@ const formattedDate = new Intl.DateTimeFormat("en", {
       <article>
         <DiscussionSource frontmatter={Astro.props.frontmatter} />
         <slot />
+        <DiscussionRelations frontmatter={Astro.props.frontmatter} />
       </article>
       <Discussion
         display={Astro.props.commentsDisplay}

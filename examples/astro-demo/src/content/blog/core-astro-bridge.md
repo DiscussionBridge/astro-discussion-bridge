@@ -6,6 +6,8 @@ tags:
   - discussionbridge
   - astro
   - demo
+contentLens: "guide"
+sectionId: "discussion-bridge-core"
 discussionCommentsDisplay: "simple"
 discourseTopicId: 34
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/core-astro-discussion-bridge-demo/34"

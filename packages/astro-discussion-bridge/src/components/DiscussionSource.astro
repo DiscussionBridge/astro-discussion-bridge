@@ -1,5 +1,6 @@
 ---
 import {
+  parseOfficialTextMetadata,
   resolveDiscussionSourceNotice,
   type DiscussionSourceMode,
   type DiscussionTargetBindings,
@@ -16,6 +17,7 @@ interface Props {
   sourceLabel?: string;
   sourceUrl?: string;
   targetBindings?: DiscussionTargetBindings | string;
+  officialText?: unknown;
 }
 
 const frontmatter = Astro.props.frontmatter;
@@ -35,7 +37,12 @@ const notice = resolveDiscussionSourceNotice({
 });
 const className = ["discussion-bridge-source", Astro.props.class].filter(Boolean).join(" ");
 const message = Astro.props.message?.trim() || notice?.message;
-const linkLabel = Astro.props.linkLabel?.trim() || "View the source discussion";
+const officialText = parseOfficialTextMetadata(
+  Astro.props.officialText ?? frontmatter?.officialText,
+);
+const linkLabel = Astro.props.linkLabel?.trim()
+  || stringValue(frontmatter?.discussionSourceLinkLabel)
+  || "View the source discussion";
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value : undefined;
@@ -53,8 +60,13 @@ function bindingValue(value: unknown): DiscussionTargetBindings | string | undef
 {notice && (
   <aside class={className} aria-label="Content source">
     <p>
-      <strong>Source:</strong> {message}
-      {notice.sourceUrl && <> <a href={notice.sourceUrl}>{linkLabel}</a>.</>}
+      <strong>Content source:</strong>{" "}
+      {officialText && notice.sourceUrl
+        ? <><a href={notice.sourceUrl}>{linkLabel}</a>.</>
+        : <>
+            {message}
+            {notice.sourceUrl && <> <a href={notice.sourceUrl}>{linkLabel}</a>.</>}
+          </>}
       {notice.sourceAuthorUsername && (
         <>
           {" "}
@@ -66,6 +78,15 @@ function bindingValue(value: unknown): DiscussionTargetBindings | string | undef
         </>
       )}
     </p>
+    {officialText && (
+      <p>
+        <strong>Official text:</strong>{" "}
+        <a href={officialText.congressUrl}>{officialText.law}, {officialText.label}</a>,{" "}
+        <a href={officialText.pdfUrl ?? officialText.textUrl ?? officialText.congressUrl}>
+          {officialText.citation}
+        </a>.
+      </p>
+    )}
   </aside>
 )}
 
@@ -81,6 +102,10 @@ function bindingValue(value: unknown): DiscussionTargetBindings | string | undef
 
   .discussion-bridge-source p {
     margin: 0;
+  }
+
+  .discussion-bridge-source p + p {
+    margin-block-start: 0.35rem;
   }
 
   .discussion-bridge-source strong {

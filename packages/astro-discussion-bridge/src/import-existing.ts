@@ -2,6 +2,13 @@ import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createDiscourseClient, type DiscoursePost, type TopicResponse } from "./discourse/client.js";
+import {
+  compareOfficialSource,
+  validateOfficialSourceProfile,
+  type OfficialSourceComparisonOutcome,
+  type OfficialSourceProfile,
+  type OfficialTextMetadata,
+} from "./official-source.js";
 
 export type ImportPruneProfile = "community-call-to-action";
 export type ImportSourceMode = "discourse-imported" | "discourse-managed";
@@ -24,6 +31,11 @@ export interface ImportExistingDiscourseTopicsOptions {
   outputFile?: string;
   requiredTags?: string[];
   sourceMode?: ImportSourceMode;
+  sectionId?: string;
+  contentLens?: string;
+  officialSource?: OfficialSourceProfile;
+  officialSourceDocumentCache?: Map<string, Promise<string>>;
+  allowSubstantiveDifference?: boolean;
 }
 
 export interface ImportedDiscourseTopic {
@@ -35,6 +47,11 @@ export interface ImportedDiscourseTopic {
   sourceAuthorUsername?: string;
   sourceAuthorName?: string;
   sourceCategoryId?: number;
+  sourceTags?: string[];
+  sectionId?: string;
+  contentLens?: string;
+  officialSourceComparison?: OfficialSourceComparisonOutcome;
+  officialCitation?: string;
   status: "imported" | "skipped" | "dry-run-import" | "dry-run-overwrite";
   reason?: string;
 }
@@ -48,6 +65,15 @@ export async function importExistingDiscourseTopics(
   const sourceMode = validateImportSourceMode(options.sourceMode);
   const pruneProfiles = validateImportPruneProfiles(options.pruneProfiles ?? []);
   const requiredTags = normalizeRequiredTags(options.requiredTags ?? []);
+  const sectionId = normalizeSectionId(options.sectionId);
+  const contentLens = normalizeContentLens(options.contentLens);
+  validateRelationshipMetadata({ sectionId, contentLens });
+  const officialSource = options.officialSource
+    ? validateOfficialSourceProfile(options.officialSource)
+    : undefined;
+  if (officialSource && !sectionId) {
+    throw new Error("sectionId is required when officialSource is configured.");
+  }
   if (options.outputFile && options.topics.length !== 1) {
     throw new Error("outputFile can only be used when importing one topic.");
   }
@@ -65,6 +91,7 @@ export async function importExistingDiscourseTopics(
   for (const topicRef of topicRefs) {
     const topic = await discourse.topic(topicRef.topicId);
     validateRequiredTopicTags(topic, requiredTags);
+    const sourceTags = normalizeTopicTags(topic.tags ?? []);
     const firstPostSummary = firstPostForTopic(topic);
     if (!firstPostSummary) {
       throw new Error(`Could not find first post for Discourse topic ${topicRef.topicId}.`);
@@ -85,7 +112,6 @@ export async function importExistingDiscourseTopics(
       existingMetadata?.sourceCategoryId,
       topic.category_id,
     );
-
     if (fileExists && !options.overwrite) {
       results.push({
         filePath,
@@ -96,10 +122,51 @@ export async function importExistingDiscourseTopics(
         sourceAuthorUsername: sourceAuthor?.username,
         sourceAuthorName: sourceAuthor?.name,
         sourceCategoryId: topic.category_id,
+        sourceTags,
+        ...(sectionId ? { sectionId } : {}),
+        ...(contentLens ? { contentLens } : {}),
         status: "skipped",
         reason: joinReasons("file already exists", categoryChange),
       });
       continue;
+    }
+
+    let firstPost: DiscoursePost | undefined;
+    let body: string | undefined;
+    let officialText: OfficialTextMetadata | undefined;
+    let officialSourceComparison: OfficialSourceComparisonOutcome | undefined;
+    let officialSourceError: string | undefined;
+    if (officialSource && sectionId) {
+      firstPost = await fullFirstPost(discourse, firstPostSummary);
+      body = applyImportPruneProfiles(
+        postBodyForImport(firstPost, topic.id),
+        pruneProfiles,
+        topic.id,
+      );
+      try {
+        const comparison = await compareOfficialSource({
+          source: officialSource,
+          sectionId,
+          communityText: body,
+          documentCache: options.officialSourceDocumentCache,
+        });
+        officialText = comparison.metadata;
+        officialSourceComparison = officialText.comparison;
+        if (
+          officialText.comparison === "substantive-difference"
+          && !options.dryRun
+          && options.allowSubstantiveDifference !== true
+        ) {
+          throw new Error(
+            `Official source comparison found a substantive difference for Section ${sectionId}. ` +
+            "Review the dry-run result and explicitly allow the difference only when publication is intentional. No file was written.",
+          );
+        }
+      } catch (error) {
+        if (!options.dryRun) throw error;
+        officialSourceComparison = "unresolved";
+        officialSourceError = errorMessage(error);
+      }
     }
 
     if (options.dryRun) {
@@ -112,20 +179,23 @@ export async function importExistingDiscourseTopics(
         sourceAuthorUsername: sourceAuthor?.username,
         sourceAuthorName: sourceAuthor?.name,
         sourceCategoryId: topic.category_id,
+        sourceTags,
+        ...(sectionId ? { sectionId } : {}),
+        ...(contentLens ? { contentLens } : {}),
+        ...(officialSourceComparison
+          ? {
+              officialSourceComparison,
+              ...(officialText?.citation ? { officialCitation: officialText.citation } : {}),
+            }
+          : {}),
         status: fileExists ? "dry-run-overwrite" : "dry-run-import",
-        reason: categoryChange,
+        reason: joinReasons(categoryChange, officialSourceError),
       });
       continue;
     }
 
-    let firstPost: DiscoursePost;
-    try {
-      firstPost = await discourse.post(firstPostSummary.id);
-    } catch (error) {
-      if (!firstPostSummary.raw?.trim()) throw error;
-      firstPost = firstPostSummary;
-    }
-    const body = applyImportPruneProfiles(
+    firstPost ??= await fullFirstPost(discourse, firstPostSummary);
+    body ??= applyImportPruneProfiles(
       postBodyForImport(firstPost, topic.id),
       pruneProfiles,
       topic.id,
@@ -150,6 +220,10 @@ export async function importExistingDiscourseTopics(
         sourceAuthorUsername: refreshedSourceAuthor?.username,
         sourceAuthorName: refreshedSourceAuthor?.name,
         sourceCategoryId: topic.category_id,
+        sourceTags,
+        sectionId,
+        contentLens,
+        officialText,
         importPolicy: pruneProfiles.length
           ? `pruned:${pruneProfiles.join(",")}`
           : "unpruned",
@@ -166,12 +240,33 @@ export async function importExistingDiscourseTopics(
       sourceAuthorUsername: refreshedSourceAuthor?.username,
       sourceAuthorName: refreshedSourceAuthor?.name,
       sourceCategoryId: topic.category_id,
+      sourceTags,
+      ...(sectionId ? { sectionId } : {}),
+      ...(contentLens ? { contentLens } : {}),
+      ...(officialSourceComparison
+        ? {
+            officialSourceComparison,
+            ...(officialText?.citation ? { officialCitation: officialText.citation } : {}),
+          }
+        : {}),
       status: "imported",
       reason: categoryChange,
     });
   }
 
   return results;
+}
+
+async function fullFirstPost(
+  discourse: ReturnType<typeof createDiscourseClient>,
+  firstPostSummary: DiscoursePost,
+): Promise<DiscoursePost> {
+  try {
+    return await discourse.post(firstPostSummary.id);
+  } catch (error) {
+    if (!firstPostSummary.raw?.trim()) throw error;
+    return firstPostSummary;
+  }
 }
 
 function validateImportSourceMode(sourceMode: ImportSourceMode | undefined): ImportSourceMode {
@@ -362,6 +457,10 @@ function markdownForImportedTopic(input: {
   sourceAuthorUsername?: string;
   sourceAuthorName?: string;
   sourceCategoryId?: number;
+  sourceTags?: string[];
+  sectionId?: string;
+  contentLens?: string;
+  officialText?: OfficialTextMetadata;
   importPolicy: string;
   body: string;
 }): string {
@@ -383,6 +482,9 @@ function markdownForImportedTopic(input: {
     ...(input.sourceCategoryId !== undefined
       ? { discussionSourceCategoryId: input.sourceCategoryId }
       : {}),
+    ...(input.sourceTags?.length
+      ? { discussionSourceTags: JSON.stringify(input.sourceTags) }
+      : {}),
     discussionSync: false,
     discourseTopicId: input.topicId,
     discourseTopicUrl: input.topicUrl,
@@ -390,6 +492,14 @@ function markdownForImportedTopic(input: {
     discussionImportPolicy: input.importPolicy,
     discussionSourceHash: input.sourceHash,
     discussionImportedAt: input.importedAt,
+    ...(input.sectionId ? { sectionId: input.sectionId } : {}),
+    ...(input.contentLens ? { contentLens: input.contentLens } : {}),
+    ...(input.officialText
+      ? {
+          officialText: JSON.stringify(input.officialText),
+          discussionSourceLinkLabel: "Community-maintained wiki topic",
+        }
+      : {}),
   };
   if (input.commentsDisplay) frontmatter.discussionCommentsDisplay = input.commentsDisplay;
 
@@ -474,18 +584,51 @@ function normalizeRequiredTags(tags: string[]): string[] {
   return normalized;
 }
 
+function normalizeSectionId(value: string | undefined): string | undefined {
+  const sectionId = value?.trim();
+  if (!sectionId) return undefined;
+  if (!/^[A-Za-z0-9.-]+$/.test(sectionId)) {
+    throw new Error(`sectionId is invalid: ${value}.`);
+  }
+  return sectionId;
+}
+
+function normalizeContentLens(value: string | undefined): string | undefined {
+  const contentLens = value?.trim();
+  if (!contentLens) return undefined;
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(contentLens)) {
+    throw new Error(`contentLens must be a lowercase slug: ${value}.`);
+  }
+  return contentLens;
+}
+
+function validateRelationshipMetadata(input: {
+  sectionId?: string;
+  contentLens?: string;
+}): void {
+  if (Boolean(input.sectionId) !== Boolean(input.contentLens)) {
+    throw new Error("sectionId and contentLens must be configured together.");
+  }
+}
+
 function validateRequiredTopicTags(topic: TopicResponse, requiredTags: string[]): void {
   if (requiredTags.length === 0) return;
-  const actual = (topic.tags ?? [])
-    .map((tag) => typeof tag === "string" ? tag : tag.name ?? tag.slug ?? "")
-    .map((tag) => tag.trim().toLowerCase())
-    .filter(Boolean);
+  const actual = normalizeTopicTags(topic.tags ?? [])
+    .map((tag) => tag.toLowerCase());
   const missing = requiredTags.filter((tag) => !actual.includes(tag.toLowerCase()));
   if (missing.length) {
     throw new Error(
       `Discourse topic ${topic.id} is missing required import tag(s): ${missing.join(", ")}. No file was written.`,
     );
   }
+}
+
+function normalizeTopicTags(tags: NonNullable<TopicResponse["tags"]>): string[] {
+  const normalized = tags
+    .map((tag) => typeof tag === "string" ? tag : tag.name ?? tag.slug ?? "")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  return [...new Set(normalized)];
 }
 
 function normalizeRouteBase(value: string | undefined): string {
@@ -506,4 +649,8 @@ async function pathExists(filePath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

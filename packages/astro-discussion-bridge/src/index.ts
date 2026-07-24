@@ -1,6 +1,12 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin } from "vite";
+import {
+  buildContentRelationshipManifest,
+  type ContentLensDefinition,
+  type ContentRelationshipManifest,
+  type ContentRelationshipSource,
+} from "./relationships.js";
 import { syncDiscourseTopics, type DiscoursePreflightLimits, type NotifyOnFailureOptions } from "./sync/index.js";
 import {
   parseDiscussionConnectionJobs,
@@ -13,7 +19,7 @@ type DiscussionBridgeIntegration = {
     "astro:config:setup": (params: {
       config: { root: URL };
       updateConfig: (config: { vite?: { plugins?: Plugin[] } }) => void;
-    }) => void;
+    }) => Promise<void>;
     "astro:build:start": (params: {
       logger: { info: (message: string) => void };
     }) => Promise<void>;
@@ -48,6 +54,11 @@ export interface DiscussionBridgeOptions {
     renderMermaid?: boolean;
     showLikes?: boolean;
     refreshOnPageLoad?: boolean;
+  };
+  relationships?: {
+    enabled?: boolean;
+    sources?: ContentRelationshipSource[];
+    lenses?: Record<string, ContentLensDefinition>;
   };
   publishOnBuild?: PublishOnBuildOptions;
 }
@@ -106,6 +117,9 @@ interface PublicOptions {
     showLikes: boolean;
     refreshOnPageLoad: boolean;
   };
+  relationships: {
+    enabled: boolean;
+  };
 }
 
 interface ResolvedOptions extends PublicOptions {
@@ -115,6 +129,11 @@ interface ResolvedOptions extends PublicOptions {
     postAs?: string;
     apiUsername?: string;
     lanes: ResolvedPublishLane[];
+  };
+  relationships: {
+    enabled: boolean;
+    sources: ContentRelationshipSource[];
+    lenses: Record<string, ContentLensDefinition>;
   };
 }
 
@@ -143,6 +162,8 @@ interface ResolvedPublishLane {
 
 const virtualModuleId = "virtual:discussion-bridge/config";
 const resolvedVirtualModuleId = `\0${virtualModuleId}`;
+const virtualRelationshipsModuleId = "virtual:discussion-bridge/relationships";
+const resolvedVirtualRelationshipsModuleId = `\0${virtualRelationshipsModuleId}`;
 
 export default function discussionBridge(
   options: DiscussionBridgeOptions,
@@ -153,11 +174,19 @@ export default function discussionBridge(
   return {
     name: "astro-discussion-bridge",
     hooks: {
-      "astro:config:setup": ({ config, updateConfig }) => {
+      "astro:config:setup": async ({ config, updateConfig }) => {
         projectRoot = fileURLToPath(config.root);
+        const relationshipManifest = resolvedOptions.relationships.enabled
+          ? await buildContentRelationshipManifest({
+              projectRoot,
+              siteUrl: resolvedOptions.siteUrl,
+              sources: resolvedOptions.relationships.sources,
+              lenses: resolvedOptions.relationships.lenses,
+            })
+          : emptyRelationshipManifest();
         updateConfig({
           vite: {
-            plugins: [virtualConfigPlugin(toPublicOptions(resolvedOptions))],
+            plugins: [virtualModulesPlugin(toPublicOptions(resolvedOptions), relationshipManifest)],
           },
         });
       },
@@ -219,6 +248,28 @@ export {
   resolveDiscussionPresentation,
 } from "./targets.js";
 export { resolveDiscussionSourceNotice } from "./source.js";
+export {
+  compareOfficialSource,
+  extractUsPublicLawSection,
+  extractUsPublicLawSectionFromText,
+  normalizeLegalText,
+  parseOfficialTextMetadata,
+  validateOfficialSourceProfile,
+} from "./official-source.js";
+export {
+  activeNavigationBranch,
+  buildNavigationContentBindings,
+  discoverDiscourseNavigation,
+  loadNavigationDiscoveryConfig,
+  navigationManifestToStarlightSidebar,
+  parseNavigationManifest,
+  writeNavigationManifest,
+} from "./navigation.js";
+export {
+  buildContentRelationshipManifest,
+  parseRelationshipManifest,
+  resolveContentRelationships,
+} from "./relationships.js";
 export type { CheckDiscourseOptions, CheckDiscourseResult } from "./check-discourse.js";
 export type {
   DiscoverImportOptions,
@@ -237,6 +288,30 @@ export type {
   ResolvedDiscussionTarget,
 } from "./targets.js";
 export type { DiscussionSourceMode, DiscussionSourceNotice } from "./source.js";
+export type {
+  OfficialSourceComparison,
+  OfficialSourceComparisonOutcome,
+  OfficialSourceProfile,
+  OfficialTextMetadata,
+  UsPublicLawSourceProfile,
+} from "./official-source.js";
+export type {
+  ContentLensDefinition,
+  ContentRelationshipEntry,
+  ContentRelationshipManifest,
+  ContentRelationshipSource,
+  ResolvedContentRelationship,
+} from "./relationships.js";
+export type {
+  DiscussionNavigationManifest,
+  DiscourseNavigationLens,
+  NavigationContentSource,
+  NavigationDiscoveryConfig,
+  NavigationLens,
+  NavigationNode,
+  NavigationNodeKind,
+  NavigationTagGroup,
+} from "./navigation.js";
 
 function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
   if (!options.discourseUrl) {
@@ -274,6 +349,13 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
       renderMermaid: options.replies?.renderMermaid ?? true,
       showLikes: options.replies?.showLikes ?? true,
       refreshOnPageLoad: options.replies?.refreshOnPageLoad ?? true,
+    },
+    relationships: {
+      enabled: options.relationships?.enabled ?? false,
+      sources: options.relationships?.sources?.length
+        ? options.relationships.sources
+        : [{ docsDir: defaultDocsDirForPreset(preset) }],
+      lenses: options.relationships?.lenses ?? {},
     },
     publishOnBuild: {
       enabled: options.publishOnBuild?.enabled ?? false,
@@ -394,6 +476,9 @@ function toPublicOptions(options: ResolvedOptions): PublicOptions {
     connections: options.connections,
     comments: options.comments,
     replies: options.replies,
+    relationships: {
+      enabled: options.relationships.enabled,
+    },
   };
 }
 
@@ -426,18 +511,29 @@ function nonEmptyValue(value: string | undefined): string | undefined {
   return trimmed || undefined;
 }
 
-function virtualConfigPlugin(options: PublicOptions): Plugin {
+function virtualModulesPlugin(
+  options: PublicOptions,
+  relationships: ContentRelationshipManifest,
+): Plugin {
   return {
-    name: "astro-discussion-bridge:virtual-config",
+    name: "astro-discussion-bridge:virtual-modules",
     resolveId(id) {
       if (id === virtualModuleId) return resolvedVirtualModuleId;
+      if (id === virtualRelationshipsModuleId) return resolvedVirtualRelationshipsModuleId;
     },
     load(id) {
       if (id === resolvedVirtualModuleId) {
         return `export default ${JSON.stringify(options)};`;
       }
+      if (id === resolvedVirtualRelationshipsModuleId) {
+        return `export default ${JSON.stringify(relationships)};`;
+      }
     },
   };
+}
+
+function emptyRelationshipManifest(): ContentRelationshipManifest {
+  return { version: 1, lenses: {}, entries: [] };
 }
 
 

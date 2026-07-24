@@ -51,11 +51,25 @@
       "types": "./dist/source.d.ts",
       "import": "./dist/source.js"
     },
+    "./official-source": {
+      "types": "./dist/official-source.d.ts",
+      "import": "./dist/official-source.js"
+    },
+    "./relationships": {
+      "types": "./dist/relationships.d.ts",
+      "import": "./dist/relationships.js"
+    },
+    "./navigation": {
+      "types": "./dist/navigation.d.ts",
+      "import": "./dist/navigation.js"
+    },
     "./DiscourseComments.astro": "./src/components/DiscourseComments.astro",
     "./DiscourseReplies.astro": "./src/components/DiscourseReplies.astro",
     "./DiscourseDiscussion.astro": "./src/components/DiscourseDiscussion.astro",
     "./Discussion.astro": "./src/components/Discussion.astro",
-    "./DiscussionSource.astro": "./src/components/DiscussionSource.astro"
+    "./DiscussionSource.astro": "./src/components/DiscussionSource.astro",
+    "./DiscussionRelations.astro": "./src/components/DiscussionRelations.astro",
+    "./DiscussionNavigation.astro": "./src/components/DiscussionNavigation.astro"
   },
   "files": [
     "dist",
@@ -74,7 +88,8 @@
     "sync-existing": "astro-discussion-bridge sync-existing",
     "publish-and-sync": "astro-discussion-bridge publish-and-sync",
     "import-existing": "astro-discussion-bridge import-existing",
-    "discover-imports": "astro-discussion-bridge discover-imports"
+    "discover-imports": "astro-discussion-bridge discover-imports",
+    "discover-navigation": "astro-discussion-bridge discover-navigation"
   },
   "keywords": [
     "astro",
@@ -101,6 +116,8 @@
     }
   },
   "dependencies": {
-    "mermaid": "^11.16.0"
+    "fast-xml-parser": "^5.10.1",
+    "mermaid": "^11.16.0",
+    "yaml": "^2.9.0"
   }
 }
