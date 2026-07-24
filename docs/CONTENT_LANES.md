@@ -397,6 +397,28 @@ npx astro-discussion-bridge check-discourse \
 
 If a granular key cannot read enough setup metadata, use explicit limits or a diagnostics key.
 
+## Official-Source And Related-Content Lanes
+
+Legal and public-record lanes may have both a community-maintained content
+source and a separately identified official text source:
+
+- Content source points to the Discourse wiki topic that editors maintain.
+- Official text points to the authoritative document/section and citation.
+
+For OBBBA, the planned lenses are OBBBA Text, Law as Amended, Impact, and
+future Stories. A stable shared `sectionId` should connect related pages across
+these lanes. Reciprocal Related links belong in a generated, adapter-neutral
+relationship/taxonomy manifest, not hand-maintained article bodies.
+
+Stories may reference multiple section IDs, and each section may have multiple
+Stories. Adding or removing a Story should require manifest regeneration and
+an Astro rebuild, not source-body reimport or edits to every related page.
+Provenance/authority disclosures remain separate from Related links.
+
+The official-source enrichment profile, relationship generation, and rendering
+are proposed active work. The bounded Section 10101 comparison is evidence for
+one source pair only and does not mark these lane features implemented.
+
 ## Listing Behavior
 
 Use `--unlist` for demo/test companion topics that should keep direct links and embeds working without appearing in category discovery.

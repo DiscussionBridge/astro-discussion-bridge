@@ -618,6 +618,64 @@ at this stage.
 This is proposed active Alpha feature work pending design, implementation, and
 review. It is not current package or site behavior.
 
+### Official-Source Enrichment And Cross-Lens Relations
+
+The reusable enrichment model distinguishes two authorities on a
+Discourse-managed public-record page:
+
+- **Content source:** the community-maintained Discourse wiki topic.
+- **Official text:** the authoritative public record, identified by document,
+  structural locator, citation/page range, and official links.
+
+For OBBBA, the authoritative record is Congress.gov Public Law 119-21. Use the
+Congress.gov text page as the durable overview, USLM XML for machine-readable
+hierarchy and text, official TXT for page-marker/fallback evidence, and PDF for
+authoritative visual verification. Cite Statutes at Large pages rather than
+ambiguous PDF file-page numbers.
+
+Proposed metadata includes document/law identity, section ID and label,
+official citation and URLs, check time, source hash, and comparison result.
+Outcomes are `exact`, `presentation-only`, `substantive-difference`, and
+`unresolved`. Missing, duplicate, or ambiguous section matching must fail
+closed or require review. Comparison must never silently rewrite community
+text.
+
+Presentation-only normalization may remove Markdown link syntax, whitespace
+and line-wrap differences, capitalization, typographic punctuation, official
+page furniture, and official side notes, but it must preserve substantive
+wording and numbering.
+
+The first bounded field proof compared forum topic 34/post 40, Section 10101,
+with USLM identifier `/us/pl/119/21/tI/stA/s10101`. After bounded
+normalization, both sources contained 608 tokens and 3,148 normalized
+characters with zero substantive differences. The official citation is Public
+Law 119-21, Section 10101, 139 Stat. 80–81. This represents that section only;
+it does not establish that all OBBBA topics match. A future comparison-only
+batch report must count all four outcomes and write no content changes.
+
+Public pages should independently link **Content source** to the community wiki
+and **Official text** to the identified law/section and citation. Keep this
+provenance/authority layer separate from related-content navigation.
+
+A stable shared key such as `sectionId` should generate reciprocal Related
+links across **OBBBA Text**, **Law as Amended**, **Impact**, and future
+**Stories**. Stories are one-to-many and may reference multiple section IDs.
+Regenerating the adapter-neutral relationship/taxonomy manifest plus rebuilding
+Astro should update reciprocal links without body reimport or manual per-page
+edits. A reader-facing pattern is:
+`Related: Read the enacted text · Explore the impact · View 3 community stories`.
+
+The public-accountability chain is official record → structured section →
+legal/practical analysis → human consequences → community scrutiny/correction.
+The components are Official text, Law as Amended, Impact, Stories, Community,
+Provenance, Source comparison, and Navigation. This model generalizes to
+Congress, state legislatures, municipal ordinances, regulations, budgets,
+ballot measures, and agency rulemaking.
+
+This is strategy discovered through implementation. The bounded Section 10101
+comparison is complete evidence; enrichment, relationship generation, batch
+reporting, and public rendering remain proposed active work.
+
 ### After Alpha
 
 Beta primarily refines exercised usability, compatibility, reliability,

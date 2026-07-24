@@ -466,4 +466,29 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       concepts only; do not lock configuration names before design review.
 - [ ] Prove proposed OBBBA routes `/obbba-text/title-i/...` and
       `/impact/title-i/...`. Redirects are not required for this design stage.
+- [x] Record the bounded Section 10101 comparison: topic 34/post 40 matched
+      USLM `/us/pl/119/21/tI/stA/s10101`; bounded normalization produced 608
+      tokens and 3,148 characters on both sides with zero substantive
+      differences; cite 139 Stat. 80–81. Do not generalize to all OBBBA topics.
+- [ ] Design a reusable official-source enrichment profile that separately
+      renders the community Discourse content source and authoritative public
+      record, with identity, locator, citation, URLs, checked time, source
+      hash, and comparison result.
+- [ ] For Public Law 119-21, use USLM XML for hierarchy/text, official TXT for
+      page-marker/fallback evidence, PDF for visual verification, and the
+      Congress.gov page as overview. Cite Statutes at Large pages, not PDF
+      file-page numbers.
+- [ ] Fail closed or require review when official matching is missing,
+      duplicated, or ambiguous. Never silently rewrite community text.
+- [ ] Produce a comparison-only batch report counting `exact`,
+      `presentation-only`, `substantive-difference`, and `unresolved`, with
+      zero content writes and bounded non-substantive normalization.
+- [ ] Generate reciprocal Related links from stable `sectionId` values across
+      OBBBA Text, Law as Amended, Impact, and future Stories. Keep
+      provenance/authority separate from Related navigation.
+- [ ] Support Stories as one-to-many references to one or more section IDs;
+      regeneration plus Astro build must update all related pages without body
+      reimport or manual per-page links.
+- [ ] Render accessible Content source, Official text, and Related actions in
+      Starlight and plain Astro from one adapter-neutral manifest.
 - [ ] Design future integration lanes for Statamic and other frameworks.

@@ -1549,7 +1549,64 @@ source forum architecture to manufacture redundant tags. Any generator must
 distinguish provenance tags from public-navigation inputs and must produce one
 adapter-neutral manifest before framework-specific rendering.
 
-## 17. Durable Update Rule
+## 17. Proposed Official-Source Enrichment And Relations
+
+Status: bounded Section 10101 comparison evidence complete; reusable
+enrichment, batch comparison, relationship generation, and rendering not
+implemented.
+
+```yaml
+official_source_enrichment:
+  content_source: community_maintained_Discourse_wiki
+  official_text:
+    identity: [document_or_law, sectionId, label]
+    locator: [structural_identifier, citation, official_page_range]
+    URLs: [overview, structured_text, text_fallback, visual_record]
+    evidence: [checkedAt, sourceHash, comparisonResult]
+  OBBBA:
+    document: Public Law 119-21
+    overview: Congress.gov_text_page
+    structured_text: USLM_XML
+    page_marker_fallback: official_TXT
+    visual_verification: official_PDF
+    citation_rule: Statutes_at_Large_pages_not_PDF_file_pages
+  match_policy:
+    missing_or_duplicate_or_ambiguous: fail_closed_or_review
+    silent_community_text_rewrite: prohibited
+  comparison_results: [exact, presentation-only, substantive-difference, unresolved]
+  presentation_only_may_ignore:
+    - Markdown_links
+    - whitespace_and_line_wrap
+    - capitalization
+    - typographic_punctuation
+    - official_page_furniture
+    - official_side_notes
+  presentation_only_must_preserve: [substantive_wording, numbering]
+  batch_mode: { report_all_result_counts: true, content_writes: 0 }
+bounded_field_evidence:
+  Discourse: { topic_id: 34, post_id: 40 }
+  section: 10101
+  USLM_id: /us/pl/119/21/tI/stA/s10101
+  normalized: { tokens_each: 608, characters_each: 3148, substantive_differences: 0 }
+  citation: Public Law 119-21, Section 10101, 139 Stat. 80-81
+  scope: representative_single_section_not_batch_claim
+relationship_graph:
+  stable_key: sectionId
+  lenses: [OBBBA Text, Law as Amended, Impact, Stories]
+  reciprocal_links: generated
+  Stories: { cardinality: one_to_many, references: one_or_more_sectionIds }
+  update_operation: regenerate_manifest_then_Astro_build
+  body_reimport_required: false
+  manual_per_page_links: prohibited
+  adapters: [Starlight, plain_Astro]
+  provenance_and_authority_separate_from_related_navigation: true
+```
+
+The public-accountability chain is official record → structured section →
+legal/practical analysis → human consequences → community scrutiny/correction.
+Do not claim implementation completion from the single-section comparison.
+
+## 18. Durable Update Rule
 
 When implementation confirms or changes a command, field, scope, endpoint,
 failure, recovery path, or deployment invariant:

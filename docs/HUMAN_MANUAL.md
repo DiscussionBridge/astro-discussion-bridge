@@ -1065,6 +1065,57 @@ canonical taxonomy manifest should feed both Starlight and plain Astro
 presentation adapters. Presentation-mode names remain a design decision. This
 section records proposed active work; it does not describe completed behavior.
 
+## Official Text, Community Source, And Related Pages
+
+For community-maintained legal or public-record content, show two separate
+source relationships:
+
+- **Content source:** the community-maintained Discourse wiki topic.
+- **Official text:** the identified law/document and section, with its official
+  citation or page range.
+
+Do not present the community wiki as the official record, and do not hide the
+community source behind the official citation. For OBBBA, use Congress.gov
+Public Law 119-21: its text page for overview, USLM XML for structured
+matching, official TXT for page-marker/fallback evidence, and PDF for visual
+verification. Use Statutes at Large pages, not PDF viewer page numbers.
+
+Before publishing a comparison:
+
+1. identify the document and structural section;
+2. require one unambiguous official match;
+3. compare without writing to either source;
+4. classify the result as exact, presentation-only, substantive-difference, or
+   unresolved;
+5. route substantive or unresolved results for review.
+
+Presentation-only comparison may ignore Markdown links, wrapping/whitespace,
+capitalization, typographic punctuation, page furniture, and official side
+notes. It must not normalize away changed words or numbering.
+
+> **Bounded evidence:** OBBBA topic 34/post 40, Section 10101, matched USLM
+> `/us/pl/119/21/tI/stA/s10101`. Both normalized forms had 608 tokens and 3,148
+> characters with zero substantive differences. Cite Public Law 119-21,
+> Section 10101, 139 Stat. 80–81. This proves only that comparison.
+
+Related pages are separate from provenance. Use a stable key such as
+`sectionId` to connect OBBBA Text, Law as Amended, Impact, and Stories.
+Generate reciprocal links during manifest generation and Astro build instead
+of maintaining them in article bodies. A Story may reference multiple section
+IDs, and a section may have multiple Stories.
+
+> **You should see:** linked Content source and Official text disclosures,
+> followed separately by actions such as “Read the enacted text,” “Explore the
+> impact,” and “View 3 community stories.”
+
+> **Stop if:** matching is missing, duplicated, or ambiguous; comparison would
+> rewrite community text; a PDF file-page number is used as the legal citation;
+> provenance is mixed with Related links; or adding a Story requires manually
+> editing every linked page.
+
+The reusable profile, batch report, relationship generator, and rendering are
+proposed active work, not completed behavior.
+
 ## Related Guides
 
 - [Machine Manual](./MACHINE_MANUAL.md)
