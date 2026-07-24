@@ -444,4 +444,26 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       Astro-managed topics and sync corrects drift; absent configuration
       preserves manual placement; Discourse-source categories are protected;
       target categories are independent.
+- [ ] Design and review a canonical navigation/taxonomy manifest generated
+      from Discourse content-lens categories, hierarchy tag groups, and
+      authored index topics. Index topics—not tag-group member order—must
+      control labels, landing pages, and navigation order.
+- [ ] Preserve source tags as provenance while explicitly excluding workflow
+      tags from automatic public navigation. Do not require redundant Title
+      tags on index topics or reshape a sound forum taxonomy for the bridge.
+- [ ] Implement OBBBA's complete-structure/progressive-presentation model:
+      show lenses and Titles globally; expand the active lens, Title, and
+      Subtitle/Chapter/Subchapter/Part branch; leave other branches collapsed
+      but user-expandable; use index pages as the complete browse surface.
+- [ ] Provide breadcrumbs, index-authored previous/next, and search. Avoid
+      rendering hundreds of inactive Title VII section links on every page,
+      preferably including avoidance of unnecessary inactive DOM content.
+- [ ] Verify the navigation adapter on desktop, laptop, tablet, and mobile,
+      including Title VII scale, active-branch drawer behavior, keyboard use,
+      screen-reader use, and appropriate expansion-state preservation.
+- [ ] Generate and review Starlight and plain Astro presentation adapters from
+      the canonical manifest. Treat progressive/complete/compact as candidate
+      concepts only; do not lock configuration names before design review.
+- [ ] Prove proposed OBBBA routes `/obbba-text/title-i/...` and
+      `/impact/title-i/...`. Redirects are not required for this design stage.
 - [ ] Design future integration lanes for Statamic and other frameworks.

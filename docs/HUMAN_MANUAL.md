@@ -1024,6 +1024,47 @@ verified. Never include keys or credentials in a support report. Follow
 [Support And Feedback](./SUPPORT_AND_FEEDBACK.md) for the sanitized diagnostic
 fields to include.
 
+## Navigation Strategy For Deep Structured Content
+
+Discussion Bridge should make a complete body of structured content reachable
+without expanding the entire hierarchy on every page. For the proposed OBBBA
+redesign, Bill Structure contains separate content lenses: **OBBBA Text**
+first, **Impact** second, and **Law as Amended** later when suitable.
+
+Use these source responsibilities:
+
+- categories define the content lens;
+- tag groups define Title/Subtitle/Chapter/Subchapter/Part hierarchy;
+- index topics define authored order, reader-facing labels, landing pages, and
+  navigation;
+- content-topic tags place the page at the deepest applicable node.
+
+Do not add redundant Title tags to index topics just for the bridge. Do not
+assume the member order returned by `/tag_groups/filter/search.json` is the
+authored order; use index topics as the authority. Preserve source tags as
+provenance, and review workflow tags separately rather than publishing them
+automatically as navigation.
+
+The recommended reader experience is complete structure with progressive
+presentation: show lenses and Titles globally, then expand the current lens,
+Title, and active Subtitle/Chapter/Subchapter/Part branch. Keep other branches
+collapsed but user-expandable. Use index pages for the complete outline, and
+provide breadcrumbs, authored previous/next, and search.
+
+> **You should see:** the active branch immediately, the full structure through
+> index/browse pages, and predictable routes such as
+> `/obbba-text/title-i/...` and `/impact/title-i/...`.
+
+> **Stop if:** hundreds of inactive Title VII links appear on every page or in
+> unnecessary DOM content; the mobile drawer loses the active branch; keyboard
+> or screen-reader navigation fails; workflow tags leak into public
+> navigation; or tag-group response order overrides authored index order.
+
+Verify desktop, laptop, tablet, and mobile at Title VII scale. A future
+canonical taxonomy manifest should feed both Starlight and plain Astro
+presentation adapters. Presentation-mode names remain a design decision. This
+section records proposed active work; it does not describe completed behavior.
+
 ## Related Guides
 
 - [Machine Manual](./MACHINE_MANUAL.md)

@@ -1495,7 +1495,61 @@ output, lane name, public URLs, category ID, tags, key type, and dry-run result.
 They must not include key values, credentials, private account data, or
 production secrets.
 
-## 16. Durable Update Rule
+## 16. Proposed Navigation/Taxonomy Manifest
+
+Status: proposed active feature work; design/review pending; not implemented.
+
+```yaml
+navigation_taxonomy_contract:
+  product_principle: complete_structure_progressive_presentation
+  source_inputs:
+    categories:
+      authority: content_lens
+      OBBBA_lenses: [OBBBA Text, Impact, Law as Amended later when suitable]
+    tag_groups:
+      authority: hierarchy_membership
+      levels: [Title, Subtitle, Chapter, Subchapter, Part]
+      public_field_endpoint: /tag_groups/filter/search.json
+      membership_order_canonical: false
+    index_topics:
+      authority: [authored_order, labels, landing_pages, navigation]
+      redundant_title_tag_required: false
+    content_topic_tags:
+      authority: deepest_applicable_hierarchy_node
+    tag_policy:
+      source_tags: preserve_as_provenance
+      workflow_tags: never_automatic_public_navigation
+  generated_artifact:
+    kind: canonical_navigation_taxonomy_manifest
+    consumers: [Starlight_adapter, plain_Astro_adapter]
+  presentation:
+    global: [content_lenses, Titles]
+    expanded: [current_lens, current_Title, active_descendant_branch]
+    collapsed_user_expandable: other_branches
+    complete_browse_surface: index_pages
+    supporting_navigation: [breadcrumbs, authored_previous_next, search]
+    avoid:
+      - hundreds_of_inactive_Title_VII_links_visible_on_every_route
+      - unnecessary_inactive_deep_branch_DOM
+    candidate_modes_not_config_contract: [progressive, complete, compact]
+  responsive_accessibility:
+    viewports: [desktop, laptop, tablet, mobile]
+    scale_case: Title_VII
+    drawer_opens_active_branch: required
+    keyboard_and_screen_reader: required
+    preserve_expansion_where_appropriate: required
+  proposed_routes:
+    - /obbba-text/title-i/...
+    - /impact/title-i/...
+  redirects_required_at_design_stage: false
+```
+
+Do not derive authored order from tag-group membership order. Do not change the
+source forum architecture to manufacture redundant tags. Any generator must
+distinguish provenance tags from public-navigation inputs and must produce one
+adapter-neutral manifest before framework-specific rendering.
+
+## 17. Durable Update Rule
 
 When implementation confirms or changes a command, field, scope, endpoint,
 failure, recovery path, or deployment invariant:

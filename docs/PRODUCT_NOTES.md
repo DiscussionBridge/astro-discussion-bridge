@@ -571,6 +571,53 @@ automatic audit fix was run.
 [Sanitized verification evidence](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/DISCUSSIONBRIDGE_DEV_TWO_WAY_DOGFOOD_2026-07-23.md)
 preserves the live facts that are not contained in the apex source commit.
 
+### OBBBA Navigation And Taxonomy Contract
+
+The proposed OBBBA redesign separates bill structure from content lens:
+
+- **Bill Structure** contains the content lenses **OBBBA Text** first,
+  **Impact** second, and **Law as Amended** later when suitable.
+- Discourse categories identify the content lens.
+- Discourse tag groups identify hierarchy:
+  Title → Subtitle → Chapter → Subchapter → Part.
+- Index topics are the authority for authored order, labels, landing pages, and
+  navigation.
+- A content topic's tags place it at the deepest applicable hierarchy node.
+
+Index topics do not need redundant Title tags merely to satisfy Discussion
+Bridge. The bridge must consume a well-architected forum rather than require
+the forum to distort its taxonomy. Public field evidence confirms
+`/tag_groups/filter/search.json` exposes the relevant OBBBA tag groups and
+members, but group membership order is not treated as canonical. Index topics
+remain the ordering authority. Preserve source tags as provenance; do not
+automatically expose workflow tags as public navigation.
+
+The UX principle is **complete structure, progressive presentation**. Every
+published item remains reachable through navigation, while the ordinary page
+view shows the content lenses and Titles globally and expands only the current
+lens, current Title, and active Subtitle/Chapter/Subchapter/Part branch. Other
+branches remain collapsed but user-expandable, with expansion preserved where
+appropriate. Index pages provide the complete outline/browse surface.
+Breadcrumbs, authored previous/next links, and search provide additional ways
+through the structure.
+
+Do not visibly render—or preferably unnecessarily place in the DOM—hundreds of
+Title VII section links on every route. On tablet and mobile, the navigation
+drawer should open the active branch and remain keyboard- and screen-reader
+usable. Verification must cover desktop, laptop, tablet, and mobile, with
+specific scale testing against Title VII.
+
+The reusable product direction is a canonical navigation/taxonomy manifest
+generated from Discourse categories, tag groups, and index topics. Starlight
+and plain Astro adapters decide how that manifest is presented. Progressive,
+complete, and compact are candidate presentation concepts, not locked
+configuration names. Proposed OBBBA destinations are
+`/obbba-text/title-i/...` and `/impact/title-i/...`; redirects are not required
+at this stage.
+
+This is proposed active Alpha feature work pending design, implementation, and
+review. It is not current package or site behavior.
+
 ### After Alpha
 
 Beta primarily refines exercised usability, compatibility, reliability,
