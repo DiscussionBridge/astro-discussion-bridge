@@ -544,6 +544,16 @@ review_status:
     files_written: 0
   Code_Boss: PASS_after_three_correction_rounds
   full_attribution_and_package_gate: PASS
+site_specific_dry_run_example:
+  site: onebigbeautifulbill.us
+  manifest: discussionbridge-imports-title-i-10106-10306.json
+  topics: [754, 755, 756, 757, 758, 759, 761, 762, 763, 764]
+  target: repeal-obbba
+  route_base: title-i
+  result: { imported: 0, skipped: 0, dry_run: 10, generatedPages: 0 }
+  writes: { Discourse: 0, Astro_content: 0 }
+  proven_gate: candidate_manifest_policy_and_dry_run
+  still_open: [live_import, build, deploy, live_route_verification]
 alpha_requirement: true
 ```
 

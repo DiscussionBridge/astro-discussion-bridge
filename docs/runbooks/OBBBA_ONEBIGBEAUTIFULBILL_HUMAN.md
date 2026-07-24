@@ -526,17 +526,45 @@ Fresh topics and pages must still prove:
 
 The Alpha gate also requires a usable import discovery/queue:
 
-- [ ] Curated explicit-topic or manifest imports preserve operator order.
-- [ ] Category selection lists available categories and subcategories and
+- [x] Curated explicit-topic or manifest imports preserve operator order.
+- [x] Category selection lists available categories and subcategories and
       accepts category ID or an unambiguous slug/name.
-- [ ] After category selection and preview, “next” selects oldest `created_at`
+- [x] After category selection and preview, “next” selects oldest `created_at`
       first, with topic ID as the stable tie-breaker.
-- [ ] Tags, created-date range, open/closed status, and limit filters can be
+- [x] Tags, created-date range, open/closed status, and limit filters can be
       applied where needed.
-- [ ] Oldest/newest ordering uses `created_at` only.
-- [ ] Candidates are previewed and already imported topics are excluded.
-- [ ] Replies and activity never reorder the queue; `bumped_at`, last reply,
+- [x] Oldest/newest ordering uses `created_at` only.
+- [x] Candidates are previewed and already imported topics are excluded.
+- [x] Replies and activity never reorder the queue; `bumped_at`, last reply,
       and latest activity are prohibited sequencing inputs.
+
+### Next Title I Candidate Batch
+
+The next reviewed batch is tracked in
+`discussionbridge-imports-title-i-10106-10306.json`, committed and pushed in
+OBBBA commits `308d751` and `30d8abe`. It preserves the natural numbered-title
+order for topics `754`, `755`, `756`, `757`, `758`, `759`, `761`, `762`, `763`,
+and `764`.
+
+Every entry uses the same reviewed presentation/import policy:
+
+- `sourceMode: discourse-imported`;
+- `commentsDisplay: fullInteractive`;
+- required tag `TITLE-I`;
+- hero `../../../assets/obbbanotso.png`;
+- alt text `One Big (not so) Beautiful Bill over the U.S. Capitol`;
+- prune profile `community-call-to-action`.
+
+The strict v1 manifest and hero asset passed validation. A credentialed,
+read-only `import-existing --manifest ... --dry-run` used the protected
+diagnostics key in memory against target `repeal-obbba`, content lane
+`title-i`. It reported 0 imported, 0 skipped, and 10 dry-run entries. A separate
+filesystem check confirmed `generatedPages=0`. No Discourse or Astro content
+write occurred, no secret was printed, and unrelated OBBBA worktree changes
+were preserved.
+
+> **Still open:** perform the approved live import, exact build, deployment,
+> and per-route live verification. This dry-run does not close those gates.
 
 ## 13. Current Open Inputs
 

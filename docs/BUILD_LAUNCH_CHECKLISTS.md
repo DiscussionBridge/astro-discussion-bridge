@@ -366,6 +366,13 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       prune (`747`), image only (`751`), prune only (`752`), then image plus
       prune (`753`); the reviewed four-case manifest passed source comparison,
       production-shaped build, deployment, and live verification.
+- [x] Review and dry-run the next OBBBA Title I batch manifest for topics
+      `754`–`764` in natural numbered-title order with uniform
+      source/comments/tag/hero/alt/prune policy; strict v1 validation passed,
+      dry-run reported 0 imported / 0 skipped / 10 dry-run, and
+      `generatedPages=0`.
+- [ ] Run the approved live import for the next OBBBA Title I batch, then pass
+      exact build, deployment, and per-route live verification.
 - [ ] Use `repealobbbaact.us` as an Alpha end-stage package-installed test for Discourse-source structured pages, source-mode safety, comments rendering, and Cloudflare deployment.
 - [x] Phil confirmed the optional Discourse plugin vertical slice belongs in
       cumulative Alpha scope.

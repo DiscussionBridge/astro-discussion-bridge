@@ -900,6 +900,46 @@ product_boss_release_approval:
 Reject release approval while any value above is unresolved, failed, incomplete,
 or tied to a different release candidate.
 
+## 11A. Next Title I Candidate Manifest
+
+```yaml
+next_title_i_batch:
+  status: candidate_manifest_and_dry_run_complete
+  live_import_build_deploy: pending
+  OBBBA_commits: [308d751, 30d8abe]
+  manifest: discussionbridge-imports-title-i-10106-10306.json
+  order: natural_numbered_title
+  topics: [754, 755, 756, 757, 758, 759, 761, 762, 763, 764]
+  uniform_policy:
+    sourceMode: discourse-imported
+    commentsDisplay: fullInteractive
+    requiredTags: [TITLE-I]
+    heroImage: ../../../assets/obbbanotso.png
+    heroAlt: One Big (not so) Beautiful Bill over the U.S. Capitol
+    pruneProfiles: [community-call-to-action]
+  preflight:
+    strict_manifest_v1: PASS
+    hero_asset_exists: true
+  dry_run:
+    command_shape: import-existing --manifest PATH --dry-run
+    credential_handling: protected_diagnostics_key_in_memory
+    target: repeal-obbba
+    route_base: title-i
+    imported: 0
+    skipped: 0
+    dry_run: 10
+    generatedPages: 0
+    Discourse_writes: 0
+    Astro_content_writes: 0
+    secret_output: none
+    unrelated_worktree_changes: preserved
+  remaining_gate:
+    - approved_live_import
+    - exact_build
+    - deployment
+    - per_route_live_verification
+```
+
 ## 12. Durable Feedback Rule
 
 When the OBBBA lane confirms package behavior, embed settings, category/tags,

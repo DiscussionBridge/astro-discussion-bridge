@@ -429,6 +429,13 @@ natural-title order, and limit 10 scanned 320 topics, excluded five already
 imported topics, and previewed topics 754, 755, 756, 757, 758, 759, 761, 762,
 763, and 764. No file was written.
 
+The OBBBA worked example then saved those ten candidates as a tracked strict v1
+manifest, applied a uniform source/comments/tag/hero/alt/prune policy, and ran a
+credentialed read-only manifest dry-run. Expected evidence was 0 imported, 0
+skipped, 10 dry-run, and `generatedPages=0`. Treat that as candidate-policy and
+dry-run approval only; live import, build, deploy, and route verification remain
+separate gates.
+
 For deterministic refresh of pages with different policies, use the reviewed
 Alpha import manifest rather than a blanket update-all operation. Its strict
 JSON contains only `version` and ordered `imports`. Each topic entry retains its
