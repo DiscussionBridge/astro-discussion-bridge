@@ -32,6 +32,7 @@ test("the metadata ledger covers and matches every synchronized docs source", as
     ...syncScript.matchAll(/^\s{2}"([^"]+\.md)",$/gm),
   ].map((match) => match[1]);
 
+  assert.doesNotMatch(syncScript, /\bgit\s+log\b|execFile/);
   assert.deepEqual(Object.keys(metadata.pages), listedFiles);
 
   for (const file of listedFiles) {

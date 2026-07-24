@@ -1,15 +1,12 @@
 import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceDir = path.join(repoRoot, "docs");
 const targetDir = path.join(repoRoot, "sites", "docs", "src", "content", "docs");
 const metadataPath = path.join(sourceDir, "DOCS_PAGE_METADATA.json");
-const execFileAsync = promisify(execFile);
 const refreshMetadata = process.argv.includes("--refresh-metadata");
 
 const docs = [
@@ -90,19 +87,6 @@ function sourceHash(markdown) {
   return createHash("sha256").update(markdown, "utf8").digest("hex");
 }
 
-async function historicalLastUpdatedDate(sourcePath) {
-  const { stdout } = await execFileAsync(
-    "git",
-    ["log", "-1", "--format=%cI", "--", sourcePath],
-    { cwd: repoRoot, encoding: "utf8" },
-  );
-  const value = stdout.trim();
-  if (!value) {
-    throw new Error(`Could not determine last updated date for ${sourcePath}`);
-  }
-  return value.slice(0, 10);
-}
-
 async function readMetadata() {
   try {
     return JSON.parse(await readFile(metadataPath, "utf8"));
@@ -147,9 +131,7 @@ for (const file of docs) {
   const lastUpdated =
     existing?.sourceSha256 === hash
       ? existing.lastUpdated
-      : existing
-        ? today
-        : await historicalLastUpdatedDate(sourcePath);
+      : today;
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(lastUpdated)) {
     throw new Error(`Invalid lastUpdated date for ${file}: ${lastUpdated}`);
