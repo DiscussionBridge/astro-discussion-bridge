@@ -1495,9 +1495,10 @@ output, lane name, public URLs, category ID, tags, key type, and dry-run result.
 They must not include key values, credentials, private account data, or
 production secrets.
 
-## 16. Proposed Navigation/Taxonomy Manifest
+## 16. Navigation/Taxonomy Manifest
 
-Status: proposed active feature work; design/review pending; not implemented.
+Status: package/demo implemented at `e775af3`; Code Boss PASS; OBBBA adoption
+and full Title VII scale proof open.
 
 ```yaml
 navigation_taxonomy_contract:
@@ -1542,6 +1543,30 @@ navigation_taxonomy_contract:
     - /obbba-text/title-i/...
     - /impact/title-i/...
   redirects_required_at_design_stage: false
+implementation_evidence:
+  commit: e775af3
+  discover_navigation:
+    operation: read_only
+    config: strict
+    tag_group_selection: exact
+    authority: [category, index_topic]
+    authored_links: same_origin_and_base_path
+    local_route_binding: matching_source_topic_only
+    manifest_write: create_only
+    modes: [anonymous, authenticated]
+  OBBBA_field_reads:
+    OBBBA_Text_nodes: 381
+    Impact_nodes: 317
+    Titles_each: I-X
+    writes: 0
+  presentation:
+    component: DiscussionNavigation
+    adapters: [Starlight_sidebar, plain_Astro]
+    browser_checks: [desktop_PASS, mobile_PASS, no_horizontal_overflow]
+  adoption_open:
+    - OBBBA_artifact_install
+    - full_Title_VII_responsive_accessibility_scale
+    - Law_as_Amended
 ```
 
 Do not derive authored order from tag-group membership order. Do not change the
@@ -1549,11 +1574,10 @@ source forum architecture to manufacture redundant tags. Any generator must
 distinguish provenance tags from public-navigation inputs and must produce one
 adapter-neutral manifest before framework-specific rendering.
 
-## 17. Proposed Official-Source Enrichment And Relations
+## 17. Official-Source Enrichment And Relations
 
-Status: bounded Section 10101 comparison evidence complete; reusable
-enrichment, batch comparison, relationship generation, and rendering not
-implemented.
+Status: package/demo implemented at `e775af3`; bounded Section 10101 field
+evidence retained; broader batch comparison and OBBBA adoption open.
 
 ```yaml
 official_source_enrichment:
@@ -1600,6 +1624,31 @@ relationship_graph:
   manual_per_page_links: prohibited
   adapters: [Starlight, plain_Astro]
   provenance_and_authority_separate_from_related_navigation: true
+implementation_evidence:
+  profile: us-public-law
+  manifest_version: 2
+  URL_policy: HTTPS_congress_gov_or_www_through_final_redirect
+  overwrite_policy:
+    no_overwrite_skip_before: [raw_post_read, official_source_read]
+    substantive_result: explicit_per_entry_override_only
+  source_tags_field: discussionSourceTags_JSON_scalar
+  component: DiscussionRelations
+  relationship_manifest: virtual_rebuild_time
+  package_tests: 103/103
+  npm_pack:
+    files: 52
+    packed_kB: 86.4
+    unpacked_kB: 381.3
+  artifact:
+    file: astro-discussion-bridge-0.1.0-alpha-e775af3-97cfd631.tgz
+    SHA256: 97cfd631e4a4dfda2bfc4e3ee37ec853320b610a078c62912cf1ae4db6011dd4
+  core_Astro_build: { status: PASS, public_routes: 3 }
+  importer_fixture: non_routed_scalar_frontmatter_validated
+  open:
+    - OBBBA_artifact_adoption_and_live_proof
+    - full_Title_VII_scale_proof
+    - batch_official_source_comparison
+    - Law_as_Amended_adoption
 ```
 
 The public-accountability chain is official record → structured section →

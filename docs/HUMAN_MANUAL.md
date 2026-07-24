@@ -1060,10 +1060,15 @@ provide breadcrumbs, authored previous/next, and search.
 > or screen-reader navigation fails; workflow tags leak into public
 > navigation; or tag-group response order overrides authored index order.
 
-Verify desktop, laptop, tablet, and mobile at Title VII scale. A future
-canonical taxonomy manifest should feed both Starlight and plain Astro
-presentation adapters. Presentation-mode names remain a design decision. This
-section records proposed active work; it does not describe completed behavior.
+Commit `e775af3` implements the canonical taxonomy manifest,
+`discover-navigation`, progressive navigation, a Starlight sidebar adapter,
+and plain Astro static demo. Desktop/mobile browser checks passed without
+horizontal overflow. Read-only OBBBA discovery found 381 OBBBA Text nodes and
+317 Impact nodes, each with Titles I–X, and performed no writes.
+
+> **Adoption boundary:** OBBBA has not installed this artifact in this pass.
+> Full Title VII desktop/laptop/tablet/mobile responsive and accessibility
+> scale proof remains open. Law as Amended is not in current Astro adoption.
 
 ## Official Text, Community Source, And Related Pages
 
@@ -1113,8 +1118,18 @@ IDs, and a section may have multiple Stories.
 > provenance is mixed with Related links; or adding a Story requires manually
 > editing every linked page.
 
-The reusable profile, batch report, relationship generator, and rendering are
-proposed active work, not completed behavior.
+Commit `e775af3` implements strict `us-public-law` enrichment, source-tag
+provenance, fail-closed manifest-v2 preflight, accessible reciprocal relations,
+and one-to-many Stories for package/demo use. No-overwrite imports skip before
+raw-post or official-source reads. A substantive result requires an explicit
+per-entry override.
+
+> **You should see in the reviewed demo:** accessible source/official
+> provenance, reciprocal cross-lens links, and static navigation with no
+> build-time network requirement.
+
+> **Still open:** OBBBA artifact adoption and live proof, full Title VII scale
+> testing, and batch official-source comparison beyond Section 10101.
 
 ## Related Guides
 

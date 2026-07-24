@@ -615,8 +615,25 @@ configuration names. Proposed OBBBA destinations are
 `/obbba-text/title-i/...` and `/impact/title-i/...`; redirects are not required
 at this stage.
 
-This is proposed active Alpha feature work pending design, implementation, and
-review. It is not current package or site behavior.
+Package implementation is complete at `e775af3` with Code Boss PASS and
+103/103 tests. `discover-navigation` builds the strict adapter-neutral
+navigation manifest read-only from category, exact tag-group, and index-topic
+authority. `DiscussionNavigation` provides progressive presentation, and the
+Starlight sidebar adapter plus plain Astro demo consume the result. Authored
+links must be same-origin/base-path safe; local routes bind only when the source
+topic matches. The create-only manifest supports anonymous or authenticated
+discovery and preserves source-tag provenance.
+
+Read-only OBBBA field runs discovered 381 OBBBA Text nodes and 317 Impact nodes,
+each with Titles I–X and exact hierarchy tag-group selection, with no writes.
+Core Astro built exactly three public routes; the non-routed importer fixture
+validated generated scalar provenance. Desktop/mobile browser checks passed
+without horizontal overflow and showed navigation plus reciprocal links.
+
+This is package/demo implementation evidence, not OBBBA adoption. The OBBBA
+site has not installed this artifact in this pass; full Title VII responsive
+and accessibility scale proof remains open; Law as Amended is not in the
+current Astro adoption.
 
 ### Official-Source Enrichment And Cross-Lens Relations
 
@@ -672,9 +689,19 @@ Provenance, Source comparison, and Navigation. This model generalizes to
 Congress, state legislatures, municipal ordinances, regulations, budgets,
 ballot measures, and agency rulemaking.
 
-This is strategy discovered through implementation. The bounded Section 10101
-comparison is complete evidence; enrichment, relationship generation, batch
-reporting, and public rendering remain proposed active work.
+This is strategy discovered through implementation. Commit `e775af3`
+implements strict `us-public-law` enrichment, fail-closed manifest-v2
+preflight, source-tag provenance, stable `sectionId` relationships,
+one-to-many Stories, accessible `DiscussionRelations`, and virtual
+rebuild-time relationship generation. Official URLs are restricted to HTTPS
+Congress.gov hosts, including final redirects; USLM XML is primary, official
+TXT is fallback, and PDF is optional visual evidence. Only an explicit
+per-entry override permits a substantive comparison result.
+
+No-overwrite imports skip before raw-post or official-source reads. Batch
+official-source comparison beyond the bounded Section 10101 evidence remains
+open, as do OBBBA artifact adoption and live rendering. Law as Amended remains
+outside current Astro adoption.
 
 ### After Alpha
 

@@ -415,9 +415,12 @@ Stories. Adding or removing a Story should require manifest regeneration and
 an Astro rebuild, not source-body reimport or edits to every related page.
 Provenance/authority disclosures remain separate from Related links.
 
-The official-source enrichment profile, relationship generation, and rendering
-are proposed active work. The bounded Section 10101 comparison is evidence for
-one source pair only and does not mark these lane features implemented.
+Commit `e775af3` implements the package/demo enrichment and relationship
+contracts: strict `us-public-law`, source-tag provenance, stable `sectionId`,
+reciprocal links, one-to-many Stories, and adapter-neutral virtual manifests.
+This is not yet OBBBA site adoption. The bounded Section 10101 comparison
+remains evidence for one source pair only; broader batch comparison is open,
+and Law as Amended is outside current Astro adoption.
 
 ## Listing Behavior
 

@@ -444,51 +444,60 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       Astro-managed topics and sync corrects drift; absent configuration
       preserves manual placement; Discourse-source categories are protected;
       target categories are independent.
-- [ ] Design and review a canonical navigation/taxonomy manifest generated
+- [x] Design, implement, and review a canonical navigation/taxonomy manifest generated
       from Discourse content-lens categories, hierarchy tag groups, and
       authored index topics. Index topics—not tag-group member order—must
-      control labels, landing pages, and navigation order.
-- [ ] Preserve source tags as provenance while explicitly excluding workflow
+      control labels, landing pages, and navigation order. Commit `e775af3`;
+      Code Boss PASS; package 103/103.
+- [x] Preserve source tags as provenance while explicitly excluding workflow
       tags from automatic public navigation. Do not require redundant Title
       tags on index topics or reshape a sound forum taxonomy for the bridge.
-- [ ] Implement OBBBA's complete-structure/progressive-presentation model:
+- [x] Implement the package/demo complete-structure/progressive-presentation model:
       show lenses and Titles globally; expand the active lens, Title, and
       Subtitle/Chapter/Subchapter/Part branch; leave other branches collapsed
       but user-expandable; use index pages as the complete browse surface.
+      OBBBA site adoption remains open.
 - [ ] Provide breadcrumbs, index-authored previous/next, and search. Avoid
       rendering hundreds of inactive Title VII section links on every page,
       preferably including avoidance of unnecessary inactive DOM content.
 - [ ] Verify the navigation adapter on desktop, laptop, tablet, and mobile,
       including Title VII scale, active-branch drawer behavior, keyboard use,
       screen-reader use, and appropriate expansion-state preservation.
-- [ ] Generate and review Starlight and plain Astro presentation adapters from
+- [x] Generate and review Starlight and plain Astro presentation adapters from
       the canonical manifest. Treat progressive/complete/compact as candidate
-      concepts only; do not lock configuration names before design review.
+      concepts only. Starlight adapter and plain Astro static demo passed;
+      browser checks passed on desktop/mobile without horizontal overflow.
+- [ ] Complete full Title VII desktop/laptop/tablet/mobile responsive and
+      accessibility scale proof after OBBBA adoption.
 - [ ] Prove proposed OBBBA routes `/obbba-text/title-i/...` and
       `/impact/title-i/...`. Redirects are not required for this design stage.
 - [x] Record the bounded Section 10101 comparison: topic 34/post 40 matched
       USLM `/us/pl/119/21/tI/stA/s10101`; bounded normalization produced 608
       tokens and 3,148 characters on both sides with zero substantive
       differences; cite 139 Stat. 80–81. Do not generalize to all OBBBA topics.
-- [ ] Design a reusable official-source enrichment profile that separately
+- [x] Design, implement, and review a reusable official-source enrichment profile that separately
       renders the community Discourse content source and authoritative public
       record, with identity, locator, citation, URLs, checked time, source
-      hash, and comparison result.
-- [ ] For Public Law 119-21, use USLM XML for hierarchy/text, official TXT for
+      hash, and comparison result. Strict `us-public-law` uses manifest v2.
+- [x] For Public Law 119-21, use USLM XML for hierarchy/text, official TXT for
       page-marker/fallback evidence, PDF for visual verification, and the
       Congress.gov page as overview. Cite Statutes at Large pages, not PDF
-      file-page numbers.
-- [ ] Fail closed or require review when official matching is missing,
+      file-page numbers. Enforce HTTPS Congress.gov hosts through final redirect.
+- [x] Fail closed or require review when official matching is missing,
       duplicated, or ambiguous. Never silently rewrite community text.
 - [ ] Produce a comparison-only batch report counting `exact`,
       `presentation-only`, `substantive-difference`, and `unresolved`, with
       zero content writes and bounded non-substantive normalization.
-- [ ] Generate reciprocal Related links from stable `sectionId` values across
+- [x] Generate reciprocal Related links from stable `sectionId` values across
       OBBBA Text, Law as Amended, Impact, and future Stories. Keep
       provenance/authority separate from Related navigation.
-- [ ] Support Stories as one-to-many references to one or more section IDs;
+- [x] Support Stories as one-to-many references to one or more section IDs;
       regeneration plus Astro build must update all related pages without body
       reimport or manual per-page links.
-- [ ] Render accessible Content source, Official text, and Related actions in
-      Starlight and plain Astro from one adapter-neutral manifest.
+- [x] Render accessible Content source, Official text, and Related actions in
+      Starlight and plain Astro demo evidence from one adapter-neutral manifest.
+- [ ] Adopt reviewed artifact
+      `astro-discussion-bridge-0.1.0-alpha-e775af3-97cfd631.tgz` in OBBBA,
+      then build/deploy/live-verify navigation, official-source disclosure,
+      and reciprocal relations without expanding the bounded comparison claim.
 - [ ] Design future integration lanes for Statamic and other frameworks.
