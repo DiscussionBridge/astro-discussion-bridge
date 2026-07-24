@@ -399,10 +399,11 @@ If a granular key cannot read enough setup metadata, use explicit limits or a di
 
 ## Official-Source And Related-Content Lanes
 
-Legal and public-record lanes may have both a community-maintained content
+Legal and public-record lanes may have both a protected Discourse content
 source and a separately identified official text source:
 
-- Content source points to the Discourse wiki topic that editors maintain.
+- Content source points to the protected Discourse source topic. Wiki status is
+  optional metadata, not the source-ownership or no-writeback basis.
 - Official text points to the authoritative document/section and citation.
 
 For OBBBA, the planned lenses are OBBBA Text, Law as Amended, Impact, and
@@ -417,7 +418,9 @@ Provenance/authority disclosures remain separate from Related links.
 
 Commit `e775af3` implements the package/demo enrichment and relationship
 contracts: strict `us-public-law`, source-tag provenance, stable `sectionId`,
-reciprocal links, one-to-many Stories, and adapter-neutral virtual manifests.
+reciprocal links, a many-to-many Stories graph, and adapter-neutral virtual
+manifests. One section can list many Stories, and one Story can reference many
+sections.
 Correction `bc8acb5` completes bounded 429 handling. OBBBA adoption `dd9c100`
 proves one OBBBA Text route, 15 Impact routes, preserved topic-34 source
 metadata, and reciprocal Section 10101 relations live. The bounded Section

@@ -648,10 +648,13 @@ Amended remains outside current Astro adoption.
 
 ### Official-Source Enrichment And Cross-Lens Relations
 
-The reusable enrichment model distinguishes two authorities on a
-Discourse-managed public-record page:
+The reusable enrichment model distinguishes two source roles on a
+Discourse-managed public-record page. Official-text authority belongs to the
+authoritative public record:
 
-- **Content source:** the community-maintained Discourse wiki topic.
+- **Content source:** the protected Discourse source topic. It may be a wiki,
+  but wiki status is optional metadata rather than the ownership or safety
+  basis.
 - **Official text:** the authoritative public record, identified by document,
   structural locator, citation/page range, and official links.
 
@@ -669,9 +672,11 @@ closed or require review. Comparison must never silently rewrite community
 text.
 
 Presentation-only normalization may remove Markdown link syntax, whitespace
-and line-wrap differences, capitalization, typographic punctuation, official
-page furniture, and official side notes, but it must preserve substantive
-wording and numbering.
+and line-wrap differences, typographic punctuation, official page furniture,
+and official side notes, but it must preserve substantive wording and
+numbering. Case-only differences require review because legal capitalization
+can identify defined terms or identifiers, unless a narrower explicitly safe
+case rule applies.
 
 The first bounded field proof compared forum topic 34/post 40, Section 10101,
 with USLM identifier `/us/pl/119/21/tI/stA/s10101`. After bounded
@@ -687,7 +692,8 @@ provenance/authority layer separate from related-content navigation.
 
 A stable shared key such as `sectionId` should generate reciprocal Related
 links across **OBBBA Text**, **Law as Amended**, **Impact**, and future
-**Stories**. Stories are one-to-many and may reference multiple section IDs.
+**Stories**. The aggregate graph is many-to-many: one section can list many
+Stories, and one Story can reference many sections.
 Regenerating the adapter-neutral relationship/taxonomy manifest plus rebuilding
 Astro should update reciprocal links without body reimport or manual per-page
 edits. A reader-facing pattern is:
@@ -702,8 +708,8 @@ ballot measures, and agency rulemaking.
 
 This is strategy discovered through implementation. Commit `e775af3`
 implements strict `us-public-law` enrichment, fail-closed manifest-v2
-preflight, source-tag provenance, stable `sectionId` relationships,
-one-to-many Stories, accessible `DiscussionRelations`, and virtual
+preflight, source-tag provenance, stable `sectionId` many-to-many Stories,
+accessible `DiscussionRelations`, and virtual
 rebuild-time relationship generation. Official URLs are restricted to HTTPS
 Congress.gov hosts, including final redirects; USLM XML is primary, official
 TXT is fallback, and PDF is optional visual evidence. Only an explicit

@@ -492,9 +492,10 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Generate reciprocal Related links from stable `sectionId` values across
       OBBBA Text, Law as Amended, Impact, and future Stories. Keep
       provenance/authority separate from Related navigation.
-- [x] Support Stories as one-to-many references to one or more section IDs;
-      regeneration plus Astro build must update all related pages without body
-      reimport or manual per-page links.
+- [x] Support an aggregate many-to-many Stories graph: one section can list
+      many Stories, and one Story can reference many section IDs; regeneration
+      plus Astro build must update all related pages without body reimport or
+      manual per-page links.
 - [x] Render accessible Content source, Official text, and Related actions in
       Starlight and plain Astro demo evidence from one adapter-neutral manifest.
 - [x] Adopt reviewed artifact

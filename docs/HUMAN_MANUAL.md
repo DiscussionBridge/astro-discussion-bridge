@@ -1080,7 +1080,9 @@ locked.
 For community-maintained legal or public-record content, show two separate
 source relationships:
 
-- **Content source:** the community-maintained Discourse wiki topic.
+- **Content source:** the protected Discourse source topic. A topic may be a
+  wiki, but wiki status is optional metadata rather than the ownership or
+  no-writeback basis.
 - **Official text:** the identified law/document and section, with its official
   citation or page range.
 
@@ -1100,8 +1102,10 @@ Before publishing a comparison:
 5. route substantive or unresolved results for review.
 
 Presentation-only comparison may ignore Markdown links, wrapping/whitespace,
-capitalization, typographic punctuation, page furniture, and official side
-notes. It must not normalize away changed words or numbering.
+typographic punctuation, page furniture, and official side notes. It must not
+normalize away changed words or numbering. Review capitalization-only
+differences because legal capitalization may identify defined terms or
+identifiers, unless a narrower explicitly safe case-normalization rule applies.
 
 > **Bounded evidence:** OBBBA topic 34/post 40, Section 10101, matched USLM
 > `/us/pl/119/21/tI/stA/s10101`. Both normalized forms had 608 tokens and 3,148
@@ -1125,7 +1129,8 @@ IDs, and a section may have multiple Stories.
 
 Commit `e775af3` implements strict `us-public-law` enrichment, source-tag
 provenance, fail-closed manifest-v2 preflight, accessible reciprocal relations,
-and one-to-many Stories for package/demo use. No-overwrite imports skip before
+and a many-to-many Stories graph: a section can list many Stories, and a Story
+can reference many sections. No-overwrite imports skip before
 raw-post or official-source reads. A substantive result requires an explicit
 per-entry override.
 

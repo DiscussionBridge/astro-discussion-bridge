@@ -1592,8 +1592,12 @@ adopted live at OBBBA `dd9c100`; broader batch comparison open.
 
 ```yaml
 official_source_enrichment:
-  content_source: community_maintained_Discourse_wiki
+  content_source:
+    role: protected_Discourse_source_topic
+    wiki_status: optional_metadata
+    ownership_and_no_writeback_basis: source_mode_contract
   official_text:
+    authority: authoritative_public_record
     identity: [document_or_law, sectionId, label]
     locator: [structural_identifier, citation, official_page_range]
     URLs: [overview, structured_text, text_fallback, visual_record]
@@ -1612,11 +1616,14 @@ official_source_enrichment:
   presentation_only_may_ignore:
     - Markdown_links
     - whitespace_and_line_wrap
-    - capitalization
     - typographic_punctuation
     - official_page_furniture
     - official_side_notes
   presentation_only_must_preserve: [substantive_wording, numbering]
+  capitalization_only:
+    default: review_required
+    reason: may_identify_legal_defined_terms_or_identifiers
+    exception: narrower_explicitly_safe_case_rule
   batch_mode: { report_all_result_counts: true, content_writes: 0 }
 bounded_field_evidence:
   Discourse: { topic_id: 34, post_id: 40 }
@@ -1626,10 +1633,13 @@ bounded_field_evidence:
   citation: Public Law 119-21, Section 10101, 139 Stat. 80-81
   scope: representative_single_section_not_batch_claim
 relationship_graph:
+  aggregate_cardinality: many_to_many
   stable_key: sectionId
   lenses: [OBBBA Text, Law as Amended, Impact, Stories]
   reciprocal_links: generated
-  Stories: { cardinality: one_to_many, references: one_or_more_sectionIds }
+  directional_views:
+    section_to_Stories: one_to_many
+    Story_to_sections: one_to_many
   update_operation: regenerate_manifest_then_Astro_build
   body_reimport_required: false
   manual_per_page_links: prohibited
