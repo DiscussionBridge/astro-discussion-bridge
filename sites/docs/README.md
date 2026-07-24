@@ -7,10 +7,16 @@ The editable source docs live in the repository-level `docs/` folder. The docs s
 ## Local Commands
 
 ```powershell
+npm run refresh-metadata
 npm run sync-content
 npm run build
 npm run preview
 ```
+
+Run `refresh-metadata` after editing any canonical file under `docs/`. It updates
+the tracked `docs/DOCS_PAGE_METADATA.json` ledger. Normal builds verify each
+source hash and fail instead of publishing a stale or shallow-clone-derived
+date.
 
 ## Cloudflare Pages
 

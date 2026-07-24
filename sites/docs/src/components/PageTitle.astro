@@ -1,0 +1,64 @@
+---
+import DefaultPageTitle from "@astrojs/starlight/components/PageTitle.astro";
+
+const { entry, lang, lastUpdated } = Astro.locals.starlightRoute;
+const appliesTo = entry.data.appliesTo;
+---
+
+<DefaultPageTitle />
+
+{
+  (lastUpdated || appliesTo) && (
+    <p class="page-metadata" aria-label="Document metadata">
+      {lastUpdated && (
+        <span>
+          <strong>{Astro.locals.t("page.lastUpdated")}</strong>{" "}
+          <time datetime={lastUpdated.toISOString()}>
+            {lastUpdated.toLocaleDateString(lang, {
+              dateStyle: "medium",
+              timeZone: "UTC",
+            })}
+          </time>
+        </span>
+      )}
+      {lastUpdated && appliesTo && <span class="separator" aria-hidden="true">·</span>}
+      {appliesTo && (
+        <span>
+          <strong>Applies to:</strong> {appliesTo}
+        </span>
+      )}
+    </p>
+  )
+}
+
+<style>
+  .page-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.55rem;
+    margin: 0.45rem 0 1.25rem;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+    line-height: 1.5;
+  }
+
+  .page-metadata strong {
+    color: var(--sl-color-gray-2);
+    font-weight: 600;
+  }
+
+  .separator {
+    color: var(--sl-color-gray-4);
+  }
+
+  @media (max-width: 30rem) {
+    .page-metadata {
+      display: grid;
+      gap: 0.2rem;
+    }
+
+    .separator {
+      display: none;
+    }
+  }
+</style>

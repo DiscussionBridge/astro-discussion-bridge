@@ -6,6 +6,10 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "Discussion Bridge Docs",
+      lastUpdated: true,
+      components: {
+        PageTitle: "./src/components/PageTitle.astro",
+      },
       social: [
         {
           icon: "github",

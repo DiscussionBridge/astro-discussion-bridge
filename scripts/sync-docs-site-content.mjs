@@ -1,10 +1,16 @@
 import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceDir = path.join(repoRoot, "docs");
 const targetDir = path.join(repoRoot, "sites", "docs", "src", "content", "docs");
+const metadataPath = path.join(sourceDir, "DOCS_PAGE_METADATA.json");
+const execFileAsync = promisify(execFile);
+const refreshMetadata = process.argv.includes("--refresh-metadata");
 
 const docs = [
   "README.md",
@@ -80,8 +86,45 @@ function rewriteLinks(markdown, sourceFile) {
   return next;
 }
 
-await rm(targetDir, { recursive: true, force: true });
-await mkdir(targetDir, { recursive: true });
+function sourceHash(markdown) {
+  return createHash("sha256").update(markdown, "utf8").digest("hex");
+}
+
+async function historicalLastUpdatedDate(sourcePath) {
+  const { stdout } = await execFileAsync(
+    "git",
+    ["log", "-1", "--format=%cI", "--", sourcePath],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+  const value = stdout.trim();
+  if (!value) {
+    throw new Error(`Could not determine last updated date for ${sourcePath}`);
+  }
+  return value.slice(0, 10);
+}
+
+async function readMetadata() {
+  try {
+    return JSON.parse(await readFile(metadataPath, "utf8"));
+  } catch (error) {
+    if (refreshMetadata && error?.code === "ENOENT") {
+      return { version: 1, appliesTo: "Discussion Bridge Alpha", pages: {} };
+    }
+    throw new Error(
+      `Could not read ${metadataPath}. Run npm run refresh-metadata from sites/docs.`,
+      { cause: error },
+    );
+  }
+}
+
+const metadata = await readMetadata();
+if (metadata.version !== 1 || typeof metadata.appliesTo !== "string" || !metadata.pages) {
+  throw new Error(`Invalid docs metadata ledger: ${metadataPath}`);
+}
+
+const pages = [];
+const nextMetadataPages = {};
+const today = new Date().toISOString().slice(0, 10);
 
 for (const file of docs) {
   const sourcePath = path.join(sourceDir, file);
@@ -92,14 +135,60 @@ for (const file of docs) {
   }
 
   const markdown = await readFile(sourcePath, "utf8");
+  const hash = sourceHash(markdown);
+  const existing = metadata.pages[file];
+
+  if (!refreshMetadata && (!existing || existing.sourceSha256 !== hash)) {
+    throw new Error(
+      `Stale docs metadata for ${file}. Run npm run refresh-metadata from sites/docs, review the date, and commit docs/DOCS_PAGE_METADATA.json.`,
+    );
+  }
+
+  const lastUpdated =
+    existing?.sourceSha256 === hash
+      ? existing.lastUpdated
+      : existing
+        ? today
+        : await historicalLastUpdatedDate(sourcePath);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(lastUpdated)) {
+    throw new Error(`Invalid lastUpdated date for ${file}: ${lastUpdated}`);
+  }
+
+  nextMetadataPages[file] = { lastUpdated, sourceSha256: hash };
+  pages.push({ file, sourcePath, markdown, lastUpdated });
+}
+
+if (refreshMetadata) {
+  await writeFile(
+    metadataPath,
+    `${JSON.stringify({ ...metadata, pages: nextMetadataPages }, null, 2)}\n`,
+    "utf8",
+  );
+}
+
+await rm(targetDir, { recursive: true, force: true });
+await mkdir(targetDir, { recursive: true });
+
+for (const { file, markdown, lastUpdated } of pages) {
   const title = pageTitle(markdown, file);
   const body = rewriteLinks(stripFirstHeading(markdown).trimStart(), file);
   const slug = slugByFile.get(file);
   const targetPath = path.join(targetDir, `${slug}.md`);
+  const editUrl = `https://github.com/DiscussionBridge/astro-discussion-bridge/edit/main/docs/${file}`;
 
   await writeFile(
     targetPath,
-    `---\ntitle: ${JSON.stringify(title)}\n---\n\n${body}`,
+    [
+      "---",
+      `title: ${JSON.stringify(title)}`,
+      `lastUpdated: ${lastUpdated}`,
+      `appliesTo: ${JSON.stringify(metadata.appliesTo)}`,
+      `editUrl: ${JSON.stringify(editUrl)}`,
+      "---",
+      "",
+      body,
+    ].join("\n"),
     "utf8",
   );
 }

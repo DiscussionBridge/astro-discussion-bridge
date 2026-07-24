@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "sync-content": "node ../../scripts/sync-docs-site-content.mjs",
+    "refresh-metadata": "node ../../scripts/sync-docs-site-content.mjs --refresh-metadata",
     "check:attribution": "node ../../scripts/check-attribution.mjs --docs-scope",
+    "check:metadata": "node --test test/docs-page-metadata.test.mjs",
     "predev": "npm run sync-content",
     "dev": "astro dev",
-    "prebuild": "npm run sync-content && npm run check:attribution",
+    "prebuild": "npm run check:metadata && npm run sync-content && npm run check:attribution",
     "build": "astro build",
     "preview": "astro preview"
   },

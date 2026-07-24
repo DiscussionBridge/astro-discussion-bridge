@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "appliesTo": "Discussion Bridge Alpha",
+  "pages": {
+    "README.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "f946656521de1d1cc40599a05f31bb3453bcaa69dc0ea05995bd15314935032f"
+    },
+    "HUMAN_MANUAL.md": {
+      "lastUpdated": "2026-07-24",
+      "sourceSha256": "73f82d65b89b2f62cc1dc1448ede3539d0b01bd9cb2fefc3247316d0b5af3d9b"
+    },
+    "MACHINE_MANUAL.md": {
+      "lastUpdated": "2026-07-24",
+      "sourceSha256": "69c2b6c3ab4068c7d8d3e4399624b627fd1f37c493fa9274dd144262f3c6e9d5"
+    },
+    "SITE_RUNBOOK_HUMAN_TEMPLATE.md": {
+      "lastUpdated": "2026-07-21",
+      "sourceSha256": "863ac3c82d8bf45a90443ef4544420dd38213a85e0e43c1752368b6d240be006"
+    },
+    "SITE_RUNBOOK_MACHINE_TEMPLATE.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "952d010b8a9f3d1a557d3ebd688ac551cba2b761f67d5328d2a30bec5a84ce07"
+    },
+    "runbooks/OBBBA_ONEBIGBEAUTIFULBILL_HUMAN.md": {
+      "lastUpdated": "2026-07-24",
+      "sourceSha256": "3ed8479a3c837ffc5a324b36036586f73c414802a783f9b5ae6424e7ae83633e"
+    },
+    "runbooks/OBBBA_ONEBIGBEAUTIFULBILL_MACHINE.md": {
+      "lastUpdated": "2026-07-24",
+      "sourceSha256": "676d89d58e3468b153f2df9fb41bf3e7aa53b43b0356bf13dc235d9c3f69b8ac"
+    },
+    "ALPHA_SETUP.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "1db645c8374dec4571c5ff0d291d2f1dedb244c57463c49323c0bc0be802a088"
+    },
+    "KEY_MANAGEMENT.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "7f8e8c0259a923936703ba2d14bd55ed673a9d40319e9970a5fbb9b0cff90a3e"
+    },
+    "COMMENTS_DISPLAY.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "03aaf23d995c7fc626d1db58c7e1d7ce00d9029978bbad0e2fcde0406c8b9bc3"
+    },
+    "CONTENT_LANES.md": {
+      "lastUpdated": "2026-07-24",
+      "sourceSha256": "b95918a3b4ef94598a9968e2ced21623c1813b001d21d7d576a172e97b28c932"
+    },
+    "PRESETS_AND_PLACEMENT.md": {
+      "lastUpdated": "2026-07-19",
+      "sourceSha256": "2370b25e837260062ed7d0bd29c89194f576045801f8338af9a48540362f5734"
+    },
+    "DISCUSSION_SAFE_MARKDOWN.md": {
+      "lastUpdated": "2026-07-19",
+      "sourceSha256": "51ca04a54712c1ecd6bca6d3424ea11e83f8373898e86948e1c8bfdbc276b56d"
+    },
+    "TROUBLESHOOTING.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "04c0fc311c1c6a170e40da6f60ad309f420e4a9976c0ed8099596598bfd442b8"
+    },
+    "SUPPORT_AND_FEEDBACK.md": {
+      "lastUpdated": "2026-07-21",
+      "sourceSha256": "cd57bfc7ba86349ac4b14cce097d29abbb9c1362d5407b0fb95b22ebabfd51ce"
+    },
+    "KNOWN_ISSUES.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "c1658c17afa6738bd19cf79a11cb9c91270c4c4ab63cde7bcaca3eaf0cf8ca67"
+    },
+    "ATTRIBUTION_OWNERSHIP_LICENSE.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "4b375d749ecfe233e8dd9aff49a40835bfced32d28d32373a943c78fdde85f4e"
+    },
+    "BUILD_LAUNCH_CHECKLISTS.md": {
+      "lastUpdated": "2026-07-24",
+      "sourceSha256": "673a6c721958b243041a19cc4fad2730102b807472b866f437e21ebfb6d37859"
+    },
+    "DEMO_PLAN.md": {
+      "lastUpdated": "2026-07-23",
+      "sourceSha256": "94ab39bfce97b946549ea2477e01198fada2166dc09adf94e277f2b44eb767e5"
+    },
+    "DISCOURSE_FIELD_NOTES.md": {
+      "lastUpdated": "2026-07-22",
+      "sourceSha256": "25c17e7d676f15671485453796dcae02308d5976ac6a4b2531193691290e4ea7"
+    },
+    "PRODUCT_NOTES.md": {
+      "lastUpdated": "2026-07-24",
+      "sourceSha256": "d402df0e2ea0aa4ed982f0b41b69fa4d1d978f350708c8dc86adc2d14546688b"
+    }
+  }
+}
