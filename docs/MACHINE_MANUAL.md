@@ -498,10 +498,25 @@ forbidden_order_fields:
   - last reply
   - latest activity
 pre_import:
+  validate_before:
+    - network_fetch
+    - local_scan
+    - dereference
+    - filesystem_work
+  invalid_runtime_values:
+    fields: [sourceMode, commentsDisplay]
+    result: reject_with_zero_fetch
   preview_selected_category_queue: required
   preview_candidates: required
   exclude_already_imported_topics:
-    recursive_fields: [discourseTopicId, discussionTargetBindings.topicId]
+    source_fields:
+      - opening_frontmatter.discourseTopicId
+      - strictly_parsed_opening_frontmatter.discussionTargetBindings.topicId
+    unrelated_topicId_metadata: eligible
+  descendant_categories:
+    fetch: direct
+    duplicate_topics: deduplicated
+  date_only_created_to: include_full_UTC_day
 manifest_output:
   option: --manifest-out FILE
   format: strict_v1
@@ -516,7 +531,7 @@ public_category_requirements:
   credentials: not_required
 review_status:
   implementation: complete
-  package_suite: 83/83
+  package_suite: 84/84
   live_read_only_CDN_proof:
     forum: https://forum.repealobbba.org
     category: 18
@@ -527,7 +542,8 @@ review_status:
     excluded_already_imported: 5
     candidates: [754, 755, 756, 757, 758, 759, 761, 762, 763, 764]
     files_written: 0
-  Code_Boss: pending
+  Code_Boss: PASS_after_three_correction_rounds
+  full_attribution_and_package_gate: PASS
 alpha_requirement: true
 ```
 

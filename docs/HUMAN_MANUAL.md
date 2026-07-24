@@ -410,19 +410,24 @@ selected lane should include descendants. Other optional controls are
 oldest|newest|natural-title`, `--limit`, and `--json`.
 
 The command previews only; it never imports. It recursively excludes topic IDs
-already present as local `discourseTopicId` values or target bindings. Add
-`--manifest-out FILE` to save the reviewed order as a new strict v1 manifest;
-the command refuses to overwrite an existing file. Generated entries default
-to `discourse-imported`, with optional `discourse-managed` source mode and an
-explicit comments display. Public categories need neither a site URL nor
-credentials.
+found in opening-frontmatter `discourseTopicId` or strictly parsed
+`discussionTargetBindings`; unrelated `topicId` metadata remains eligible.
+Descendant categories are fetched directly and deduplicated. A date-only
+`--created-to` includes that entire UTC day.
 
-Current implementation evidence is 83/83 tests plus a live read-only run
+Add `--manifest-out FILE` to save the reviewed order as a new strict v1
+manifest; the command refuses to overwrite an existing file. All runtime
+source-mode/comments-display validation finishes before network or local
+scans, and manifest validation finishes before dereference or filesystem work.
+Generated entries default to `discourse-imported`, with optional
+`discourse-managed` source mode and an explicit comments display. Public
+categories need neither a site URL nor credentials.
+
+Final reviewed evidence is Code Boss PASS and 84/84 tests plus a live read-only run
 against the Cloudflare-CDN-backed Repeal OBBBA forum: category 18, `TITLE-I`,
 natural-title order, and limit 10 scanned 320 topics, excluded five already
 imported topics, and previewed topics 754, 755, 756, 757, 758, 759, 761, 762,
-763, and 764. No file was written. Code Boss review is still pending, so do not
-treat this evidence as final review approval.
+763, and 764. No file was written.
 
 For deterministic refresh of pages with different policies, use the reviewed
 Alpha import manifest rather than a blanket update-all operation. Its strict

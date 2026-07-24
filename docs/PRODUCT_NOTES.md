@@ -360,11 +360,19 @@ and target-binding topic IDs, previews candidates, supports JSON, and may write
 a new—but never overwrite an existing—strict v1 manifest. Public-category
 discovery requires no site URL or credentials.
 
-The current candidate passes 83/83 tests. A live read-only CDN-backed
+Final review tightened the safety boundary: runtime source-mode/comments-display
+values reject before network or local scans; the writer validates before
+dereference/filesystem work; exclusions use only opening-frontmatter
+`discourseTopicId` and strictly parsed target bindings; unrelated `topicId`
+metadata stays eligible. Descendants are fetched directly and deduplicated,
+and date-only `created-to` includes the full UTC day.
+
+Code Boss returned PASS after three correction rounds, the package suite passes
+84/84, and the full attribution/package gate passes. A live read-only CDN-backed
 TITLE-I/category-18 run scanned 320 topics, excluded five already imported
 topics, and returned the next ten natural-title candidates beginning with topic
-754 (Section 10106); it wrote no files. This closes implementation and live
-read-only proof, but Code Boss review remains open and must not be implied.
+754 (Section 10106); it wrote no files. Implementation, live read-only proof,
+and Code Boss review are complete.
 
 ## Accessible Hero Imports
 

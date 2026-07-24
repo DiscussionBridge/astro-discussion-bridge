@@ -153,8 +153,11 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       `discourseTopicId` and target-binding topic IDs.
 - [x] Add optional non-overwriting `--manifest-out` for a new strict v1
       manifest, with selectable source mode/comments display and JSON output.
-- [ ] Obtain Code Boss review for the 83/83 discovery candidate; implementation
-      and live read-only CDN-backed evidence are complete, but review is not.
+- [x] Complete Code Boss review for import discovery after three correction
+      rounds: PASS, package suite 84/84. Final coverage includes validation
+      before dereference/filesystem/network work, strict opening-frontmatter
+      exclusions, direct deduplicated descendant fetches, and full-UTC-day
+      handling for date-only `created-to`.
 - [x] Add optional imported-page hero placement and require non-empty alt text
       whenever a hero image is configured (`729d85f`, reviewed package suite
       38/38); reject missing, empty, whitespace-only, or unpaired values before
