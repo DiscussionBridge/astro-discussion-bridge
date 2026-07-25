@@ -29,6 +29,41 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       implementation labor, handholding, managed hosting/operations,
       customization, support, and consulting; third-party infrastructure
       remains operator-paid.
+- [x] Settle the product architecture: Discussion Bridge is a
+      Discourse-centered, adapter-driven orchestration system. The portable
+      core owns connections, identities, mappings, policies, jobs,
+      comparisons, approvals, retries, provenance, and audit evidence; the
+      Discussion Bridge for Discourse plugin is its present operational home
+      and natural control plane.
+- [x] Treat Astro, Statamic, and future integrations as well-featured adapters,
+      not separate control planes. Support one Discourse installation
+      connecting concurrently to multiple publishing systems.
+- [x] Preserve Tier 1 API-only operation as a useful compatibility capability,
+      while no longer describing it as the product's natural operational
+      center.
+- [x] Keep every offering under one Discussion Bridge product family:
+      fully featured free Discussion Bridge for Discourse and Discussion
+      Bridge for Astro; paid managed Discussion Bridge SaaS for multi-CMS,
+      multi-site, and multi-community orchestration; paid professional
+      services; and public community support.
+- [x] Require the free products to remain genuinely capable. Discussion Bridge
+      SaaS must sell managed operation, scale, governance, convenience, and
+      operational relief rather than escape from artificial limitations.
+- [ ] Inventory current Astro behavior and classify each item as portable-core
+      domain logic, Discourse-host behavior, or Astro-adapter behavior before
+      moving or extending it. Product Notes now records the initial behavioral
+      classification; complete the module/dependency inventory before code
+      migration.
+- [ ] Define stable host-neutral core contracts and persistence boundaries so
+      the Discourse plugin can operate the core without unnecessarily coupling
+      domain logic to Discourse internals.
+- [x] Produce the core/adapter migration roadmap from the current Astro
+      prototype evidence to portable core, Discourse host, and publishing
+      adapters in `docs/CORE_ADAPTER_IMPLEMENTATION_ROADMAP.md`. Preserve
+      current working workflows during the transition and do not imply that
+      the architectural migration is already implemented. Individual phase
+      gates still require their named Product, Code, Manual, Discourse, and
+      Bridge reviews.
 
 ### DiscussionBridge.dev Two-Direction Dogfood Gate
 
@@ -487,9 +522,45 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       file-page numbers. Enforce HTTPS Congress.gov hosts through final redirect.
 - [x] Fail closed or require review when official matching is missing,
       duplicated, or ambiguous. Never silently rewrite community text.
-- [ ] Produce a comparison-only batch report counting `exact`,
+- [x] Produce a comparison-only batch report counting `exact`,
       `presentation-only`, `substantive-difference`, and `unresolved`, with
-      zero content writes and bounded non-substantive normalization.
+      zero content writes and bounded non-substantive normalization. The final
+      2026-07-24 Public Law 119-21 run compared 307 actual OBBBA Text sections:
+      48 exact, 28 presentation-only, 231 substantive-difference, and zero
+      unresolved. It made zero Discourse and zero Astro content writes; see
+      `docs/evidence/OBBBA_OFFICIAL_SOURCE_COMPARISON_FINAL_2026-07-24.md`.
+- [x] Recompare all 307 source topics against the enrolled H.R. 1 baseline
+      actually used for population. Final zero-write result: 301 normalized
+      exact, four presentation-only, two initially flagged source-content
+      exceptions, and zero unresolved. Author disposition and direct raw-post
+      verification characterized both: Section 10401 is intentional
+      community-only annotation/legacy color residue. Section 40005 contains
+      its operative embedded `§ 20306` heading but omits the repeated 13-token
+      table-of-sections entry from subsection `(b) Clerical amendment`; see
+      `docs/evidence/OBBBA_ENROLLED_SOURCE_COMPARISON_2026-07-24.md`.
+- [x] Set the reader-facing disposition for the two enrolled-source exceptions:
+      exclude Section 10401's author-confirmed footnote from authoritative
+      OBBBA Text while retaining it as community text; restore Section 40005's
+      repeated `§ 20306` clerical table-of-sections entry in authoritative
+      Astro output without writing back to the protected Discourse source.
+- [ ] Create the explicit population manifest. Preserve the signed Public Law
+      comparison as separate later-stage authority evidence.
+- [ ] Classify Impact topics before population. Do not publish an Astro Impact
+      page while its source topic still contains the canonical placeholder
+      prompt (reference: Section 82001/topic 1002). Retain its `sectionId` and
+      protected Discourse topic URL so OBBBA Text can link to that forum topic.
+      Freeze the reference as a dated, versioned normalized-content snapshot
+      with topic/post identity and SHA-256; do not use future edits to topic
+      1002 as a moving baseline. The dry-run report must list
+      placeholder-suppressed, publication-candidate, and review-required Impact
+      topics separately. A nonmatching hash is not automatic publication
+      approval; partial, mixed, or uncertain matches require review.
+- [x] Implement and Code Boss-review the GET-only Impact population planner.
+      The strict generated config covers 307 unique topics/sections, retains 15
+      existing Astro routes, freezes topic 1002/post 1009, revalidates runtime
+      authority and identity before credentialed reads, blocks redirects and
+      non-GET requests, and creates only a zero-write report. Package suite:
+      128/128.
 - [x] Generate reciprocal Related links from stable `sectionId` values across
       OBBBA Text, Law as Amended, Impact, and future Stories. Keep
       provenance/authority separate from Related navigation.

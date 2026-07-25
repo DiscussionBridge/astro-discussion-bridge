@@ -8,8 +8,58 @@ must never contain real secret values.
 ## 1. Product And Package
 
 ```yaml
-product: Discussion Bridge for Astro
-package: astro-discussion-bridge
+product: Discussion Bridge
+architecture: Discourse-centered_adapter-driven
+operational_home: Discussion Bridge for Discourse
+control_plane_host: Discourse
+portable_core:
+  owns:
+    - connections
+    - identities
+    - mappings
+    - policies
+    - jobs
+    - comparisons
+    - approvals
+    - retries
+    - provenance
+    - audit_evidence
+adapters:
+  current: [Astro]
+  planned: [Statamic, future_publishing_systems]
+  rule: adapters_translate_portable_contract_and_do_not_create_control_planes
+tier_1_API_only:
+  status: supported_compatibility_capability
+  natural_operational_center: false
+portability:
+  rule: keep_core_domain_logic_host-neutral_where_practical
+  future_host_option: standalone_without_domain_rewrite
+implementation_status:
+  architecture_decision: settled
+  core_plugin_adapter_migration: open
+product_family:
+  umbrella: Discussion_Bridge
+  free_products:
+    - Discussion_Bridge_for_Discourse
+    - Discussion_Bridge_for_Astro
+  paid_managed_product:
+    name: Discussion_Bridge_SaaS
+    purpose: multi_CMS_multi_site_multi_community_orchestration
+  paid_services:
+    - implementation
+    - migration
+    - customization
+    - training
+    - operations
+    - extensive_support
+  community:
+    public_docs: true
+    community_support: true
+    team_help: as_capacity_permits
+  commercial_rule: SaaS_sells_managed_operation_scale_governance_convenience_and_operational_relief_not_artificial_limit_removal
+  shared_foundation: portable_Discussion_Bridge_Core_contracts_policies_terminology_identity_and_trust_model
+Astro_product: Discussion Bridge for Astro
+Astro_package: astro-discussion-bridge
 package_root: packages/astro-discussion-bridge
 cli_source: packages/astro-discussion-bridge/src/cli.ts
 sync_source: packages/astro-discussion-bridge/src/sync/index.ts
@@ -17,6 +67,22 @@ import_source: packages/astro-discussion-bridge/src/import-existing.ts
 public_docs: docs
 default_starlight_dir: src/content/docs
 default_astro_dir: src/content
+```
+
+Classify new and existing behavior before moving or extending it:
+
+```yaml
+behavior_classification:
+  portable_core:
+    test: owns_domain_policy_state_or_audit_evidence
+  Discourse_host:
+    test: uses_Discourse_users_permissions_jobs_UI_database_APIs_or_operations
+  publishing_adapter:
+    test: maps_portable_contract_to_CMS_content_navigation_rendering_build_or_deploy
+prohibited:
+  - duplicate_control_plane_per_adapter
+  - unnecessary_Discourse_internal_dependency_in_portable_domain_logic
+  - claim_migration_complete_before_reviewed_implementation_evidence
 ```
 
 Package commands run from the consuming Astro project root:
@@ -1589,8 +1655,8 @@ adapter-neutral manifest before framework-specific rendering.
 ## 17. Official-Source Enrichment And Relations
 
 Status: package implemented at `e775af3` plus `bc8acb5` and `db1c57a`;
-bounded Section 10101 refreshed live at OBBBA `5a455f1`; broader batch
-comparison open.
+bounded Section 10101 refreshed live at OBBBA `5a455f1`; final zero-write
+OBBBA Text batch comparison completed 2026-07-24.
 
 ```yaml
 official_source_enrichment:
@@ -1628,6 +1694,146 @@ official_source_enrichment:
     path: review_or_explicit_per_entry_override
     reason: may_identify_legal_defined_terms_or_identifiers
   batch_mode: { report_all_result_counts: true, content_writes: 0 }
+batch_comparison_evidence:
+  command: compare-official-sources
+  request_policy:
+    method: GET_only
+    sequential: true
+    minimum_interval_ms: 350
+    retry_statuses: [429]
+    max_retries: 3
+    Retry_After: bounded
+  scope:
+    authored_navigation_nodes: 381
+    actual_section_nodes: 307
+  results:
+    exact: 48
+    presentation-only: 28
+    substantive-difference: 231
+    unresolved: 0
+  immediately_clear_of_substantive_difference: 76
+  writes: { Discourse: 0, Astro_content: 0 }
+  evidence:
+    - docs/evidence/OBBBA_OFFICIAL_SOURCE_COMPARISON_FINAL_2026-07-24.json
+    - docs/evidence/OBBBA_OFFICIAL_SOURCE_COMPARISON_FINAL_2026-07-24.md
+  next_gate:
+    - use_enrolled_source_provenance_baseline
+    - create_explicit_approved_population_manifest
+    - generate_Impact_links_during_approved_population_run
+enrolled_source_comparison:
+  source_stage: enrolled_HR1_119th_Congress
+  source_file: BILLS-119hr1enr.xml
+  actual_format: legacy_GPO_HTML_markup
+  parser_boundaries:
+    inline_small_caps: join_without_invented_whitespace
+    authored_hierarchy: stop_section
+    quoted_internal_legal_structure: preserve_inside_section
+    attestation: stop_section
+  results:
+    total: 307
+    normalized_exact: 301
+    presentation_only: 4
+    word_difference: 2
+    unresolved: 0
+  exceptions:
+    section_10401:
+      disposition: intentional_community_only_annotation_and_legacy_color_residue
+      authoritative_OBBBA_Text: exclude_annotation
+    section_40005:
+      operative_embedded_20306_heading: present
+      omitted_text: repeated_13_token_table_of_sections_entry
+      location: subsection_b_clerical_amendment
+      disposition: restore_in_authoritative_Astro_output
+      protected_source_writeback: false
+  changed_operative_provisions_demonstrated: 0
+  writes: { Discourse: 0, Astro_content: 0 }
+  evidence:
+    - docs/evidence/OBBBA_ENROLLED_SOURCE_COMPARISON_2026-07-24.json
+    - docs/evidence/OBBBA_ENROLLED_SOURCE_COMPARISON_2026-07-24.md
+impact_population_gate:
+  credential_rule:
+    authority: user_created_Discourse_API_key
+    alternate_credential_scheme: forbidden
+    durable_identity_backing: user_created_Discourse_API_key
+    per_run_key_churn: forbidden
+    protected_storage_provider_changes_authority: false
+    preferred_operator_input:
+      option: --diagnostics-api-key-file
+      environment: DISCOURSE_DIAGNOSTICS_API_KEY_FILE
+      source: existing_protected_vault_record
+      required_key_lines: 1
+      key_shape: 64_hex_characters_unformatted
+      secret_in_argv_or_history: false
+  preflight:
+    command: preflight-impact-population
+    scope: frozen_placeholder_topic_only
+    collector_and_auth_path: same_as_full_plan
+    report_created: false
+    writes: { Discourse: 0, Astro_content: 0 }
+    required_result: Preflight_PASS
+  command: plan-impact-population
+  command_inputs:
+    config: examples/obbba-impact-population.config.json
+    report_out: docs/evidence/OBBBA_IMPACT_POPULATION_DRY_RUN_2026-07-24.json
+    credentials: session_only_environment
+  collector:
+    methods: [GET]
+    redirects: blocked
+    runtime_config_revalidation: required
+    report_create_only: true
+    progress: per_topic_completion
+    rate_limit_waits: visible
+  operator_policy:
+    credential_source: approved_vault_mechanism
+    paste_secret_into_shell_command: forbidden
+    maximum_failed_attempts: 2
+    after_limit: stop_and_return_evidence_to_implementation_lane
+  canonical_placeholder_reference:
+    section_id: "82001"
+    topic_id: 1002
+    post_id: 1009
+    topic_url: https://forum.repealobbba.org/t/sec-82001-loan-repayment-impact/1002
+    snapshot_required:
+      - post_id
+      - captured_at
+      - normalization_version
+      - normalized_content_sha256
+    future_topic_edits_change_baseline: false
+  production_inventory:
+    total_sources: 307
+    existing_Astro_Impact_routes: 15
+  classification:
+    input: normalized_first_post_source_content
+    evidence: sha256
+    title_or_topic_id_only: forbidden
+    outcomes:
+      - placeholder_suppressed
+      - publication_candidate
+      - review_required
+    nonmatching_hash_implies_publication_approval: false
+    review_required_when:
+      - minor_placeholder_edit
+      - partial_placeholder_removal
+      - mixed_placeholder_and_developed_content
+      - normalization_uncertainty
+  placeholder_suppressed:
+    publish_Astro_Impact_page: false
+    retain_relationship: true
+    relationship_target: protected_Discourse_topic_url
+    link_label_must_not_imply_published_analysis: true
+  publication_candidate:
+    publish_Astro_Impact_page: eligible_after_normal_review
+    relationship_target: published_Astro_Impact_route
+  published_page_drift:
+    auto_delete_or_replace: false
+    operator_review_required: true
+  dry_run:
+    report_separate_counts:
+      - placeholder_suppressed
+      - publication_candidate
+      - review_required
+    per_topic_disposition: required
+    Discourse_writes: 0
 bounded_field_evidence:
   Discourse: { topic_id: 34, post_id: 40 }
   section: 10101
@@ -1669,7 +1875,7 @@ implementation_evidence:
   core_Astro_build: { status: PASS, public_routes: 3 }
   importer_fixture: non_routed_scalar_frontmatter_validated
   open:
-    - batch_official_source_comparison
+    - batch_comparison_review_and_approved_population_manifest
     - additional_OBBBA_Text_and_lenses
     - Law_as_Amended_adoption
     - broader_Title_VII_scale_and_accessibility_as_content_expands

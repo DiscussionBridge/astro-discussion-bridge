@@ -7,6 +7,21 @@ gates pass; they are not the primary public distribution story.
 
 A content lane maps a group of Astro content to Discourse behavior.
 
+At the product level, a lane is an adapter-neutral connection contract. The
+portable Discussion Bridge Core owns its source and destination identities,
+direction, policy, job state, approvals, retries, provenance, and audit
+evidence. The Astro adapter maps that contract to Astro content roots, routes,
+navigation, rendering, builds, and deployment. Statamic and future adapters
+should map the same contract to their systems rather than creating separate
+control planes.
+
+The Discussion Bridge for Discourse plugin is the present operational home for
+the portable core and may operate lanes for multiple publishing systems from
+one Discourse installation. Tier 1 API-only lanes remain supported
+compatibility behavior. The current Astro implementation is prototype and
+field evidence for this model; migration into the core/host/adapter boundaries
+is not yet complete.
+
 Attribution travels with lane content. The automated gate checks objective
 license/provenance inventory and protected-path conditions, but a release still
 requires Manual Boss semantic review of source rights, adapted material,

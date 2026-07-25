@@ -3,16 +3,16 @@
   "appliesTo": "Discussion Bridge Alpha",
   "pages": {
     "README.md": {
-      "lastUpdated": "2026-07-23",
-      "sourceSha256": "f946656521de1d1cc40599a05f31bb3453bcaa69dc0ea05995bd15314935032f"
+      "lastUpdated": "2026-07-25",
+      "sourceSha256": "3893870b83696a8448e6b0469b7b3767b1172ebccf34d8def85cec52a831c0c2"
     },
     "HUMAN_MANUAL.md": {
-      "lastUpdated": "2026-07-24",
-      "sourceSha256": "a19f701b32a0f769523242c2514e3bd6f98714b27ff2c6dbc0d1813051bb1964"
+      "lastUpdated": "2026-07-25",
+      "sourceSha256": "922d5d9dc08c4cbab84f3695f6ffe17798a34e7fe752d08c72917529d66bc416"
     },
     "MACHINE_MANUAL.md": {
-      "lastUpdated": "2026-07-24",
-      "sourceSha256": "3f7c42c1ca06c4a72d83349889879e4dc9f9fdfd994a392959557aedbaf29411"
+      "lastUpdated": "2026-07-25",
+      "sourceSha256": "4c861bc027d0ca24b23f89fb3678f84b718ea4c39c41cbb1e823813fbe4abe09"
     },
     "SITE_RUNBOOK_HUMAN_TEMPLATE.md": {
       "lastUpdated": "2026-07-21",
@@ -43,8 +43,8 @@
       "sourceSha256": "03aaf23d995c7fc626d1db58c7e1d7ce00d9029978bbad0e2fcde0406c8b9bc3"
     },
     "CONTENT_LANES.md": {
-      "lastUpdated": "2026-07-24",
-      "sourceSha256": "b95918a3b4ef94598a9968e2ced21623c1813b001d21d7d576a172e97b28c932"
+      "lastUpdated": "2026-07-25",
+      "sourceSha256": "6421defbfd7cfdac1223327e24397a75c5977f47e59a0cd3ba13b5c8bba0df06"
     },
     "PRESETS_AND_PLACEMENT.md": {
       "lastUpdated": "2026-07-19",
@@ -71,8 +71,8 @@
       "sourceSha256": "4b375d749ecfe233e8dd9aff49a40835bfced32d28d32373a943c78fdde85f4e"
     },
     "BUILD_LAUNCH_CHECKLISTS.md": {
-      "lastUpdated": "2026-07-24",
-      "sourceSha256": "a4a0f8f7256bd88235ebb6ff4e9a5334356494ec3c7618b362a6442311c1f16e"
+      "lastUpdated": "2026-07-25",
+      "sourceSha256": "545b9178c6db711ad4199509f231bed8302429f55f92b0fc76b816389554978b"
     },
     "DEMO_PLAN.md": {
       "lastUpdated": "2026-07-24",
@@ -83,8 +83,8 @@
       "sourceSha256": "25c17e7d676f15671485453796dcae02308d5976ac6a4b2531193691290e4ea7"
     },
     "PRODUCT_NOTES.md": {
-      "lastUpdated": "2026-07-24",
-      "sourceSha256": "5a8676533459849a0f6ec948af99afeb19ba49882df07e4b0689e01b2b7116aa"
+      "lastUpdated": "2026-07-25",
+      "sourceSha256": "e612cd694e00cdd5ceac7e3db3bd0032d0ba0c7fb67dc4848345a4ffe44cf3ec"
     }
   }
 }

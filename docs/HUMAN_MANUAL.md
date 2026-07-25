@@ -7,10 +7,40 @@ when exact commands, fields, scopes, or recovery checks matter.
 
 Discussion Bridge keeps each system doing the job it does well:
 
-- Astro owns fast, structured public pages.
+- Astro or another publishing system owns its fast, structured public pages.
 - Discourse owns identity, replies, moderation, notifications, and community
-  memory.
-- Discussion Bridge maintains the declared relationship between them.
+  memory and is the present operational home for Bridge orchestration.
+- Discussion Bridge Core maintains the declared relationships, policies,
+  provenance, jobs, recovery state, and audit evidence.
+- Astro, Statamic, and future integrations adapt that portable contract to
+  their publishing systems; they are not independent control planes.
+
+The natural product center is the Discussion Bridge for Discourse plugin,
+hosting and operating the portable core through Discourse's users,
+permissions, jobs, UI, database, APIs, and operational machinery. One Discourse
+installation may connect to more than one publishing system at the same time.
+Tier 1 API-only use remains a useful compatibility path, but operators should
+not reproduce separate orchestration policy in every CMS adapter.
+
+Portability is an operator benefit, not merely a code preference. Authorized
+people should be able to understand, govern, operate, and move their Bridge
+relationships without being trapped by an Astro-specific workflow or another
+CMS adapter. The current Astro package proves important domain behavior; the
+transition to the portable core, Discourse host, and adapter boundaries is
+planned work and is not yet complete.
+
+Everything remains under one Discussion Bridge tent. Discussion Bridge for
+Discourse and Discussion Bridge for Astro are fully featured free products.
+Public documentation and community support are free, with team help as
+capacity permits. Implementation, migration, customization, training,
+operations, and extensive hand-holding are paid professional services.
+Discussion Bridge SaaS is the paid, managed standalone control plane for
+multi-CMS, multi-site, and multi-community orchestration.
+
+The SaaS offering sells managed operation, scale, governance, convenience, and
+operational relief. It must not depend on artificial limitations in the free
+products. All deployment and service models share the portable Discussion
+Bridge Core and preserve operator autonomy.
 
 This is Alpha documentation. Preview every write, keep publishing opt-in, and
 verify both systems after a live operation.
@@ -222,6 +252,18 @@ DISCOURSE_DIAGNOSTICS_API_KEY
 `DISCOURSE_DIAGNOSTICS_API_KEY` is optional. When absent,
 `check-discourse` falls back to the publishing key and may report metadata as
 unavailable rather than failing.
+
+All Bridge authorization uses user-created Discourse API keys. A named Bridge
+machine identity is a durable operating record for one of those keys and its
+Discourse actor, scope, owner, storage reference, audit policy, and rotation
+policy. It is not an alternate credential system. Routine operations reuse the
+appropriately scoped key; they do not create or revoke a key per run.
+
+The established protected-record workflow is supported directly with
+`--diagnostics-api-key-file` or `DISCOURSE_DIAGNOSTICS_API_KEY_FILE`. The
+record may contain human metadata but must contain exactly one unformatted
+64-character Discourse API key line. Discussion Bridge reads the record without
+placing the key in command arguments, terminal paste, or shell history.
 
 Prefer `DISCOURSE_POST_AS`; retain `DISCOURSE_API_USERNAME` only for backward
 compatibility. `postAs` selects the request actor but does not silently change
@@ -669,13 +711,16 @@ refine real-user experience, compatibility, reliability, performance,
 packaging, documentation, installation, recovery, support, and presentation.
 This does not move every future or Layer 3 idea into Alpha.
 
-Tier 1 operation remains API-only, free/self-serve, and independent of any
-Discourse plugin. An optional Discourse plugin vertical slice has been proposed
-and accepted for Alpha, pending implementation design and proof. It is optional,
-not a Tier 1 installation requirement. The first slice is limited to
-`fullInteractive` Mermaid/table parity and a future-safe architecture/test
-baseline—not the full control plane, post-as-user, PM automation, or general
-many-to-many management.
+Tier 1 operation remains API-only, free/self-serve, and independent of a
+Discourse plugin as a compatibility capability. The settled product
+architecture nevertheless makes the Discussion Bridge for Discourse plugin the
+natural operational home for the portable core and almost all orchestration
+and policy. The first Alpha plugin slice remains bounded to
+`fullInteractive` Mermaid/table parity and an architecture/test baseline.
+Migration of existing orchestration into the portable core and Discourse host
+requires separately reviewed implementation gates; do not claim it is already
+available. Post-as-user, PM automation, and broad unattended forum-to-forum
+administration remain outside plugin v0.1.
 
 Current proposed CAN path is to use the existing Discourse Mermaid theme
 component for normal topics and design a bounded optional plugin slice for
@@ -1102,6 +1147,78 @@ Before publishing a comparison:
    unresolved;
 5. route substantive or unresolved results for review.
 
+For an OBBBA Text batch, run `compare-official-sources` from the package CLI
+with the reviewed navigation/config inputs, an HTTPS `DISCOURSE_URL`, and
+read-only Discourse credentials supplied through the environment. The command
+must produce a create-only, zero-write report. Read its four outcomes as:
+
+- `exact`: the compared text is identical;
+- `presentation-only`: only approved formatting/presentation differences
+  remain;
+- `substantive-difference`: words, numbering, or legal case differ and require
+  an explicit disposition before population;
+- `unresolved`: identity, retrieval, or extraction did not produce one safe
+  comparison and must stop the entry.
+
+The signed Public Law report is later-stage authority evidence. For the current
+population, the enrolled H.R. 1 source `BILLS-119hr1enr.xml`—identified and
+preserved by SHA-256—is the provenance baseline because it is the official
+document used to populate the forum text. Do not silently substitute one source
+stage for the other.
+
+The reviewed enrolled batch resolved 307 sections with zero writes: 301
+normalized exact, four presentation-only, two bounded word differences, and
+zero unresolved. Section 10401's author-confirmed clarity footnote remains in
+community text but is excluded from authoritative OBBBA Text. Section 40005's
+operative `§ 20306` heading is already present; restore the omitted repeated
+`§ 20306` clerical table-of-sections line in authoritative Astro output without
+writing back to the protected Discourse topic.
+
+After those dispositions are encoded, create and review the explicit population
+manifest. Add official-source metadata and generate reciprocal Impact links
+during that population run, rather than hand-editing source posts or individual
+Astro pages. Preserve both comparison reports as acceptance evidence.
+
+Impact links do not automatically authorize Impact-page publication. Many
+Impact topics were created with one shared prompt asking what the section does
+and inviting community stories. Use Section 82001/topic 1002 as the canonical
+placeholder reference. Freeze that reference once with its post identity,
+capture date, normalization version, and normalized-content SHA-256; later
+edits to topic 1002 do not redefine the baseline. During the dry run, normalize
+and hash each Impact topic's first-post source content:
+
+- if it still matches the placeholder, do not create an Astro Impact page, but
+  retain the `sectionId` and link the OBBBA Text page to the protected Discourse
+  topic with a label that identifies a forum discussion rather than published
+  Impact analysis;
+- if it clearly contains developed content, classify it only as a publication
+  candidate; it must still pass the normal reviewed Astro publication gate;
+- if it contains a minor placeholder edit, partial removal, mixed
+  placeholder/developed content, or uncertain normalization, require operator
+  review.
+
+Do not classify by title or topic number, and do not rewrite the placeholder
+topic. The dry-run report must show placeholder-suppressed,
+publication-candidate, and review-required counts plus every per-topic
+disposition. If an already-published source later approaches the placeholder,
+report drift for review; do not automatically delete or replace the Astro page.
+
+The reviewed OBBBA inventory contains 307 unique Impact source topics and 15
+existing Astro Impact routes. The frozen placeholder is topic 1002, first post
+1009. First run `preflight-impact-population` with
+`examples/obbba-impact-population.config.json`. This bounded, zero-write check
+reads only that frozen topic through the exact collector and authentication
+path used by the full plan. Continue only after `Preflight PASS`.
+
+Then run `plan-impact-population` with
+`examples/obbba-impact-population.config.json`, a diagnostics key loaded only
+into the current shell, and a new `--report-out` path. The collector revalidates
+the full runtime config, blocks redirects and non-GET requests, verifies the
+frozen first-post identity, prints each completed topic and rate-limit wait, and
+creates only the zero-write report. Never paste the key into a PowerShell
+command. Stop after two failed operator attempts and return the evidence to the
+implementation lane.
+
 Presentation-only comparison may ignore Markdown links, wrapping/whitespace,
 typographic punctuation, page furniture, and official side notes. It must not
 normalize away changed words or numbering. The comparator preserves case:
@@ -1145,9 +1262,9 @@ Public Law 119-21/Title I/Section 10101 citation, Impact relation, and topic 34
 discussion. Impact 10101 links back to the official-text route and retains topic
 434. No Discourse writes occurred.
 
-> **Still open:** batch official-source comparison beyond Section 10101,
-> additional OBBBA Text/lens imports, Law as Amended, broader scale/a11y proof,
-> and dependency-vulnerability review.
+> **Still open:** the explicit OBBBA population manifest and population run,
+> additional lenses including Law as Amended, broader scale/a11y proof, and
+> dependency-vulnerability review.
 
 If public tag-group discovery returns 429, the corrected client reads groups
 sequentially and retries only 429 up to three times. It honors bounded

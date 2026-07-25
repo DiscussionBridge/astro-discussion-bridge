@@ -25,6 +25,102 @@ This product definition was discovered through implementation. It is not a
 retrofitted feature list: an initially undefined static-site/community
 connection problem exposed the operating model one real constraint at a time.
 
+## Discourse-Centered, Adapter-Driven Architecture
+
+Discussion Bridge is a Discourse-centered, adapter-driven content and
+discussion orchestration system. Its portable core connects Discourse with one
+or more external publishing systems while preserving authority, provenance,
+policy, and auditability.
+
+Discourse is the present operational home and control plane. The Discussion
+Bridge for Discourse plugin should host and operate the portable core and be the
+primary operating surface for almost all Bridge orchestration and policy. This
+is a deliberate use of Discourse's users, permissions, jobs, UI, database,
+APIs, and operational machinery—not an accidental coupling of the domain model
+to one host.
+
+The portable core owns:
+
+- connections and external-system identities;
+- source/destination mappings and direction;
+- policies, jobs, comparisons, and approvals;
+- target-specific retry and recovery state;
+- provenance and durable audit evidence.
+
+Astro, Statamic, and future integrations are well-featured adapters. They
+translate the portable contract into each publishing system's content,
+navigation, rendering, build, and deployment model; they are not separate
+control planes. One Discourse installation may operate connections to multiple
+publishing systems concurrently.
+
+Tier 1 API-only operation remains a useful compatibility and self-serve
+capability, but it is no longer the product's natural operational center.
+Current Astro implementation remains valuable prototype and field evidence.
+Each behavior should now be classified as portable-core domain logic,
+Discourse-host behavior, or Astro-adapter behavior before it is extended.
+
+Portability remains a design constraint. Core domain logic should not depend on
+Discourse internals when a stable host-neutral contract is practical. This
+preserves a later standalone hosting path without requiring the product to be
+reinvented. The human outcome is autonomy: authorized people can operate,
+understand, govern, and move their system without being trapped by a CMS
+adapter or accidental implementation boundary.
+
+This architecture was discovered through the work—the WebSynergetics way. It
+is a settled product direction, while migration of existing Astro behavior into
+the core/plugin/adapter boundaries remains implementation work and must not be
+described as complete.
+
+The intact source decision is preserved in
+`docs/evidence/DISCUSSION_BRIDGE_DISCOURSE_CENTERED_DOCTRINE_2026-07-25.md`.
+The authoritative system boundaries and migration sequence are maintained in
+`docs/CORE_ADAPTER_ARCHITECTURE.md` and
+`docs/CORE_ADAPTER_IMPLEMENTATION_ROADMAP.md`.
+
+## One Discussion Bridge Product Family
+
+Everything stays under the Discussion Bridge tent. Discussion Bridge for
+Discourse is the free, fully featured plugin and local operational center.
+Discussion Bridge for Astro is the free, fully featured Astro adapter.
+Discussion Bridge SaaS is the paid, managed standalone control plane for
+multiple CMSs, sites, adapters, and Discourse communities.
+
+Discussion Bridge Services provides paid implementation, migration,
+customization, training, operations, and extensive support. Discussion Bridge
+Community provides public documentation and community support, with the team
+helping as capacity permits.
+
+The free products must be genuinely capable. SaaS sells managed orchestration,
+scale, governance, convenience, and operational relief—not freedom from
+artificial limitations. All offerings share the portable Discussion Bridge
+Core, contracts, policies, terminology, identity model, and trust boundaries.
+They are deployment and service models within one product ecosystem, not
+fragmented products.
+
+The intact source decision is preserved in
+`docs/evidence/DISCUSSION_BRIDGE_PRODUCT_FAMILY_DOCTRINE_2026-07-25.md`.
+
+### Initial Classification Of Existing Astro Work
+
+This classification is the starting architectural inventory. It identifies
+ownership of behavior; it does not assert that code has already moved.
+
+| Existing behavior | Architectural owner |
+| --- | --- |
+| source modes, single-writer/no-writeback rules, connections, target bindings, identity and direction | portable core |
+| manifests, deterministic ordering, policy validation, comparisons, approvals, retry/idempotency, rollback, provenance, and audit records | portable core |
+| content-lens, relationship, official-source, placeholder-suppression, and population eligibility policies | portable core |
+| durable job execution, scheduling, operator approvals, inventory, and operational status UI | Discourse host/plugin |
+| Discourse user/key authorization, permissions, categories, tags, topic state, and host-side diagnostics | Discourse host/plugin, through portable contracts where possible |
+| Astro frontmatter projection, content collections/schema integration, route generation, and public navigation | Astro adapter |
+| Astro/Starlight components, layouts, comments placement, source/official/related rendering, and progressive sidebar presentation | Astro adapter |
+| Astro build hooks, package exports, demo fixtures, consumer installation, and deployment verification | Astro adapter and Astro delivery tooling |
+| current CLI/API-only workflows | compatibility surface over portable behavior; retain while the Discourse host matures |
+
+Before moving a specific module, review its dependencies and split mixed
+responsibilities rather than moving an Astro-shaped abstraction wholesale into
+the core.
+
 ## Public Alpha Distribution
 
 The Astro package's intended public Alpha path is a GitHub prerelease and npm
@@ -686,17 +782,65 @@ with USLM identifier `/us/pl/119/21/tI/stA/s10101`. After bounded
 normalization, both sources contained 608 tokens and 3,148 normalized
 characters with zero substantive differences. The official citation is Public
 Law 119-21, Section 10101, 139 Stat. 80–81. This represents that section only;
-it does not establish that all OBBBA topics match. A future comparison-only
-batch report must count all four outcomes and write no content changes.
+it does not establish that all OBBBA topics match.
 
-Public pages should independently link **Content source** to the community wiki
-and **Official text** to the identified law/section and citation. Keep this
+The final 2026-07-24 comparison-only batch covered all 307 actual section nodes
+in the OBBBA Text navigation manifest. It found 48 exact, 28
+presentation-only, 231 substantive-difference, and zero unresolved results,
+with zero Discourse writes and zero Astro content writes. The 76 exact or
+presentation-only sections form the immediate no-substantive-difference queue.
+The 231 review-required results are conservative: many are capitalization-only,
+while some expose structured-extraction differences that require inspection.
+The machine-readable result and concise interpretation are in
+`docs/evidence/OBBBA_OFFICIAL_SOURCE_COMPARISON_FINAL_2026-07-24.json` and its
+companion Markdown record.
+
+The source-stage follow-up used `BILLS-119hr1enr.xml`, the enrolled H.R. 1
+legacy GPO/HTML source from which the forum text was populated. After correcting
+inline small-cap and authored-hierarchy boundaries while preserving quoted
+internal legal structures, the final result was 301 normalized exact, four
+presentation-only, two bounded source-content exceptions, and zero unresolved.
+Section 10401 contains an author-confirmed community-only footnote plus legacy
+color residue; it is not OBBBA Text. Direct first-post raw Markdown inspection
+confirmed that Section 40005 contains the operative embedded `§ 20306` heading.
+Its remaining difference is at the end of subsection `(b) Clerical amendment`:
+the community post ends after “by adding at the end the following:” and omits
+the enrolled text's repeated 13-token table entry. No changed operative
+provision is demonstrated. The settled population disposition is to restore
+that repeated `§ 20306` table-of-sections entry in authoritative Astro output
+without writing back to the protected Discourse source. This establishes the
+enrolled bill as the provenance baseline and keeps the signed Public Law
+comparison as distinct later-stage authority evidence.
+
+Public pages should independently link **Content source** to the protected
+Discourse source topic and **Official text** to the identified law/section and
+citation. Wiki status, when present, is optional metadata. Keep this
 provenance/authority layer separate from related-content navigation.
 
 A stable shared key such as `sectionId` should generate reciprocal Related
 links across **OBBBA Text**, **Law as Amended**, **Impact**, and future
 **Stories**. The aggregate graph is many-to-many: one section can list many
 Stories, and one Story can reference many sections.
+
+Impact relationship eligibility is broader than Astro publication eligibility.
+Many Impact source topics began with the same invitation-only placeholder; some
+now contain developed analysis and some still contain only that placeholder.
+Placeholder-only topics must not become public Astro Impact pages. They remain
+valid protected Discourse relationship targets, so the corresponding OBBBA Text
+page may link to the forum topic. A developed and reviewed Impact topic may
+instead publish to Astro and become the reciprocal Astro relationship target.
+Freeze the canonical Section 82001/topic 1002 placeholder as a dated snapshot
+with post identity, normalization version, and normalized-content SHA-256;
+later edits to topic 1002 must not silently move the baseline. The population
+dry run must classify each first post as placeholder-suppressed,
+publication-candidate, or review-required. A nonmatching hash is not proof of
+developed content: minor edits, partial removal, mixed placeholder/content, and
+normalization uncertainty require review. Publication candidates still pass
+the normal review gate. If a published source later drifts toward the
+placeholder, report it for operator review without automatically deleting or
+replacing its Astro page. Placeholder links must be labeled as forum
+discussion, not published Impact analysis.
+
 Regenerating the adapter-neutral relationship/taxonomy manifest plus rebuilding
 Astro should update reciprocal links without body reimport or manual per-page
 edits. A reader-facing pattern is:
@@ -783,14 +927,71 @@ semantic review, attribution/licensing review, or release approval.
 
 Beta primarily refines exercised usability, compatibility, reliability,
 performance, packaging, installation, recovery, support, documentation, and
-presentation. The optional plugin v0.1 remains intentionally light and may be
-revisited as locked gates close and user feedback arrives. The full control
-plane, broad forum-to-forum orchestration, post-as-user, PM automation, and
-general many-to-many administration remain excluded later work unless
-separately approved. Tier 1 remains fully useful without the plugin.
+presentation. The plugin v0.1 Alpha slice remains intentionally bounded, but
+the settled product architecture now places the portable core and natural
+control plane in the Discourse-hosted product. Expanding that host must proceed
+through reviewed vertical slices rather than pulling every later control-plane
+idea into v0.1. Post-as-user, PM automation, and broad unattended
+forum-to-forum administration remain outside v0.1 unless separately approved.
+Tier 1 remains useful without the plugin as a compatibility path.
 
 The current logical/workspace home for that optional plugin is
 `DiscussionBridge/plugins/discourse-discussion-bridge`. The `plugins` directory
 may move higher later. Physical GitHub repository naming and placement remain a
 Boss/folder decision because GitHub organizations do not provide nested
 repositories.
+
+### Boss-Lane Handoff Retrospective
+
+Replacing a saturated Boss task requires more than transferring repository
+state, commits, files, and open gates. The successor must receive the lived
+operating doctrine that explains how the product reached that state:
+
+- non-negotiable product invariants;
+- settled decisions and the evidence behind them;
+- known operator workflows that already work;
+- exceptional recovery procedures that must not become normal operations;
+- user expectations about acceptable complexity; and
+- lane ownership and escalation boundaries.
+
+The Bridge Boss replacement handoff did not transfer enough of that context.
+The successor over-optimized for generic credential security, centered a new
+transport architecture, and treated an exposed-key incident as grounds for a
+new normal operating model. That drift would likely not have occurred in the
+context-rich predecessor lane.
+
+The settled invariant is that every Bridge operation uses a user-created
+Discourse API key. Bridge tooling may safely store, reference, validate, scope,
+audit, rotate, and use that key, but it does not replace the credential model.
+Phil's established vault/Context/Notepad workflow is known operating context,
+not an unknown to be redesigned away. Exposed-key revocation and history
+cleanup are exceptional remediation, not routine task ceremony.
+
+Standing handoff rule: a successor Boss package must explicitly transfer facts,
+product intent, operating doctrine, settled workflows, invariants, exceptions,
+and the reasons behind prior decisions. If any of those are missing, the
+successor pauses architecture changes and reconstructs them from the durable
+docs and predecessor record before acting.
+
+#### Successor Readiness Checkpoint
+
+After any Boss-lane handoff, product, design, and operator work remains paused
+until the successor restates the following checkpoint and Phil accepts it:
+
+1. Non-negotiable product invariants.
+2. Known working human and machine workflows.
+3. Exceptional incidents and recovery actions that must not become doctrine.
+4. Current blocked and unblocked state, with evidence.
+5. The exact next action.
+6. Explicitly out-of-scope alternatives and expansions.
+
+For Discussion Bridge, the checkpoint must always state:
+
+- every Bridge operation is authorized by a user-created Discourse API key;
+- durable identities are operating records around those keys, never alternate
+  authority;
+- routine operations reuse appropriately scoped keys rather than creating and
+  revoking keys per run;
+- exposed-key revocation and history cleanup are exceptional remediation; and
+- no command or design move follows the handoff until Phil accepts the
+  checkpoint.
