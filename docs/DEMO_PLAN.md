@@ -32,7 +32,7 @@ Do not duplicate demo source into `discussionbridge.dev` just because a deploy t
 
 4. Live Discourse category for Astro
    - Use `forum.discussionbridge.dev` as the Discourse host.
-   - Use the public `Discussion Bridge for Astro` category at `https://forum.discussionbridge.dev/c/alpha/5` for test/demo topics.
+   - Use the public `Discussion Bridge for Astro` category at `https://forum.discussionbridge.dev/c/discussionbridge-for-astro/5` for test/demo topics.
    - Use Discourse category ID `5` for `publish-new` tests.
    - Use tags for product and demo details, for example `discussionbridge`, `astro`, `starlight-demo`, and `cloudflare-demo`.
    - Current forum tag settings for Alpha testing: max tags per topic `6`, max tag length `30`.
@@ -209,4 +209,3 @@ C:\CodeProjects\Planning\Procedure Docs\standards\product-demo-domain-pattern.md
 - Future integration lanes can use parallel names such as DiscussionBridge for Statamic.
 - Public demo hostnames should sit under the demo lane, then start with the integration family: `astro.demo`, `astrostarlight.demo`, `statamic.demo`, `statamicsomething.demo`.
 - Tags should carry product, integration, demo, and provider details such as `discussionbridge`, `astro`, `astro-demo`, `starlight-demo`, `cloudflare-demo`.
-
