@@ -1,33 +1,27 @@
 ---
 import { getCollection } from "astro:content";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 
 const posts = (await getCollection("news")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>News Lane | DiscussionBridge for Astro</title>
-  </head>
-  <body>
-    <main>
-      <a href="/">DiscussionBridge for Astro</a>
-      <h1>News Lane</h1>
-      <p>Announcements mapped to a news discussion lane.</p>
-      <ul>
-        {posts.map((entry) => (
-          <li><a href={`/news/${entry.id}/`}>{entry.data.title}</a></li>
-        ))}
-      </ul>
-    </main>
-  </body>
-</html>
+<StarlightPage
+  frontmatter={{
+    title: "News Lane",
+    description: "Announcements mapped to a news discussion lane.",
+    editUrl: false,
+  }}
+>
+  <p>Announcements mapped to a news discussion lane.</p>
+  <ul>
+    {posts.map((entry) => (
+      <li><a href={`/news/${entry.id}/`}>{entry.data.title}</a></li>
+    ))}
+  </ul>
+</StarlightPage>
 
 <style>
-  body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
-  main { width: min(760px, calc(100% - 2rem)); margin: 0 auto; padding-block: 4rem; }
   li { margin-block: 0.75rem; }
 </style>

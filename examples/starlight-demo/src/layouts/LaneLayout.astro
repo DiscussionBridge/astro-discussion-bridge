@@ -1,5 +1,6 @@
 ---
 import Discussion from "astro-discussion-bridge/Discussion.astro";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 
 interface Props {
   commentsDisplay?: "simple" | "full" | "fullInteractive";
@@ -17,143 +18,46 @@ const formattedDate = new Intl.DateTimeFormat("en", {
 }).format(Astro.props.date);
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{Astro.props.title} | DiscussionBridge for Astro</title>
-    <meta name="description" content={Astro.props.description} />
-  </head>
-  <body>
-    <header class="site-header">
-      <a href="/">DiscussionBridge for Astro</a>
-      <nav aria-label="Content lanes">
-        <a href="/releases/">Releases</a>
-        <a href="/blog/">Blog</a>
-        <a href="/news/">News</a>
-        <a href="/comments/">Comments</a>
-      </nav>
-    </header>
-    <main>
-      <p class="lane">{Astro.props.laneLabel}</p>
-      <h1>{Astro.props.title}</h1>
-      <p class="description">{Astro.props.description}</p>
-      <p class="date">{formattedDate}</p>
-      <article>
-        <slot />
-      </article>
-      <Discussion
-        display={Astro.props.commentsDisplay}
-        embedUrl={Astro.props.embedUrl}
-        heading="Discussion"
-        topicId={Astro.props.topicId}
-        topicUrl={Astro.props.topicUrl}
-      />
-    </main>
-  </body>
-</html>
+<StarlightPage
+  frontmatter={{
+    title: Astro.props.title,
+    description: Astro.props.description,
+    editUrl: false,
+  }}
+>
+  <p class="lane">{Astro.props.laneLabel}</p>
+  <p class="description">{Astro.props.description}</p>
+  <p class="date">{formattedDate}</p>
+  <article>
+    <slot />
+  </article>
+  <Discussion
+    display={Astro.props.commentsDisplay}
+    embedUrl={Astro.props.embedUrl}
+    heading="Discussion"
+    topicId={Astro.props.topicId}
+    topicUrl={Astro.props.topicUrl}
+  />
+</StarlightPage>
 
 <style>
-  :root {
-    color-scheme: light dark;
-    --sl-color-gray-5: #d6d3ca;
-    --sl-text-h3: 1.35rem;
-    --sl-text-sm: 0.95rem;
-  }
-
-  body {
-    margin: 0;
-    background: #fbfaf7;
-    color: #232421;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    line-height: 1.65;
-  }
-
-  a {
-    color: #245f73;
-  }
-
-  .site-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding: 1rem clamp(1rem, 4vw, 3rem);
-    border-block-end: 1px solid #d6d3ca;
-    background: #ffffff;
-  }
-
-  .site-header > a {
-    color: #232421;
-    font-weight: 700;
-    text-decoration: none;
-  }
-
-  nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  nav a {
-    text-decoration: none;
-  }
-
-  main {
-    width: min(760px, calc(100% - 2rem));
-    margin: 0 auto;
-    padding-block: 4rem;
-  }
-
   .lane,
   .date {
-    color: #62665d;
-    font-size: 0.95rem;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
   }
 
   .lane {
-    margin: 0 0 0.5rem;
+    margin-block-start: 0;
     font-weight: 700;
     text-transform: uppercase;
   }
 
-  h1 {
-    margin: 0;
-    font-size: clamp(2.25rem, 5vw, 4rem);
-    line-height: 1.05;
-  }
-
   .description {
-    margin-block: 1rem 0;
-    font-size: 1.25rem;
+    font-size: var(--sl-text-lg);
   }
 
   article {
     margin-block-start: 3rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    body {
-      background: #181a1b;
-      color: #f1eee8;
-    }
-
-    .site-header {
-      background: #202324;
-      border-block-end-color: #3c4142;
-    }
-
-    .site-header > a {
-      color: #f1eee8;
-    }
-
-    a {
-      color: #85c7d8;
-    }
-
-    .lane,
-    .date {
-      color: #b7b0a4;
-    }
   }
 </style>

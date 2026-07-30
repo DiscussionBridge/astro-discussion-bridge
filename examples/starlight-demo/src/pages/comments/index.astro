@@ -1,39 +1,28 @@
 ---
 import { getCollection } from "astro:content";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
 
 const posts = (await getCollection("comments")).sort(
   (a, b) => a.data.title.localeCompare(b.data.title),
 );
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Comments Mode Demos | DiscussionBridge for Astro</title>
-  </head>
-  <body>
-    <main>
-      <a href="/">DiscussionBridge for Astro</a>
-      <nav aria-label="Content lanes">
-        <a href="/releases/">Releases</a>
-        <a href="/blog/">Blog</a>
-        <a href="/news/">News</a>
-      </nav>
-      <h1>Comments Mode Demos</h1>
-      <p>Side-by-side routes for testing simple, full, and fullInteractive comment rendering.</p>
-      <ul>
-        {posts.map((entry) => (
-          <li><a href={`/comments/${entry.id}/`}>{entry.data.title}</a></li>
-        ))}
-      </ul>
-    </main>
-  </body>
-</html>
+<StarlightPage
+  frontmatter={{
+    title: "Comments Mode Demos",
+    description: "Side-by-side routes for testing simple, full, and fullInteractive comment rendering.",
+    editUrl: false,
+  }}
+>
+  <p>Side-by-side routes for testing simple, full, and fullInteractive comment rendering.</p>
+  <ul>
+    {posts.map((entry) => (
+      <li><a href={`/comments/${entry.id}/`}>{entry.data.title}</a></li>
+    ))}
+  </ul>
+</StarlightPage>
 
 <style>
-  body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
-  main { width: min(760px, calc(100% - 2rem)); margin: 0 auto; padding-block: 4rem; }
   nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1rem 2rem; }
   li { margin-block: 0.75rem; }
 </style>
