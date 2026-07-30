@@ -11,6 +11,13 @@ export default defineConfig({
           label: "Stock Starlight",
           items: [{ label: "Home", slug: "index" }],
         },
+        {
+          label: "DiscussionBridge",
+          items: [
+            { label: "Demo hub", link: "https://demo.discussionbridge.dev/" },
+            { label: "DiscussionBridge.dev", link: "https://discussionbridge.dev/" },
+          ],
+        },
       ],
     }),
   ],

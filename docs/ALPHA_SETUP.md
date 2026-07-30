@@ -24,7 +24,8 @@ In Discourse admin:
 1. Create or choose a category for companion topics.
 2. Create the tags the bridge will use, or make sure the API user can create them.
 3. Add the Astro host as an allowed embedding host.
-4. Choose whether companion topics should be listed by default.
+4. Choose the forum-owned listing policy. For Core Alpha, prefer unlisted by
+   default as an interim discovery delay and forum-review convention.
 5. Configure full app embeds when using `comments.display: "fullInteractive"`.
 
 Recommended `fullInteractive` settings:
@@ -34,7 +35,9 @@ Recommended `fullInteractive` settings:
 - `Suppress third party analytics in embed`: yes when Astro owns analytics
 - `Embed support markdown`: yes
 - `Embed set canonical URL`: yes
-- `Embed unlisted`: yes for demo/test companion topics, unless category discovery should show them immediately
+- `Embed unlisted`: yes as the conservative Core baseline, with the limitation
+  that Discourse may list an imported topic after its first reply; this is not a
+  guaranteed manual forum-operator approval workflow
 - `Embed any origin`: no unless explicitly needed
 - `Embed topics list`: no unless intentionally embedding topic lists
 
@@ -45,6 +48,13 @@ Create a dedicated Discourse user such as `discussbridge-bot`.
 For Alpha testing, the user may need moderator or admin capability depending on the features being tested. Topic creation, first-post updates, tag updates, title updates, unlisting, diagnostics, and reconciliation can require different permissions.
 
 Use the narrowest key that works for routine publishing. Use a broader diagnostics key only for setup checks when granular keys cannot read the required Discourse metadata.
+
+An Astro page or lane may request listed or unlisted treatment, but the forum
+operator owns the final discovery policy. Until the optional DiscussionBridge
+for Discourse listing-review capability is installed, do not describe
+unlisted-until-reply as equivalent to manual approval. Enforceable manual
+approval requires that plugin or a separately restricted category that prevents
+public replies before approval.
 
 See [KEY_MANAGEMENT.md](./KEY_MANAGEMENT.md).
 

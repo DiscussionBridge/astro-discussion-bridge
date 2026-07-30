@@ -4,6 +4,19 @@ Use these checklists as the product dashboard for DiscussionBridge for Astro. Th
 
 publish -> sync -> diagnose -> maintain -> recover -> document
 
+## DiscussionBridge.dev Astro-Family Wrangler Migration
+
+- [ ] Migrate each Astro-family site to reviewed, checked-in Wrangler
+      deployment: `discussionbridge.dev`, `docs.discussionbridge.dev`,
+      `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`,
+      `astrostarlightdemo.discussionbridge.dev`, and
+      `stockstarlight.demo.discussionbridge.dev`.
+- [ ] Treat every site as a separate reversible migration with exact source and
+      build identity, current-provider snapshot, rollback target, bindings and
+      flags, custom-domain evidence, and post-deploy HTTP/functional acceptance.
+- [ ] Do not claim Wrangler ownership from local configuration alone and do not
+      cut over the family as one irreversible batch.
+
 ## Alpha Readiness Checklist
 
 ### Connected Public-Site Release Gate

@@ -31,16 +31,16 @@
       "sourceSha256": "bba3a7d87cbd7ce7db5eceac819b0007822044f0c1bf8adef0ecc1ff564c1bfd"
     },
     "ALPHA_SETUP.md": {
-      "lastUpdated": "2026-07-23",
-      "sourceSha256": "1db645c8374dec4571c5ff0d291d2f1dedb244c57463c49323c0bc0be802a088"
+      "lastUpdated": "2026-07-30",
+      "sourceSha256": "aaecd0f4a84aecdf64e7c21cc3073d81d3846ac13a66d765fc4ec7a3a50741da"
     },
     "KEY_MANAGEMENT.md": {
       "lastUpdated": "2026-07-27",
       "sourceSha256": "55d7991aa9f7427eb54f6f376e7fb23ec57da226e781f0cab47998a03fa13791"
     },
     "COMMENTS_DISPLAY.md": {
-      "lastUpdated": "2026-07-27",
-      "sourceSha256": "29adb843f1960f67ba744cbfe2cfc39c6c37327d234eec62e218c0f7c898bf5f"
+      "lastUpdated": "2026-07-30",
+      "sourceSha256": "9d8197d25f639da7cc455887c856594692cbf330073c1e4d7a484ff42879661f"
     },
     "CONTENT_LANES.md": {
       "lastUpdated": "2026-07-27",
@@ -71,16 +71,16 @@
       "sourceSha256": "5e2f111e8b4468c67484293859a949f749f080a23705b7e060b94f28a4a7688f"
     },
     "BUILD_LAUNCH_CHECKLISTS.md": {
-      "lastUpdated": "2026-07-28",
-      "sourceSha256": "30f6f0feff9d168751d23ea7d2dc14e05ce8b4b78612af080c5101cb2624ff33"
+      "lastUpdated": "2026-07-30",
+      "sourceSha256": "c76a734093695a39702513b6b6a30028cd8db3446a74ef4cf54941e0975b1594"
     },
     "CORE_ADAPTER_ARCHITECTURE.md": {
       "lastUpdated": "2026-07-27",
       "sourceSha256": "72f50c82416847adbe9dc32d942349fa31bfade32f863dc083e3009c89f2d722"
     },
     "CORE_ADAPTER_IMPLEMENTATION_ROADMAP.md": {
-      "lastUpdated": "2026-07-27",
-      "sourceSha256": "3be28e7489bea2121e713099d9a2ad6cf8f0acd9f2fea21be2012bdaac9e0dfb"
+      "lastUpdated": "2026-07-30",
+      "sourceSha256": "a53f82b5bdc5bd13779275cecd0d5d99f66ed0b6666a332965c94e5578280f34"
     },
     "DEMO_PLAN.md": {
       "lastUpdated": "2026-07-30",
@@ -91,8 +91,8 @@
       "sourceSha256": "f694ca946aa2865d7cd5904bf584ba7dcf5a40ad02a7a353e0685d30005720a1"
     },
     "PRODUCT_NOTES.md": {
-      "lastUpdated": "2026-07-27",
-      "sourceSha256": "f167afcde4795b3ba1bef578ed6ff139413a1d9c632bab62ea1394d2261add90"
+      "lastUpdated": "2026-07-30",
+      "sourceSha256": "7c3ce446e48b52562d966ddb02a6192256837d2e8521aa87f911e31b2f1f8060"
     },
     "evidence/DISCUSSION_BRIDGE_DISCOURSE_CENTERED_DOCTRINE_2026-07-25.md": {
       "lastUpdated": "2026-07-27",

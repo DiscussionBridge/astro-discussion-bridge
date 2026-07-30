@@ -19,6 +19,13 @@ export default defineConfig({
             { label: "Comments Mode Demos", link: "/comments/" },
           ],
         },
+        {
+          label: "DiscussionBridge",
+          items: [
+            { label: "Demo hub", link: "https://demo.discussionbridge.dev/" },
+            { label: "DiscussionBridge.dev", link: "https://discussionbridge.dev/" },
+          ],
+        },
       ],
     }),
     discussionBridge({

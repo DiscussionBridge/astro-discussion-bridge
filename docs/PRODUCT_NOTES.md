@@ -662,7 +662,28 @@ installing a Discourse plugin. A separate optional `DiscussionBridge for
 Discourse` plugin is accepted Alpha product work, pending implementation design
 and proof. Its bounded v0.1 vertical slice provides
 `fullInteractive` Mermaid/table rendering parity inside the Discourse-owned
-embed plus the architecture and test baseline for later control-plane work.
+embed plus the architecture and test baseline for control-plane work.
+
+Listing connected topics is forum-owned governance when the publishing-site
+operator and forum operator differ. The interim Core Alpha posture is unlisted
+by default as a discovery delay and forum-review convention. The forum operator
+may manually list a reviewed topic, but Core does not guarantee that approval
+boundary because a first reply may list it automatically. Astro pages and lanes
+may request a listed or unlisted disposition, but a request is not authority
+and must not override forum policy. DiscussionBridge must preserve requested
+and actual visibility as distinct states.
+
+Discourse Core's global unlisted-until-reply behavior does not provide manual
+approval because a first reply may list the topic. The plugin therefore needs
+an early server-enforced listing-governance slice: hold new connected topics
+unlisted, present listing requests to a forum-operator review queue, record
+approval/rejection/defer decisions and audit identity, and allow automatic
+listing only through an explicit forum-owned trust policy scoped to the
+connection, API user, category, tag, or lane. Broad API-key capability must not
+be treated as permission to bypass that policy.
+
+Guaranteed manual approval requires that plugin enforcement or a separately
+restricted category whose permissions prevent public replies before approval.
 
 That slice does not include the full control plane, post-as-user, PM automation,
 or general many-to-many administration. The roadmap must not imply that Tier 1

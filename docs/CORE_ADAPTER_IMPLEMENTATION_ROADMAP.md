@@ -63,6 +63,13 @@ Outcome: Discourse can host the core and operate a no-write vertical slice.
   cancellation, and recovery states.
 - Build an operator UI for connection health, plan requests, progress,
   comparison results, approvals, and evidence.
+- Add a server-enforced connected-topic listing review: new topics remain
+  unlisted by default, site/adapter listing intent is recorded as a request,
+  and only the forum operator or an explicit forum-owned trust policy can
+  approve listing. Record requester, connection, topic/category, reviewer,
+  timestamp, and outcome.
+- Do not use Discourse Core's unlisted-until-first-reply behavior as a substitute
+  for forum approval; a reply is engagement, not an authorization decision.
 - Run the first vertical slice as GET-only and zero-write using the established
   OBBBA comparison/preflight behavior.
 

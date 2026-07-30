@@ -145,7 +145,11 @@ Recommended Discourse settings:
 - `Suppress third party analytics in embed`: yes when Astro owns analytics
 - `Embed support markdown`: yes
 - `Embed set canonical URL`: yes
-- `Embed unlisted`: yes for demo/test companion topics unless category discovery should show them immediately
+- `Embed unlisted`: yes as the conservative Core Alpha discovery delay and
+  forum-review convention; it is also useful for demo/test companion topics.
+  Discourse may list an imported topic after its first reply, so this is not
+  guaranteed manual approval. Enforceable manual approval requires the optional
+  DiscussionBridge for Discourse workflow or a separately restricted category.
 - `Embed any origin`: no unless explicitly needed
 - `Embed topics list`: no unless intentionally embedding topic lists
 - `Allowed embed selectors`: empty/default unless using Discourse's native page-scraping embed flow

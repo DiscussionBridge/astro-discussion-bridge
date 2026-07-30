@@ -62,6 +62,13 @@ const navigationManifest = {
     <meta name="description" content="Plain Astro demo for DiscussionBridge." />
   </head>
   <body>
+    <header class="site-header">
+      <a href="/">DiscussionBridge for Astro Demo</a>
+      <nav aria-label="Product navigation">
+        <a href="https://demo.discussionbridge.dev/">Demo hub</a>
+        <a href="https://discussionbridge.dev/">DiscussionBridge.dev</a>
+      </nav>
+    </header>
     <main>
       <p>Plain Astro</p>
       <h1>DiscussionBridge for Astro Demo</h1>
@@ -91,6 +98,31 @@ const navigationManifest = {
     line-height: 1.65;
   }
 
+  .site-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1rem clamp(1rem, 4vw, 3rem);
+    border-block-end: 1px solid #d9d6cf;
+    background: #fff;
+  }
+
+  .site-header > a {
+    color: #232421;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .site-header nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .site-header nav a {
+    text-decoration: none;
+  }
+
   main {
     width: min(760px, calc(100% - 2rem));
     margin: 0 auto;
@@ -111,5 +143,12 @@ const navigationManifest = {
 
   a {
     color: #245f73;
+  }
+
+  @media (max-width: 640px) {
+    .site-header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
   }
 </style>
