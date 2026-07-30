@@ -6,7 +6,7 @@ This is a living list of Discourse issues, feature needs, wishlist items, shortc
 
 - Forum: `https://forum.discussionbridge.dev`
 - Astro demo target: `https://astro.demo.discussionbridge.dev`
-- Astro/Starlight demo target: `https://astrostarlightdemo.discussionbridge.dev`
+- Astro/Starlight demo target: `https://astrostarlight.demo.discussionbridge.dev`
 - Primary category: `Discussion Bridge for Astro`, category ID `5`
 - Bot user: `discussbridge-bot`
 - Current key model under test:
@@ -96,6 +96,10 @@ before changing DiscussionBridge.
 - The bridge should keep failing clearly when it cannot prove the owning topic. Guessing would be worse than stopping.
 
 ## Real Examples From Testing
+
+The three `astrostarlightdemo.discussionbridge.dev` URLs below are preserved as
+historical evidence from before the 2026-07-30 hostname correction. They are not
+the current demo target.
 
 - Topic 24 was created/claimed by Discourse embedding before CLI publishing.
 - `publish-and-sync` initially failed with `Embed url has already been taken`.

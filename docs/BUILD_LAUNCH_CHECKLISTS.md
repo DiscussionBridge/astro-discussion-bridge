@@ -9,7 +9,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Migrate each Astro-family site to reviewed, checked-in Wrangler
       deployment: `discussionbridge.dev`, `docs.discussionbridge.dev`,
       `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`,
-      `astrostarlightdemo.discussionbridge.dev`, and
+      `astrostarlight.demo.discussionbridge.dev`, and
       `stockstarlight.demo.discussionbridge.dev`.
 - [ ] Treat every site as a separate reversible migration with exact source and
       build identity, current-provider snapshot, rollback target, bindings and
@@ -300,7 +300,14 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       cache-rule configuration.
 - [ ] Verify topic creation so pages from different Astro hosts do not collide or create confusing duplicate topics.
 - [ ] Confirm `embed_url` maps each Astro page to the correct companion topic across hosts.
-- [x] Verify public Alpha demo domains use the settled hostnames: `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, `astrostarlightdemo.discussionbridge.dev`, `stockstarlight.demo.discussionbridge.dev`, and future reviewed integration hosts.
+- [ ] Verify public Alpha demo domains use the settled hostnames:
+      `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`,
+      `astrostarlight.demo.discussionbridge.dev`,
+      `stockstarlight.demo.discussionbridge.dev`, and future reviewed
+      integration hosts. Keep `astrostarlightdemo.discussionbridge.dev`
+      compatibility-only as a permanent path- and query-preserving redirect;
+      never serve duplicate canonical content or blanket-redirect to the
+      homepage.
 - [x] Add and build clean stock Starlight control site to compare framework warnings and upgrades.
 - [x] Apply demo topic lifecycle policy in Discourse: tagged old/transitional topics `20`, `21`, `24`, and `28` as `historical-reference`; reserve deletion/permanent deletion for true mistakes or sensitive/unsafe content.
 - [x] Retire or clearly mark transitional demo deploy copies under `discussionbridge.dev` after public demo projects build from `astro-discussion-bridge`.

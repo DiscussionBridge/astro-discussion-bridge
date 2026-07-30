@@ -27,7 +27,7 @@ Do not duplicate demo source into `discussionbridge.dev` just because a deploy t
 
 3. Live Astro/Starlight demo on Cloudflare
    - Deploy the Starlight docs demo fixture to a public Cloudflare URL.
-   - Use `astrostarlightdemo.discussionbridge.dev` as the stable Astro/Starlight demo hostname.
+   - Use `astrostarlight.demo.discussionbridge.dev` as the stable Astro/Starlight demo hostname.
    - Use this as the real docs-site embed-host test target.
 
 4. Live Discourse category for Astro
@@ -42,7 +42,7 @@ Do not duplicate demo source into `discussionbridge.dev` just because a deploy t
    - Current fallback: global/admin-capable diagnostics key for setup checks; granular publishing key where it can perform create/update/tag/read actions.
    - Use `check-discourse` as the read-only lane readiness check before live publishing. It reads `/site/settings.json` for client-visible authoring limits, `/site.json` for user-specific tag capabilities such as `can_tag_topics` and `can_create_tag`, `/categories.json` for the configured category, and `/tags.json` for requested tag inventory. Current granular publishing key returns `403` for some site-level endpoints, so diagnostics may need a global key or explicit configured limits.
    - Topic visibility and retitling replied topics require a Discourse user with enough topic-management authority.
-   - Enable embedding for localhost preview, `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, and `astrostarlightdemo.discussionbridge.dev`.
+   - Enable embedding for localhost preview, `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, and `astrostarlight.demo.discussionbridge.dev`.
    - Pre-integration backup checkpoint: `discussion-bridge-forum-2026-07-16-140054-v20260715090434.tar.gz`.
 
 ## Test Matrix
@@ -83,7 +83,7 @@ Blog lane smoke test:
 npx astro-discussion-bridge sync-existing src/content/blog `
   --route-base blog `
   --discourse-url https://forum.discussionbridge.dev `
-  --site-url https://astrostarlightdemo.discussionbridge.dev `
+  --site-url https://astrostarlight.demo.discussionbridge.dev `
   --category-id 5 `
   --tags discussionbridge,starlight-demo,blog `
   --force `
@@ -101,15 +101,26 @@ Use `demo.discussionbridge.dev` as the public demo hub, then put each runnable d
 
 - `demo.discussionbridge.dev` for the demo index/chooser.
 - `astro.demo.discussionbridge.dev` for the plain Astro/core demo.
-- `astrostarlightdemo.discussionbridge.dev` for the Astro + Starlight demo.
+- `astrostarlight.demo.discussionbridge.dev` for the Astro + Starlight demo.
 - `stockstarlight.demo.discussionbridge.dev` for a clean stock Starlight control site.
 - Future integration lanes should follow the same pattern, such as `statamic.demo.discussionbridge.dev` and a more specific Statamic demo host when needed.
 
 Older internal/test hostnames such as `astrodemo.discussionbridge.dev`,
-`astro.discussionbridge.dev`, `astrostarlight.discussionbridge.dev`, and the
-BB2-introduced `astrostarlight.demo.discussionbridge.dev` are transitional test
-artifacts, redirects, or retired names. The settled Astro + Starlight hostname
-is `astrostarlightdemo.discussionbridge.dev`.
+`astro.discussionbridge.dev`, `astrostarlight.discussionbridge.dev`, and
+`astrostarlightdemo.discussionbridge.dev` are transitional test artifacts,
+compatibility redirects, or retired names. The settled Astro + Starlight
+hostname is `astrostarlight.demo.discussionbridge.dev`.
+
+The combined `astrostarlightdemo.discussionbridge.dev` hostname is a permanent
+compatibility redirect only. It must preserve the original path and query
+string when redirecting to the dotted hostname, must not blanket-redirect to
+the homepage, and must not serve duplicate canonical demo content. Canonical
+metadata, sitemap URLs, embed identities, and future publishing identities use
+only `astrostarlight.demo.discussionbridge.dev`. Authorize the dotted hostname
+in Discourse before cutover; then verify simple, full, and fullInteractive
+comments plus existing topic bindings. Do not create or reconcile topics
+against the compatibility hostname. Record the exact Pages projects, domains,
+deployment identities, and rollback targets before and after cutover.
 
 As part of the Alpha gate, verify each public demo hostname, Discourse embed host setting, companion topic URL, Cloudflare Pages project, and docs link uses the public hostname rather than a transitional test hostname.
 
@@ -147,7 +158,11 @@ node scripts/tag-discourse-topics.mjs --tag historical-reference 20 21 24 28
   - `index.md`: https://forum.discussionbridge.dev/t/discussionbridge-starlight-demo/21
   - Post as / request actor: `discussbridge-bot`
   - Current key scope: global; replace with granular/category-scoped key when available.
-- 2026-07-16: Starlight demo deployed to Cloudflare Pages and verified at https://astrostarlightdemo.discussionbridge.dev/.
+- 2026-07-16: Starlight demo deployed to Cloudflare Pages and verified at the
+  then-current `https://astrostarlightdemo.discussionbridge.dev/` hostname.
+- 2026-07-30: the public convention was corrected to
+  `https://astrostarlight.demo.discussionbridge.dev/`; the combined hostname is
+  compatibility-only.
   - Homepage returns `200` and links topic 21.
   - `/existing-md-page/` returns `200` and links topic 20.
 - 2026-07-16: Starlight demo synced existing first posts for topics 20 and 21.
@@ -201,7 +216,7 @@ C:\CodeProjects\Planning\Procedure Docs\standards\product-demo-domain-pattern.md
 - `discussionbridge.com` redirects to `discussionbridge.dev`.
 - `demo.discussionbridge.dev` hosts the public demo index/chooser.
 - `astro.demo.discussionbridge.dev` hosts the live plain Astro/core demo.
-- `astrostarlightdemo.discussionbridge.dev` hosts the live Astro/Starlight demo.
+- `astrostarlight.demo.discussionbridge.dev` hosts the live Astro/Starlight demo.
 - `stockstarlight.demo.discussionbridge.dev` hosts the clean stock Starlight control.
 - `forum.discussionbridge.dev` hosts the Discourse instance.
 - DiscussionBridge is the umbrella product family.
