@@ -1,0 +1,3988 @@
+{
+  "version": 1,
+  "mode": "law-as-amended-forum-metadata-only",
+  "authorityBoundary": {
+    "forumProvides": [
+      "title",
+      "tags",
+      "topic-identity",
+      "discussion-binding"
+    ],
+    "forumDoesNotProvide": [
+      "current-law-text",
+      "amendment-history",
+      "prior-law-text",
+      "official-citations"
+    ]
+  },
+  "inputs": {
+    "navigationSha256": "d6b8e28bae607b2b549313b9f46e36fc0fe66e55966fbf3763679d8382edb89d",
+    "diagnosticReportSha256": "cb94611cae58068235e580c05555b303080ed73f30873a1798817d661ae73aed"
+  },
+  "summary": {
+    "total": 309,
+    "placeholderTagged": 257
+  },
+  "entries": [
+    {
+      "sectionId": "10101",
+      "topicId": 433,
+      "title": "Sec. 10101. Re-evaluation of thrifty food plan | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/433",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—nutrition",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10102",
+      "topicId": 439,
+      "title": "Sec. 10102. Modifications to SNAP work requirements for able-bodied adults | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/439",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—nutrition",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10103",
+      "topicId": 440,
+      "title": "Sec. 10103. Availability of standard utility allowances based on receipt of energy assistance | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/440",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—nutrition",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10104",
+      "topicId": 442,
+      "title": "Sec. 10104. Restrictions on internet expenses | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/442",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—nutrition",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10105",
+      "topicId": 443,
+      "title": "Sec. 10105. Matching funds requirements | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/443",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—nutrition",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10106",
+      "topicId": 444,
+      "title": "Sec. 10106. Administrative cost sharing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/444",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—nutrition",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10107",
+      "topicId": 446,
+      "title": "Sec. 10107. National education and obesity prevention grant program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/446",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—nutrition",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10108",
+      "topicId": 447,
+      "title": "Sec. 10108. Alien SNAP eligibility | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/447",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—nutrition",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10201",
+      "topicId": 448,
+      "title": "Sec. 10201. Rescission of amounts for forestry | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/448",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-b—forestry",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10301",
+      "topicId": 449,
+      "title": "Sec. 10301. Effective reference price; reference price | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/449",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10302",
+      "topicId": 450,
+      "title": "Sec. 10302. Base acres | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/450",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10303",
+      "topicId": 451,
+      "title": "Sec. 10303. Producer election | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/451",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10304",
+      "topicId": 452,
+      "title": "Sec. 10304. Price loss coverage | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/452",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10305",
+      "topicId": 453,
+      "title": "Sec. 10305. Agriculture risk coverage | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/453",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10306",
+      "topicId": 454,
+      "title": "Sec. 10306. Equitable treatment of certain entities | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/454",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10307",
+      "topicId": 455,
+      "title": "Sec. 10307. Payment limitations | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/455",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10308",
+      "topicId": 456,
+      "title": "Sec. 10308. Adjusted gross income limitation | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/456",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10309",
+      "topicId": 457,
+      "title": "Sec. 10309. Marketing loans | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/457",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10310",
+      "topicId": 458,
+      "title": "Sec. 10310. Repayment of marketing loans | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/458",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10311",
+      "topicId": 459,
+      "title": "Sec. 10311. Economic adjustment assistance for textile mills | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/459",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10312",
+      "topicId": 460,
+      "title": "Sec. 10312. Sugar program updates | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/460",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-work",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10313",
+      "topicId": 461,
+      "title": "Sec. 10313. Dairy policy updates | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/461",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10314",
+      "topicId": 462,
+      "title": "Sec. 10314. Implementation | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/462",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—commodities",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10401",
+      "topicId": 463,
+      "title": "Sec. 10401. Supplemental agricultural disaster assistance | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/463",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-d—disaster-assistance-programs",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10501",
+      "topicId": 464,
+      "title": "Sec. 10501. Beginning farmer and rancher benefit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/464",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-e—crop-insurance",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10502",
+      "topicId": 465,
+      "title": "Sec. 10502. Area-based crop insurance coverage and affordability | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/465",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-e—crop-insurance",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10503",
+      "topicId": 466,
+      "title": "Sec. 10503. Administrative and operating expense adjustments | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/466",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-e—crop-insurance",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10504",
+      "topicId": 467,
+      "title": "Sec. 10504. Premium support | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/467",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-e—crop-insurance",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10505",
+      "topicId": 468,
+      "title": "Sec. 10505. Program compliance and integrity | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/468",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-e—crop-insurance",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10506",
+      "topicId": 469,
+      "title": "Sec. 10506. Reviews, compliance, and integrity | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/469",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-e—crop-insurance",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10507",
+      "topicId": 470,
+      "title": "Sec. 10507. Poultry insurance pilot program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/470",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-e—crop-insurance",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10601",
+      "topicId": 471,
+      "title": "Sec. 10601. Conservation | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/471",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-f—additional-investments-in-rural-america",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10602",
+      "topicId": 472,
+      "title": "Sec. 10602. Supplemental agricultural trade promotion program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/472",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-f—additional-investments-in-rural-america",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10603",
+      "topicId": 473,
+      "title": "Sec. 10603. Nutrition | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/473",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-f—additional-investments-in-rural-america",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10604",
+      "topicId": 474,
+      "title": "Sec. 10604. Research | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/474",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-f—additional-investments-in-rural-america",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10605",
+      "topicId": 475,
+      "title": "Sec. 10605. Energy | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/475",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-f—additional-investments-in-rural-america",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10606",
+      "topicId": 476,
+      "title": "Sec. 10606. Horticulture | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/476",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-work",
+        "subtitle-f—additional-investments-in-rural-america",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "10607",
+      "topicId": 477,
+      "title": "Sec. 10607. Miscellaneous | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/477",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-work",
+        "subtitle-f—additional-investments-in-rural-america",
+        "title-i"
+      ]
+    },
+    {
+      "sectionId": "20001",
+      "topicId": 478,
+      "title": "Sec. 20001. Enhancement of Department of Defense resources for improving the quality of life for military personnel | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/478",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20002",
+      "topicId": 479,
+      "title": "Sec. 20002. Enhancement of Department of Defense resources for shipbuilding | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/479",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20003",
+      "topicId": 480,
+      "title": "Sec. 20003. Enhancement of Department of Defense resources for integrated air and missile defense | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/480",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20004",
+      "topicId": 481,
+      "title": "Sec. 20004. Enhancement of Department of Defense resources for munitions and defense supply chain resiliency | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/481",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20005",
+      "topicId": 482,
+      "title": "Sec. 20005. Enhancement of Department of Defense resources for scaling low-cost weapons into production | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/482",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20006",
+      "topicId": 483,
+      "title": "Sec. 20006. Enhancement of Department of Defense resources for improving the efficiency and cybersecurity of the Department of Defense | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/483",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20007",
+      "topicId": 484,
+      "title": "Sec. 20007. Enhancement of Department of Defense resources for air superiority | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/484",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20008",
+      "topicId": 485,
+      "title": "Sec. 20008. Enhancement of resources for nuclear forces | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/485",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20009",
+      "topicId": 1155,
+      "title": "Sec. 20009. Enhancement of Department of Defense resources to improve capabilities of United States Indo-Pacific Command | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/1155",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20010",
+      "topicId": 486,
+      "title": "Sec. 20010. Enhancement of Department of Defense resources for improving the readiness of the Department of Defense | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/486",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20011",
+      "topicId": 487,
+      "title": "Sec. 20011. Improving Department of Defense border support and counter-drug missions | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/487",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20012",
+      "topicId": 488,
+      "title": "Sec. 20012. Department of Defense oversight | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/488",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "20013",
+      "topicId": 489,
+      "title": "Sec. 20013. Military construction projects authorized | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/489",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-ii"
+      ]
+    },
+    {
+      "sectionId": "30001",
+      "topicId": 490,
+      "title": "Sec. 30001. Funding cap for the Bureau of Consumer Financial Protection | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/490",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "title-iii"
+      ]
+    },
+    {
+      "sectionId": "30002",
+      "topicId": 491,
+      "title": "Sec. 30002. Rescission of funds for Green and Resilient Retrofit Program for Multifamily Housing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/491",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-iii"
+      ]
+    },
+    {
+      "sectionId": "30003",
+      "topicId": 492,
+      "title": "Sec. 30003. Securities and Exchange Commission Reserve Fund | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/492",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-iii"
+      ]
+    },
+    {
+      "sectionId": "30004",
+      "topicId": 493,
+      "title": "Sec. 30004. Appropriations for Defense Production Act | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/493",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-iii"
+      ]
+    },
+    {
+      "sectionId": "40001",
+      "topicId": 494,
+      "title": "Sec. 40001. Coast Guard mission readiness | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/494",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40002",
+      "topicId": 495,
+      "title": "Sec. 40002. Spectrum auctions | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/495",
+      "normalizedTags": [
+        "law-as-amended",
+        "stuck-confused",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40003",
+      "topicId": 496,
+      "title": "Sec. 40003. Air traffic control improvements | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/496",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40004",
+      "topicId": 497,
+      "title": "Sec. 40004. Space launch and reentry licensing and permitting user fees | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/497",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-work",
+        "olrc-404",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40005",
+      "topicId": 498,
+      "title": "Sec. 40005. Mars missions, Artemis missions, and Moon to Mars program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/498",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "olrc-404",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40006",
+      "topicId": 499,
+      "title": "Sec. 40006. Corporate average fuel economy civil penalties | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/499",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-work",
+        "olrc-404",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40007",
+      "topicId": 500,
+      "title": "Sec. 40007. Payments for lease of Metropolitan Washington Airports | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/500",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-work",
+        "olrc-404",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40008",
+      "topicId": 501,
+      "title": "Sec. 40008. Rescission of certain amounts for the National Oceanic and Atmospheric Administration | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/501",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40009",
+      "topicId": 502,
+      "title": "Sec. 40009. Reduction in annual transfers to Travel Promotion Fund | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/502",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40010",
+      "topicId": 503,
+      "title": "Sec. 40010. Treatment of unobligated funds for alternative fuel and low-emission aviation technology | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/503",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "40011",
+      "topicId": 504,
+      "title": "Sec. 40011. Rescission of amounts appropriated to Public Wireless Supply Chain Innovation Fund | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/504",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-iv"
+      ]
+    },
+    {
+      "sectionId": "50101",
+      "topicId": 505,
+      "title": "Sec. 50101. Onshore oil and gas leasing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/505",
+      "normalizedTags": [
+        "editor-issue",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-a—oil-and-gas-leasing",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50102",
+      "topicId": 506,
+      "title": "Sec. 50102. Offshore oil and gas leasing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/506",
+      "normalizedTags": [
+        "editor-issue",
+        "law-as-amended",
+        "needs-work",
+        "olrc",
+        "subtitle-a—oil-and-gas-leasing",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50103",
+      "topicId": 507,
+      "title": "Sec. 50103. Royalties on extracted methane | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/507",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—oil-and-gas-leasing",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50104",
+      "topicId": 508,
+      "title": "Sec. 50104. Alaska oil and gas leasing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/508",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—oil-and-gas-leasing",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50105",
+      "topicId": 509,
+      "title": "Sec. 50105. National Petroleum Reserve–Alaska | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/509",
+      "normalizedTags": [
+        "editor-issue",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-a—oil-and-gas-leasing",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50201",
+      "topicId": 510,
+      "title": "Sec. 50201. Coal leasing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/510",
+      "normalizedTags": [
+        "law-as-amended",
+        "stuck-confused",
+        "subtitle-b—mining",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50202",
+      "topicId": 511,
+      "title": "Sec. 50202. Coal royalty | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/511",
+      "normalizedTags": [
+        "editor-issue",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-b—mining",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50203",
+      "topicId": 512,
+      "title": "Sec. 50203. Leases for known recoverable coal resources | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/512",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-b—mining",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50204",
+      "topicId": 513,
+      "title": "Sec. 50204. Authorization to mine Federal coal | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/513",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-b—mining",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50301",
+      "topicId": 514,
+      "title": "Sec. 50301. Timber sales and long-term contracting for the Forest Service and the Bureau of Land Management | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/514",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—lands",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50302",
+      "topicId": 515,
+      "title": "Sec. 50302. Renewable energy fees on Federal land | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/515",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—lands",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50303",
+      "topicId": 516,
+      "title": "Sec. 50303. Renewable energy revenue sharing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/516",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-c—lands",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50304",
+      "topicId": 517,
+      "title": "Sec. 50304. Rescission of National Park Service and Bureau of Land Management funds | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/517",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-c—lands",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50305",
+      "topicId": 518,
+      "title": "Sec. 50305. Celebrating America’s 250th anniversary | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/518",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "subtitle-c—lands",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50401",
+      "topicId": 519,
+      "title": "Sec. 50401. Strategic Petroleum Reserve | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/519",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "olrc",
+        "repeal",
+        "subtitle-d—energy",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50402",
+      "topicId": 520,
+      "title": "Sec. 50402. Repeals; rescissions | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/520",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "olrc",
+        "repeal",
+        "subtitle-d—energy",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50403",
+      "topicId": 521,
+      "title": "Sec. 50403. Energy dominance financing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/521",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-work",
+        "subtitle-d—energy",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50404",
+      "topicId": 522,
+      "title": "Sec. 50404. Transformational artificial intelligence models | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/522",
+      "normalizedTags": [
+        "appropriations",
+        "editor-issue",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-d—energy",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "50501",
+      "topicId": 523,
+      "title": "Sec. 50501. Water conveyance and surface water storage enhancement | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/523",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "subtitle-e—water",
+        "title-v"
+      ]
+    },
+    {
+      "sectionId": "60001",
+      "topicId": 524,
+      "title": "Sec. 60001. Rescission of funding for clean heavy-duty vehicles | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/524",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60002",
+      "topicId": 525,
+      "title": "Sec. 60002. Repeal of Greenhouse Gas Reduction Fund | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/525",
+      "normalizedTags": [
+        "law-as-amended",
+        "repeal",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60003",
+      "topicId": 526,
+      "title": "Sec. 60003. Rescission of funding for diesel emissions reductions | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/526",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60004",
+      "topicId": 527,
+      "title": "Sec. 60004. Rescission of funding to address air pollution | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/527",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60005",
+      "topicId": 528,
+      "title": "Sec. 60005. Rescission of funding to address air pollution at schools | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/528",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60006",
+      "topicId": 529,
+      "title": "Sec. 60006. Rescission of funding for the low emissions electricity program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/529",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60007",
+      "topicId": 530,
+      "title": "Sec. 60007. Rescission of funding for section 211(o) of the Clean Air Act | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/530",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60008",
+      "topicId": 531,
+      "title": "Sec. 60008. Rescission of funding for implementation of the American Innovation and Manufacturing Act | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/531",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60009",
+      "topicId": 532,
+      "title": "Sec. 60009. Rescission of funding for enforcement technology and public information | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/532",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60010",
+      "topicId": 533,
+      "title": "Sec. 60010. Rescission of funding for greenhouse gas corporate reporting | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/533",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60011",
+      "topicId": 534,
+      "title": "Sec. 60011. Rescission of funding for environmental product declaration assistance | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/534",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60012",
+      "topicId": 535,
+      "title": "Sec. 60012. Rescission of funding for methane emissions and waste reduction incentive program for petroleum and natural gas systems | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/535",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60013",
+      "topicId": 536,
+      "title": "Sec. 60013. Rescission of funding for greenhouse gas air pollution plans and implementation grants | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/536",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60014",
+      "topicId": 537,
+      "title": "Sec. 60014. Rescission of funding for environmental protection agency efficient, accurate, and timely reviews | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/537",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60015",
+      "topicId": 538,
+      "title": "Sec. 60015. Rescission of funding for low-embodied carbon labeling for construction materials | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/538",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60016",
+      "topicId": 539,
+      "title": "Sec. 60016. Rescission of funding for environmental and climate justice block grants | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/539",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60017",
+      "topicId": 540,
+      "title": "Sec. 60017. Rescission of funding for ESA recovery plans | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/540",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60018",
+      "topicId": 541,
+      "title": "Sec. 60018. Rescission of funding for environmental and climate data collection | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/541",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60019",
+      "topicId": 542,
+      "title": "Sec. 60019. Rescission of neighborhood access and equity grant program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/542",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60020",
+      "topicId": 543,
+      "title": "Sec. 60020. Rescission of funding for Federal building assistance | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/543",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60021",
+      "topicId": 544,
+      "title": "Sec. 60021. Rescission of funding for low-carbon materials for Federal buildings | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/544",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60022",
+      "topicId": 545,
+      "title": "Sec. 60022. Rescission of funding for GSA emerging and sustainable technologies | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/545",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60023",
+      "topicId": 546,
+      "title": "Sec. 60023. Rescission of environmental review implementation funds | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/546",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60024",
+      "topicId": 547,
+      "title": "Sec. 60024. Rescission of low-carbon transportation materials grants | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/547",
+      "normalizedTags": [
+        "appropriations-rescinded",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60025",
+      "topicId": 548,
+      "title": "Sec. 60025. John F. Kennedy Center for the Performing Arts | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/548",
+      "normalizedTags": [
+        "appropriations",
+        "law-as-amended",
+        "needs-work",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "60026",
+      "topicId": 549,
+      "title": "Sec. 60026. Project sponsor opt-in fees for environmental reviews | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/549",
+      "normalizedTags": [
+        "law-as-amended",
+        "title-vi"
+      ]
+    },
+    {
+      "sectionId": "70001",
+      "topicId": 550,
+      "title": "Sec. 70001. References to the Internal Revenue Code of 1986, etc | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/550",
+      "normalizedTags": [
+        "law-as-amended",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70101",
+      "topicId": 551,
+      "title": "Sec. 70101. Extension and enhancement of reduced rates | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/551",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70102",
+      "topicId": 552,
+      "title": "Sec. 70102. Extension and enhancement of increased standard deduction | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/552",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70103",
+      "topicId": 553,
+      "title": "Sec. 70103. Termination of deduction for personal exemptions other than temporary senior deduction | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/553",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70104",
+      "topicId": 554,
+      "title": "Sec. 70104. Extension and enhancement of increased child tax credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/554",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70105",
+      "topicId": 555,
+      "title": "Sec. 70105. Extension and enhancement of deduction for qualified business income | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/555",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70106",
+      "topicId": 556,
+      "title": "Sec. 70106. Extension and enhancement of increased estate and gift tax exemption amounts | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/556",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70107",
+      "topicId": 557,
+      "title": "Sec. 70107. Extension of increased alternative minimum tax exemption amounts and modification of phaseout thresholds | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/557",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70108",
+      "topicId": 558,
+      "title": "Sec. 70108. Extension and modification of limitation on deduction for qualified residence interest | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/558",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70109",
+      "topicId": 559,
+      "title": "Sec. 70109. Extension and modification of limitation on casualty loss deduction | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/559",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70110",
+      "topicId": 560,
+      "title": "Sec. 70110. Termination of miscellaneous itemized deductions other than educator expenses | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/560",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70111",
+      "topicId": 561,
+      "title": "Sec. 70111. Limitation on tax benefit of itemized deductions | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/561",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70112",
+      "topicId": 562,
+      "title": "Sec. 70112. Extension and modification of qualified transportation fringe benefits | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/562",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70113",
+      "topicId": 563,
+      "title": "Sec. 70113. Extension and modification of limitation on deduction and exclusion for moving expenses | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/563",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70114",
+      "topicId": 564,
+      "title": "Sec. 70114. Extension and modification of limitation on wagering losses | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/564",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70115",
+      "topicId": 565,
+      "title": "Sec. 70115. Extension and enhancement of increased limitation on contributions to ABLE accounts | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/565",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70116",
+      "topicId": 566,
+      "title": "Sec. 70116. Extension and enhancement of savers credit allowed for ABLE contributions | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/566",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70117",
+      "topicId": 567,
+      "title": "Sec. 70117. Extension of rollovers from qualified tuition programs to ABLE accounts permitted | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/567",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70118",
+      "topicId": 568,
+      "title": "Sec. 70118. Extension of treatment of certain individuals performing services in the Sinai Peninsula and enhancement to include additional areas | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/568",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70119",
+      "topicId": 569,
+      "title": "Sec. 70119. Extension and modification of exclusion from gross income of student loans discharged on account of death or disability | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/569",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70120",
+      "topicId": 570,
+      "title": "Sec. 70120. Limitation on individual deductions for certain state and local taxes, etc | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/570",
+      "normalizedTags": [
+        "chapter-1—providing-permanent-tax-relief",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70201",
+      "topicId": 571,
+      "title": "Sec. 70201. No tax on tips | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/571",
+      "normalizedTags": [
+        "chapter-2—delivering-on-presidential-priorities",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70202",
+      "topicId": 572,
+      "title": "Sec. 70202. No tax on overtime | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/572",
+      "normalizedTags": [
+        "chapter-2—delivering-on-presidential-priorities",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70203",
+      "topicId": 573,
+      "title": "Sec. 70203. No tax on car loan interest | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/573",
+      "normalizedTags": [
+        "chapter-2—delivering-on-presidential-priorities",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70204",
+      "topicId": 574,
+      "title": "Sec. 70204. Trump accounts and contribution pilot program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/574",
+      "normalizedTags": [
+        "chapter-2—delivering-on-presidential-priorities",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70301",
+      "topicId": 575,
+      "title": "Sec. 70301. Full expensing for certain business property | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/575",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70302",
+      "topicId": 576,
+      "title": "Sec. 70302. Full expensing of domestic research and experimental expenditures | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/576",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70303",
+      "topicId": 577,
+      "title": "Sec. 70303. Modification of limitation on business interest | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/577",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70304",
+      "topicId": 578,
+      "title": "Sec. 70304. Extension and enhancement of paid family and medical leave credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/578",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70305",
+      "topicId": 579,
+      "title": "Sec. 70305. Exceptions from limitations on deduction for business meals | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/579",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70306",
+      "topicId": 580,
+      "title": "Sec. 70306. Increased dollar limitations for expensing of certain depreciable business assets | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/580",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70307",
+      "topicId": 581,
+      "title": "Sec. 70307. Special depreciation allowance for qualified production property | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/581",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70308",
+      "topicId": 582,
+      "title": "Sec. 70308. Enhancement of advanced manufacturing investment credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/582",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70309",
+      "topicId": 583,
+      "title": "Sec. 70309. Spaceports are treated like airports under exempt facility bond rules | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/583",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-us-business-tax-reform",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70311",
+      "topicId": 584,
+      "title": "Sec. 70311. Modifications related to foreign tax credit limitation | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/584",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-i—foreign-tax-credit",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70312",
+      "topicId": 585,
+      "title": "Sec. 70312. Modifications to determination of deemed paid credit for taxes properly attributable to tested income | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/585",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-i—foreign-tax-credit",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70313",
+      "topicId": 586,
+      "title": "Sec. 70313. Sourcing certain income from the sale of inventory produced in the United States | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/586",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-i—foreign-tax-credit",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70321",
+      "topicId": 587,
+      "title": "Sec. 70321. Modification of deduction for foreign-derived deduction eligible income and net CFC tested income | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/587",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-ii—foreign-derived-deduction-eligible-income",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70322",
+      "topicId": 588,
+      "title": "Sec. 70322. Determination of deduction eligible income | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/588",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-ii—foreign-derived-deduction-eligible-income",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70323",
+      "topicId": 589,
+      "title": "Sec. 70323. Rules related to deemed intangible income | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/589",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-ii—foreign-derived-deduction-eligible-income",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70331",
+      "topicId": 590,
+      "title": "Sec. 70331. Extension and modification of base erosion minimum tax amount | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/590",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-iii—base-erosion-minimum-tax",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70341",
+      "topicId": 591,
+      "title": "Sec. 70341. Coordination of business interest limitation with interest capitalization provisions",
+      "sourceUrl": "https://forum.repealobbba.org/t/591",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-iv—business-interest-limitation",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70342",
+      "topicId": 592,
+      "title": "Sec. 70342. Definition of adjusted taxable income for business interest limitation | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/592",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-iv—business-interest-limitation",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70351",
+      "topicId": 593,
+      "title": "Sec. 70351. Permanent extension of look-thru rule for related controlled foreign corporations | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/593",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-v—other-international-tax-reforms",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70352",
+      "topicId": 594,
+      "title": "Sec. 70352. Repeal of election for 1-month deferral in determination of taxable year of specified foreign corporations | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/594",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-v—other-international-tax-reforms",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70353",
+      "topicId": 595,
+      "title": "Sec. 70353. Restoration of limitation on downward attribution of stock ownership in applying constructive ownership rules | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/595",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-v—other-international-tax-reforms",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70354",
+      "topicId": 596,
+      "title": "Sec. 70354. Modifications to pro rata share rules | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/596",
+      "normalizedTags": [
+        "chapter-3—establishing-certainty-job-creators",
+        "law-as-amended",
+        "needs-text",
+        "part-v—other-international-tax-reforms",
+        "subchapter-b—permanent-america-first-tax-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70401",
+      "topicId": 597,
+      "title": "Sec. 70401. Enhancement of employer-provided child care credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/597",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-investments-in-families",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70402",
+      "topicId": 598,
+      "title": "Sec. 70402. Enhancement of adoption credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/598",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-investments-in-families",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70403",
+      "topicId": 599,
+      "title": "Sec. 70403. Recognizing Indian tribal governments for purposes of determining whether a child has special needs for purposes of the adoption credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/599",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-investments-in-families",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70404",
+      "topicId": 600,
+      "title": "Sec. 70404. Enhancement of the dependent care assistance program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/600",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-investments-in-families",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70405",
+      "topicId": 601,
+      "title": "Sec. 70405. Enhancement of child and dependent care tax credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/601",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—permanent-investments-in-families",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70411",
+      "topicId": 602,
+      "title": "Sec. 70411. Tax credit for contributions of individuals to scholarship granting organizations | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/602",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—permanent-investments-in-students",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70412",
+      "topicId": 603,
+      "title": "Sec. 70412. Exclusion for employer payments of student loans | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/603",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—permanent-investments-in-students",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70413",
+      "topicId": 604,
+      "title": "Sec. 70413. Additional expenses treated as qualified higher education expenses for purposes of 529 accounts | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/604",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—permanent-investments-in-students",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70414",
+      "topicId": 605,
+      "title": "Sec. 70414. Certain postsecondary credentialing expenses treated as qualified higher education expenses for purposes of 529 accounts | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/605",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—permanent-investments-in-students",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70415",
+      "topicId": 606,
+      "title": "Sec. 70415. Modification of excise tax on investment income of certain private colleges and universities | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/606",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—permanent-investments-in-students",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70416",
+      "topicId": 607,
+      "title": "Sec. 70416. Expanding application of tax on excess compensation within tax-exempt organizations | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/607",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—permanent-investments-in-students",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70421",
+      "topicId": 608,
+      "title": "Sec. 70421. Permanent renewal and enhancement of opportunity zones | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/608",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70422",
+      "topicId": 609,
+      "title": "Sec. 70422. Permanent enhancement of low-income housing tax credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/609",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70423",
+      "topicId": 610,
+      "title": "Sec. 70423. Permanent extension of new markets tax credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/610",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70424",
+      "topicId": 611,
+      "title": "Sec. 70424. Permanent and expanded reinstatement of partial deduction for charitable contributions of individuals who do not elect to itemize | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/611",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70425",
+      "topicId": 612,
+      "title": "Sec. 70425. 0.5 percent floor on deduction of contributions made by individuals | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/612",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70426",
+      "topicId": 613,
+      "title": "Sec. 70426. 1-percent floor on deduction of charitable contributions made by corporations | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/613",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70427",
+      "topicId": 614,
+      "title": "Sec. 70427. Permanent increase in limitation on cover over of tax on distilled spirits | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/614",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70428",
+      "topicId": 615,
+      "title": "Sec. 70428. Nonprofit community development activities in remote native villages | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/615",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70429",
+      "topicId": 616,
+      "title": "Sec. 70429. Adjustment of charitable deduction for certain expenses incurred in support of Native Alaskan subsistence whaling | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/616",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70430",
+      "topicId": 617,
+      "title": "Sec. 70430. Exception to percentage of completion method of accounting for certain residential construction contracts | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/617",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—permanent-investments-community-dev",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70431",
+      "topicId": 618,
+      "title": "Sec. 70431. Expansion of qualified small business stock gain exclusion | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/618",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70432",
+      "topicId": 619,
+      "title": "Sec. 70432. Repeal of revision to de minimis rules for third party network transactions | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/619",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70433",
+      "topicId": 620,
+      "title": "Sec. 70433. Increase in threshold for requiring information reporting with respect to certain payees | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/620",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70434",
+      "topicId": 621,
+      "title": "Sec. 70434. Treatment of certain qualified sound recording productions | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/621",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70435",
+      "topicId": 622,
+      "title": "Sec. 70435. Exclusion of interest on loans secured by rural or agricultural real property | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/622",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70436",
+      "topicId": 623,
+      "title": "Sec. 70436. Reduction of transfer and manufacturing taxes for certain devices | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/623",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70437",
+      "topicId": 624,
+      "title": "Sec. 70437. Treatment of capital gains from the sale of certain farmland property | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/624",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70438",
+      "topicId": 625,
+      "title": "Sec. 70438. Extension of rules for treatment of certain disaster-related personal casualty losses | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/625",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70439",
+      "topicId": 626,
+      "title": "Sec. 70439. Restoration of taxable REIT subsidiary asset test | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/626",
+      "normalizedTags": [
+        "chapter-4—investing-in-american-families",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—permanent-investments-small-business",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70501",
+      "topicId": 627,
+      "title": "Sec. 70501. Termination of previously-owned clean vehicle credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/627",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70502",
+      "topicId": 628,
+      "title": "Sec. 70502. Termination of clean vehicle credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/628",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70503",
+      "topicId": 629,
+      "title": "Sec. 70503. Termination of qualified commercial clean vehicles credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/629",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70504",
+      "topicId": 630,
+      "title": "Sec. 70504. Termination of alternative fuel vehicle refueling property credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/630",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70505",
+      "topicId": 631,
+      "title": "Sec. 70505. Termination of energy efficient home improvement credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/631",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70506",
+      "topicId": 632,
+      "title": "Sec. 70506. Termination of residential clean energy credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/632",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70507",
+      "topicId": 633,
+      "title": "Sec. 70507. Termination of energy efficient commercial buildings deduction | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/633",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70508",
+      "topicId": 634,
+      "title": "Sec. 70508. Termination of new energy efficient home credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/634",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70509",
+      "topicId": 635,
+      "title": "Sec. 70509. Termination of cost recovery for energy property | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/635",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70510",
+      "topicId": 636,
+      "title": "Sec. 70510. Modifications of zero-emission nuclear power production credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/636",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70511",
+      "topicId": 637,
+      "title": "Sec. 70511. Termination of clean hydrogen production credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/637",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70512",
+      "topicId": 638,
+      "title": "Sec. 70512. Termination and restrictions on clean electricity production credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/638",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70513",
+      "topicId": 639,
+      "title": "Sec. 70513. Termination and restrictions on clean electricity investment credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/639",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70514",
+      "topicId": 640,
+      "title": "Sec. 70514. Phase-out and restrictions on advanced manufacturing production credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/640",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70515",
+      "topicId": 641,
+      "title": "Sec. 70515. Restriction on the extension of advanced energy project credit program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/641",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—termination-of-green-new-deal",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70521",
+      "topicId": 642,
+      "title": "Sec. 70521. Extension and modification of clean fuel production credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/642",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—enhancement-of-america-first-energy",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70522",
+      "topicId": 643,
+      "title": "Sec. 70522. Restrictions on carbon oxide sequestration credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/643",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—enhancement-of-america-first-energy",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70523",
+      "topicId": 644,
+      "title": "Sec. 70523. Intangible drilling and development costs taken into account for purposes of computing adjusted financial statement income | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/644",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—enhancement-of-america-first-energy",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70524",
+      "topicId": 645,
+      "title": "Sec. 70524. Income from hydrogen storage, carbon capture, advanced nuclear, hydropower, and geothermal energy added to qualifying income of certain publicly traded partnerships | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/645",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—enhancement-of-america-first-energy",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70525",
+      "topicId": 646,
+      "title": "Sec. 70525. Allow for payments to certain individuals who dye fuel | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/646",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—enhancement-of-america-first-energy",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70531",
+      "topicId": 647,
+      "title": "Sec. 70531. Modifications to de minimis entry privilege for commercial shipments | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/647",
+      "normalizedTags": [
+        "chapter-5—ending-green-new-deal-spending",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—other-reforms",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70601",
+      "topicId": 648,
+      "title": "Sec. 70601. Modification and extension of limitation on excess business losses of noncorporate taxpayers | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/648",
+      "normalizedTags": [
+        "chapter-6—enhancing-deduction-income-tax-credit",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70602",
+      "topicId": 649,
+      "title": "Sec. 70602. Treatment of payments from partnerships to partners for property or services | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/649",
+      "normalizedTags": [
+        "chapter-6—enhancing-deduction-income-tax-credit",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70603",
+      "topicId": 650,
+      "title": "Sec. 70603. Excessive employee remuneration from controlled group members and allocation of deduction | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/650",
+      "normalizedTags": [
+        "chapter-6—enhancing-deduction-income-tax-credit",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70604",
+      "topicId": 651,
+      "title": "Sec. 70604. Excise tax on certain remittance transfers | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/651",
+      "normalizedTags": [
+        "chapter-6—enhancing-deduction-income-tax-credit",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70605",
+      "topicId": 652,
+      "title": "Sec. 70605. Enforcement provisions with respect to COVID-related employee retention credits | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/652",
+      "normalizedTags": [
+        "chapter-6—enhancing-deduction-income-tax-credit",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70606",
+      "topicId": 653,
+      "title": "Sec. 70606. Social security number requirement for American Opportunity and Lifetime Learning credits | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/653",
+      "normalizedTags": [
+        "chapter-6—enhancing-deduction-income-tax-credit",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "70607",
+      "topicId": 654,
+      "title": "Sec. 70607. Task force on the replacement of Direct File | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/654",
+      "normalizedTags": [
+        "chapter-6—enhancing-deduction-income-tax-credit",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—tax",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71101",
+      "topicId": 655,
+      "title": "Sec. 71101. Moratorium on implementation of rule relating to eligibility and enrollment in Medicare Savings Programs | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/655",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71102",
+      "topicId": 656,
+      "title": "Sec. 71102. Moratorium on implementation of rule relating to eligibility and enrollment for Medicaid, CHIP, and the Basic Health Program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/656",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71103",
+      "topicId": 657,
+      "title": "Sec. 71103. Reducing duplicate enrollment under the Medicaid and CHIP programs | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/657",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71104",
+      "topicId": 658,
+      "title": "Sec. 71104. Ensuring deceased individuals do not remain enrolled | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/658",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71105",
+      "topicId": 659,
+      "title": "Sec. 71105. Ensuring deceased providers do not remain enrolled | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/659",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71106",
+      "topicId": 660,
+      "title": "Sec. 71106. Payment reduction related to certain erroneous excess payments under Medicaid | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/660",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71107",
+      "topicId": 661,
+      "title": "Sec. 71107. Eligibility redeterminations | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/661",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71108",
+      "topicId": 662,
+      "title": "Sec. 71108. Revising home equity limit for determining eligibility for long-term care services under the Medicaid program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/662",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71109",
+      "topicId": 663,
+      "title": "Sec. 71109. Alien Medicaid eligibility | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/663",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71110",
+      "topicId": 664,
+      "title": "Sec. 71110. Expansion FMAP for emergency Medicaid | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/664",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—reducing-fraud-improving-enrollment",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71111",
+      "topicId": 665,
+      "title": "Sec. 71111. Moratorium on implementation of rule relating to staffing standards for long-term care facilities under the Medicare and Medicaid programs | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/665",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—preventing-wasteful-spending",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71112",
+      "topicId": 666,
+      "title": "Sec. 71112. Reducing State Medicaid costs | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/666",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—preventing-wasteful-spending",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71113",
+      "topicId": 667,
+      "title": "Sec. 71113. Federal payments to prohibited entities | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/667",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—preventing-wasteful-spending",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71114",
+      "topicId": 668,
+      "title": "Sec. 71114. Sunsetting increased FMAP incentive | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/668",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—stopping-abusive-financing-practices",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71115",
+      "topicId": 669,
+      "title": "Sec. 71115. Provider taxes | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/669",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—stopping-abusive-financing-practices",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71116",
+      "topicId": 670,
+      "title": "Sec. 71116. State directed payments | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/670",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—stopping-abusive-financing-practices",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71117",
+      "topicId": 671,
+      "title": "Sec. 71117. Requirements regarding waiver of uniform tax requirement for Medicaid provider tax | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/671",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—stopping-abusive-financing-practices",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71118",
+      "topicId": 672,
+      "title": "Sec. 71118. Requiring budget neutrality for Medicaid demonstration projects under section 1115 | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/672",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—stopping-abusive-financing-practices",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71119",
+      "topicId": 1212,
+      "title": "Sec. 71119. Requirement for States to establish Medicaid community engagement | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/1212",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—increasing-personal-accountability",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71120",
+      "topicId": 673,
+      "title": "Sec. 71120. Modifying cost sharing requirements for certain expansion individuals under the Medicaid program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/673",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-d—increasing-personal-accountability",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71121",
+      "topicId": 674,
+      "title": "Sec. 71121. Making certain adjustments to coverage of home or community-based services under Medicaid | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/674",
+      "normalizedTags": [
+        "chapter-1—medicaid",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-e—expanding-access-to-care",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71201",
+      "topicId": 675,
+      "title": "Sec. 71201. Limiting Medicare coverage of certain individuals | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/675",
+      "normalizedTags": [
+        "chapter-2—medicare",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—strengthening-eligibility-requirements",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71202",
+      "topicId": 676,
+      "title": "Sec. 71202. Temporary payment increase under the medicare physician fee schedule to account for exceptional circumstances | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/676",
+      "normalizedTags": [
+        "chapter-2—medicare",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—improving-services-for-seniors",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71203",
+      "topicId": 677,
+      "title": "Sec. 71203. Expanding and clarifying the exclusion for orphan drugs under the Drug Price Negotiation Program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/677",
+      "normalizedTags": [
+        "chapter-2—medicare",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—improving-services-for-seniors",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71301",
+      "topicId": 678,
+      "title": "Sec. 71301. Permitting premium tax credit only for certain individuals | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/678",
+      "normalizedTags": [
+        "chapter-3—health-tax",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—improving-eligibility-criteria",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71302",
+      "topicId": 679,
+      "title": "Sec. 71302. Disallowing premium tax credit during periods of medicaid ineligibility due to alien status | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/679",
+      "normalizedTags": [
+        "chapter-3—health-tax",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-a—improving-eligibility-criteria",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71303",
+      "topicId": 680,
+      "title": "Sec. 71303. Requiring verification of eligibility for premium tax credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/680",
+      "normalizedTags": [
+        "chapter-3—health-tax",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—preventing-waste-fraud-and-abuse",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71304",
+      "topicId": 681,
+      "title": "Sec. 71304. Disallowing premium tax credit in case of certain coverage enrolled in during special enrollment period | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/681",
+      "normalizedTags": [
+        "chapter-3—health-tax",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—preventing-waste-fraud-and-abuse",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71305",
+      "topicId": 682,
+      "title": "Sec. 71305. Eliminating limitation on recapture of advance payment of premium tax credit | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/682",
+      "normalizedTags": [
+        "chapter-3—health-tax",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-b—preventing-waste-fraud-and-abuse",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71306",
+      "topicId": 683,
+      "title": "Sec. 71306. Permanent extension of safe harbor for absence of deductible for telehealth services | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/683",
+      "normalizedTags": [
+        "chapter-3—health-tax",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—enhancing-choice-for-patients",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71307",
+      "topicId": 684,
+      "title": "Sec. 71307. Allowance of bronze and catastrophic plans in connection with health savings accounts | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/684",
+      "normalizedTags": [
+        "chapter-3—health-tax",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—enhancing-choice-for-patients",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71308",
+      "topicId": 685,
+      "title": "Sec. 71308. Treatment of direct primary care service arrangements | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/685",
+      "normalizedTags": [
+        "chapter-3—health-tax",
+        "law-as-amended",
+        "needs-text",
+        "subchapter-c—enhancing-choice-for-patients",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "71401",
+      "topicId": 686,
+      "title": "Sec. 71401. Rural Health Transformation Program | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/686",
+      "normalizedTags": [
+        "chapter-4—protecting-rural-hospitals-and-providers",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—health",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "72001",
+      "topicId": 687,
+      "title": "Sec. 72001. Modification of limitation on the public debt | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/687",
+      "normalizedTags": [
+        "chapter-4—protecting-rural-hospitals-and-providers",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—health",
+        "subtitle-c—increase-in-debt-limit",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "73001",
+      "topicId": 688,
+      "title": "Sec. 73001. Ending unemployment payments to jobless millionaires | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/688",
+      "normalizedTags": [
+        "chapter-4—protecting-rural-hospitals-and-providers",
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—health",
+        "subtitle-d—unemployment",
+        "title-vii"
+      ]
+    },
+    {
+      "sectionId": "80001",
+      "topicId": 689,
+      "title": "Sec. 80001. Exemption of certain assets | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/689",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—exemption-of-certain-assets",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "81001",
+      "topicId": 690,
+      "title": "Sec. 81001. Establishment of loan limits for graduate and professional students and parent borrowers; termination of graduate and professional PLUS loans | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/690",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—loan-limits",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "82001",
+      "topicId": 691,
+      "title": "Sec. 82001. Loan repayment | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/691",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—loan-repayment",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "82002",
+      "topicId": 692,
+      "title": "Sec. 82002. Deferment; forbearance | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/692",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—loan-repayment",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "82003",
+      "topicId": 693,
+      "title": "Sec. 82003. Loan rehabilitation | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/693",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—loan-repayment",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "82004",
+      "topicId": 694,
+      "title": "Sec. 82004. Public service loan forgiveness | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/694",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—loan-repayment",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "82005",
+      "topicId": 695,
+      "title": "Sec. 82005. Student loan servicing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/695",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—loan-repayment",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "83001",
+      "topicId": 696,
+      "title": "Sec. 83001. Eligibility | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/696",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-d—pell-grants",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "83002",
+      "topicId": 697,
+      "title": "Sec. 83002. Workforce Pell Grants | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/697",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-d—pell-grants",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "83003",
+      "topicId": 698,
+      "title": "Sec. 83003. Pell shortfall | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/698",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-d—pell-grants",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "83004",
+      "topicId": 699,
+      "title": "Sec. 83004. Federal Pell Grant exclusion relating to other grant aid | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/699",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-d—pell-grants",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "84001",
+      "topicId": 700,
+      "title": "Sec. 84001. Ineligibility based on low earning outcomes | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/700",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-e—accountability",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "85001",
+      "topicId": 701,
+      "title": "Sec. 85001. Delay of rule relating to borrower defense to repayment | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/701",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-f—regulatory-relief",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "85002",
+      "topicId": 702,
+      "title": "Sec. 85002. Delay of rule relating to closed school discharges | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/702",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-e—accountability",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "86001",
+      "topicId": 703,
+      "title": "Sec. 86001. Garden of Heroes | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/703",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-g—garden-of-heroes",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "87001",
+      "topicId": 704,
+      "title": "Sec. 87001. Potential sponsor vetting for unaccompanied alien children appropriation | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/704",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-h—office-of-refugee-resettlement",
+        "title-viii"
+      ]
+    },
+    {
+      "sectionId": "90001",
+      "topicId": 705,
+      "title": "Sec. 90001. Border infrastructure and wall system | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/705",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—homeland-security-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90002",
+      "topicId": 706,
+      "title": "Sec. 90002. U.S. Customs and Border Protection personnel, fleet vehicles, and facilities | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/706",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—homeland-security-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90003",
+      "topicId": 707,
+      "title": "Sec. 90003. Detention capacity | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/707",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—homeland-security-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90004",
+      "topicId": 708,
+      "title": "Sec. 90004. Border security, technology, and screening | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/708",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—homeland-security-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90005",
+      "topicId": 709,
+      "title": "Sec. 90005. State and local assistance | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/709",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—homeland-security-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90006",
+      "topicId": 710,
+      "title": "Sec. 90006. Presidential residence protection | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/710",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—homeland-security-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90007",
+      "topicId": 711,
+      "title": "Sec. 90007. Department of Homeland Security appropriations for border support | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/711",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-a—homeland-security-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90101",
+      "topicId": 712,
+      "title": "Sec. 90101. FEHB improvements | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/712",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—governmental-affairs-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90102",
+      "topicId": 713,
+      "title": "Sec. 90102. Pandemic Response Accountability Committee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/713",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—governmental-affairs-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "90103",
+      "topicId": 714,
+      "title": "Sec. 90103. Appropriation for the Office of Management and Budget | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/714",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—governmental-affairs-provisions",
+        "title-ix"
+      ]
+    },
+    {
+      "sectionId": "100001",
+      "topicId": 715,
+      "title": "Sec. 100001. Applicability of the immigration laws | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/715",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100002",
+      "topicId": 716,
+      "title": "Sec. 100002. Asylum fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/716",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100003",
+      "topicId": 717,
+      "title": "Sec. 100003. Employment authorization document fees | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/717",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100004",
+      "topicId": 718,
+      "title": "Sec. 100004. Immigration parole fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/718",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100005",
+      "topicId": 719,
+      "title": "Sec. 100005. Special immigrant juvenile fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/719",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100006",
+      "topicId": 720,
+      "title": "Sec. 100006. Temporary protected status fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/720",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100007",
+      "topicId": 721,
+      "title": "Sec. 100007. Visa integrity fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/721",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100008",
+      "topicId": 722,
+      "title": "Sec. 100008. Form I–94 fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/722",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100009",
+      "topicId": 723,
+      "title": "Sec. 100009. Annual asylum fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/723",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100010",
+      "topicId": 724,
+      "title": "Sec. 100010. Fee relating to renewal and extension of employment authorization for parolees | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/724",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100011",
+      "topicId": 725,
+      "title": "Sec. 100011. Fee relating to renewal or extension of employment authorization for asylum applicants | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/725",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100012",
+      "topicId": 726,
+      "title": "Sec. 100012. Fee relating to renewal and extension of employment authorization for aliens granted temporary protected status | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/726",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100013",
+      "topicId": 727,
+      "title": "Sec. 100013. Fees relating to applications for adjustment of status | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/727",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100014",
+      "topicId": 728,
+      "title": "Sec. 100014. Electronic System for Travel Authorization fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/728",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100015",
+      "topicId": 729,
+      "title": "Sec. 100015. Electronic Visa Update System fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/729",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100016",
+      "topicId": 730,
+      "title": "Sec. 100016. Fee for aliens ordered removed in absentia | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/730",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100017",
+      "topicId": 731,
+      "title": "Sec. 100017. Inadmissible alien apprehension fee | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/731",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100018",
+      "topicId": 732,
+      "title": "Sec. 100018. Amendment to authority to apply for asylum | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/732",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-i—immigration-fees",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100051",
+      "topicId": 733,
+      "title": "Sec. 100051. Appropriation for the Department of Homeland Security | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/733",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-ii—immigration-and-law-enforcement-funding",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100052",
+      "topicId": 734,
+      "title": "Sec. 100052. Appropriation for U.S. Immigration and Customs Enforcement | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/734",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-ii—immigration-and-law-enforcement-funding",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100053",
+      "topicId": 735,
+      "title": "Sec. 100053. Appropriation for Federal Law Enforcement Training Centers | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/735",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-ii—immigration-and-law-enforcement-funding",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100054",
+      "topicId": 736,
+      "title": "Sec. 100054. Appropriation for the Department of Justice | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/736",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-ii—immigration-and-law-enforcement-funding",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100055",
+      "topicId": 737,
+      "title": "Sec. 100055. Bridging Immigration-related Deficits Experienced Nationwide Reimbursement Fund | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/737",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-ii—immigration-and-law-enforcement-funding",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100056",
+      "topicId": 738,
+      "title": "Sec. 100056. Appropriation for the Bureau of Prisons | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/738",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-ii—immigration-and-law-enforcement-funding",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100057",
+      "topicId": 739,
+      "title": "Sec. 100057. Appropriation for the United States Secret Service | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/739",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "part-ii—immigration-and-law-enforcement-funding",
+        "subtitle-a—immigration-and-law-enforcement-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100101",
+      "topicId": 740,
+      "title": "Sec. 100101. Appropriation to the Administrative Office of the United States Courts | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/740",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—judiciary-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100102",
+      "topicId": 741,
+      "title": "Sec. 100102. Appropriation to the Federal Judicial Center | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/741",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-b—judiciary-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100201",
+      "topicId": 742,
+      "title": "Sec. 100201. Extension of fund | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/742",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—radiation-exposure-compensation-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100202",
+      "topicId": 743,
+      "title": "Sec. 100202. Claims relating to atmospheric testing | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/743",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—radiation-exposure-compensation-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100203",
+      "topicId": 744,
+      "title": "Sec. 100203. Claims relating to uranium mining | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/744",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—radiation-exposure-compensation-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100204",
+      "topicId": 745,
+      "title": "Sec. 100204. Claims relating to Manhattan Project waste | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/745",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—radiation-exposure-compensation-matters",
+        "title-x"
+      ]
+    },
+    {
+      "sectionId": "100205",
+      "topicId": 746,
+      "title": "Sec. 100205. Limitations on claims | Law as Amended",
+      "sourceUrl": "https://forum.repealobbba.org/t/746",
+      "normalizedTags": [
+        "law-as-amended",
+        "needs-text",
+        "subtitle-c—radiation-exposure-compensation-matters",
+        "title-x"
+      ]
+    }
+  ]
+}

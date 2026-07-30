@@ -1,6 +1,6 @@
 ---
-title: "Core Astro Discussion Bridge Demo"
-description: "A plain Astro content collection page proving Discussion Bridge does not depend on Starlight."
+title: "Core DiscussionBridge for Astro Demo"
+description: "A plain Astro content collection page proving DiscussionBridge does not depend on Starlight."
 pubDate: "2026-07-19"
 tags:
   - discussionbridge
@@ -16,11 +16,11 @@ discussionLastSyncedAt: "2026-07-19T17:15:05.119Z"
 
 ---
 
-# Core Astro Discussion Bridge Demo
+# Core DiscussionBridge for Astro Demo
 
 This page is intentionally not a Starlight page. It uses a normal Astro content collection, a regular route, and a site layout that decides where the discussion belongs.
 
-That is the important product test. Discussion Bridge for Astro should not require a documentation framework. Starlight gets a polished preset because Starlight has its own page model, but regular Astro sites should be able to place the bridge exactly where their templates need it.
+That is the important product test. DiscussionBridge for Astro should not require a documentation framework. Starlight gets a polished preset because Starlight has its own page model, but regular Astro sites should be able to place the bridge exactly where their templates need it.
 
 In this demo, the article owns the reading experience. The discussion section appears after the article body, before any site footer or surrounding chrome. That keeps comments attached to the content rather than hidden inside global layout furniture.
 

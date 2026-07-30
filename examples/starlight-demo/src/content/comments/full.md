@@ -4,7 +4,7 @@ description: "A demo route for bridge-rendered Discourse replies with like count
 date: "2026-07-17"
 discourseTopicId: 33
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/full-comments-mode/33"
-discussionEmbedUrl: "https://astrostarlight.demo.discussionbridge.dev/comments/full/"
+discussionEmbedUrl: "https://astrostarlightdemo.discussionbridge.dev/comments/full/"
 discussionCommentsDisplay: "full"
 discussionSourceHash: "53896a0a27804e5494e3f2d8665bbeea34250258027d59b1239a7ea8bd69ed55"
 discussionLastSyncedAt: "2026-07-19T06:09:47.251Z"
@@ -21,7 +21,7 @@ This is the best Tier 1 mode when the Astro page should look like it owns the co
 
 ## One discussion, different presentation modes
 
-Discussion Bridge lets a site choose how a Discourse conversation appears on an Astro page. The same community topic can support a lightweight embed, a polished native comment view, or a full interactive Discourse iframe.
+DiscussionBridge lets a site choose how a Discourse conversation appears on an Astro page. The same community topic can support a lightweight embed, a polished native comment view, or a full interactive Discourse iframe.
 
 The important rule is ownership. One Astro page should manage the companion topic's first post. Other pages can display the same discussion for demos, comparisons, or alternate reader experiences without trying to rewrite the Discourse source post.
 

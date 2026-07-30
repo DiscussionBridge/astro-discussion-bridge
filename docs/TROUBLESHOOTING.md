@@ -201,8 +201,23 @@ For `fullInteractive` mode:
 
 - confirm `Embed full app` is enabled
 - confirm `Embed full app signin flow` is configured appropriately
+- classify the relationship correctly: subdomains of one registrable domain are
+  cross-origin but same-site; unrelated registrable domains are cross-site
+- for a genuinely cross-site embed, confirm the hidden Discourse setting
+  `SiteSetting.same_site_cookies` is exactly `"None"`
 - test logged-in and logged-out behavior
 - test on a page where comments start below the first viewport
+
+If top-level sign-in succeeds but the embed remains at **Waiting for sign-in**,
+do not repeat the login loop. That symptom is consistent with a cross-site
+iframe that cannot receive the forum session cookie. The hidden setting may not
+appear in Admin search. On a self-hosted two-container installation, enter the
+production Rails console through the actual web container (`web_only` in the
+proven OBBBA installation), record the prior value, and make the controlled
+change there. `./launcher enter app` is the standalone-container command and is
+wrong for that layout. After the change, clear/reissue forum cookies and verify
+top-level login, an ordinary CSRF-protected write, iframe authentication, and an
+embedded reply.
 
 ## Discourse Refused to Connect
 

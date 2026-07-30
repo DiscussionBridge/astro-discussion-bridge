@@ -7,16 +7,122 @@ DiscussionBridge uses Discourse API keys to publish, sync, diagnose, and recover
 Use separate keys when possible:
 
 - publishing key: normal `publish-new`, `sync-existing`, and `publish-and-sync` runs
-- diagnostics key: setup checks with `check-discourse` and controlled
-  `import-existing` source reads when the granular key cannot read raw posts
+- diagnostics key: normal setup checks and routine read-only diagnostics
+- bulk/diagnostics/import key: temporary broader read access for a bounded
+  import, comparison, or migration when the durable diagnostics key cannot read
+  required raw posts or administrative metadata
 - recovery/admin key: rare repair operations that need broader authority
 
 For Alpha, the practical model is:
 
 - use a granular publishing key when it can create topics/posts, read linked topics/posts, update managed first posts, update topic metadata, update tags, and unlist when needed
-- use a global/admin-capable diagnostics key when granular keys cannot read the
-  site metadata, reconciliation endpoints, or raw source posts needed by
-  `check-discourse` or controlled `import-existing`
+- keep routine diagnostics on a durable least-privilege diagnostics key
+- create a broader bulk/diagnostics/import key only when a bounded machine task
+  cannot be completed through the durable diagnostics key; revoke and delete
+  that temporary key after the task and its evidence checks finish
+
+The OBBBA implementation uses the four generic role identities:
+
+```text
+diagnostics key
+read-only diagnostics key
+publishing granular key
+bulk/diagnostics/import key
+```
+
+The first three are durable identity roles and must not be silently repurposed
+or have their scope changed when another workflow may depend on them. Key
+existence and replacement status must be recorded from explicit operator
+confirmation, not inferred from a proposed storage template. The read-only
+diagnostics key is the preferred identity for GET-only checks and planning. The
+bulk/diagnostics/import key is created when needed and deleted when the bounded
+work is finished. This is exceptional temporary elevation, not routine per-run
+key churn.
+
+### OBBBA Four-Key Metadata
+
+Store the matching block with each protected OBBBA vault record.
+
+Do not conflate the three identifiers:
+
+1. **Discourse API-key description:** names the generic credential role,
+   for example `diagnostics key`.
+2. **Selected Discourse user/request actor:** names the forum identity,
+   `obbba-bot`.
+3. **Vault filename:** names the forum, actor, purpose, and creation date, for
+   example `repealobbba-forum-obbba-bot-diagnostics-key-20260721.txt`.
+
+The description answers **what role this key performs**. The selected user
+answers **which Discourse identity authorizes the request**. The vault filename
+answers **where, for whom, for what, and when the credential record belongs**.
+These values are related but do not use the same naming pattern.
+
+Use these exact vault filenames:
+
+```text
+repealobbba-forum-obbba-bot-publishing-key-20260721.txt
+repealobbba-forum-obbba-bot-diagnostics-key-20260725.txt
+repealobbba-forum-obbba-bot-read-only-diagnostics-key-20260725.txt
+repealobbba-forum-obbba-bot-bulk-diagnostics-import-key-TEMP-YYYYMMDD.txt
+```
+
+Credential filenames follow the established OBBBA pattern:
+`repealobbba-forum-{actor}-{purpose}-YYYYMMDD.txt`. The date is the key creation
+date. Date-only is acceptable because exact creation time is not operationally
+significant here. `TEMP` makes the exceptional lifecycle visible. A
+metadata-only template may exist before the key; replace `YYYYMMDD` with the
+temporary key's actual creation date only when the key is created. The API-key
+descriptions remain the generic role names above; the vault filenames identify
+the Discourse forum and actor.
+
+Operator-confirmed active state on 2026-07-25:
+
+```text
+publishing granular key — Granular — existing
+diagnostics key — Global — newly created
+read-only diagnostics key — Read-only — newly created
+bulk/diagnostics/import key — not created
+```
+
+#### `publishing granular key`
+
+```text
+Purpose: Runtime publishing granular key
+Use: publish-new, sync-existing, publish-and-sync, check-discourse basic limits
+Bot user role: Admin currently; intended future runtime posture is non-admin or least-privilege
+Key scope: Granular
+Operational rule: Use this for normal OBBBA bridge publishing/runtime operations. Do not use it for setup diagnostics, site settings reads, or admin troubleshooting.
+```
+
+#### `diagnostics key`
+
+```text
+Purpose: Diagnostics/setup key
+Use: check-discourse, setup verification, site settings/capability reads, embed/topic reconciliation when the granular publishing key cannot read the required endpoints
+Bot user role: Admin currently; diagnostics key is admin-capable by design
+Key scope: Global
+Operational rule: Keep this key out of runtime/deploy paths. Use only for setup checks, diagnostics, and controlled troubleshooting.
+```
+
+#### `read-only diagnostics key`
+
+```text
+Purpose: Read-only diagnostics/planning key
+Use: GET-only preflight, comparison reports, routine setup verification, site settings/capability reads, and embed/topic checks
+Bot user role: Admin currently; the key can read admin-visible information but cannot make non-GET API requests
+Key scope: Read-only
+Operational rule: Prefer this key for diagnostics, planning, and comparison work. Do not use it for publishing. Keep it out of runtime/deploy paths unless a reviewed read-only process explicitly requires it.
+```
+
+#### `bulk/diagnostics/import key`
+
+```text
+Purpose: Temporary bulk diagnostics/import key
+Use: Bounded bulk comparison, import, migration, raw-source collection, or recovery work that cannot be completed with the durable read-only diagnostics or granular publishing keys
+Bot user role: Admin currently; this temporary key is admin-capable by design
+Key scope: Global
+Operational rule: Create only for an explicitly bounded task. Keep it out of runtime/deploy paths. Use the read-only diagnostics key instead whenever the task requires GET requests only and that key can access every required endpoint. Revoke and delete after the bounded work, output verification, and evidence review are complete.
+```
 
 Established product rule: when documenting or requesting a granular publishing key, provide the exact Discourse scope settings. Do not describe the publishing key as "similar", "roughly", or "mostly" once a product key model has been settled.
 
@@ -30,7 +136,7 @@ sent in `Api-Username`. With `Single User`, the key is bound to the selected
 user. Scope separately controls which endpoints/actions are available. See
 [Discourse Meta: Create and configure an API key](https://meta.discourse.org/t/create-and-configure-an-api-key/230124).
 
-Discussion Bridge now has preferred request-actor controls:
+DiscussionBridge now has preferred request-actor controls:
 
 - CLI `--post-as`;
 - environment `DISCOURSE_POST_AS`;
@@ -83,7 +189,7 @@ search
   show
 ```
 
-This is the settled runtime publishing key model used for Discussion Bridge-style publishing and sync. Diagnostics/setup work stays on the diagnostics key.
+This is the settled runtime publishing key model used for DiscussionBridge-style publishing and sync. Diagnostics/setup work stays on the diagnostics key.
 
 Allowed parameters from the Discourse granular key UI:
 
@@ -329,7 +435,7 @@ origin system.
 
 | Origin | Candidate username | Candidate public name |
 | --- | --- | --- |
-| Discussion Bridge Forum | `editorbridgeforum` | Discussion Bridge Forum Editor |
+| DiscussionBridge Forum | `editorbridgeforum` | DiscussionBridge Forum Editor |
 | Citizen Activist Network Forum | `editorcanforum` | CAN Forum Editor |
 
 Discourse normalizes username case. Check the exact final username against each

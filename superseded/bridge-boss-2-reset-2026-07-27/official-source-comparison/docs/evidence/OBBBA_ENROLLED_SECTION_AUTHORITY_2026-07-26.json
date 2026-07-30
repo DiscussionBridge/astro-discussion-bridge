@@ -1,0 +1,1859 @@
+{
+  "version": 1,
+  "mode": "enrolled-section-authority",
+  "source": {
+    "comparisonSha256": "128ab8e7884cfe18acab62082f714ae32943b9600a9ddeeee35215dbf6211ae9",
+    "enrolledSourceSha256": "9da9f04a1edcc30f789697ce6d4b80299b55a33fe1056a575d2e1d8bba4727ad"
+  },
+  "writes": {
+    "discourse": 0,
+    "astroContent": 0
+  },
+  "summary": {
+    "total": 307
+  },
+  "entries": [
+    {
+      "sectionId": "10101",
+      "topicId": 34,
+      "sourceUrl": "https://forum.repealobbba.org/t/34",
+      "enrolledLegalTextSha256": "9c74752c315c22c5640a9722d4f3eb44717f9015fc4c520caa3f6ce582a81fc5"
+    },
+    {
+      "sectionId": "10102",
+      "topicId": 35,
+      "sourceUrl": "https://forum.repealobbba.org/t/35",
+      "enrolledLegalTextSha256": "ce59f04b2e2fdcb0fa40a4188803370c27e46b604505dcf24d06a2539cbd4ba4"
+    },
+    {
+      "sectionId": "10103",
+      "topicId": 36,
+      "sourceUrl": "https://forum.repealobbba.org/t/36",
+      "enrolledLegalTextSha256": "c50391473c6d8ca4d733aca4120f7892bc0147561a1f285d4c4c2daf381b967d"
+    },
+    {
+      "sectionId": "10104",
+      "topicId": 37,
+      "sourceUrl": "https://forum.repealobbba.org/t/37",
+      "enrolledLegalTextSha256": "4d95937afc06083cb7e45946647106bd0c1f7c43e47682192ffa759f63b3e56a"
+    },
+    {
+      "sectionId": "10105",
+      "topicId": 38,
+      "sourceUrl": "https://forum.repealobbba.org/t/38",
+      "enrolledLegalTextSha256": "0db9ebd564984e37fef82f3ecfafd1141c91f51d73f76fd999c61988b21f47cb"
+    },
+    {
+      "sectionId": "10106",
+      "topicId": 39,
+      "sourceUrl": "https://forum.repealobbba.org/t/39",
+      "enrolledLegalTextSha256": "f22a2724a58b6a5f310723bf692a304e6ec320f8722d0a7e0fbe0cb9b088c32b"
+    },
+    {
+      "sectionId": "10107",
+      "topicId": 40,
+      "sourceUrl": "https://forum.repealobbba.org/t/40",
+      "enrolledLegalTextSha256": "e3c8d6172c44da7585e4d87df94eb889bc0266bc586e28f223f4f0a30a71edf5"
+    },
+    {
+      "sectionId": "10108",
+      "topicId": 41,
+      "sourceUrl": "https://forum.repealobbba.org/t/41",
+      "enrolledLegalTextSha256": "4bf3ef0b57706786657c84a7fc4faa29b7519f4210407442889a19cc3241d547"
+    },
+    {
+      "sectionId": "10201",
+      "topicId": 43,
+      "sourceUrl": "https://forum.repealobbba.org/t/43",
+      "enrolledLegalTextSha256": "bc899df5f94b28368ea53da96cf5de32b28f24c4671212a8b264a1d10788481d"
+    },
+    {
+      "sectionId": "10301",
+      "topicId": 45,
+      "sourceUrl": "https://forum.repealobbba.org/t/45",
+      "enrolledLegalTextSha256": "d64fab1577c34fe4f827b259c873e11e628ae7fd72be3653555bf7dbf3355a76"
+    },
+    {
+      "sectionId": "10302",
+      "topicId": 46,
+      "sourceUrl": "https://forum.repealobbba.org/t/46",
+      "enrolledLegalTextSha256": "d34f3b62c72eca921e850d1ac69609cf14e53a9eca2132b2ac14a12b03795d89"
+    },
+    {
+      "sectionId": "10303",
+      "topicId": 47,
+      "sourceUrl": "https://forum.repealobbba.org/t/47",
+      "enrolledLegalTextSha256": "cee976145d21280143cb4da650d7d20593eb0568101ef65968f36cd7f16e060c"
+    },
+    {
+      "sectionId": "10304",
+      "topicId": 48,
+      "sourceUrl": "https://forum.repealobbba.org/t/48",
+      "enrolledLegalTextSha256": "8368ec2fcdd33a433e357e88c8e58076c7c668cf158365462333831f29313bce"
+    },
+    {
+      "sectionId": "10305",
+      "topicId": 49,
+      "sourceUrl": "https://forum.repealobbba.org/t/49",
+      "enrolledLegalTextSha256": "37ee51ccf11acc663f64c8762d1675d66dd6fd93dd26dd7d1326497a849e8a0a"
+    },
+    {
+      "sectionId": "10306",
+      "topicId": 50,
+      "sourceUrl": "https://forum.repealobbba.org/t/50",
+      "enrolledLegalTextSha256": "ef414a3e950183cd98c16cde467b593b702ed5a3245fd39d74aa1800fa908ab1"
+    },
+    {
+      "sectionId": "10307",
+      "topicId": 51,
+      "sourceUrl": "https://forum.repealobbba.org/t/51",
+      "enrolledLegalTextSha256": "e44ef2145f376075aed8409cc975b42e76c41c82e3c537b420394e73e114a580"
+    },
+    {
+      "sectionId": "10308",
+      "topicId": 52,
+      "sourceUrl": "https://forum.repealobbba.org/t/52",
+      "enrolledLegalTextSha256": "a1b303c25f339c99b34700532623ae0795090cf941d2ffd41d7a3775ed7a9a4e"
+    },
+    {
+      "sectionId": "10309",
+      "topicId": 53,
+      "sourceUrl": "https://forum.repealobbba.org/t/53",
+      "enrolledLegalTextSha256": "da3e5f26dfcba40e5b1c44859fc5c54850b101a220ea8413f7e753458b029d37"
+    },
+    {
+      "sectionId": "10310",
+      "topicId": 54,
+      "sourceUrl": "https://forum.repealobbba.org/t/54",
+      "enrolledLegalTextSha256": "8960ad348cbe569f639279e54412626a3ac1bc99ba90017ae809403b7503cbe7"
+    },
+    {
+      "sectionId": "10311",
+      "topicId": 55,
+      "sourceUrl": "https://forum.repealobbba.org/t/55",
+      "enrolledLegalTextSha256": "da23cc7e20e19ccaabd429b95eb8b39e6f28645b9beb8cdbdfa2f86163ddfdc2"
+    },
+    {
+      "sectionId": "10312",
+      "topicId": 56,
+      "sourceUrl": "https://forum.repealobbba.org/t/56",
+      "enrolledLegalTextSha256": "5919c08ba9364bf2ecaa9d8d4645f0b6d7ceb3e1709982e3e3efab606e02fcd1"
+    },
+    {
+      "sectionId": "10313",
+      "topicId": 57,
+      "sourceUrl": "https://forum.repealobbba.org/t/57",
+      "enrolledLegalTextSha256": "0d0ff6b234e9df9632321dc5bb3e84514073ac17759127257c10f61ba645222e"
+    },
+    {
+      "sectionId": "10314",
+      "topicId": 58,
+      "sourceUrl": "https://forum.repealobbba.org/t/58",
+      "enrolledLegalTextSha256": "fe2ad55a2c9d122acb817a0ac3349fc526769f5fd8cea65acda3312bcf5aa218"
+    },
+    {
+      "sectionId": "10401",
+      "topicId": 60,
+      "sourceUrl": "https://forum.repealobbba.org/t/60",
+      "enrolledLegalTextSha256": "da0f6afed28550c4c9b42a1b5d647a3bbc3dc80448957c4576b4c022caf161e8"
+    },
+    {
+      "sectionId": "10501",
+      "topicId": 62,
+      "sourceUrl": "https://forum.repealobbba.org/t/62",
+      "enrolledLegalTextSha256": "d7a29e3fc627cfcbbf33db1b70cc5aa9b123a89193fcf4e84068febfcc8264b4"
+    },
+    {
+      "sectionId": "10502",
+      "topicId": 63,
+      "sourceUrl": "https://forum.repealobbba.org/t/63",
+      "enrolledLegalTextSha256": "affd20b98417c6845381918646a96fd62a718ad44bbb64a3bc26ede24099a42a"
+    },
+    {
+      "sectionId": "10503",
+      "topicId": 64,
+      "sourceUrl": "https://forum.repealobbba.org/t/64",
+      "enrolledLegalTextSha256": "3a244d3d2b25e6dbbc9781f640cbb5e44444a13d6e9c44ef1e8518bad9114cf4"
+    },
+    {
+      "sectionId": "10504",
+      "topicId": 65,
+      "sourceUrl": "https://forum.repealobbba.org/t/65",
+      "enrolledLegalTextSha256": "26f7f96ffd239fb326f893896c1f80d7cf07b8898a3f7a16b2591cade2255d6e"
+    },
+    {
+      "sectionId": "10505",
+      "topicId": 66,
+      "sourceUrl": "https://forum.repealobbba.org/t/66",
+      "enrolledLegalTextSha256": "7d310f5db6911e90d594e9bcc6faad6330c8ee4dcaf7cc32a55d601ac6faac3e"
+    },
+    {
+      "sectionId": "10506",
+      "topicId": 67,
+      "sourceUrl": "https://forum.repealobbba.org/t/67",
+      "enrolledLegalTextSha256": "c3725fc0cf5cab4ac48f84d324e5643e92b366fa6c2a523b2dcc8dfbb9d714b3"
+    },
+    {
+      "sectionId": "10507",
+      "topicId": 68,
+      "sourceUrl": "https://forum.repealobbba.org/t/68",
+      "enrolledLegalTextSha256": "353970f5b11b372e55e197cf48cd05e06e87a949cca0aa175e3030f3415b4225"
+    },
+    {
+      "sectionId": "10601",
+      "topicId": 70,
+      "sourceUrl": "https://forum.repealobbba.org/t/70",
+      "enrolledLegalTextSha256": "04888fb72ebbb79b1af4928873917a70479f349364d0d89b3f8d3be44ab49f45"
+    },
+    {
+      "sectionId": "10602",
+      "topicId": 71,
+      "sourceUrl": "https://forum.repealobbba.org/t/71",
+      "enrolledLegalTextSha256": "1d8171d5b91209592d4f5aeae07d579a3dc708ce2c09998aa51b1d5c3ca8334f"
+    },
+    {
+      "sectionId": "10603",
+      "topicId": 72,
+      "sourceUrl": "https://forum.repealobbba.org/t/72",
+      "enrolledLegalTextSha256": "c18b25d92de6ee851a70652aa61fd017182927867435d5680d1821da204e79c8"
+    },
+    {
+      "sectionId": "10604",
+      "topicId": 73,
+      "sourceUrl": "https://forum.repealobbba.org/t/73",
+      "enrolledLegalTextSha256": "805b3e24042be68b75f75e412fe7b65700eea29e6f8a4af8f7f32c42d65b1d38"
+    },
+    {
+      "sectionId": "10605",
+      "topicId": 74,
+      "sourceUrl": "https://forum.repealobbba.org/t/74",
+      "enrolledLegalTextSha256": "066fb05976fd6daf090b39bae0b8a0180250eb855a3d8665c9412aa7967b85e6"
+    },
+    {
+      "sectionId": "10606",
+      "topicId": 75,
+      "sourceUrl": "https://forum.repealobbba.org/t/75",
+      "enrolledLegalTextSha256": "bde0c0182054b4e61d582b13ec3062312c07f61f345322cdf46c9fc1978b8328"
+    },
+    {
+      "sectionId": "10607",
+      "topicId": 76,
+      "sourceUrl": "https://forum.repealobbba.org/t/76",
+      "enrolledLegalTextSha256": "9681579054d8da82180b1259e9e92b2ae975fa2173493daf28d23e1b58613543"
+    },
+    {
+      "sectionId": "20001",
+      "topicId": 78,
+      "sourceUrl": "https://forum.repealobbba.org/t/78",
+      "enrolledLegalTextSha256": "788fb774a2f7539cedebe0bd0352c2f22ba7353ff6cf4b90cd244d544498c963"
+    },
+    {
+      "sectionId": "20002",
+      "topicId": 79,
+      "sourceUrl": "https://forum.repealobbba.org/t/79",
+      "enrolledLegalTextSha256": "d8a98ce3022cca612daacf89d24927fdd8d5f266cb547e7ff89fbb4999b78ffc"
+    },
+    {
+      "sectionId": "20003",
+      "topicId": 80,
+      "sourceUrl": "https://forum.repealobbba.org/t/80",
+      "enrolledLegalTextSha256": "c45fec8a80b3f51c488f2e9c409b825c7cab8748db3d632281476f33fc37abe3"
+    },
+    {
+      "sectionId": "20004",
+      "topicId": 81,
+      "sourceUrl": "https://forum.repealobbba.org/t/81",
+      "enrolledLegalTextSha256": "329ae9525aa3dcb19f4c42454d753308364735ab07fe4e22648cbd8176030641"
+    },
+    {
+      "sectionId": "20005",
+      "topicId": 82,
+      "sourceUrl": "https://forum.repealobbba.org/t/82",
+      "enrolledLegalTextSha256": "931c37cdc8b00014abf68f4801e2cd68dd07760e5a3300f9c43e51ab8fde0fae"
+    },
+    {
+      "sectionId": "20006",
+      "topicId": 83,
+      "sourceUrl": "https://forum.repealobbba.org/t/83",
+      "enrolledLegalTextSha256": "0aa0eb4fdda8f0dbf49ba932d86158b99c50cfb128ece8c390ca28ec6fa6e514"
+    },
+    {
+      "sectionId": "20007",
+      "topicId": 84,
+      "sourceUrl": "https://forum.repealobbba.org/t/84",
+      "enrolledLegalTextSha256": "57e888a4056f76d1049797cae564135174a10e4c95723ecc4f4954f06744844f"
+    },
+    {
+      "sectionId": "20008",
+      "topicId": 85,
+      "sourceUrl": "https://forum.repealobbba.org/t/85",
+      "enrolledLegalTextSha256": "5bda0847a7102f87da0c143a7d83150e3f361295bfe97c8697c6fcecf60548a7"
+    },
+    {
+      "sectionId": "20010",
+      "topicId": 87,
+      "sourceUrl": "https://forum.repealobbba.org/t/87",
+      "enrolledLegalTextSha256": "45fd24e4ce712a32dfe3f8af291adda9b61bfd9f282847cae530a60d53915582"
+    },
+    {
+      "sectionId": "20011",
+      "topicId": 88,
+      "sourceUrl": "https://forum.repealobbba.org/t/88",
+      "enrolledLegalTextSha256": "a938fa384a77b14b287d3a9ed2da82fbfae8043d3ff6629126e34fca881cfd91"
+    },
+    {
+      "sectionId": "20012",
+      "topicId": 89,
+      "sourceUrl": "https://forum.repealobbba.org/t/89",
+      "enrolledLegalTextSha256": "68656ccc8e2128e9ffbc6a564e2c6882c3dab59d60556090f8b9a3aef8da4d05"
+    },
+    {
+      "sectionId": "20013",
+      "topicId": 90,
+      "sourceUrl": "https://forum.repealobbba.org/t/90",
+      "enrolledLegalTextSha256": "49189efc9febd9ceda5234c4815908c5039fd782d1eef3abcc8e206d03b1efbc"
+    },
+    {
+      "sectionId": "30001",
+      "topicId": 91,
+      "sourceUrl": "https://forum.repealobbba.org/t/91",
+      "enrolledLegalTextSha256": "3965a3b89e8428d1f7a5f75fdb56f89927864370d9129507e68c9a1e4e664ea0"
+    },
+    {
+      "sectionId": "30002",
+      "topicId": 92,
+      "sourceUrl": "https://forum.repealobbba.org/t/92",
+      "enrolledLegalTextSha256": "50b0622e758131ea5dfe96c777fc5fe75fdfaa13838e4d3a958e4e7f0d82305e"
+    },
+    {
+      "sectionId": "30003",
+      "topicId": 93,
+      "sourceUrl": "https://forum.repealobbba.org/t/93",
+      "enrolledLegalTextSha256": "534fa5f025d01d8c9df510edead2a355534abb097611c389e0d890c51ccb3f8c"
+    },
+    {
+      "sectionId": "30004",
+      "topicId": 94,
+      "sourceUrl": "https://forum.repealobbba.org/t/94",
+      "enrolledLegalTextSha256": "f50984f1bdb9f7b76d813e5aeb9c8331d7a190efb5b5bc1f9add898122d7df05"
+    },
+    {
+      "sectionId": "40001",
+      "topicId": 95,
+      "sourceUrl": "https://forum.repealobbba.org/t/95",
+      "enrolledLegalTextSha256": "f3f516e7eef1cffd4ec948e0090b997e2850267c947c85009528dd33a34c9265"
+    },
+    {
+      "sectionId": "40002",
+      "topicId": 96,
+      "sourceUrl": "https://forum.repealobbba.org/t/96",
+      "enrolledLegalTextSha256": "6739c3838e7df80f8c3eca16b1fa6805cb9a902cbc0fa1827d54551541dde510"
+    },
+    {
+      "sectionId": "40003",
+      "topicId": 97,
+      "sourceUrl": "https://forum.repealobbba.org/t/97",
+      "enrolledLegalTextSha256": "5c3f31e3551a1914671b2790071be7913997c2e625f74cd59404c12210b7609b"
+    },
+    {
+      "sectionId": "40004",
+      "topicId": 98,
+      "sourceUrl": "https://forum.repealobbba.org/t/98",
+      "enrolledLegalTextSha256": "c1df069ed5a0d5826b6ff45c651f48442d23cfe6cd3fa42a06d4b154c0a4b3a0"
+    },
+    {
+      "sectionId": "40005",
+      "topicId": 99,
+      "sourceUrl": "https://forum.repealobbba.org/t/99",
+      "enrolledLegalTextSha256": "ba46f9eaabef44d5c069b06952d844966db984f5ffb96ab4d15a1f07fdccd3a1"
+    },
+    {
+      "sectionId": "40006",
+      "topicId": 100,
+      "sourceUrl": "https://forum.repealobbba.org/t/100",
+      "enrolledLegalTextSha256": "a05cd5307108acca24d7a9233e7a0ecddd5cd0e0a0f11016cca6107f550d6025"
+    },
+    {
+      "sectionId": "40007",
+      "topicId": 101,
+      "sourceUrl": "https://forum.repealobbba.org/t/101",
+      "enrolledLegalTextSha256": "a5e8dd25bc6b69e489e23d8e44a60efec9635f1a0940456e95b118d6ec927978"
+    },
+    {
+      "sectionId": "40008",
+      "topicId": 102,
+      "sourceUrl": "https://forum.repealobbba.org/t/102",
+      "enrolledLegalTextSha256": "5691efd1ca52b476a0f1e98333f747c8462448461dd417b70ed3a8840a58ca5b"
+    },
+    {
+      "sectionId": "40009",
+      "topicId": 103,
+      "sourceUrl": "https://forum.repealobbba.org/t/103",
+      "enrolledLegalTextSha256": "17bcd083972a0b11ec546acce49a2774d3deecfa176c2898efa6a1147397b440"
+    },
+    {
+      "sectionId": "40010",
+      "topicId": 104,
+      "sourceUrl": "https://forum.repealobbba.org/t/104",
+      "enrolledLegalTextSha256": "f59603c62374c2b423c9160fffeb02aa11b06816ec1060ce4e62dafaf937603c"
+    },
+    {
+      "sectionId": "40011",
+      "topicId": 105,
+      "sourceUrl": "https://forum.repealobbba.org/t/105",
+      "enrolledLegalTextSha256": "e91fb847c9f2dca93907a692fcee62df9518862b688e2a88cdfd89bae4ed5607"
+    },
+    {
+      "sectionId": "50101",
+      "topicId": 106,
+      "sourceUrl": "https://forum.repealobbba.org/t/106",
+      "enrolledLegalTextSha256": "86c465ce1eb9fbb88497f84f0a653e1b139829d03dc79717c347419ce05422df"
+    },
+    {
+      "sectionId": "50102",
+      "topicId": 107,
+      "sourceUrl": "https://forum.repealobbba.org/t/107",
+      "enrolledLegalTextSha256": "4f221858b43e0c5f3f4801853b2c87c1db2a155ac0c359bedd31e329ce6df216"
+    },
+    {
+      "sectionId": "50103",
+      "topicId": 108,
+      "sourceUrl": "https://forum.repealobbba.org/t/108",
+      "enrolledLegalTextSha256": "46d7be33849cb6cf0b78e6c6df7665fbec2f014c2b36f5d2715dadefa6ad74cd"
+    },
+    {
+      "sectionId": "50104",
+      "topicId": 109,
+      "sourceUrl": "https://forum.repealobbba.org/t/109",
+      "enrolledLegalTextSha256": "dc1d2168406e8c17b16e3bf35f4a89f0f8628b93c625d51c6c93a1e49880f831"
+    },
+    {
+      "sectionId": "50105",
+      "topicId": 110,
+      "sourceUrl": "https://forum.repealobbba.org/t/110",
+      "enrolledLegalTextSha256": "2f9a8048e427413dadcda70ceaa0f807452f72957c4a53b5ccd4397e7715b46e"
+    },
+    {
+      "sectionId": "50201",
+      "topicId": 113,
+      "sourceUrl": "https://forum.repealobbba.org/t/113",
+      "enrolledLegalTextSha256": "4c9631b185f7fa23a26e9ee17b982d8017cfc4f4848c5514c08aec69347f351a"
+    },
+    {
+      "sectionId": "50202",
+      "topicId": 114,
+      "sourceUrl": "https://forum.repealobbba.org/t/114",
+      "enrolledLegalTextSha256": "67d56d95b9e2b341cc4db5f097494d6b3e236961c09ae4f70909699b6b9d53bf"
+    },
+    {
+      "sectionId": "50203",
+      "topicId": 115,
+      "sourceUrl": "https://forum.repealobbba.org/t/115",
+      "enrolledLegalTextSha256": "0375246a2c5f17ccd2660db3b21529e3a50f8082ee428b78fe74b8553913f4fd"
+    },
+    {
+      "sectionId": "50204",
+      "topicId": 116,
+      "sourceUrl": "https://forum.repealobbba.org/t/116",
+      "enrolledLegalTextSha256": "7b984ac4f7771f659315e772513f58e5893e1da74be26700e5decbd3a37e4fda"
+    },
+    {
+      "sectionId": "50301",
+      "topicId": 117,
+      "sourceUrl": "https://forum.repealobbba.org/t/117",
+      "enrolledLegalTextSha256": "70dfc5ceba05fc32ee0d50b3038ae4bffc8f40fa51d51ec21112381934656749"
+    },
+    {
+      "sectionId": "50302",
+      "topicId": 118,
+      "sourceUrl": "https://forum.repealobbba.org/t/118",
+      "enrolledLegalTextSha256": "d6bd7ef2ef537df3fd24bc396d20ad1a148b034534f6755dfc7d0afa27ef4089"
+    },
+    {
+      "sectionId": "50303",
+      "topicId": 119,
+      "sourceUrl": "https://forum.repealobbba.org/t/119",
+      "enrolledLegalTextSha256": "4d3c2d45b3928b7913c1516fb9720eb450e43beb487fde289dfbca401a3066cf"
+    },
+    {
+      "sectionId": "50304",
+      "topicId": 120,
+      "sourceUrl": "https://forum.repealobbba.org/t/120",
+      "enrolledLegalTextSha256": "3e43f074ed4fd7be9d0db85d0f3df20f1f46dfc993f202bad87463b44d10d8cb"
+    },
+    {
+      "sectionId": "50305",
+      "topicId": 121,
+      "sourceUrl": "https://forum.repealobbba.org/t/121",
+      "enrolledLegalTextSha256": "fc4a8d1414fbd5ddf5ff0f421dcfdeb7a8701d5ecab27bd6ec2744d328686a90"
+    },
+    {
+      "sectionId": "50401",
+      "topicId": 122,
+      "sourceUrl": "https://forum.repealobbba.org/t/122",
+      "enrolledLegalTextSha256": "6fd9c7836a411ceb2bd4e9126750400844df391f7b1c5352971a99d0aa81eee0"
+    },
+    {
+      "sectionId": "50402",
+      "topicId": 123,
+      "sourceUrl": "https://forum.repealobbba.org/t/123",
+      "enrolledLegalTextSha256": "4e895b2e40fe402cd3b921d1c82194add384c1e614695b099b95e7677c565926"
+    },
+    {
+      "sectionId": "50403",
+      "topicId": 124,
+      "sourceUrl": "https://forum.repealobbba.org/t/124",
+      "enrolledLegalTextSha256": "a434e19d29a9a4ec9ce775750f876a5129e5dc28d3efbb398e5f1882ff6b4b3a"
+    },
+    {
+      "sectionId": "50404",
+      "topicId": 125,
+      "sourceUrl": "https://forum.repealobbba.org/t/125",
+      "enrolledLegalTextSha256": "3386c86ecbb5eb2a9b23fd1239c280034c0b67830a4ce00a48c811b401def879"
+    },
+    {
+      "sectionId": "50501",
+      "topicId": 126,
+      "sourceUrl": "https://forum.repealobbba.org/t/126",
+      "enrolledLegalTextSha256": "fd3c1848da187c4d63ad036a1897f9630622873ae2ec07d8f64275411fc90d65"
+    },
+    {
+      "sectionId": "60001",
+      "topicId": 132,
+      "sourceUrl": "https://forum.repealobbba.org/t/132",
+      "enrolledLegalTextSha256": "0b6fa8091180b1aaafd0026905834cc87acbad569aa6b33e829fdeff70c3f4fa"
+    },
+    {
+      "sectionId": "60002",
+      "topicId": 133,
+      "sourceUrl": "https://forum.repealobbba.org/t/133",
+      "enrolledLegalTextSha256": "685bccb8fa3372be30458bd5d9c96a0567f9e86aab769c73566f243d47a8c5ae"
+    },
+    {
+      "sectionId": "60003",
+      "topicId": 134,
+      "sourceUrl": "https://forum.repealobbba.org/t/134",
+      "enrolledLegalTextSha256": "997ed80ded1c85916d74dac54527e782793a86650f4209a79ed66f466921568f"
+    },
+    {
+      "sectionId": "60004",
+      "topicId": 135,
+      "sourceUrl": "https://forum.repealobbba.org/t/135",
+      "enrolledLegalTextSha256": "cc2840b6e1f866206ef24c779c71dc8708f555ae96e34c35a0ba8614438c996c"
+    },
+    {
+      "sectionId": "60005",
+      "topicId": 136,
+      "sourceUrl": "https://forum.repealobbba.org/t/136",
+      "enrolledLegalTextSha256": "2d7626dc03e34dd2c98ed259e0a12440017b0002d3c630c65441cb0e6ed92a0a"
+    },
+    {
+      "sectionId": "60006",
+      "topicId": 137,
+      "sourceUrl": "https://forum.repealobbba.org/t/137",
+      "enrolledLegalTextSha256": "6f66111f401b87e9ed326ca8b3c57e6228adb3147e97ae65e0f97aaf99bf0362"
+    },
+    {
+      "sectionId": "60007",
+      "topicId": 138,
+      "sourceUrl": "https://forum.repealobbba.org/t/138",
+      "enrolledLegalTextSha256": "876624246a2b96845a4dd1d05530de0b2dfd39e807587848811fb3e4de80cd85"
+    },
+    {
+      "sectionId": "60008",
+      "topicId": 139,
+      "sourceUrl": "https://forum.repealobbba.org/t/139",
+      "enrolledLegalTextSha256": "e83bddc0ee8c09cba23ec366636dbf7fa74075c736236434a93d3c7be5ca1368"
+    },
+    {
+      "sectionId": "60009",
+      "topicId": 140,
+      "sourceUrl": "https://forum.repealobbba.org/t/140",
+      "enrolledLegalTextSha256": "c98a2fbdcab23d3959734b81665af86be3182ede0d5cb3c7afc19ad995a37ad3"
+    },
+    {
+      "sectionId": "60010",
+      "topicId": 141,
+      "sourceUrl": "https://forum.repealobbba.org/t/141",
+      "enrolledLegalTextSha256": "f51ece44fa57626d76e2046365dd284a30c13b1c6141a4862e869d320c06a2aa"
+    },
+    {
+      "sectionId": "60011",
+      "topicId": 142,
+      "sourceUrl": "https://forum.repealobbba.org/t/142",
+      "enrolledLegalTextSha256": "6f365824f96f29ad112364888589e41ec355bdc410334a0fab36b33e70b4f0c5"
+    },
+    {
+      "sectionId": "60012",
+      "topicId": 143,
+      "sourceUrl": "https://forum.repealobbba.org/t/143",
+      "enrolledLegalTextSha256": "cc3849640e963fb3e21139a13f683f5830ecdcc2cb32eae48e9945fbefcaca00"
+    },
+    {
+      "sectionId": "60013",
+      "topicId": 144,
+      "sourceUrl": "https://forum.repealobbba.org/t/144",
+      "enrolledLegalTextSha256": "41b9a3af523e8518d09cba1d75a8a50068497c12c8a39a13cf9b4d0017555029"
+    },
+    {
+      "sectionId": "60014",
+      "topicId": 145,
+      "sourceUrl": "https://forum.repealobbba.org/t/145",
+      "enrolledLegalTextSha256": "3d571e7cf0ff882f950224dbdcebaffebfc77d3fda7d064501722391ad657612"
+    },
+    {
+      "sectionId": "60015",
+      "topicId": 146,
+      "sourceUrl": "https://forum.repealobbba.org/t/146",
+      "enrolledLegalTextSha256": "b19d5b410bb188f6ae99c7f9c5e2e2eb28304b4dae0ee97ccd946c65e310d7cb"
+    },
+    {
+      "sectionId": "60016",
+      "topicId": 147,
+      "sourceUrl": "https://forum.repealobbba.org/t/147",
+      "enrolledLegalTextSha256": "d04c75f29cc720f9c5f968664d7687abc8154c10c7913921eb7901aa4cff455d"
+    },
+    {
+      "sectionId": "60017",
+      "topicId": 148,
+      "sourceUrl": "https://forum.repealobbba.org/t/148",
+      "enrolledLegalTextSha256": "f050b9c5d9831d9c0044070bc6e5aedf5f2097692568ebc2f4cfd7e91024fdbd"
+    },
+    {
+      "sectionId": "60018",
+      "topicId": 149,
+      "sourceUrl": "https://forum.repealobbba.org/t/149",
+      "enrolledLegalTextSha256": "802e871a48acc226634c4a790ab931b7d30fedc25e40bea49987e1e7396932f3"
+    },
+    {
+      "sectionId": "60019",
+      "topicId": 150,
+      "sourceUrl": "https://forum.repealobbba.org/t/150",
+      "enrolledLegalTextSha256": "9d3735fd8a5ec1afb98c673bdaf864afcc0c57950651f898ce8492a472e68700"
+    },
+    {
+      "sectionId": "60020",
+      "topicId": 151,
+      "sourceUrl": "https://forum.repealobbba.org/t/151",
+      "enrolledLegalTextSha256": "ae3dbeebdab7324dbb21138233d8b3317e84adfbe01f5addf34c0bdfb64b3ab1"
+    },
+    {
+      "sectionId": "60021",
+      "topicId": 152,
+      "sourceUrl": "https://forum.repealobbba.org/t/152",
+      "enrolledLegalTextSha256": "8944cb1896b56ad8531e6affb639cdc9bcabb199ce80d2ef73a943d7c914d158"
+    },
+    {
+      "sectionId": "60022",
+      "topicId": 153,
+      "sourceUrl": "https://forum.repealobbba.org/t/153",
+      "enrolledLegalTextSha256": "936304c9be19fde0bca24f5e72ecfedab73b0773bee29f6a189846e5a9a691ac"
+    },
+    {
+      "sectionId": "60023",
+      "topicId": 154,
+      "sourceUrl": "https://forum.repealobbba.org/t/154",
+      "enrolledLegalTextSha256": "beac4a6d190e3c9f77fce3b3e98ac491fbd03cc990f1d5108f7cd0fe1692cff7"
+    },
+    {
+      "sectionId": "60024",
+      "topicId": 155,
+      "sourceUrl": "https://forum.repealobbba.org/t/155",
+      "enrolledLegalTextSha256": "24a32406a107baacb9b52b89c89fba4e0067c09f38d983be2b5045a9d2f59c09"
+    },
+    {
+      "sectionId": "60025",
+      "topicId": 158,
+      "sourceUrl": "https://forum.repealobbba.org/t/158",
+      "enrolledLegalTextSha256": "9f4e740b41aec24017820d8a9ce6c3460dbed4b596693f77fda755ec3c5adb98"
+    },
+    {
+      "sectionId": "60026",
+      "topicId": 157,
+      "sourceUrl": "https://forum.repealobbba.org/t/157",
+      "enrolledLegalTextSha256": "f815691a1e409053f4a6429555fe01120f6227c3ea3185640460832e1871576c"
+    },
+    {
+      "sectionId": "70001",
+      "topicId": 165,
+      "sourceUrl": "https://forum.repealobbba.org/t/165",
+      "enrolledLegalTextSha256": "48c56db16d7eafabb2eea7da6823a30bfa1fbce4db47d5082ea2f0426efa972b"
+    },
+    {
+      "sectionId": "70101",
+      "topicId": 166,
+      "sourceUrl": "https://forum.repealobbba.org/t/166",
+      "enrolledLegalTextSha256": "648d8d8a5adc4b78267ac506a4a41d1a44fedb5de2a5842908578afc32d1927b"
+    },
+    {
+      "sectionId": "70102",
+      "topicId": 167,
+      "sourceUrl": "https://forum.repealobbba.org/t/167",
+      "enrolledLegalTextSha256": "8a2e9dc41fb025150cfb804bd7d8216dadeabc3f8645442a9b4ca78e8a0b26e6"
+    },
+    {
+      "sectionId": "70103",
+      "topicId": 168,
+      "sourceUrl": "https://forum.repealobbba.org/t/168",
+      "enrolledLegalTextSha256": "19f7497540c7f687a6acf8f854e569bd3de325f6a37efaded9a7c9f9582dcfa0"
+    },
+    {
+      "sectionId": "70104",
+      "topicId": 169,
+      "sourceUrl": "https://forum.repealobbba.org/t/169",
+      "enrolledLegalTextSha256": "be137248ae4ce4fb2fc95953e7dfc7ca60553324893e595cfc31522174b47052"
+    },
+    {
+      "sectionId": "70105",
+      "topicId": 170,
+      "sourceUrl": "https://forum.repealobbba.org/t/170",
+      "enrolledLegalTextSha256": "93609c66c0e15baf5f16b0c2ce0c9ec357f333bba1040cacdae15ff8effe83d0"
+    },
+    {
+      "sectionId": "70106",
+      "topicId": 171,
+      "sourceUrl": "https://forum.repealobbba.org/t/171",
+      "enrolledLegalTextSha256": "406e0ea50adfb901b0c0d9efa0d76d9326eba5de58ffad235d6a3acec1cc1a4d"
+    },
+    {
+      "sectionId": "70107",
+      "topicId": 172,
+      "sourceUrl": "https://forum.repealobbba.org/t/172",
+      "enrolledLegalTextSha256": "e30c21fa32b3ec7d59d210c5d1c23ddd4fa98ce4f6734760daf07f5be62218cd"
+    },
+    {
+      "sectionId": "70108",
+      "topicId": 173,
+      "sourceUrl": "https://forum.repealobbba.org/t/173",
+      "enrolledLegalTextSha256": "8c3f9ba0ddc40fcc3edbcaeba45598ecb2f8c1e3b77648e514fb22c6454fbb0a"
+    },
+    {
+      "sectionId": "70109",
+      "topicId": 174,
+      "sourceUrl": "https://forum.repealobbba.org/t/174",
+      "enrolledLegalTextSha256": "046620d58e0f1d93ef95870243df8875c181476c8832b2af7c02efea71fa95e5"
+    },
+    {
+      "sectionId": "70110",
+      "topicId": 192,
+      "sourceUrl": "https://forum.repealobbba.org/t/192",
+      "enrolledLegalTextSha256": "76b68d9788583183d5f79193dc43de18e67c2d7408f46a70afcf8a065db6fbbe"
+    },
+    {
+      "sectionId": "70111",
+      "topicId": 193,
+      "sourceUrl": "https://forum.repealobbba.org/t/193",
+      "enrolledLegalTextSha256": "0f91bc0411355f944b54f13a8ec5830dfe248252cd3cf6c8b9758e20216fb780"
+    },
+    {
+      "sectionId": "70112",
+      "topicId": 194,
+      "sourceUrl": "https://forum.repealobbba.org/t/194",
+      "enrolledLegalTextSha256": "8f14a68a730430092e44b1f078a60bc81c7b430eb4d05db25947f21184450fc1"
+    },
+    {
+      "sectionId": "70113",
+      "topicId": 195,
+      "sourceUrl": "https://forum.repealobbba.org/t/195",
+      "enrolledLegalTextSha256": "87ae64040bbc3e3a68f2aeb0587597ce6d7b406d71f3ec99d624e57c9328fc87"
+    },
+    {
+      "sectionId": "70114",
+      "topicId": 196,
+      "sourceUrl": "https://forum.repealobbba.org/t/196",
+      "enrolledLegalTextSha256": "09b13c609dd6d0302326376e350ce4cf2ccfaf6570c83238fea3572a701493b0"
+    },
+    {
+      "sectionId": "70115",
+      "topicId": 197,
+      "sourceUrl": "https://forum.repealobbba.org/t/197",
+      "enrolledLegalTextSha256": "4c290b744e49e637a44ccd5e61ef63426cb80b9ae136ce8e2b6e0c32d8765dd2"
+    },
+    {
+      "sectionId": "70116",
+      "topicId": 198,
+      "sourceUrl": "https://forum.repealobbba.org/t/198",
+      "enrolledLegalTextSha256": "28da678fb893e355ed937b7287403ed54b159afd3d79f736e6bbf0d15e14dc88"
+    },
+    {
+      "sectionId": "70117",
+      "topicId": 199,
+      "sourceUrl": "https://forum.repealobbba.org/t/199",
+      "enrolledLegalTextSha256": "3207443a454d3cdd3bda5d67268c8493743fc12e1debf95fca415f6745267f46"
+    },
+    {
+      "sectionId": "70118",
+      "topicId": 200,
+      "sourceUrl": "https://forum.repealobbba.org/t/200",
+      "enrolledLegalTextSha256": "9970d76e3e15af78f17a019b14790176c1c6eafa9289139eb8ec77bb77a668bc"
+    },
+    {
+      "sectionId": "70119",
+      "topicId": 201,
+      "sourceUrl": "https://forum.repealobbba.org/t/201",
+      "enrolledLegalTextSha256": "54110c40ddf62d51880d741053cc9848f7679a8004b40318cce4c86e9b7fca2f"
+    },
+    {
+      "sectionId": "70120",
+      "topicId": 202,
+      "sourceUrl": "https://forum.repealobbba.org/t/202",
+      "enrolledLegalTextSha256": "22238c6ade28cd754f7b4654f33ab9bb0626d47d27ddc8c06ae29133d9ac499a"
+    },
+    {
+      "sectionId": "70201",
+      "topicId": 204,
+      "sourceUrl": "https://forum.repealobbba.org/t/204",
+      "enrolledLegalTextSha256": "878b5f129a08bb09f20b0056242083fdc45557db162ad2800554dad6e4b215d0"
+    },
+    {
+      "sectionId": "70202",
+      "topicId": 205,
+      "sourceUrl": "https://forum.repealobbba.org/t/205",
+      "enrolledLegalTextSha256": "ede56cd4db39eaf671a3026461a1996a755c009845f30eb0e979ec5ae7b80f64"
+    },
+    {
+      "sectionId": "70203",
+      "topicId": 206,
+      "sourceUrl": "https://forum.repealobbba.org/t/206",
+      "enrolledLegalTextSha256": "86a923765283fb7508a5ae9e16b71da6a591050cd370cc687b69181bbbe1a3e6"
+    },
+    {
+      "sectionId": "70204",
+      "topicId": 207,
+      "sourceUrl": "https://forum.repealobbba.org/t/207",
+      "enrolledLegalTextSha256": "cdde381b6bf65dc477d289ce538ccfb5cf4cf95512ae4f6947af1c4be5f710ca"
+    },
+    {
+      "sectionId": "70301",
+      "topicId": 209,
+      "sourceUrl": "https://forum.repealobbba.org/t/209",
+      "enrolledLegalTextSha256": "24be04ccb177cddc4b67c366a74af317af74c7ba0feed5f117754f9f2b7fd9b2"
+    },
+    {
+      "sectionId": "70302",
+      "topicId": 210,
+      "sourceUrl": "https://forum.repealobbba.org/t/210",
+      "enrolledLegalTextSha256": "7f3ad73ad3b2310e2fa70250fbc0af0482bb8c1b06e015b12e26f6795f53a484"
+    },
+    {
+      "sectionId": "70303",
+      "topicId": 211,
+      "sourceUrl": "https://forum.repealobbba.org/t/211",
+      "enrolledLegalTextSha256": "fc19aa8fdcdd96c1c92eb8959de1991297a610ac8d946b7bb9e7a38f47235eee"
+    },
+    {
+      "sectionId": "70304",
+      "topicId": 212,
+      "sourceUrl": "https://forum.repealobbba.org/t/212",
+      "enrolledLegalTextSha256": "fab1a203efc695830a01c2d7c238ca0db1dc39267c0fbd2d45392aa5b265be99"
+    },
+    {
+      "sectionId": "70305",
+      "topicId": 213,
+      "sourceUrl": "https://forum.repealobbba.org/t/213",
+      "enrolledLegalTextSha256": "b5457ac6930175c09b7d7bd7a8e550bdf4b31a3ace0cc1c271b45ac5ae3f9769"
+    },
+    {
+      "sectionId": "70306",
+      "topicId": 214,
+      "sourceUrl": "https://forum.repealobbba.org/t/214",
+      "enrolledLegalTextSha256": "340f60d55e0ce143969b87d70a2e840b110befdea38744ac4b289ab26e26fabb"
+    },
+    {
+      "sectionId": "70307",
+      "topicId": 215,
+      "sourceUrl": "https://forum.repealobbba.org/t/215",
+      "enrolledLegalTextSha256": "a2d03600b93424feddfbcceae2d35c3e14852a0f2d9c1df7a9c07f84707a2772"
+    },
+    {
+      "sectionId": "70308",
+      "topicId": 216,
+      "sourceUrl": "https://forum.repealobbba.org/t/216",
+      "enrolledLegalTextSha256": "8ccecaadc3bee25db3257476aee22b1313df2d885b93bb27709ec90491fcd1ac"
+    },
+    {
+      "sectionId": "70309",
+      "topicId": 217,
+      "sourceUrl": "https://forum.repealobbba.org/t/217",
+      "enrolledLegalTextSha256": "7781d6afb24d3bd81b1f00de35524d34088affd3bce77ab4273b27c71db46c86"
+    },
+    {
+      "sectionId": "70311",
+      "topicId": 219,
+      "sourceUrl": "https://forum.repealobbba.org/t/219",
+      "enrolledLegalTextSha256": "4bc58032768bedc6f5f4bad75ad708770c48e7ea84e7f41d83cf6fcc48c45248"
+    },
+    {
+      "sectionId": "70312",
+      "topicId": 220,
+      "sourceUrl": "https://forum.repealobbba.org/t/220",
+      "enrolledLegalTextSha256": "aeda5b74996c97b48158b5ebe52258bb500f5fe68a57d7448e20a79024ffea21"
+    },
+    {
+      "sectionId": "70313",
+      "topicId": 221,
+      "sourceUrl": "https://forum.repealobbba.org/t/221",
+      "enrolledLegalTextSha256": "4683e57b3e7f1ea15f7a1011a32ab48f9a0e1c47527101abbe450804acb5b6bf"
+    },
+    {
+      "sectionId": "70321",
+      "topicId": 223,
+      "sourceUrl": "https://forum.repealobbba.org/t/223",
+      "enrolledLegalTextSha256": "488596e3dc7e16c8449850c132991f3019e50a430a47648e60b5bb3d37d40e76"
+    },
+    {
+      "sectionId": "70322",
+      "topicId": 224,
+      "sourceUrl": "https://forum.repealobbba.org/t/224",
+      "enrolledLegalTextSha256": "9d369c7c9405a08843af8e2d523f232e6da4ec436ebbe6c84cdc166d3ce915ac"
+    },
+    {
+      "sectionId": "70323",
+      "topicId": 225,
+      "sourceUrl": "https://forum.repealobbba.org/t/225",
+      "enrolledLegalTextSha256": "24e1a73e09ee76220a3bee80009fda15bdde5d7d2f980644672a7404e3183df9"
+    },
+    {
+      "sectionId": "70331",
+      "topicId": 227,
+      "sourceUrl": "https://forum.repealobbba.org/t/227",
+      "enrolledLegalTextSha256": "02dfcdf677986aebf187a5ffb337fe34a48d6494a4b07aa36835314c6f9312fc"
+    },
+    {
+      "sectionId": "70341",
+      "topicId": 229,
+      "sourceUrl": "https://forum.repealobbba.org/t/229",
+      "enrolledLegalTextSha256": "a2c5da7c917df4a05c82ae60b7362c6ba5fc234537e481cecf32fe633fe200ad"
+    },
+    {
+      "sectionId": "70342",
+      "topicId": 230,
+      "sourceUrl": "https://forum.repealobbba.org/t/230",
+      "enrolledLegalTextSha256": "ca27457183a945ff1ecc8650640c2515a90016fbc54c82c3cf0899dd32ef484e"
+    },
+    {
+      "sectionId": "70351",
+      "topicId": 232,
+      "sourceUrl": "https://forum.repealobbba.org/t/232",
+      "enrolledLegalTextSha256": "bce8795e6cd7df1dc2644df21bc25b1c7c2ce587515cc9bcdf297a1597bfe027"
+    },
+    {
+      "sectionId": "70352",
+      "topicId": 233,
+      "sourceUrl": "https://forum.repealobbba.org/t/233",
+      "enrolledLegalTextSha256": "8ee5ae7736dd9631d55152b330036037824735f4f9a8f1416c8daedd37e56058"
+    },
+    {
+      "sectionId": "70353",
+      "topicId": 234,
+      "sourceUrl": "https://forum.repealobbba.org/t/234",
+      "enrolledLegalTextSha256": "30f2b3dd76e51b403c1c070a3113bcbac794d3a4aec1ee3046954cb2a293c4d0"
+    },
+    {
+      "sectionId": "70354",
+      "topicId": 235,
+      "sourceUrl": "https://forum.repealobbba.org/t/235",
+      "enrolledLegalTextSha256": "20834982a70e10fe19fb0ef6c83f2c19a0bd0e690d215d8e4fcc6d274a91ab3c"
+    },
+    {
+      "sectionId": "70401",
+      "topicId": 239,
+      "sourceUrl": "https://forum.repealobbba.org/t/239",
+      "enrolledLegalTextSha256": "e4905ec90e898835cfc2990bcc615334ed614fb3bb2fe0c97e69fbed5e57620e"
+    },
+    {
+      "sectionId": "70402",
+      "topicId": 240,
+      "sourceUrl": "https://forum.repealobbba.org/t/240",
+      "enrolledLegalTextSha256": "2d5ab94f57b06e78c801402b4c8ede267a7875ca1c5cfb5423d9bf7cefbcb179"
+    },
+    {
+      "sectionId": "70403",
+      "topicId": 241,
+      "sourceUrl": "https://forum.repealobbba.org/t/241",
+      "enrolledLegalTextSha256": "2d5caf32e3db166a965cc2e0538cfc797dbbaba323ecdda5183dc384ceb95ff6"
+    },
+    {
+      "sectionId": "70404",
+      "topicId": 242,
+      "sourceUrl": "https://forum.repealobbba.org/t/242",
+      "enrolledLegalTextSha256": "89ee78bd69b144989cce4c06a628a4b7e2050bba8ce4c829c3feec917c1e753e"
+    },
+    {
+      "sectionId": "70405",
+      "topicId": 243,
+      "sourceUrl": "https://forum.repealobbba.org/t/243",
+      "enrolledLegalTextSha256": "ab39d3966618d919d4426a1af82865496c7729e53611d8144043c39298321255"
+    },
+    {
+      "sectionId": "70411",
+      "topicId": 245,
+      "sourceUrl": "https://forum.repealobbba.org/t/245",
+      "enrolledLegalTextSha256": "aed779f17e0ed2da83cc6b3f5e7a236415cd0c291e8c72aa51be608c14252ae1"
+    },
+    {
+      "sectionId": "70412",
+      "topicId": 247,
+      "sourceUrl": "https://forum.repealobbba.org/t/247",
+      "enrolledLegalTextSha256": "06aa24a827fdd75f0c7bf7f091e934a0e7e6ea36902ea3f9155fb9e8840fbbb5"
+    },
+    {
+      "sectionId": "70413",
+      "topicId": 248,
+      "sourceUrl": "https://forum.repealobbba.org/t/248",
+      "enrolledLegalTextSha256": "142d985207221597a4cf2c7d53e6637b87aa0bb5e06a8e46dd1ad642d12aae34"
+    },
+    {
+      "sectionId": "70414",
+      "topicId": 249,
+      "sourceUrl": "https://forum.repealobbba.org/t/249",
+      "enrolledLegalTextSha256": "452b41d221993464b2c6bed84738552cfc52503bb0b0903d9fe0ad7dd0ba82b7"
+    },
+    {
+      "sectionId": "70415",
+      "topicId": 250,
+      "sourceUrl": "https://forum.repealobbba.org/t/250",
+      "enrolledLegalTextSha256": "4fb6319a420cd0db862cd3b3760a70dfccb17c92b26cb396da5fc237f36ed984"
+    },
+    {
+      "sectionId": "70416",
+      "topicId": 251,
+      "sourceUrl": "https://forum.repealobbba.org/t/251",
+      "enrolledLegalTextSha256": "0f2ac04cb80c2010ab005d17a9ecb371c0564512bde9ade3efb5326fee626d0a"
+    },
+    {
+      "sectionId": "70421",
+      "topicId": 253,
+      "sourceUrl": "https://forum.repealobbba.org/t/253",
+      "enrolledLegalTextSha256": "fb40b94bdd78a8f6b70dd49a3e35663107563161b724d4eb4a40cab95ffa2823"
+    },
+    {
+      "sectionId": "70422",
+      "topicId": 254,
+      "sourceUrl": "https://forum.repealobbba.org/t/254",
+      "enrolledLegalTextSha256": "284252f4ef676864a4923afe8344f3ce7d90c4a254631468cf098a8f4fba6c37"
+    },
+    {
+      "sectionId": "70423",
+      "topicId": 255,
+      "sourceUrl": "https://forum.repealobbba.org/t/255",
+      "enrolledLegalTextSha256": "20ac986ad855d875419c8987001bca4c6e2307fc8fadbffe8ee93d02c1c32e0a"
+    },
+    {
+      "sectionId": "70424",
+      "topicId": 256,
+      "sourceUrl": "https://forum.repealobbba.org/t/256",
+      "enrolledLegalTextSha256": "4b33c349dfcadb2c63db1dc3379827660e1ecba8b21c9711013a6a643a71cc6e"
+    },
+    {
+      "sectionId": "70425",
+      "topicId": 257,
+      "sourceUrl": "https://forum.repealobbba.org/t/257",
+      "enrolledLegalTextSha256": "8a1cee12254e72e1e3f1657fb9d1d8f29f2948881321a9b21aa75bb5307bf9a2"
+    },
+    {
+      "sectionId": "70426",
+      "topicId": 258,
+      "sourceUrl": "https://forum.repealobbba.org/t/258",
+      "enrolledLegalTextSha256": "f8520ba4b3eaf4da3d68e00b284faf8e5527968ed7d10405f021e4e996789e43"
+    },
+    {
+      "sectionId": "70427",
+      "topicId": 259,
+      "sourceUrl": "https://forum.repealobbba.org/t/259",
+      "enrolledLegalTextSha256": "912dd7b4f9132ccbf7f38fbf5eec42552504d0f68f5133cdc1c159a03d3e5daf"
+    },
+    {
+      "sectionId": "70428",
+      "topicId": 260,
+      "sourceUrl": "https://forum.repealobbba.org/t/260",
+      "enrolledLegalTextSha256": "5551b17b298027f75037b1cd277cdff6ed17cf3e31d95fe805b4c7b8e40fc5bb"
+    },
+    {
+      "sectionId": "70429",
+      "topicId": 261,
+      "sourceUrl": "https://forum.repealobbba.org/t/261",
+      "enrolledLegalTextSha256": "8a6849749642a3d057fbde97c8a47d1f68f5ab60b6686e4999e288ebb34aea64"
+    },
+    {
+      "sectionId": "70430",
+      "topicId": 262,
+      "sourceUrl": "https://forum.repealobbba.org/t/262",
+      "enrolledLegalTextSha256": "77b001c37fb94c6b4871ca7d53f01a757fff2340c536a632ad9bb0dd09389f99"
+    },
+    {
+      "sectionId": "70431",
+      "topicId": 264,
+      "sourceUrl": "https://forum.repealobbba.org/t/264",
+      "enrolledLegalTextSha256": "a1202e2b640caa3315a7c88dcc0a19de1490e4f8a0c3f5b9c656f8cb461019bd"
+    },
+    {
+      "sectionId": "70432",
+      "topicId": 265,
+      "sourceUrl": "https://forum.repealobbba.org/t/265",
+      "enrolledLegalTextSha256": "4901e7b09da99bc49e39c2f7084e9cbbc6498880b76159f49467c5312556269c"
+    },
+    {
+      "sectionId": "70433",
+      "topicId": 266,
+      "sourceUrl": "https://forum.repealobbba.org/t/266",
+      "enrolledLegalTextSha256": "06a783e924e02151226844f655bff94d59ebee19e7546e6cf36ade12754131ca"
+    },
+    {
+      "sectionId": "70434",
+      "topicId": 267,
+      "sourceUrl": "https://forum.repealobbba.org/t/267",
+      "enrolledLegalTextSha256": "12b2b43679d104082971719e379de1165b38fd002daed36f518dde4b639a57eb"
+    },
+    {
+      "sectionId": "70435",
+      "topicId": 268,
+      "sourceUrl": "https://forum.repealobbba.org/t/268",
+      "enrolledLegalTextSha256": "cade88f9736eca0f654fba6e8a1229ba3e6fbb1fdf951c63514d186cc9ceae1b"
+    },
+    {
+      "sectionId": "70436",
+      "topicId": 269,
+      "sourceUrl": "https://forum.repealobbba.org/t/269",
+      "enrolledLegalTextSha256": "c7fa66bc48382a53952c50bb95a5763c6988dec7d67b7e3921e42ab87d2094f0"
+    },
+    {
+      "sectionId": "70437",
+      "topicId": 270,
+      "sourceUrl": "https://forum.repealobbba.org/t/270",
+      "enrolledLegalTextSha256": "775c24bcfd023430d3d0434bfb02e8f8a19f1d2abc659f14002bbd58c4b7b545"
+    },
+    {
+      "sectionId": "70438",
+      "topicId": 271,
+      "sourceUrl": "https://forum.repealobbba.org/t/271",
+      "enrolledLegalTextSha256": "64bdcc53fa00e720055d5cf5f35839dd3092b52b0b49f9e673a0e20ee625989b"
+    },
+    {
+      "sectionId": "70439",
+      "topicId": 272,
+      "sourceUrl": "https://forum.repealobbba.org/t/272",
+      "enrolledLegalTextSha256": "3992f1b190d6b128bada5711d39dcab5daecd334a8349dfb915806d25b1c6f11"
+    },
+    {
+      "sectionId": "70501",
+      "topicId": 275,
+      "sourceUrl": "https://forum.repealobbba.org/t/275",
+      "enrolledLegalTextSha256": "fb67575a95629842478de64c3eda459e32680ec9514f514f0d5966cc37dfcd53"
+    },
+    {
+      "sectionId": "70502",
+      "topicId": 276,
+      "sourceUrl": "https://forum.repealobbba.org/t/276",
+      "enrolledLegalTextSha256": "c6fb6a2eb7d521ec25b4100e64d33bba8da3386644abcd25e277453682bab384"
+    },
+    {
+      "sectionId": "70503",
+      "topicId": 277,
+      "sourceUrl": "https://forum.repealobbba.org/t/277",
+      "enrolledLegalTextSha256": "4c5b65bfa270b3f25a5e7e0d555334cb59e6df3413dfbc9151abd578532f9f3b"
+    },
+    {
+      "sectionId": "70504",
+      "topicId": 278,
+      "sourceUrl": "https://forum.repealobbba.org/t/278",
+      "enrolledLegalTextSha256": "107a3ada46276be08922ff7997477ac9820c52ebedb22c8ddcd969ff16c55628"
+    },
+    {
+      "sectionId": "70505",
+      "topicId": 279,
+      "sourceUrl": "https://forum.repealobbba.org/t/279",
+      "enrolledLegalTextSha256": "4aee6556cc2962052fa545a1a49d7b1987cf666ce41ef4fe1f75db0bda82b7de"
+    },
+    {
+      "sectionId": "70506",
+      "topicId": 280,
+      "sourceUrl": "https://forum.repealobbba.org/t/280",
+      "enrolledLegalTextSha256": "39321750475d364fe8d0f14aaa05b0f74fef3263fcdb88d2337b9d34ea6567a9"
+    },
+    {
+      "sectionId": "70507",
+      "topicId": 281,
+      "sourceUrl": "https://forum.repealobbba.org/t/281",
+      "enrolledLegalTextSha256": "b6047edd2c10723053c6a651137f6fad05956858c79b38a8a007cbe42534b122"
+    },
+    {
+      "sectionId": "70508",
+      "topicId": 282,
+      "sourceUrl": "https://forum.repealobbba.org/t/282",
+      "enrolledLegalTextSha256": "d6c394b5fb2588436e4eee158bdf66526e27ad7d3103b457a37bf2ea0722add4"
+    },
+    {
+      "sectionId": "70509",
+      "topicId": 283,
+      "sourceUrl": "https://forum.repealobbba.org/t/283",
+      "enrolledLegalTextSha256": "5155619067d4e007ae73a3c2646c38edb3273034a3cdebdd4a2789579e8b8fce"
+    },
+    {
+      "sectionId": "70510",
+      "topicId": 284,
+      "sourceUrl": "https://forum.repealobbba.org/t/284",
+      "enrolledLegalTextSha256": "d96e92c426bb06b49cd04907ba234c378b7c2a45feac270f6110cace014e54ac"
+    },
+    {
+      "sectionId": "70511",
+      "topicId": 285,
+      "sourceUrl": "https://forum.repealobbba.org/t/285",
+      "enrolledLegalTextSha256": "8e87d84c212f358e3272b96da2d05b291085ae8deb723bc2f479cd0ecacce394"
+    },
+    {
+      "sectionId": "70512",
+      "topicId": 286,
+      "sourceUrl": "https://forum.repealobbba.org/t/286",
+      "enrolledLegalTextSha256": "49966167ad3fd430ca822ad7a9fe3f19880910e9438b354a6334575c4fb850f3"
+    },
+    {
+      "sectionId": "70513",
+      "topicId": 287,
+      "sourceUrl": "https://forum.repealobbba.org/t/287",
+      "enrolledLegalTextSha256": "b72f3b85cd7e27763b7b9f20606c4cc0b880d4c034c2f7f89c7fe8f3f5515b1a"
+    },
+    {
+      "sectionId": "70514",
+      "topicId": 288,
+      "sourceUrl": "https://forum.repealobbba.org/t/288",
+      "enrolledLegalTextSha256": "3255c333a733eeb904cb70d0dd521285f2965601e6c4d1f5ccbe8056166fef23"
+    },
+    {
+      "sectionId": "70515",
+      "topicId": 289,
+      "sourceUrl": "https://forum.repealobbba.org/t/289",
+      "enrolledLegalTextSha256": "1d564c4e74ae6a9487edefe84bc8c19f9aa0c926abb20887898485f6c39cdead"
+    },
+    {
+      "sectionId": "70521",
+      "topicId": 291,
+      "sourceUrl": "https://forum.repealobbba.org/t/291",
+      "enrolledLegalTextSha256": "5c2059d7c0d6f6101c9a6ff42f2d06a969eca8358ae37b48b9ef85ef8e022998"
+    },
+    {
+      "sectionId": "70522",
+      "topicId": 292,
+      "sourceUrl": "https://forum.repealobbba.org/t/292",
+      "enrolledLegalTextSha256": "9cc7418bc8a5799d5189e362943ca722a1a3fca453de5cdee1fde13d7f0c152a"
+    },
+    {
+      "sectionId": "70523",
+      "topicId": 293,
+      "sourceUrl": "https://forum.repealobbba.org/t/293",
+      "enrolledLegalTextSha256": "ebbeff5f01a3e0ff9a600278f008d6e1ec9780122db7294d44b134cc63e69581"
+    },
+    {
+      "sectionId": "70524",
+      "topicId": 294,
+      "sourceUrl": "https://forum.repealobbba.org/t/294",
+      "enrolledLegalTextSha256": "2fce5e3a2d2c93b8dc488fd34e120fbe94785ca9db69bbaf3faf95a5d1be4ea1"
+    },
+    {
+      "sectionId": "70525",
+      "topicId": 295,
+      "sourceUrl": "https://forum.repealobbba.org/t/295",
+      "enrolledLegalTextSha256": "80caf7586f03555ff79c956162f3f1b1e8466284722b8a2cca154929879eec88"
+    },
+    {
+      "sectionId": "70531",
+      "topicId": 297,
+      "sourceUrl": "https://forum.repealobbba.org/t/297",
+      "enrolledLegalTextSha256": "510f7512c56f2734f759251d28641586e49325dd3be8c181bae83e351cd39825"
+    },
+    {
+      "sectionId": "70601",
+      "topicId": 300,
+      "sourceUrl": "https://forum.repealobbba.org/t/300",
+      "enrolledLegalTextSha256": "96557f7bb815edfa7f6a5c7534f2e19b4fcd442924ffe94ed9f3a6b0d7211644"
+    },
+    {
+      "sectionId": "70602",
+      "topicId": 301,
+      "sourceUrl": "https://forum.repealobbba.org/t/301",
+      "enrolledLegalTextSha256": "ef8aac7840e2331211f24c6c58c8a517062bfc7713603e40ff53e4a4c077dd61"
+    },
+    {
+      "sectionId": "70603",
+      "topicId": 302,
+      "sourceUrl": "https://forum.repealobbba.org/t/302",
+      "enrolledLegalTextSha256": "d77ce4eb5b5d155e74b0e61e28870180b4e5c2ca9218111d387bc0922c2750a0"
+    },
+    {
+      "sectionId": "70604",
+      "topicId": 303,
+      "sourceUrl": "https://forum.repealobbba.org/t/303",
+      "enrolledLegalTextSha256": "9c88732c18ef6c41d7d3f3a47432f35595d96260f7cc0b8c6363ee88722f394a"
+    },
+    {
+      "sectionId": "70605",
+      "topicId": 304,
+      "sourceUrl": "https://forum.repealobbba.org/t/304",
+      "enrolledLegalTextSha256": "4d9ff5ca8edb0464f17a65fcc9d64b9eba9d807dd28772ca1a730cb50b227316"
+    },
+    {
+      "sectionId": "70606",
+      "topicId": 305,
+      "sourceUrl": "https://forum.repealobbba.org/t/305",
+      "enrolledLegalTextSha256": "1c8c781439a1b2e564f2a2c867ed58609cf075b1daf1d6a13bb3d32c4cb7c606"
+    },
+    {
+      "sectionId": "70607",
+      "topicId": 306,
+      "sourceUrl": "https://forum.repealobbba.org/t/306",
+      "enrolledLegalTextSha256": "1bd5c06e37f24a1b2df92ec232691dc23a89b547f63813efec2bfcebfac00a35"
+    },
+    {
+      "sectionId": "71101",
+      "topicId": 309,
+      "sourceUrl": "https://forum.repealobbba.org/t/309",
+      "enrolledLegalTextSha256": "3763e2fb529ce3a19a96a10466877b3b87a8659b0030f15d18e2af8f2c2b8c4c"
+    },
+    {
+      "sectionId": "71102",
+      "topicId": 310,
+      "sourceUrl": "https://forum.repealobbba.org/t/310",
+      "enrolledLegalTextSha256": "e23961bacdd4437afc7265a2f0f83040d790a0ca7fec57e0bcdc797b9a06ab10"
+    },
+    {
+      "sectionId": "71103",
+      "topicId": 311,
+      "sourceUrl": "https://forum.repealobbba.org/t/311",
+      "enrolledLegalTextSha256": "676ab0439f672c64614cdd698d99e0790396d0f832ba39f56dff2abecb410846"
+    },
+    {
+      "sectionId": "71104",
+      "topicId": 312,
+      "sourceUrl": "https://forum.repealobbba.org/t/312",
+      "enrolledLegalTextSha256": "c5df020ba10eb986ae23c16c1710581ad029bbadf18e73ec070ecf0203889e68"
+    },
+    {
+      "sectionId": "71105",
+      "topicId": 313,
+      "sourceUrl": "https://forum.repealobbba.org/t/313",
+      "enrolledLegalTextSha256": "8a0fc0eced925d83da219159c8e82cf0e09f7fb3a1f23a941dab672998607f01"
+    },
+    {
+      "sectionId": "71106",
+      "topicId": 314,
+      "sourceUrl": "https://forum.repealobbba.org/t/314",
+      "enrolledLegalTextSha256": "569999fb881d6273eccfb000dd1c4cc79a89cf91b288e8e04d97df10ad914931"
+    },
+    {
+      "sectionId": "71107",
+      "topicId": 315,
+      "sourceUrl": "https://forum.repealobbba.org/t/315",
+      "enrolledLegalTextSha256": "302d56a36304ea9fc38b7fb661f8378ef767126c9d4b7427ee08a77aac036574"
+    },
+    {
+      "sectionId": "71108",
+      "topicId": 316,
+      "sourceUrl": "https://forum.repealobbba.org/t/316",
+      "enrolledLegalTextSha256": "eb90197f597e4a2e9742c9b85cb8cc426a6198b5c803cd3d8a77d395c8e10bb3"
+    },
+    {
+      "sectionId": "71109",
+      "topicId": 317,
+      "sourceUrl": "https://forum.repealobbba.org/t/317",
+      "enrolledLegalTextSha256": "f7e19b8d6ed784c52fe2c132ab892d25c1055142527507d64b58aed218a350b0"
+    },
+    {
+      "sectionId": "71110",
+      "topicId": 318,
+      "sourceUrl": "https://forum.repealobbba.org/t/318",
+      "enrolledLegalTextSha256": "93192653fcc2b595b8ce8f6f2f54bc42a339b0c8c9811fb1a2811965c11024ff"
+    },
+    {
+      "sectionId": "71111",
+      "topicId": 320,
+      "sourceUrl": "https://forum.repealobbba.org/t/320",
+      "enrolledLegalTextSha256": "3bd82233da112e8bd5906fcf7b7207b554ad647bf450c19ce2ddcdb4b47e26c6"
+    },
+    {
+      "sectionId": "71112",
+      "topicId": 321,
+      "sourceUrl": "https://forum.repealobbba.org/t/321",
+      "enrolledLegalTextSha256": "5d623a72c017850f9178113802f7c07841a411e01263d55c628f62fd712bfb89"
+    },
+    {
+      "sectionId": "71113",
+      "topicId": 322,
+      "sourceUrl": "https://forum.repealobbba.org/t/322",
+      "enrolledLegalTextSha256": "023a29b195e46e5840b5fdd4cc5c355192a05e2fdcce999efe69e93b707912a6"
+    },
+    {
+      "sectionId": "71114",
+      "topicId": 324,
+      "sourceUrl": "https://forum.repealobbba.org/t/324",
+      "enrolledLegalTextSha256": "20d4c97b07b97bf1833caaaf6b3fa748b50bb230f5de05766bd6ad6b53fe1703"
+    },
+    {
+      "sectionId": "71115",
+      "topicId": 325,
+      "sourceUrl": "https://forum.repealobbba.org/t/325",
+      "enrolledLegalTextSha256": "bc3320762ece32f0323cba593d74e4cea409389c5b5cadb975ea9ba9fb1951a8"
+    },
+    {
+      "sectionId": "71116",
+      "topicId": 326,
+      "sourceUrl": "https://forum.repealobbba.org/t/326",
+      "enrolledLegalTextSha256": "ec196e3e4989eb15793816ed4c6fb2e0fb9073919f3efb69c3535adbf468bb69"
+    },
+    {
+      "sectionId": "71117",
+      "topicId": 327,
+      "sourceUrl": "https://forum.repealobbba.org/t/327",
+      "enrolledLegalTextSha256": "a895986359ba6c836e5d4ad90027e9053a84c480c02697237c5a76ebcafe8520"
+    },
+    {
+      "sectionId": "71118",
+      "topicId": 328,
+      "sourceUrl": "https://forum.repealobbba.org/t/328",
+      "enrolledLegalTextSha256": "fd247b8a9155535b82acfa2bb196b9ec05ea720ae043d17b4744be3a2739db09"
+    },
+    {
+      "sectionId": "71120",
+      "topicId": 331,
+      "sourceUrl": "https://forum.repealobbba.org/t/331",
+      "enrolledLegalTextSha256": "43477b1ddc14049446336fe81f098fd7dd12f2d18e271971f51183173895ee62"
+    },
+    {
+      "sectionId": "71121",
+      "topicId": 333,
+      "sourceUrl": "https://forum.repealobbba.org/t/333",
+      "enrolledLegalTextSha256": "e23d0d18a8bb3bbf0d2fe8d3aa472b4efa63ab0381576e67dfcf2382841dde61"
+    },
+    {
+      "sectionId": "71201",
+      "topicId": 336,
+      "sourceUrl": "https://forum.repealobbba.org/t/336",
+      "enrolledLegalTextSha256": "85276bbd1c2d027036e0cdc35ae68015661d38c9bac1066ad28975446a2e33d0"
+    },
+    {
+      "sectionId": "71202",
+      "topicId": 338,
+      "sourceUrl": "https://forum.repealobbba.org/t/338",
+      "enrolledLegalTextSha256": "bad344878b47a5a812041741aa2e534779e2b876d3d1c015d453317125720f67"
+    },
+    {
+      "sectionId": "71203",
+      "topicId": 339,
+      "sourceUrl": "https://forum.repealobbba.org/t/339",
+      "enrolledLegalTextSha256": "210fa3f17f64ae68708ac5a67eb0ad27b6d8c3c0dcc9ff003bcb4304ad512737"
+    },
+    {
+      "sectionId": "71301",
+      "topicId": 342,
+      "sourceUrl": "https://forum.repealobbba.org/t/342",
+      "enrolledLegalTextSha256": "aa5d0611eb180c96af0c4e144724e55f361d8c37030c387bd587780e0c6def1b"
+    },
+    {
+      "sectionId": "71302",
+      "topicId": 343,
+      "sourceUrl": "https://forum.repealobbba.org/t/343",
+      "enrolledLegalTextSha256": "76cbb7188a7f252bfed2049512cecaf75017b308ef6f1feeb3fee48823fdd66c"
+    },
+    {
+      "sectionId": "71303",
+      "topicId": 345,
+      "sourceUrl": "https://forum.repealobbba.org/t/345",
+      "enrolledLegalTextSha256": "af05420e5b316a04776ff3aa3d1b59277134dc26a9e2a344ec8c3fbbf3384e6c"
+    },
+    {
+      "sectionId": "71304",
+      "topicId": 346,
+      "sourceUrl": "https://forum.repealobbba.org/t/346",
+      "enrolledLegalTextSha256": "e415e7f48c0a34dff904fb3be13a15a8862b9e0ab4027e88b904d416093f42de"
+    },
+    {
+      "sectionId": "71305",
+      "topicId": 347,
+      "sourceUrl": "https://forum.repealobbba.org/t/347",
+      "enrolledLegalTextSha256": "5449502b8e300542aeca03c1c1b41031127de4da4a6a8b4cc1a22ba3adea27b9"
+    },
+    {
+      "sectionId": "71306",
+      "topicId": 349,
+      "sourceUrl": "https://forum.repealobbba.org/t/349",
+      "enrolledLegalTextSha256": "66c9abbc932bab6945a804baeaa952df3b5b39a5020de6648b9cfd6866d4d378"
+    },
+    {
+      "sectionId": "71307",
+      "topicId": 350,
+      "sourceUrl": "https://forum.repealobbba.org/t/350",
+      "enrolledLegalTextSha256": "2461976d522ab9d4dc138795f5b8623d3d820ffafda1e55ff0a6cf222adeec52"
+    },
+    {
+      "sectionId": "71308",
+      "topicId": 351,
+      "sourceUrl": "https://forum.repealobbba.org/t/351",
+      "enrolledLegalTextSha256": "edcf22e40bc1eaa1dd2062912c0399342ee5334505ef3a2d0ee89488d6cb3c5e"
+    },
+    {
+      "sectionId": "71401",
+      "topicId": 353,
+      "sourceUrl": "https://forum.repealobbba.org/t/353",
+      "enrolledLegalTextSha256": "54c51d0fe36cffc62e61b1635e4b513c10e11be3b551bc8c7fe2add4a71bfaaf"
+    },
+    {
+      "sectionId": "72001",
+      "topicId": 354,
+      "sourceUrl": "https://forum.repealobbba.org/t/354",
+      "enrolledLegalTextSha256": "c3c04c7c350a3fba65f30c6b2f918fcac9183c5fd43d0d73c3b2a8ac53ac69ea"
+    },
+    {
+      "sectionId": "73001",
+      "topicId": 355,
+      "sourceUrl": "https://forum.repealobbba.org/t/355",
+      "enrolledLegalTextSha256": "3fff07ca2684f0717005e8767076d8978213149b0bda7b80301cca44853c6b9e"
+    },
+    {
+      "sectionId": "80001",
+      "topicId": 361,
+      "sourceUrl": "https://forum.repealobbba.org/t/361",
+      "enrolledLegalTextSha256": "88b183bdf722cadeb41f497f15096b94cca331dad36c64b532fe9c27b626e35f"
+    },
+    {
+      "sectionId": "81001",
+      "topicId": 363,
+      "sourceUrl": "https://forum.repealobbba.org/t/363",
+      "enrolledLegalTextSha256": "04d434c197f2b0335ea90bf0f4ec5680413f24463e9bb6ed67c71afa09c845bd"
+    },
+    {
+      "sectionId": "82001",
+      "topicId": 365,
+      "sourceUrl": "https://forum.repealobbba.org/t/365",
+      "enrolledLegalTextSha256": "23ac24cdea8b8de9fedbc4d3571a3411ea495dea34fb3587a55228458b92db9d"
+    },
+    {
+      "sectionId": "82002",
+      "topicId": 366,
+      "sourceUrl": "https://forum.repealobbba.org/t/366",
+      "enrolledLegalTextSha256": "9e411b7345d77d881ae039e3c4e9ecdfb79904aea224a5614766e6cf7ce4d93b"
+    },
+    {
+      "sectionId": "82003",
+      "topicId": 367,
+      "sourceUrl": "https://forum.repealobbba.org/t/367",
+      "enrolledLegalTextSha256": "2c8dd78b013030945c0d397c35f5011e877acb94b472f0086ce4a4644cda8abc"
+    },
+    {
+      "sectionId": "82004",
+      "topicId": 368,
+      "sourceUrl": "https://forum.repealobbba.org/t/368",
+      "enrolledLegalTextSha256": "2a239c66e32aae0bd9343063b2aec9f3b615a3dd4673dac1c7b9fe21f4d6146c"
+    },
+    {
+      "sectionId": "82005",
+      "topicId": 369,
+      "sourceUrl": "https://forum.repealobbba.org/t/369",
+      "enrolledLegalTextSha256": "dd50276e2fca97d5d492c05d2fb395c9503e3b002a77f3eda964e72a9ad4cb88"
+    },
+    {
+      "sectionId": "83001",
+      "topicId": 371,
+      "sourceUrl": "https://forum.repealobbba.org/t/371",
+      "enrolledLegalTextSha256": "e1a30301d2d7f40eece28894c59100177564f9dd7c6e557ec34a3be0242a4266"
+    },
+    {
+      "sectionId": "83002",
+      "topicId": 372,
+      "sourceUrl": "https://forum.repealobbba.org/t/372",
+      "enrolledLegalTextSha256": "bdf809a629d0dca23f697f8d7e6e7350fe80486cc23122661b1ec041baa05923"
+    },
+    {
+      "sectionId": "83003",
+      "topicId": 373,
+      "sourceUrl": "https://forum.repealobbba.org/t/373",
+      "enrolledLegalTextSha256": "8787eb9072f00c39ee8297ccd445b97e7f8ca7095682c09cfc2a631227788f24"
+    },
+    {
+      "sectionId": "83004",
+      "topicId": 374,
+      "sourceUrl": "https://forum.repealobbba.org/t/374",
+      "enrolledLegalTextSha256": "e1222b8ce43771d53000d49598a7403bc8ac00254ff583f02bdbee3493dfa3c1"
+    },
+    {
+      "sectionId": "84001",
+      "topicId": 376,
+      "sourceUrl": "https://forum.repealobbba.org/t/376",
+      "enrolledLegalTextSha256": "90e952a6ffae190e4e93310a0b156c2f6ec13cc9b43ff7dab51c3e8c876c54c9"
+    },
+    {
+      "sectionId": "85001",
+      "topicId": 378,
+      "sourceUrl": "https://forum.repealobbba.org/t/378",
+      "enrolledLegalTextSha256": "9bbc3220290236c3403c57d55418b2d9a25341c7047e128d87f369b0e6764b6f"
+    },
+    {
+      "sectionId": "85002",
+      "topicId": 379,
+      "sourceUrl": "https://forum.repealobbba.org/t/379",
+      "enrolledLegalTextSha256": "c24385b96139d7bf4913b618ef66a1c3a3a7a07b72b1646764cceb8ddb54e301"
+    },
+    {
+      "sectionId": "86001",
+      "topicId": 382,
+      "sourceUrl": "https://forum.repealobbba.org/t/382",
+      "enrolledLegalTextSha256": "67a6c931f7b1dd7801130b3cd9b5bc3fd2c62400f4fbfa49c4a855cfc2df5574"
+    },
+    {
+      "sectionId": "87001",
+      "topicId": 383,
+      "sourceUrl": "https://forum.repealobbba.org/t/383",
+      "enrolledLegalTextSha256": "08eecf1c9774b9f16d62dd5d0c44802fb6901140ba8d276d2259108cd008a5cb"
+    },
+    {
+      "sectionId": "90001",
+      "topicId": 386,
+      "sourceUrl": "https://forum.repealobbba.org/t/386",
+      "enrolledLegalTextSha256": "3d10092f84dbbe3655cd222f485c4904f6e39425a9efc1a72d5a1663df84670c"
+    },
+    {
+      "sectionId": "90002",
+      "topicId": 387,
+      "sourceUrl": "https://forum.repealobbba.org/t/387",
+      "enrolledLegalTextSha256": "3ea6360ad2da81c01bacf06262f0a08fde1fb6ec19b69228b6f586a11b480c9b"
+    },
+    {
+      "sectionId": "90003",
+      "topicId": 388,
+      "sourceUrl": "https://forum.repealobbba.org/t/388",
+      "enrolledLegalTextSha256": "5f8308606674486f16b8766261a4594338595f7c6098cf53c9d83ccbaf7326bf"
+    },
+    {
+      "sectionId": "90004",
+      "topicId": 389,
+      "sourceUrl": "https://forum.repealobbba.org/t/389",
+      "enrolledLegalTextSha256": "fba74da55d779460dcdade0ad162918f0ea49d2eeba427b92f1bae66351cf16a"
+    },
+    {
+      "sectionId": "90005",
+      "topicId": 390,
+      "sourceUrl": "https://forum.repealobbba.org/t/390",
+      "enrolledLegalTextSha256": "b772ea63dafa560063d3e73ca3c6c578d7312fa09e86a9bea20ae54fb0a05455"
+    },
+    {
+      "sectionId": "90006",
+      "topicId": 391,
+      "sourceUrl": "https://forum.repealobbba.org/t/391",
+      "enrolledLegalTextSha256": "347ba7fa8201593de12cc248a7f6b34e2aff25b9402429656c11e31ab3b9039f"
+    },
+    {
+      "sectionId": "90007",
+      "topicId": 392,
+      "sourceUrl": "https://forum.repealobbba.org/t/392",
+      "enrolledLegalTextSha256": "54cc52db441fccb4d1dd8b6bc8a709230b1aaf19586d9392c16195d1205d1ebb"
+    },
+    {
+      "sectionId": "90101",
+      "topicId": 394,
+      "sourceUrl": "https://forum.repealobbba.org/t/394",
+      "enrolledLegalTextSha256": "0ead7d58519be9e140c621758e2fac15b6e94fe4ee9ce5734a4bf6ea864bb45c"
+    },
+    {
+      "sectionId": "90102",
+      "topicId": 395,
+      "sourceUrl": "https://forum.repealobbba.org/t/395",
+      "enrolledLegalTextSha256": "cec27ab9c1cfd48f6a392cde842cb4fcfa3eaaf2ccf36891491dc025195947b8"
+    },
+    {
+      "sectionId": "90103",
+      "topicId": 396,
+      "sourceUrl": "https://forum.repealobbba.org/t/396",
+      "enrolledLegalTextSha256": "9e6a012a0f77ae3c3669af4043e53a4fdac9f4f61b1f02829b06b748e0504d09"
+    },
+    {
+      "sectionId": "100001",
+      "topicId": 403,
+      "sourceUrl": "https://forum.repealobbba.org/t/403",
+      "enrolledLegalTextSha256": "d29bd3a2a7b85750f34bba27db13017bb53bdca7a99aac9a5d38b13354da5a73"
+    },
+    {
+      "sectionId": "100002",
+      "topicId": 404,
+      "sourceUrl": "https://forum.repealobbba.org/t/404",
+      "enrolledLegalTextSha256": "ab51a04491030b8bd643127f98558df6d7239e15b8969621d25753b19ae2db8f"
+    },
+    {
+      "sectionId": "100003",
+      "topicId": 405,
+      "sourceUrl": "https://forum.repealobbba.org/t/405",
+      "enrolledLegalTextSha256": "fcfa707c7464e2047ded59644e4513763cfcec893be0dec6a572a7b8bd5199ce"
+    },
+    {
+      "sectionId": "100004",
+      "topicId": 406,
+      "sourceUrl": "https://forum.repealobbba.org/t/406",
+      "enrolledLegalTextSha256": "a33615b4424437ce221527aafda37453c594864252dd4a9fe9f9dfd550f70190"
+    },
+    {
+      "sectionId": "100005",
+      "topicId": 407,
+      "sourceUrl": "https://forum.repealobbba.org/t/407",
+      "enrolledLegalTextSha256": "d0fa74737e19d263b77075973a4ac256941924be6f3122e2808eb19d67fcd653"
+    },
+    {
+      "sectionId": "100006",
+      "topicId": 408,
+      "sourceUrl": "https://forum.repealobbba.org/t/408",
+      "enrolledLegalTextSha256": "b5aafe629324e49ac5d591fd909d1f1449fdf025467596ccbfce32b2416f0e8b"
+    },
+    {
+      "sectionId": "100007",
+      "topicId": 409,
+      "sourceUrl": "https://forum.repealobbba.org/t/409",
+      "enrolledLegalTextSha256": "76d329cab7453ed79c2d9c55193bec9847dbaf7da2d85d396e804b9bf44bd05e"
+    },
+    {
+      "sectionId": "100008",
+      "topicId": 410,
+      "sourceUrl": "https://forum.repealobbba.org/t/410",
+      "enrolledLegalTextSha256": "0dcc36c13d7708b25cd4820e813ce22ffc9768d4d4667d6c4668baed30bab65f"
+    },
+    {
+      "sectionId": "100009",
+      "topicId": 411,
+      "sourceUrl": "https://forum.repealobbba.org/t/411",
+      "enrolledLegalTextSha256": "af0a5110d237e0a9fa3ada7c590cb81e0d3e1542dfd263bd407f5e40a7d6278b"
+    },
+    {
+      "sectionId": "100010",
+      "topicId": 412,
+      "sourceUrl": "https://forum.repealobbba.org/t/412",
+      "enrolledLegalTextSha256": "da1448e03547f46319f55238781743e6c94358d0011e61c8ab677b76dbecf245"
+    },
+    {
+      "sectionId": "100011",
+      "topicId": 413,
+      "sourceUrl": "https://forum.repealobbba.org/t/413",
+      "enrolledLegalTextSha256": "5cc523080a356aac6d3d12b2226f5e61bf8c8e1e3de76c461ed9a300c89088da"
+    },
+    {
+      "sectionId": "100012",
+      "topicId": 414,
+      "sourceUrl": "https://forum.repealobbba.org/t/414",
+      "enrolledLegalTextSha256": "ba652b7002bb14400f2999b4d414efc70c954185a17508243ebbae7f8f6ff64d"
+    },
+    {
+      "sectionId": "100013",
+      "topicId": 415,
+      "sourceUrl": "https://forum.repealobbba.org/t/415",
+      "enrolledLegalTextSha256": "e39b72fa5da414d8c30b0b6733b508810c26bf689efe107b17387e7be7e57190"
+    },
+    {
+      "sectionId": "100014",
+      "topicId": 416,
+      "sourceUrl": "https://forum.repealobbba.org/t/416",
+      "enrolledLegalTextSha256": "c079814fcd5261d0e684d255ee658e766139535d4acc59b038c24ed362946686"
+    },
+    {
+      "sectionId": "100015",
+      "topicId": 417,
+      "sourceUrl": "https://forum.repealobbba.org/t/417",
+      "enrolledLegalTextSha256": "d50ae23e2ca1a13f6c8ccd1789fc233b4f68e584c473fddd1d6f503b128bcc3c"
+    },
+    {
+      "sectionId": "100016",
+      "topicId": 418,
+      "sourceUrl": "https://forum.repealobbba.org/t/418",
+      "enrolledLegalTextSha256": "146ca0625a042a8c3cda549b5c35c85faa3fcab293fcbb2973a62f8f271f7cb8"
+    },
+    {
+      "sectionId": "100017",
+      "topicId": 419,
+      "sourceUrl": "https://forum.repealobbba.org/t/419",
+      "enrolledLegalTextSha256": "41f74528d69ca30af6bf4a6fd72d32d922664ba5fb05bf6919a03bd2324227d9"
+    },
+    {
+      "sectionId": "100018",
+      "topicId": 420,
+      "sourceUrl": "https://forum.repealobbba.org/t/420",
+      "enrolledLegalTextSha256": "94d0ba6356b560efb18e216695f22c798ad1c427ea8870f24870800b00be3e2d"
+    },
+    {
+      "sectionId": "100051",
+      "topicId": 422,
+      "sourceUrl": "https://forum.repealobbba.org/t/422",
+      "enrolledLegalTextSha256": "0f4ddcf2ee7260552f371482194d283ff5c623f089c27bdb3ffd7668a8938ae3"
+    },
+    {
+      "sectionId": "100052",
+      "topicId": 423,
+      "sourceUrl": "https://forum.repealobbba.org/t/423",
+      "enrolledLegalTextSha256": "fbbce275201ebdda363b39baac04df74dfc3ee80f23b286340ab63b7d15fbb3f"
+    },
+    {
+      "sectionId": "100053",
+      "topicId": 424,
+      "sourceUrl": "https://forum.repealobbba.org/t/424",
+      "enrolledLegalTextSha256": "23dffdccfb3d887556f3458c267fe8efcfdd4373f3f72a7c970fcd2365c2957a"
+    },
+    {
+      "sectionId": "100054",
+      "topicId": 425,
+      "sourceUrl": "https://forum.repealobbba.org/t/425",
+      "enrolledLegalTextSha256": "f4e7eedc5abd6dd700224d10439cf876cf19fa49e0793cda88af791fd583f7ea"
+    },
+    {
+      "sectionId": "100055",
+      "topicId": 426,
+      "sourceUrl": "https://forum.repealobbba.org/t/426",
+      "enrolledLegalTextSha256": "41561b37289b340c69595b1c2d5bd02fa4b2330a10f55575323f76586bfb3e5c"
+    },
+    {
+      "sectionId": "100056",
+      "topicId": 427,
+      "sourceUrl": "https://forum.repealobbba.org/t/427",
+      "enrolledLegalTextSha256": "c2bc073ff5d5f32d49d08fc38b3d8d8a34465c908952f58e6733c945518be44f"
+    },
+    {
+      "sectionId": "100057",
+      "topicId": 428,
+      "sourceUrl": "https://forum.repealobbba.org/t/428",
+      "enrolledLegalTextSha256": "f6fd008fc4ba4b010d88f9224a8767e63a867c15d31fa627f3fa123d8ac42117"
+    },
+    {
+      "sectionId": "100101",
+      "topicId": 400,
+      "sourceUrl": "https://forum.repealobbba.org/t/400",
+      "enrolledLegalTextSha256": "cfaefad27d0754566b96d8daa379ffe0f7421dc8b6010071f3943d352ebd8f86"
+    },
+    {
+      "sectionId": "100102",
+      "topicId": 401,
+      "sourceUrl": "https://forum.repealobbba.org/t/401",
+      "enrolledLegalTextSha256": "23864df8feea786a1a42fceddbc2e327aaade97697bded8dd60b361217210194"
+    },
+    {
+      "sectionId": "100201",
+      "topicId": 32,
+      "sourceUrl": "https://forum.repealobbba.org/t/32",
+      "enrolledLegalTextSha256": "eaa9b4330c78620df4f2deecbf725c1777ab02fa6100eda9a0a35513ce253678"
+    },
+    {
+      "sectionId": "100202",
+      "topicId": 31,
+      "sourceUrl": "https://forum.repealobbba.org/t/31",
+      "enrolledLegalTextSha256": "ef2d67ce857629d30392d4e46932be44e0f0b95f6afe9d8eb16a35a5e3e26da3"
+    },
+    {
+      "sectionId": "100203",
+      "topicId": 30,
+      "sourceUrl": "https://forum.repealobbba.org/t/30",
+      "enrolledLegalTextSha256": "4464ddf6e1af0f0d28d0569bd1833cd4e9f99fd21d9cfb8c2dfea6203b6245be"
+    },
+    {
+      "sectionId": "100204",
+      "topicId": 29,
+      "sourceUrl": "https://forum.repealobbba.org/t/29",
+      "enrolledLegalTextSha256": "0d9fba4e75ead4c3300682adb2c384bc57b94d23d33955f2bc3c9ca2f8e28664"
+    },
+    {
+      "sectionId": "100205",
+      "topicId": 28,
+      "sourceUrl": "https://forum.repealobbba.org/t/28",
+      "enrolledLegalTextSha256": "09493c793b260a395eb383ab307999501063da7cd2536359f4f1f845cab7ef80"
+    }
+  ]
+}

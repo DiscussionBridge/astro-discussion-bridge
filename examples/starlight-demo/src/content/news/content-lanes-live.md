@@ -1,5 +1,5 @@
 ---
-title: "Discussion Bridge Content Lanes Are Live in the Demo"
+title: "DiscussionBridge Content Lanes Are Live in the Demo"
 description: "A news-style announcement showing a third content lane in the same Astro site."
 date: "2026-07-17"
 discourseTopicId: 28

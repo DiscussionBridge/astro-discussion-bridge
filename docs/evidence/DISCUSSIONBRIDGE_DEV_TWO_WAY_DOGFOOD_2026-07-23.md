@@ -1,6 +1,6 @@
 # DiscussionBridge.dev Two-Way Dogfood Evidence — 2026-07-23
 
-This sanitized record supports the bounded live claims in the Discussion Bridge
+This sanitized record supports the bounded live claims in the DiscussionBridge
 manuals and Alpha checklist. It contains no credentials, account identifiers,
 protected paths, or private deployment data.
 
@@ -8,7 +8,7 @@ protected paths, or private deployment data.
 
 | Item | Sanitized evidence |
 | --- | --- |
-| Apex source commit | `d68ffc4` — `Add two-way Discussion Bridge dogfood` |
+| Apex source commit | `d68ffc4` — `Add two-way DiscussionBridge dogfood` |
 | Review | Code Boss final PASS |
 | Apex build | Clean detached `npm ci` and production build passed; the apex build generated **5 public routes** |
 | Deployment time | 2026-07-23 09:00:47 America/Los_Angeles |
@@ -60,6 +60,6 @@ These notices remain release work. This record does not claim they are fixed.
 
 ## Claim Boundary
 
-This evidence proves two separate, live, single-writer Discussion Bridge
+This evidence proves two separate, live, single-writer DiscussionBridge
 connections on DiscussionBridge.dev. It does not prove merged replies, a
 general control plane, or general forum-to-forum orchestration.

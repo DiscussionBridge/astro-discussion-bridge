@@ -1,7 +1,7 @@
 # Known Issues
 
 This page records confirmed issues that operators may encounter while using or
-building Discussion Bridge sites. It distinguishes product defects from
+building DiscussionBridge sites. It distinguishes product defects from
 upstream framework behavior and keeps workarounds bounded.
 
 ## Astro
@@ -27,7 +27,7 @@ Entry docs -> 404 was not found.
 - a clean stock Starlight control at `examples/stock-starlight`
 - Astro `^7.0.4`
 - Starlight `^0.41.2`
-- no Discussion Bridge integration or component wiring required
+- no DiscussionBridge integration or component wiring required
 - `npm run build` completes successfully and then prints the message
 
 **Likely source:**
@@ -119,14 +119,14 @@ the version ranges above with the exact installed versions.
 
 ### Granular API Keys Cannot Read Every Diagnostics Endpoint
 
-**Status:** Confirmed in Discussion Bridge field testing. The upstream question
+**Status:** Confirmed in DiscussionBridge field testing. The upstream question
 about a supported granular scope for these site-level reads remains open.
-Discussion Bridge provides a bounded fallback.
+DiscussionBridge provides a bounded fallback.
 
 **Impact:** A least-privilege granular publishing key can perform normal
 publishing work but may receive `403 Forbidden` from site-level endpoints used
 by `check-discourse`. One granular key therefore cannot currently provide every
-publishing and setup-diagnostics capability that Discussion Bridge needs.
+publishing and setup-diagnostics capability that DiscussionBridge needs.
 
 With the exercised granular key configuration, the publishing key could read
 `/categories.json` and `/tags.json`, but could not read all of:

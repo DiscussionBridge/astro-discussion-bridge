@@ -1,5 +1,5 @@
 ---
-title: "Content Lanes With Full Comments in Discussion Bridge for Astro"
+title: "Content Lanes With Full Comments in DiscussionBridge for Astro"
 description: "A blog-style post showing how editorial content can have its own discussion mapping."
 date: "2026-07-17"
 discourseTopicId: 27

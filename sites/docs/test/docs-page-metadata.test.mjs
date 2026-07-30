@@ -14,7 +14,7 @@ const metadata = JSON.parse(
 
 test("tracked docs dates do not depend on deployment Git history", () => {
   assert.equal(metadata.version, 1);
-  assert.equal(metadata.appliesTo, "Discussion Bridge Alpha");
+  assert.equal(metadata.appliesTo, "DiscussionBridge Alpha");
 
   for (const [file, page] of Object.entries(metadata.pages)) {
     assert.match(file, /\.md$/);

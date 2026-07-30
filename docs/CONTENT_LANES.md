@@ -8,14 +8,14 @@ gates pass; they are not the primary public distribution story.
 A content lane maps a group of Astro content to Discourse behavior.
 
 At the product level, a lane is an adapter-neutral connection contract. The
-portable Discussion Bridge Core owns its source and destination identities,
+portable DiscussionBridge Core owns its source and destination identities,
 direction, policy, job state, approvals, retries, provenance, and audit
 evidence. The Astro adapter maps that contract to Astro content roots, routes,
 navigation, rendering, builds, and deployment. Statamic and future adapters
 should map the same contract to their systems rather than creating separate
 control planes.
 
-The Discussion Bridge for Discourse plugin is the present operational home for
+The DiscussionBridge for Discourse plugin is the present operational home for
 the portable core and may operate lanes for multiple publishing systems from
 one Discourse installation. Tier 1 API-only lanes remain supported
 compatibility behavior. The current Astro implementation is prototype and
@@ -182,7 +182,7 @@ Use `discussionSync: false` when a page should display an existing Discourse dis
 
 ## Source Modes
 
-Discussion Bridge should keep the content source of truth explicit.
+DiscussionBridge should keep the content source of truth explicit.
 
 Source-mode operating vocabulary:
 
@@ -333,10 +333,10 @@ For Alpha, keep these layers separate:
 
 - use `discussionTags` or lane `tags` for Discourse topic tags
 - leave ordinary Astro/template tags to the site template
-- keep the Starlight demo close to official Starlight, with Discussion Bridge fields added deliberately
+- keep the Starlight demo close to official Starlight, with DiscussionBridge fields added deliberately
 - use `preset: "starlight"` for Starlight documentation sites and `preset: "astro"` for broader Astro content sites
 
-A future Discussion Bridge feature can optionally map content tags to Discourse tags when configured. That should be opt-in so sites can keep editorial taxonomy separate from forum taxonomy.
+A future DiscussionBridge feature can optionally map content tags to Discourse tags when configured. That should be opt-in so sites can keep editorial taxonomy separate from forum taxonomy.
 
 Possible future config shape:
 
@@ -425,6 +425,20 @@ For OBBBA, the planned lenses are OBBBA Text, Law as Amended, Impact, and
 future Stories. A stable shared `sectionId` should connect related pages across
 these lanes. Reciprocal Related links belong in a generated, adapter-neutral
 relationship/taxonomy manifest, not hand-maintained article bodies.
+
+Law as Amended has a stricter split than a normal Discourse-imported content
+lane. Its inherited implementation was abandoned on 2026-07-27 and is not a
+repair base. The replacement is an empty, OBBBA-specific, official-source-first
+lane: authoritative external sources establish scope and legal state before
+Astro presentation is generated.
+
+Discourse may later add an optional verbatim title, organization
+(tags/category/authored index), legislative-drafting context, topic identity,
+and discussion binding. It is joined only after official scope exists.
+Discourse bodies, OBBBA Text, diagnostics, legacy caches, derivatives, and the
+historical 309-item forum inventory cannot establish legal content, scope, or
+cardinality. No legacy implementation asset, portable Core behavior,
+publication path, or Gate 2 work is authorized by this lane description.
 
 Stories may reference multiple section IDs, and each section may have multiple
 Stories. Adding or removing a Story should require manifest regeneration and

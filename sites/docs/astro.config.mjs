@@ -5,7 +5,8 @@ export default defineConfig({
   site: "https://docs.discussionbridge.dev",
   integrations: [
     starlight({
-      title: "Discussion Bridge Docs",
+      title: "DiscussionBridge Docs",
+      disable404Route: true,
       lastUpdated: true,
       components: {
         PageTitle: "./src/components/PageTitle.astro",
@@ -43,6 +44,8 @@ export default defineConfig({
           items: [
             { label: "Attribution, Ownership, And Licensing", slug: "attribution-ownership-license" },
             { label: "Build/Launch Checklists", slug: "build-launch-checklists" },
+            { label: "Core/Adapter Architecture", slug: "core-adapter-architecture" },
+            { label: "Core/Adapter Roadmap", slug: "core-adapter-implementation-roadmap" },
             { label: "Demo Plan", slug: "demo-plan" },
             { label: "Discourse Field Notes", slug: "discourse-field-notes" },
             { label: "Product Notes", slug: "product-notes" },

@@ -4,8 +4,8 @@ Status: implementation evidence only; not yet approved for live operator use.
 
 ## Absolute credential rule
 
-Every Discussion Bridge operation uses a user-created Discourse API key.
-Discussion Bridge does not replace that credential with OAuth, a Windows
+Every DiscussionBridge operation uses a user-created Discourse API key.
+DiscussionBridge does not replace that credential with OAuth, a Windows
 credential, an invented service account, or another authorization scheme.
 
 A durable named Bridge identity is an operating record backed by a

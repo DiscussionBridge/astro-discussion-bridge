@@ -1,4 +1,4 @@
-# Discussion Bridge Site Runbook: {Site Name}
+# DiscussionBridge Site Runbook: {Site Name}
 
 Status: `{draft | review | approved | current}`  
 Environment: `{development | staging | production}`  
@@ -164,7 +164,7 @@ mode.
 2. Confirm project root `{root directory}` and build command `{command}`.
 3. Confirm the deployment represents the intended commit.
 4. Confirm `{custom domain}` resolves with valid HTTPS.
-5. Confirm Astro `site`, Discussion Bridge `siteUrl`, CLI `SITE_URL`, and the
+5. Confirm Astro `site`, DiscussionBridge `siteUrl`, CLI `SITE_URL`, and the
    public hostname agree.
 6. Confirm Discourse allows the exact public hostname as an embed host.
 7. Verify one page from each lane and its companion topic in both directions.

@@ -2,13 +2,45 @@
 
 Status: existing proof-page package migration and live fullInteractive interaction verified; fresh-import Alpha gate open
 Environment: current live proof lane plus local canonical source  
-Last verified from workspace facts: 2026-07-21  
+Last verified from workspace facts: 2026-07-26
 Companion: [OBBBA Machine Runbook](./OBBBA_ONEBIGBEAUTIFULBILL_MACHINE.md)
 
 > **Alpha feature lock:** This runbook remains part of the cumulative locked
 > Alpha proof set. New OBBBA work must close an existing gate, fix exercised
 > behavior, or be approved explicitly as a scope change. The separate
 > DiscussionBridge.dev dogfood gate does not replace an OBBBA gate.
+
+## Law As Amended
+
+**Law as Amended is a planned lens, not a current live implementation.**
+
+The inherited Bridge Boss 2 Law pipeline was abandoned on 2026-07-27. Do not
+run, repair, copy, or adapt its code, tests, schemas, fixtures, parsers, caches,
+generated evidence, cardinalities, or derivative source models. They are inert
+lessons-learned provenance.
+
+The replacement begins in an empty OBBBA-specific clean room:
+
+1. authoritative external official sources establish scope and legal state;
+2. reviewed evidence drives accessible Astro presentation; and
+3. optional forum context is joined only afterward.
+
+Forum context may include a verbatim title, organization, legislative drafting,
+topic identity, and discussion binding. It may not supply legal body, official
+scope, or official cardinality. The historical 309 count describes forum
+identities/discussion bindings only.
+
+Keep these settled facts:
+
+- Section 20009 is enacted, present, and mandatory.
+- Phil/Boss has settled that Section 70310 does not exist; do not reopen a
+  targeted search.
+- Section 71119 requires official-source-first binding.
+- Contradictory controlling evidence stops work as
+  `BLOCKED - DOCTRINE/EVIDENCE CONFLICT`.
+
+No legacy salvage, publication, Gate 2 work, deployment, reusable Astro-package
+behavior, or portable Core adoption is authorized by this runbook.
 
 The separate DiscussionBridge.dev two-direction dogfood gate is now complete at
 apex commit `d68ffc4`: Astro-managed blog topic `37` and Discourse-managed wiki
@@ -23,7 +55,7 @@ still needs its own `Attribution and Licensing: PASS / FAIL / N/A`, reviewed
 paths, and sanitized review record. Candidate `b09dbce` has that separate PASS;
 see its [sanitized record](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/evidence/ATTRIBUTION_LICENSING_REVIEW_B09DBCE_2026-07-23.md).
 
-This runbook covers the first real OBBBA Discussion Bridge lane:
+This runbook covers the first real OBBBA DiscussionBridge lane:
 
 Current package import behavior also supports explicit `--source-mode
 discourse-imported|discourse-managed` and per-manifest `sourceMode` (`1731547`,
@@ -70,8 +102,8 @@ human explicitly promotes the page to `astro-managed`.
 
 | Responsibility | Lane |
 | --- | --- |
-| OBBBA/Discussion Bridge implementation | Bridge Boss |
-| Discussion Bridge code review | Code Boss |
+| OBBBA/DiscussionBridge implementation | Bridge Boss |
+| DiscussionBridge code review | Code Boss |
 | OBBBA product manuals and runbooks | Product Boss |
 | Manual quality and public/private review | Manual Boss |
 | Cloudflare, DNS, forum, and account operations | Phil/Ops |
@@ -184,6 +216,14 @@ The selected proof mode is `fullInteractive` because the page is long enough to
 show the Discourse interaction after the article and because the OBBBA lane is
 intended to encourage forum participation.
 
+This pairing is cross-site: `onebigbeautifulbill.us` and
+`forum.repealobbba.org` do not share a registrable domain. The proven production
+configuration requires `Embed full app` and `Embed full app signin flow`, plus
+the hidden Discourse setting `SiteSetting.same_site_cookies = "None"`. The
+forum is a two-container installation, so an authorized server operator must
+use the `web_only` production Rails console—not the standalone `app`
+container—and record the previous value before changing it.
+
 Verify:
 
 1. Open `https://onebigbeautifulbill.us/title-i/10101-impact/`.
@@ -220,12 +260,67 @@ account identifier is intentionally omitted from this runbook.
 
 The Discourse bot user is `obbba-bot`. The settled key model is:
 
-- granular publishing/runtime key for future routine bridge operations;
-- separate global/admin-capable diagnostics key for setup checks;
-- diagnostics key kept out of runtime and deployment paths.
+- `publishing granular key` for routine Bridge
+  publishing and synchronization;
+- `diagnostics key` for its established diagnostics
+  workflows; do not infer whether its current key exists from discussion of a
+  proposed storage template;
+- `read-only diagnostics key` for routine GET-only setup
+  checks, comparison, and planning;
+- `bulk/diagnostics/import key` for bounded work that
+  needs broader raw-source or administrative read access. Create this temporary
+  key when needed, then revoke and delete it after the work and evidence review
+  are complete.
+
+The first three keys are durable named identities. The bulk/diagnostics/import
+key is exceptional temporary elevation, not a normal per-run ritual. All four
+remain user-created Discourse API keys.
 
 The key values belong in the approved credential vault. This runbook records
 only names, purposes, and scopes.
+
+Each credential layer answers a different operational question:
+
+- Discourse's API-key **Description** uses one of the four generic role names:
+  `diagnostics key`, `read-only diagnostics key`, `publishing granular key`, or
+  `bulk/diagnostics/import key`.
+- The selected Discourse user/request actor is `obbba-bot`.
+- The protected-vault filename uses the forum, actor, purpose, and creation
+  date: `repealobbba-forum-obbba-bot-...-YYYYMMDD.txt`.
+
+Do not rename one side to match the other; they answer different operational
+questions.
+
+The exact protected-vault filenames are:
+
+```text
+repealobbba-forum-obbba-bot-publishing-key-20260721.txt
+repealobbba-forum-obbba-bot-diagnostics-key-20260725.txt
+repealobbba-forum-obbba-bot-read-only-diagnostics-key-20260725.txt
+repealobbba-forum-obbba-bot-bulk-diagnostics-import-key-TEMP-YYYYMMDD.txt
+```
+
+Use the actual creation date for later replacements. The API-key description
+names the generic role; the filename follows the established forum, actor,
+purpose, and creation-date convention. `TEMP` identifies the exceptional
+lifecycle. The metadata-only template may exist without a key; replace the date
+placeholder only when the temporary key is actually created.
+
+Phil confirmed on 2026-07-25 that the existing publishing granular key, the new
+Global diagnostics key, and the new read-only diagnostics key are active and
+saved. The temporary bulk/diagnostics/import key has not been created.
+
+| Key | Purpose | Scope | Lifecycle |
+| --- | --- | --- | --- |
+| `publishing granular key` | Normal OBBBA Bridge publishing/runtime operations | Granular | Durable |
+| `diagnostics key` | Setup checks, site settings/capability reads, reconciliation, and controlled troubleshooting | Global | Durable; keep out of runtime/deploy paths |
+| `read-only diagnostics key` | GET-only preflight, comparison, planning, and routine verification | Read-only | Durable and preferred for read-only work |
+| `bulk/diagnostics/import key` | Bounded bulk comparison, import, migration, raw-source collection, or recovery | Global | Temporary; create when needed and revoke/delete after work and evidence review |
+
+Both diagnostics identities currently use the admin-capable `obbba-bot`.
+Consequently, both can see information available to that actor, but only the
+Global diagnostics key can perform non-GET API operations. Prefer the read-only
+diagnostics key whenever it can complete the task.
 
 The publishing scopes are:
 

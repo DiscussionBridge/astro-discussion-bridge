@@ -1,0 +1,414 @@
+{
+  "version": 1,
+  "mode": "obbba-law-usc-xml-evidence",
+  "input": {
+    "archiveEvidenceSha256": "5dc17fedeaaccfa834ce41732047685b80006d4158151a103b3ad1ec68d63f79"
+  },
+  "summary": {
+    "documents": 40,
+    "titles": 20,
+    "totalBytes": 996545696
+  },
+  "documents": [
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "5",
+      "sourceArchiveSha256": "69978f606fc0fb52c36364fb2cfa6f3ca868fa6e0ad9704f0051eb969746a157",
+      "fileName": "before-usc05.xml",
+      "bytes": 18875754,
+      "sha256": "d13bd6f72ac9107b5bd8564e8d035588df952c976fb220c8600429831e515d7f",
+      "relativePath": "documents/before-usc05.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "5",
+      "sourceArchiveSha256": "f2250e81cfd06e510e635d41fbf8088974e06496d6ed3723a19d13dbaccbc000",
+      "fileName": "after-usc05.xml",
+      "bytes": 18883757,
+      "sha256": "0e831dddbda30e114030e0ccdaa7eb449e74b8bd94477a5a3aeb365d426136fb",
+      "relativePath": "documents/after-usc05.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "7",
+      "sourceArchiveSha256": "6cc7154b3bd0cf97e2a6cde9998fb4ca4c1bad726f662fed93bc37acec6af535",
+      "fileName": "before-usc07.xml",
+      "bytes": 28543839,
+      "sha256": "caed97e4cc6ea22e13cbc149893f44e2a5bb09f0a418403bc85346471a63d781",
+      "relativePath": "documents/before-usc07.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "7",
+      "sourceArchiveSha256": "dd1f6037104f0e0612b50a25a989b7d492eb84364b87035686624137cef73a8b",
+      "fileName": "after-usc07.xml",
+      "bytes": 28692983,
+      "sha256": "ef337c96a6d2eff3ccfab004c8ba31bd391f00ea0a1d569a8ad460cd38840a14",
+      "relativePath": "documents/after-usc07.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "8",
+      "sourceArchiveSha256": "e56243cdccfcb4f7fb5b244ef149ca6b8603058fb35d1cad30141fcbfa8f3fad",
+      "fileName": "before-usc08.xml",
+      "bytes": 7181556,
+      "sha256": "f188dce0c4b15791d52300548d175e5c0fd18aa9c3d39074f90c152959f2ad3a",
+      "relativePath": "documents/before-usc08.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "8",
+      "sourceArchiveSha256": "f0b831ef81b77f76730dff18ddddebe092583054e097a087fbe0663055336cdd",
+      "fileName": "after-usc08.xml",
+      "bytes": 7347984,
+      "sha256": "99482852ec99d4ccb05261565b5d31a382616b3ae08fab5e5e9d24c0becc78b9",
+      "relativePath": "documents/after-usc08.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "10",
+      "sourceArchiveSha256": "837270e525eb1fafbf5b6065e0e2236b1d5c818018ec30d01ea3fef2c359933f",
+      "fileName": "before-usc10.xml",
+      "bytes": 53143921,
+      "sha256": "29d544259e42d82913e22705db026b3b1e8da70b6f8e565e1677ebe3a915b7d4",
+      "relativePath": "documents/before-usc10.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "10",
+      "sourceArchiveSha256": "c4c36222a426d4c52ee817bfb41943736a38e717a7a455e18e52703236ebd7c5",
+      "fileName": "after-usc10.xml",
+      "bytes": 53148910,
+      "sha256": "ad58cf4a148c5392a3c49a7b508e0c426898ede83abba51f998becdca417780d",
+      "relativePath": "documents/after-usc10.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "12",
+      "sourceArchiveSha256": "59efc587810f135686336c81abcf4f50a09241de5f998cfd60d2667586817301",
+      "fileName": "before-usc12.xml",
+      "bytes": 24057325,
+      "sha256": "c8cc1ba2dc7ef1d4b896e628937a8d6c2a00929cfe296dbce4d50328aa74968c",
+      "relativePath": "documents/before-usc12.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "12",
+      "sourceArchiveSha256": "9d8731cff3099c8702f9b38067fbbd552702bb814e85ff41f7f47088218b68d1",
+      "fileName": "after-usc12.xml",
+      "bytes": 24057906,
+      "sha256": "79d7d082cb3686d635460c61402280efc85779ab1be547276f1431418c5668c4",
+      "relativePath": "documents/after-usc12.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "14",
+      "sourceArchiveSha256": "ed229b41606ed4fc2ff547b9f7eecc5eb3626047c7e14d3a129a546514ca7e86",
+      "fileName": "before-usc14.xml",
+      "bytes": 3298468,
+      "sha256": "7a764ecefdf6f1e579cbc858f121c8140e4b10af244087e0f702b176b49c1309",
+      "relativePath": "documents/before-usc14.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "14",
+      "sourceArchiveSha256": "3ce7b45af27bcc1532812b5136e30e04a29b0d6af9ea09b2b97557d68a9682fd",
+      "fileName": "after-usc14.xml",
+      "bytes": 3308146,
+      "sha256": "4d538e111b74913c57cb8b55932337f6cc0d648ba051adad67ef8f239f36f260",
+      "relativePath": "documents/after-usc14.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "15",
+      "sourceArchiveSha256": "95c88913c339dddbe0bdbc49376aef4052ecb8508b47dad1438099c77c51363e",
+      "fileName": "before-usc15.xml",
+      "bytes": 30811727,
+      "sha256": "e06516eb3cf6cdf4886a5b70aeb418feaae24cb2e6c932aa9bb84ba4993e47a5",
+      "relativePath": "documents/before-usc15.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "15",
+      "sourceArchiveSha256": "e9ab86b1ef4dd9252244bc8cfc1eafcc6a0dfc5c26f9f3d68ee6478755af80d4",
+      "fileName": "after-usc15.xml",
+      "bytes": 30814949,
+      "sha256": "2809d46f107d31984f8823bdc002cee10ad944f36aedb728190f30b070ce7c7e",
+      "relativePath": "documents/after-usc15.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "16",
+      "sourceArchiveSha256": "e619f30642d862b44b1c9b46f87dd0f2bb41a28817a555c6af202cf356f0901f",
+      "fileName": "before-usc16.xml",
+      "bytes": 33083473,
+      "sha256": "436dd4a067514233a681298e20814afa8f0083dbd45bd97048f6a3152ddd05cd",
+      "relativePath": "documents/before-usc16.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "16",
+      "sourceArchiveSha256": "1975040b9026c4b449201f707b8061eefe2bcfdf2ad23c4bc295a70e3a53d422",
+      "fileName": "after-usc16.xml",
+      "bytes": 33101629,
+      "sha256": "868f8ef4232559c4ed082773513fbab3c7848135aed0b9aabfb204a8029065b7",
+      "relativePath": "documents/after-usc16.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "19",
+      "sourceArchiveSha256": "ff2eaa21c54b8568b23be013c35dbcfe54a6f801a836d5ff09c42e85442e2dd1",
+      "fileName": "before-usc19.xml",
+      "bytes": 14443826,
+      "sha256": "1aabd49a2141c6e6ff1efb3bcd6dbd2ffd72c526013d904cffeced5c261a4faf",
+      "relativePath": "documents/before-usc19.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "19",
+      "sourceArchiveSha256": "489094cad0396ddad01d8aeebf3b0cb76357e3182b1d0d454275cf1a176bdf18",
+      "fileName": "after-usc19.xml",
+      "bytes": 14449448,
+      "sha256": "f1ebaf51b8fa06eb694278371674696a3f51103f2eca1f5cbe13151a5377c829",
+      "relativePath": "documents/after-usc19.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "20",
+      "sourceArchiveSha256": "136f6fe64bf2034542dc5aba54c69a9ac2b5b7b363f334cec9110938e3fd1433",
+      "fileName": "before-usc20.xml",
+      "bytes": 22406301,
+      "sha256": "ee2f556b300d6975dd9446179388fd3fc3650f1d9712536e1178b210dc4089e3",
+      "relativePath": "documents/before-usc20.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "20",
+      "sourceArchiveSha256": "97925762de7c64e3a60b545c4f2be2ba81f1dc1c585cd45870ecd6a5b6180bf9",
+      "fileName": "after-usc20.xml",
+      "bytes": 22532961,
+      "sha256": "a11d8fbb60d4743fab07a24d55767e4af855f184aa0c0f260186e38ac54a400d",
+      "relativePath": "documents/after-usc20.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "22",
+      "sourceArchiveSha256": "d918ef7d47fe341c3cfcc3dec367e63d758a4806acf4cf91482a3e44853d0321",
+      "fileName": "before-usc22.xml",
+      "bytes": 28479108,
+      "sha256": "b5186a61b186aa2b651f4109370bb6d5e146348d140ee03fcdb59173f40e8691",
+      "relativePath": "documents/before-usc22.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "22",
+      "sourceArchiveSha256": "689507f05e712433c0d9009ef2cd9fe75a80dc9ed7c18c30aa27111d96ef7616",
+      "fileName": "after-usc22.xml",
+      "bytes": 28457748,
+      "sha256": "43221dd139261168595fa304ff582e2ba24cd41bb1dafef3b4abbba6ee30053c",
+      "relativePath": "documents/after-usc22.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "26",
+      "sourceArchiveSha256": "5b77c3d1e94652e83c60962d59a18c0f3addd273a5f0382bd29d122ba1b20dd4",
+      "fileName": "before-usc26.xml",
+      "bytes": 55009195,
+      "sha256": "bbcf9e11ac3bbff6c7c18898db4517742178fa7626ef32c51fc21f3ded30a14c",
+      "relativePath": "documents/before-usc26.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "26",
+      "sourceArchiveSha256": "3e8722614c41eafee29dfec40bb7b6662df3aec59442bbabb1548da6c60dfa90",
+      "fileName": "after-usc26.xml",
+      "bytes": 55795846,
+      "sha256": "8107f5d2ae884dadfc55ca286118c93016419689baeee5bc70cff188ffec588b",
+      "relativePath": "documents/after-usc26.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "30",
+      "sourceArchiveSha256": "f003df4d1f0f177c773eb764aaa4c01cd6ae044537e16b068149d3282c8ea127",
+      "fileName": "before-usc30.xml",
+      "bytes": 4283277,
+      "sha256": "3c853752e519bd40af6d64171d3c9a0b58f03f2f3716bd56d6dbea04db2aaf98",
+      "relativePath": "documents/before-usc30.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "30",
+      "sourceArchiveSha256": "d5f423372ad36b83f570d74352b6ed5714d88062cc3cf6af866b0f7b7db4a62b",
+      "fileName": "after-usc30.xml",
+      "bytes": 4316199,
+      "sha256": "c0e67c5376a79076d1cf5a9364e2bfc77edf871dfac5ec0899a15df70ed513ec",
+      "relativePath": "documents/after-usc30.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "31",
+      "sourceArchiveSha256": "7dfaf605b818457e6a6d060055015d48397a4d4a6f6ac893a830c51d2bcf3f74",
+      "fileName": "before-usc31.xml",
+      "bytes": 8719286,
+      "sha256": "17e48b9094528509f0960165353155e468ebab944d099bffc5e4c278987adf71",
+      "relativePath": "documents/before-usc31.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "31",
+      "sourceArchiveSha256": "975d9e64eecec56506b04bf0a8682c47da0cf3830fbe79ac7b27534d03210f53",
+      "fileName": "after-usc31.xml",
+      "bytes": 8720024,
+      "sha256": "75555edced85429abcada4a6a4a0397ea50e59b0c682562a816a307eda7911ea",
+      "relativePath": "documents/after-usc31.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "34",
+      "sourceArchiveSha256": "193fe8ca80a2559674cc110441c6e04de88167bf41c0c32055643777035ea3f3",
+      "fileName": "before-usc34.xml",
+      "bytes": 8850873,
+      "sha256": "6ac03e9a4718b43f421a1f98574bb7af39f4cf7c32c1aa0cdfe043d2e470c3e4",
+      "relativePath": "documents/before-usc34.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "34",
+      "sourceArchiveSha256": "f741ff8d3767174b9f3499e3a18baaf6ca2dfc3c227c7368aa63e53635def50e",
+      "fileName": "after-usc34.xml",
+      "bytes": 8858135,
+      "sha256": "c7fb2dd48677fcb551d9657c8a117b7e2e06cab0c7ad79d41ba10560654c542a",
+      "relativePath": "documents/after-usc34.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "42",
+      "sourceArchiveSha256": "6a6367052fb969178ec04573935431505efdffa09249162cd414c81860d826e8",
+      "fileName": "before-usc42.xml",
+      "bytes": 112633097,
+      "sha256": "9195bfa093af383f75beee98701bc6dd8ff9de404061aa46ab8034b6387c1338",
+      "relativePath": "documents/before-usc42.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "42",
+      "sourceArchiveSha256": "0854d8e262835c3af286d6e11c1a7f249d807cf6a6d5bc752910ab7d8f8bc8d6",
+      "fileName": "after-usc42.xml",
+      "bytes": 112855434,
+      "sha256": "e0d8b317ca83113c929115248f553c3404f04935b18d203c593c82fa70cf732e",
+      "relativePath": "documents/after-usc42.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "43",
+      "sourceArchiveSha256": "c32048db0f5b32a32b40876337c36b520d1fb46ee646ee3d19a90f93d3118f21",
+      "fileName": "before-usc43.xml",
+      "bytes": 7983581,
+      "sha256": "4b88889141516f6f449f2139e61cdb0de3d9ec9feb138de7bc443754669202c9",
+      "relativePath": "documents/before-usc43.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "43",
+      "sourceArchiveSha256": "8c7b3b4720d7621534cfc1660e439fc83296361b791ddb631dfc6989725b98e1",
+      "fileName": "after-usc43.xml",
+      "bytes": 8028596,
+      "sha256": "2733c1ddcc042643f66b3d291291f3a48b454ea7f49a9c44f0495ba6e98d4176",
+      "relativePath": "documents/after-usc43.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "47",
+      "sourceArchiveSha256": "a94d43f8a4ff0eabb3ebe15d6ee5093f55f606409191f668f2b45359bb20df1a",
+      "fileName": "before-usc47.xml",
+      "bytes": 6007868,
+      "sha256": "e6a4e47bf52636ab8875067649346d95647d99c8642af918b0c82903e8a4f33f",
+      "relativePath": "documents/before-usc47.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "47",
+      "sourceArchiveSha256": "7678f1f9a4e79eb0b59a0bef789e72dd3d97471afdcde19e3609bae60687a0d2",
+      "fileName": "after-usc47.xml",
+      "bytes": 6019105,
+      "sha256": "3289060e22fe28e5f6510fce4330c4643808f3168e5dcaa0a14de202470840d7",
+      "relativePath": "documents/after-usc47.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "49",
+      "sourceArchiveSha256": "7ce927a3d0f2072f12552b0c1fb46f80509c7d28419e65c0f5f97f048fbb70b4",
+      "fileName": "before-usc49.xml",
+      "bytes": 26827095,
+      "sha256": "147ddad4f5dc483f5f31f91de528d879b90030f1ef7c55cbc99d5457a79fec5f",
+      "relativePath": "documents/before-usc49.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "49",
+      "sourceArchiveSha256": "df7f7adb7622af4bb00cda38425c13b3bde7e642557abb57710f279c6c4b986b",
+      "fileName": "after-usc49.xml",
+      "bytes": 26831597,
+      "sha256": "7ec40db5f5bdb66b0317c3125cbefec902029e406c14c7ac517d0e0f11a3331c",
+      "relativePath": "documents/after-usc49.xml"
+    },
+    {
+      "releaseRole": "before",
+      "releasePoint": "119-27not21",
+      "uscTitle": "51",
+      "sourceArchiveSha256": "0bb2f9a1841d7175df80f0fa818fc73c345cc95f1e3ae9c4086e3ac3c10c012f",
+      "fileName": "before-usc51.xml",
+      "bytes": 2829306,
+      "sha256": "db2425affdc9255972d372e97e637e5d85fdd5cc67fa42397ea81a4ce4e5edf7",
+      "relativePath": "documents/before-usc51.xml"
+    },
+    {
+      "releaseRole": "after",
+      "releasePoint": "119-31",
+      "uscTitle": "51",
+      "sourceArchiveSha256": "96760e03e1edf7fdecb5e53c195375c0c524d3ff98c74fdb8900a65f01c4e0ca",
+      "fileName": "after-usc51.xml",
+      "bytes": 2855463,
+      "sha256": "2ea53b78fe3f1a7b66192831e1204274af993b0738d9d12957946c207ab3d82d",
+      "relativePath": "documents/after-usc51.xml"
+    }
+  ]
+}

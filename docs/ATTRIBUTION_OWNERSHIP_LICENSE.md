@@ -1,6 +1,6 @@
 # Attribution, Ownership, And Licensing
 
-This document records the public Alpha attribution, ownership, and licensing posture for DiscussionBridge and Discussion Bridge for Astro.
+This document records the public Alpha attribution, ownership, and licensing posture for DiscussionBridge and DiscussionBridge for Astro.
 
 **Why Alpha:** attribution and licensing principles are not temporary, but the
 exact package contents, public surfaces, third-party references, and release
@@ -15,7 +15,7 @@ It adapts the WebSynergetics legal and ownership governance working notes for th
 
 DiscussionBridge is an independent WebSynergetics project.
 
-Discussion Bridge for Astro is the Astro integration package in the DiscussionBridge project family.
+DiscussionBridge for Astro is the Astro integration package in the DiscussionBridge project family.
 
 Package name:
 

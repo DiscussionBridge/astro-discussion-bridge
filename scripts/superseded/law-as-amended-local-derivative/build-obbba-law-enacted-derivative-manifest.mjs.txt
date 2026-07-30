@@ -1,0 +1,400 @@
+import { createHash } from "node:crypto";
+import { readdir, readFile, writeFile } from "node:fs/promises";
+import { isAbsolute, relative, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import {
+  normalizeLegalText,
+} from "../packages/astro-discussion-bridge/dist/official-source.js";
+
+const ROOT = fileURLToPath(new URL("../", import.meta.url));
+const PAGE_PLAN_SHA256 =
+  "b2b5abde4e24d878501c007faf0e460d3a7badcabb0272c4728b29580a1e243b";
+const ENROLLED_AUTHORITY_SHA256 =
+  "f10f9b688ed8c7ff0168b72587cfdea2ddc30a55ee0390e659f901b4616309b2";
+
+export async function buildObbbaLawEnactedDerivativeManifest({
+  onProgress,
+} = {}) {
+  return runObbbaLawEnactedDerivativeManifestWithCommitments({
+    onProgress,
+    pagePlanPath: resolve(
+      ROOT,
+      "docs/evidence/OBBBA_LAW_AS_AMENDED_PAGE_INPUT_PLAN_2026-07-26.json",
+    ),
+    pagePlanSha256: PAGE_PLAN_SHA256,
+    enrolledAuthorityPath: resolve(
+      ROOT,
+      "docs/evidence/OBBBA_ENROLLED_SECTION_AUTHORITY_2026-07-26.json",
+    ),
+    enrolledAuthoritySha256: ENROLLED_AUTHORITY_SHA256,
+    contentRoot: resolve(
+      ROOT,
+      "../../Projects/OBBBA/sites/onebigbeautifulbill.us/astro/"
+        + "src/content/docs/obbba-text",
+    ),
+    outputPath: resolve(
+      ROOT,
+      "docs/evidence/OBBBA_LAW_ENACTED_DERIVATIVE_MANIFEST_2026-07-26.json",
+    ),
+  });
+}
+
+export async function runObbbaLawEnactedDerivativeManifestWithCommitments(
+  options,
+) {
+  const outputPath = resolve(options.outputPath);
+  await assertAbsent(outputPath);
+  const [planBytes, authorityBytes] = await Promise.all([
+    readPinned(options.pagePlanPath, options.pagePlanSha256, "page plan"),
+    readPinned(
+      options.enrolledAuthorityPath,
+      options.enrolledAuthoritySha256,
+      "enrolled authority",
+    ),
+  ]);
+  const plan = JSON.parse(planBytes.toString("utf8"));
+  const authority = JSON.parse(authorityBytes.toString("utf8"));
+  const enacted = validateAndSelectEnactedPlan(plan);
+  const authorityBySection = validateEnrolledAuthority(authority);
+  const contentRoot = resolve(options.contentRoot);
+  const files = await listMarkdownFiles(contentRoot);
+  const localBySection = new Map();
+  for (const file of files) {
+    const bytes = await readFile(file);
+    const parsed = parseLocalDerivative(bytes.toString("utf8"));
+    if (!parsed) continue;
+    if (localBySection.has(parsed.sectionId)) {
+      throw new Error(
+        `Enacted derivative section is duplicated: ${parsed.sectionId}.`,
+      );
+    }
+    localBySection.set(parsed.sectionId, { bytes, file, parsed });
+  }
+  const entries = [];
+  const unresolved = [];
+  for (const planned of enacted) {
+    const local = localBySection.get(planned.sectionId);
+    const enrolled = authorityBySection.get(planned.sectionId);
+    if (!local && !enrolled) {
+      unresolved.push({
+        sectionId: planned.sectionId,
+        reason:
+          "enrolled-section-authority-and-local-derivative-are-absent",
+      });
+      continue;
+    }
+    if (!enrolled) {
+      throw new Error(
+        `Enrolled authority is missing Section ${planned.sectionId}.`,
+      );
+    }
+    if (!local) {
+      unresolved.push({
+        sectionId: planned.sectionId,
+        reason: "local-enrolled-derivative-is-absent",
+      });
+      continue;
+    }
+    const { parsed } = local;
+    if (parsed.sectionId !== planned.sectionId
+      || parsed.contentLens !== "obbba-text"
+      || parsed.discourseTopicId !== enrolled.topicId
+      || parsed.discussionSync !== false) {
+      throw new Error(
+        `Enacted derivative frontmatter drift: ${planned.sectionId}.`,
+      );
+    }
+    const semanticSha256 = sha256(
+      normalizeLegalText(stripMarkdownLinks(parsed.body)),
+    );
+    if (semanticSha256 !== enrolled.enrolledLegalTextSha256) {
+      throw new Error(
+        `Enacted derivative legal-text drift: ${planned.sectionId}.`,
+      );
+    }
+    const relativePath = relative(contentRoot, local.file).replaceAll("\\", "/");
+    if (!relativePath || isAbsolute(relativePath)
+      || relativePath.startsWith("../")
+      || !/^title-(?:i|ii|iii|iv|v|vi|vii|viii|ix|x)\/[a-z0-9-]+\.md$/.test(
+        relativePath,
+      )) {
+      throw new Error(
+        `Enacted derivative path is unsafe: ${planned.sectionId}.`,
+      );
+    }
+    entries.push({
+      sectionId: planned.sectionId,
+      localRelativePath: relativePath,
+      localFileSha256: sha256(local.bytes),
+      frontmatter: {
+        title: parsed.title,
+        sectionId: parsed.sectionId,
+        contentLens: parsed.contentLens,
+        discourseTopicId: parsed.discourseTopicId,
+        discussionSync: parsed.discussionSync,
+      },
+      bodySha256: sha256(parsed.body),
+      enrolledSemanticProfile: "enrolled-legal-text",
+      enrolledSemanticSha256: semanticSha256,
+      enrolledAuthority: {
+        sourceUrl: enrolled.sourceUrl,
+        topicId: enrolled.topicId,
+      },
+      govInfoSourceUrl: planned.enactedAuthority.sourceUrl,
+    });
+    await options.onProgress?.({
+      completed: entries.length,
+      total: 81,
+    });
+  }
+  const result = {
+    version: 1,
+    mode: "obbba-law-enacted-derivative-manifest",
+    authorityBoundary:
+      "Local Markdown is a verified publication derivative of enrolled "
+      + "Public Law 119-21 authority; directory presence is not authority.",
+    inputs: {
+      pagePlanSha256: options.pagePlanSha256,
+      enrolledAuthoritySha256: options.enrolledAuthoritySha256,
+    },
+    summary: {
+      plannedEnactedOnly: enacted.length,
+      verifiedDerivatives: entries.length,
+      unresolved: unresolved.length,
+    },
+    entries,
+    unresolved,
+  };
+  validateEnactedDerivativeManifest(result, {
+    pagePlanSha256: options.pagePlanSha256,
+    enrolledAuthoritySha256: options.enrolledAuthoritySha256,
+  });
+  await commitEnactedDerivativeManifestCreateOnly(
+    result,
+    outputPath,
+    options.beforeCommit,
+  );
+  return result;
+}
+
+export async function commitEnactedDerivativeManifestCreateOnly(
+  result,
+  outputPath,
+  beforeCommit,
+) {
+  const reviewedBytes = `${JSON.stringify(result, null, 2)}\n`;
+  await beforeCommit?.(result);
+  if (`${JSON.stringify(result, null, 2)}\n` !== reviewedBytes) {
+    throw new Error("Enacted derivative manifest changed after validation.");
+  }
+  await writeFile(resolve(outputPath), reviewedBytes, {
+    encoding: "utf8",
+    flag: "wx",
+  });
+}
+
+export function validateEnactedDerivativeManifest(value, expected) {
+  exactKeys(value, [
+    "authorityBoundary", "entries", "inputs", "mode", "summary",
+    "unresolved", "version",
+  ]);
+  exactKeys(value.inputs, ["enrolledAuthoritySha256", "pagePlanSha256"]);
+  exactKeys(value.summary, [
+    "plannedEnactedOnly", "unresolved", "verifiedDerivatives",
+  ]);
+  if (value.version !== 1
+    || value.mode !== "obbba-law-enacted-derivative-manifest"
+    || value.authorityBoundary
+      !== "Local Markdown is a verified publication derivative of enrolled "
+        + "Public Law 119-21 authority; directory presence is not authority."
+    || value.inputs.pagePlanSha256 !== expected.pagePlanSha256
+    || value.inputs.enrolledAuthoritySha256
+      !== expected.enrolledAuthoritySha256
+    || value.summary.plannedEnactedOnly !== 82
+    || value.summary.verifiedDerivatives !== 81
+    || value.summary.unresolved !== 1
+    || !Array.isArray(value.entries) || value.entries.length !== 81
+    || !Array.isArray(value.unresolved) || value.unresolved.length !== 1) {
+    throw new Error("Enacted derivative manifest shape/counts are invalid.");
+  }
+  exactKeys(value.unresolved[0], ["reason", "sectionId"]);
+  if (value.unresolved[0].sectionId !== "20009"
+    || value.unresolved[0].reason
+      !== "enrolled-section-authority-and-local-derivative-are-absent") {
+    throw new Error("Enacted derivative unresolved identity is invalid.");
+  }
+  const sections = new Set();
+  const paths = new Set();
+  for (const entry of value.entries) {
+    exactKeys(entry, [
+      "bodySha256", "enrolledAuthority", "enrolledSemanticProfile",
+      "enrolledSemanticSha256", "frontmatter", "govInfoSourceUrl",
+      "localFileSha256", "localRelativePath", "sectionId",
+    ]);
+    exactKeys(entry.frontmatter, [
+      "contentLens", "discourseTopicId", "discussionSync", "sectionId",
+      "title",
+    ]);
+    exactKeys(entry.enrolledAuthority, ["sourceUrl", "topicId"]);
+    if (!/^\d+[A-Za-z]?$/.test(entry.sectionId)
+      || entry.sectionId === "20009" || sections.has(entry.sectionId)
+      || paths.has(entry.localRelativePath.toLowerCase())
+      || entry.frontmatter.sectionId !== entry.sectionId
+      || entry.frontmatter.contentLens !== "obbba-text"
+      || entry.frontmatter.discussionSync !== false
+      || !Number.isSafeInteger(entry.frontmatter.discourseTopicId)
+      || entry.enrolledAuthority.topicId
+        !== entry.frontmatter.discourseTopicId
+      || entry.enrolledSemanticProfile !== "enrolled-legal-text"
+      || typeof entry.frontmatter.title !== "string"
+      || !entry.frontmatter.title
+      || !/^https:\/\/forum\.repealobbba\.org\/t\/\d+$/.test(
+        entry.enrolledAuthority.sourceUrl,
+      )
+      || !/^title-(?:i|ii|iii|iv|v|vi|vii|viii|ix|x)\/[a-z0-9-]+\.md$/.test(
+        entry.localRelativePath,
+      )
+      || !/^https:\/\/www\.govinfo\.gov\/app\/details\/PLAW-119publ21$/.test(
+        entry.govInfoSourceUrl,
+      )) {
+      throw new Error("Enacted derivative entry identity is invalid.");
+    }
+    for (const hash of [
+      entry.bodySha256,
+      entry.enrolledSemanticSha256,
+      entry.localFileSha256,
+    ]) {
+      if (!/^[a-f0-9]{64}$/.test(hash ?? "")) {
+        throw new Error("Enacted derivative commitment hash is invalid.");
+      }
+    }
+    sections.add(entry.sectionId);
+    paths.add(entry.localRelativePath.toLowerCase());
+  }
+  if (sections.size !== 81 || paths.size !== 81
+    || /"(?:body|raw|legalText|markdown)"\s*:/i.test(JSON.stringify(value))) {
+    throw new Error("Enacted derivative manifest content is invalid.");
+  }
+}
+
+function validateAndSelectEnactedPlan(plan) {
+  if (!plan || plan.version !== 1
+    || plan.mode !== "obbba-law-as-amended-page-input-plan"
+    || plan.summary?.pages !== 309
+    || !Array.isArray(plan.entries) || plan.entries.length !== 309) {
+    throw new Error("Enacted derivative page plan is invalid.");
+  }
+  const selected = plan.entries.filter((entry) =>
+    entry.outcome === "enacted-law-only");
+  if (selected.length !== 82
+    || new Set(selected.map(({ sectionId }) => sectionId)).size !== 82) {
+    throw new Error("Enacted-only plan identity set is invalid.");
+  }
+  return selected;
+}
+
+function validateEnrolledAuthority(authority) {
+  if (!authority || authority.version !== 1
+    || authority.mode !== "enrolled-section-authority"
+    || authority.summary?.total !== 307
+    || !Array.isArray(authority.entries)
+    || authority.entries.length !== 307) {
+    throw new Error("Enrolled authority is invalid.");
+  }
+  const result = new Map();
+  for (const entry of authority.entries) {
+    if (!/^\d+[A-Za-z]?$/.test(entry.sectionId ?? "")
+      || !Number.isSafeInteger(entry.topicId)
+      || !/^[a-f0-9]{64}$/.test(entry.enrolledLegalTextSha256 ?? "")
+      || result.has(entry.sectionId)) {
+      throw new Error("Enrolled authority entry is invalid.");
+    }
+    result.set(entry.sectionId, entry);
+  }
+  return result;
+}
+
+function parseLocalDerivative(value) {
+  const match =
+    /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/.exec(value);
+  if (!match) return undefined;
+  const field = (name) =>
+    new RegExp(`^${name}:\\s*"?([^"\\r\\n]+)"?\\s*$`, "m")
+      .exec(match[1])?.[1];
+  const sectionId = field("sectionId");
+  if (!sectionId) return undefined;
+  return {
+    title: field("title"),
+    sectionId,
+    contentLens: field("contentLens"),
+    discourseTopicId: Number(field("discourseTopicId")),
+    discussionSync: field("discussionSync") === "false" ? false : undefined,
+    body: match[2],
+  };
+}
+
+async function listMarkdownFiles(root) {
+  const result = [];
+  for (const item of await readdir(root, { withFileTypes: true })) {
+    const path = resolve(root, item.name);
+    if (item.isDirectory()) result.push(...await listMarkdownFiles(path));
+    else if (item.isFile() && item.name.endsWith(".md")) result.push(path);
+  }
+  return result;
+}
+
+function stripMarkdownLinks(value) {
+  return value.replace(/\[([^\]]+)\]\((?:[^()]|\([^)]*\))*\)/g, "$1");
+}
+
+async function readPinned(path, expectedSha256, label) {
+  const bytes = await readFile(resolve(path));
+  if (!/^[a-f0-9]{64}$/.test(expectedSha256 ?? "")
+    || sha256(bytes) !== expectedSha256) {
+    throw new Error(`Enacted derivative ${label} bytes do not match review.`);
+  }
+  return bytes;
+}
+
+async function assertAbsent(path) {
+  try {
+    await readFile(path);
+    throw new Error(`Enacted derivative output already exists: ${path}.`);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
+
+function exactKeys(value, keys) {
+  if (!value || typeof value !== "object" || Array.isArray(value)
+    || Object.keys(value).sort().join(",") !== [...keys].sort().join(",")) {
+    throw new Error("Enacted derivative schema is invalid.");
+  }
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+async function main() {
+  const result = await buildObbbaLawEnactedDerivativeManifest({
+    onProgress: ({ completed, total }) => {
+      if (completed === total || completed % 10 === 0) {
+        process.stdout.write(`Verified ${completed}/${total} derivatives.\n`);
+      }
+    },
+  });
+  process.stdout.write(
+    `Enacted derivatives: ${result.summary.verifiedDerivatives}; `
+    + `unresolved: ${result.summary.unresolved}.\n`,
+  );
+}
+
+if (process.argv[1]
+  && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  main().catch((error) => {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+  });
+}

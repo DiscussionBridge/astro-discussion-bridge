@@ -1,4 +1,4 @@
-# Discussion Bridge Docs Site
+# DiscussionBridge Docs Site
 
 This is the Starlight site for `docs.discussionbridge.dev`.
 

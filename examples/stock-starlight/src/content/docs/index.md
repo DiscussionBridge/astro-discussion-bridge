@@ -7,6 +7,6 @@ description: A clean Starlight control site for upgrade and warning checks.
 
 This site is intentionally plain.
 
-It exists to verify stock Astro and Starlight behavior before changes are blamed on Discussion Bridge wiring.
+It exists to verify stock Astro and Starlight behavior before changes are blamed on DiscussionBridge wiring.
 
 Use it to test framework upgrades, Starlight warnings, default routing behavior, search output, and deployment settings.

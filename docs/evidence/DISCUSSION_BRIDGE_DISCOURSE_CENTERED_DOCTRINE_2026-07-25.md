@@ -1,4 +1,4 @@
-# Discussion Bridge Discourse-Centered Product Doctrine
+# DiscussionBridge Discourse-Centered Product Doctrine
 
 Date recorded: 2026-07-25  
 Source: Phil through Bridge Boss  
@@ -27,4 +27,6 @@ The following source statement is preserved intact:
 
 This record preserves the decision source. Canonical interpretation and
 implementation status live in Product Notes, the paired manuals, Content
-Lanes, and the build/launch checklist.
+Lanes, and the build/launch checklist. Current Product styling is
+`DiscussionBridge`; the preserved quotation above retains its historical
+wording.

@@ -708,7 +708,7 @@ async function notifySyncFailure(input: {
   try {
     await input.discourse.createPrivateMessage({
       recipients: notification.recipients,
-      title: notification.title ?? "Discussion Bridge publish failed",
+      title: notification.title ?? "DiscussionBridge publish failed",
       raw: syncFailureNotificationBody({
         docsDir: input.options.docsDir,
         mode: input.options.mode,
@@ -732,7 +732,7 @@ function syncFailureNotificationBody(input: {
   error: unknown;
 }): string {
   return [
-    "Discussion Bridge could not complete a publish/sync run.",
+    "DiscussionBridge could not complete a publish/sync run.",
     "",
     `Mode: ${input.mode}`,
     `Docs directory: ${input.docsDir}`,

@@ -50,6 +50,30 @@ test("full replies preserve Mermaid rendering and readable tables", async () => 
   assert.match(replies, /overflow-x: auto/);
 });
 
+test("discussion credit renders once after the complete discussion composition", async () => {
+  const discussion = await readFile(
+    new URL("../src/components/Discussion.astro", import.meta.url),
+    "utf8",
+  );
+  const credit = await readFile(
+    new URL("../src/components/DiscussionCredit.astro", import.meta.url),
+    "utf8",
+  );
+
+  assert.equal((discussion.match(/<DiscussionCredit/g) ?? []).length, 1);
+  assert.ok(
+    discussion.indexOf("<DiscussionCredit") > discussion.indexOf("discussion-bridge-additional"),
+  );
+  assert.match(credit, /data-discussion-bridge-credit/);
+  assert.match(credit, /discussion-bridge-credit__prefix/);
+  assert.match(credit, /discussion-bridge-credit__brand/);
+  assert.match(credit, /aria-label=\{`\$\{credit\.label\} credit`\}/);
+  assert.doesNotMatch(credit, /aria-label="Visit DiscussionBridge"/);
+  assert.match(credit, /prefers-reduced-motion: reduce/);
+  assert.match(credit, /transform: scaleX\(0\)/);
+  assert.match(credit, /transform: scaleX\(1\)/);
+});
+
 test("source disclosure is accessible and links to the source discussion", async () => {
   const source = await readFile(
     new URL("../src/components/DiscussionSource.astro", import.meta.url),

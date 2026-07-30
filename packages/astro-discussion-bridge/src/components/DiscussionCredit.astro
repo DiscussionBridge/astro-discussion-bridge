@@ -1,0 +1,75 @@
+---
+import config from "virtual:discussion-bridge/config";
+
+const credit = config.comments.credit;
+---
+
+{credit.enabled && (
+  <footer
+    class="discussion-bridge-credit"
+    data-discussion-bridge-credit
+    aria-label={`${credit.label} credit`}
+  >
+    <span class="discussion-bridge-credit__prefix">{credit.prefix}</span>{" "}
+    <a
+      class="discussion-bridge-credit__brand"
+      href={credit.href}
+    >
+      {credit.label}
+    </a>
+  </footer>
+)}
+
+<style>
+  .discussion-bridge-credit {
+    margin: 0.45rem 0 0;
+    color: var(--sl-color-gray-3, #555962);
+    text-align: center;
+    font-size: var(--sl-text-sm, 0.875rem);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .discussion-bridge-credit__brand {
+    position: relative;
+    color: inherit;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  .discussion-bridge-credit__brand::after {
+    position: absolute;
+    right: 0;
+    bottom: -0.12em;
+    left: 0;
+    height: 1px;
+    background: currentColor;
+    content: "";
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 180ms ease;
+  }
+
+  .discussion-bridge-credit__brand:hover,
+  .discussion-bridge-credit__brand:focus-visible {
+    color: var(--sl-color-accent-high, #3451b2);
+  }
+
+  .discussion-bridge-credit__brand:hover::after,
+  .discussion-bridge-credit__brand:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .discussion-bridge-credit__brand:focus-visible {
+    border-radius: 0.15rem;
+    outline: 2px solid var(--sl-color-accent-high, #3451b2);
+    outline-offset: 0.2rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .discussion-bridge-credit__brand,
+    .discussion-bridge-credit__brand::after {
+      transition: none;
+    }
+  }
+</style>

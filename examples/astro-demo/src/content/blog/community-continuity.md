@@ -1,5 +1,5 @@
 ---
-title: "Community Continuity With Discussion Bridge"
+title: "Community Continuity With DiscussionBridge"
 description: "An Impact-style companion lens connected to the core Astro guide by a stable section identifier."
 pubDate: "2026-07-23"
 tags:
@@ -12,12 +12,12 @@ discussionCommentsDisplay: "simple"
 discussionSync: false
 ---
 
-# Community Continuity With Discussion Bridge
+# Community Continuity With DiscussionBridge
 
 Publishing is only the first half of a durable public page. The other half is the discussion,
 correction, and lived experience that accumulates after the original article ships.
 
-This page shares a stable section identifier with the core Astro guide. Discussion Bridge uses
+This page shares a stable section identifier with the core Astro guide. DiscussionBridge uses
 that identifier to produce reciprocal related links without requiring either page to know the
 other page's route.
 

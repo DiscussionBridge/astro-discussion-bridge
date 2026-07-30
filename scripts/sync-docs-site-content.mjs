@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,6 +8,19 @@ const sourceDir = path.join(repoRoot, "docs");
 const targetDir = path.join(repoRoot, "sites", "docs", "src", "content", "docs");
 const metadataPath = path.join(sourceDir, "DOCS_PAGE_METADATA.json");
 const refreshMetadata = process.argv.includes("--refresh-metadata");
+const checkOnly = process.argv.includes("--check");
+const expectedChangePrefix = "--expect-change=";
+const expectedChanges = process.argv
+  .filter((argument) => argument.startsWith(expectedChangePrefix))
+  .map((argument) => argument.slice(expectedChangePrefix.length));
+
+if (checkOnly && refreshMetadata) {
+  throw new Error("--check cannot be combined with --refresh-metadata.");
+}
+
+if (!checkOnly && expectedChanges.length > 0) {
+  throw new Error("--expect-change requires --check.");
+}
 
 const docs = [
   "README.md",
@@ -28,9 +41,14 @@ const docs = [
   "KNOWN_ISSUES.md",
   "ATTRIBUTION_OWNERSHIP_LICENSE.md",
   "BUILD_LAUNCH_CHECKLISTS.md",
+  "CORE_ADAPTER_ARCHITECTURE.md",
+  "CORE_ADAPTER_IMPLEMENTATION_ROADMAP.md",
   "DEMO_PLAN.md",
   "DISCOURSE_FIELD_NOTES.md",
   "PRODUCT_NOTES.md",
+  "evidence/DISCUSSION_BRIDGE_DISCOURSE_CENTERED_DOCTRINE_2026-07-25.md",
+  "evidence/DISCUSSION_BRIDGE_PRODUCT_FAMILY_DOCTRINE_2026-07-25.md",
+  "evidence/DISCUSSION_BRIDGE_MISSION_2026-07-25.md",
 ];
 
 const slugByFile = new Map(
@@ -94,7 +112,7 @@ async function readMetadata() {
     return JSON.parse(await readFile(metadataPath, "utf8"));
   } catch (error) {
     if (refreshMetadata && error?.code === "ENOENT") {
-      return { version: 1, appliesTo: "Discussion Bridge Alpha", pages: {} };
+      return { version: 1, appliesTo: "DiscussionBridge Alpha", pages: {} };
     }
     throw new Error(
       `Could not read ${metadataPath}. Run npm run refresh-metadata from sites/docs.`,
@@ -151,19 +169,15 @@ if (refreshMetadata) {
   );
 }
 
-await rm(targetDir, { recursive: true, force: true });
-await mkdir(targetDir, { recursive: true });
-
-for (const { file, markdown, lastUpdated } of pages) {
+function renderPage({ file, markdown, lastUpdated }) {
   const title = pageTitle(markdown, file);
   const body = rewriteLinks(stripFirstHeading(markdown).trimStart(), file);
   const slug = slugByFile.get(file);
-  const targetPath = path.join(targetDir, `${slug}.md`);
   const editUrl = `https://github.com/DiscussionBridge/astro-discussion-bridge/edit/main/docs/${file}`;
 
-  await writeFile(
-    targetPath,
-    [
+  return {
+    file: `${slug}.md`,
+    content: [
       "---",
       `title: ${JSON.stringify(title)}`,
       `lastUpdated: ${lastUpdated}`,
@@ -173,8 +187,62 @@ for (const { file, markdown, lastUpdated } of pages) {
       "",
       body,
     ].join("\n"),
-    "utf8",
-  );
+  };
 }
 
-console.log(`Synced ${docs.length} docs pages to ${targetDir}`);
+const renderedPages = pages.map(renderPage);
+
+if (checkOnly) {
+  const expectedFiles = new Set(renderedPages.map(({ file }) => file));
+  const changed = [];
+
+  for (const { file, content } of renderedPages) {
+    try {
+      const existing = await readFile(path.join(targetDir, file), "utf8");
+      if (existing !== content) changed.push(file);
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      changed.push(file);
+    }
+  }
+
+  try {
+    for (const entry of await readdir(targetDir, { withFileTypes: true })) {
+      if (entry.isFile() && !expectedFiles.has(entry.name)) {
+        changed.push(entry.name);
+      }
+    }
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+
+  changed.sort();
+  console.log(
+    changed.length === 0
+      ? "Docs content check passed: no generated pages would change."
+      : `Docs content check found ${changed.length} changed page(s):\n${changed.join("\n")}`,
+  );
+
+  if (expectedChanges.length > 0) {
+    const expected = [...new Set(expectedChanges)].sort();
+    if (
+      expected.length !== changed.length ||
+      expected.some((file, index) => file !== changed[index])
+    ) {
+      throw new Error(
+        `Generated change set did not match --expect-change allowlist.\nExpected:\n${expected.join("\n") || "(none)"}\nActual:\n${changed.join("\n") || "(none)"}`,
+      );
+    }
+  } else if (changed.length > 0) {
+    process.exitCode = 1;
+  }
+} else {
+  await rm(targetDir, { recursive: true, force: true });
+  await mkdir(targetDir, { recursive: true });
+
+  for (const { file, content } of renderedPages) {
+    await writeFile(path.join(targetDir, file), content, "utf8");
+  }
+
+  console.log(`Synced ${docs.length} docs pages to ${targetDir}`);
+}

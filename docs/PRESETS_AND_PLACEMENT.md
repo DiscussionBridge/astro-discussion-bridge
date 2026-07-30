@@ -1,6 +1,6 @@
 # Presets And Placement
 
-Discussion Bridge for Astro has one package and two primary preset stories:
+DiscussionBridge for Astro has one package and two primary preset stories:
 
 ```js
 discussionBridge({
@@ -18,7 +18,7 @@ The preset should choose sensible defaults. The site still chooses where the dis
 
 Use `preset: "starlight"` for Starlight documentation sites.
 
-Starlight owns its own page model, routes, content schema, and component slots. For Starlight docs pages, the recommended placement is a Starlight `MarkdownContent` override that renders Discussion Bridge after the page body and before Starlight's real footer.
+Starlight owns its own page model, routes, content schema, and component slots. For Starlight docs pages, the recommended placement is a Starlight `MarkdownContent` override that renders DiscussionBridge after the page body and before Starlight's real footer.
 
 That keeps the discussion attached to the content, while the footer remains responsible for footer things such as pagination, edit links, and metadata.
 

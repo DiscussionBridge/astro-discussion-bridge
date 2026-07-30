@@ -1,4 +1,4 @@
-# Discussion Bridge Site Machine Runbook: {Site Name}
+# DiscussionBridge Site Machine Runbook: {Site Name}
 
 Status: `{draft | review | approved | current}`  
 Environment: `{development | staging | production}`  
@@ -307,7 +307,7 @@ discourse_embed_host: "{hostname}"
 Required equality:
 
 ```text
-Astro site URL == Discussion Bridge siteUrl == CLI SITE_URL == public origin
+Astro site URL == DiscussionBridge siteUrl == CLI SITE_URL == public origin
 Discourse embed host == public hostname
 ```
 

@@ -376,7 +376,13 @@ function topicIdentity(
 
 function contentBindings(entries: ContentRelationshipEntry[]): Map<number, ContentRelationshipEntry> {
   const output = new Map<number, ContentRelationshipEntry>();
+  const destinations = new Set<string>();
   for (const entry of entries) {
+    const destination = comparableUrl(entry.url);
+    if (destinations.has(destination)) {
+      throw new Error(`Multiple Astro pages claim public destination ${destination}.`);
+    }
+    destinations.add(destination);
     if (entry.sourceTopicId === undefined) continue;
     if (output.has(entry.sourceTopicId)) {
       throw new Error(`Multiple Astro pages claim Discourse source topic ${entry.sourceTopicId}.`);

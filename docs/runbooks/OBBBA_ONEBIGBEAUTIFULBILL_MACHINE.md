@@ -1,12 +1,51 @@
 # OBBBA Machine Runbook: onebigbeautifulbill.us and forum.repealobbba.org
 
 Status: existing proof-page package migration and live fullInteractive interaction verified; fresh-import Alpha gate open
-Last verified from workspace facts: 2026-07-21  
+Last verified from workspace facts: 2026-07-26
 Companion: [OBBBA Human Runbook](./OBBBA_ONEBIGBEAUTIFULBILL_HUMAN.md)
 
 No secret values belong in this file.
 
 ```yaml
+law_as_amended_authority:
+  status: planned_clean_room_not_live
+  reset_date: 2026-07-27
+  legacy:
+    implementation_base: abandoned
+    disposition: inert_lessons_learned_only
+    salvage_authorized: false
+  clean_room:
+    root_role: OBBBA_specific_site_adapter_evidence
+    admitted_legacy_imports: 0
+    admitted_legacy_artifacts: 0
+    salvaged_assets: 0
+    portable_Core: false
+    reusable_Astro_package: false
+  flow:
+    - authoritative_official_source_scope
+    - preserved_retrieval_and_bytes
+    - neutral_parsing_and_reviewed_evidence
+    - Astro_presentation
+    - optional_forum_context
+  forum_role:
+    allowed_after_official_scope:
+      - verbatim_title
+      - organization
+      - legislative_drafting_context
+      - topic_discussion_binding
+    prohibited:
+      - legal_body_authority
+      - official_scope
+      - official_cardinality
+  invariants:
+    section_20009: present_mandatory
+    section_70310: settled_nonexistent_no_targeted_search
+    section_71119: official_source_first
+    forum_count_309: identity_discussion_only
+  authorization:
+    publication: false
+    gate_2: false
+    portable_adoption: false
 alpha_feature_lock:
   cumulative_OBBBA_gates_preserved: true
   allowed_new_work:
@@ -84,6 +123,21 @@ current_integration:
   package_installed: true
   package_version: 0.1.0
   alpha_artifact: vendor/astro-discussion-bridge-0.1.0-alpha-69846cf-64a151bd.tgz
+  embed_relationship: cross-site
+  discourse_container_layout: two-container
+  discourse_web_container: web_only
+  embed_full_app: true
+  embed_full_app_signin_flow: true
+  same_site_cookies:
+    prior_verified: Lax
+    current_verified: None
+    hidden_setting: true
+  verified_result:
+    date: 2026-07-26
+    top_level_sign_in: pass
+    iframe_session_recognition: pass
+    embedded_editor: pass
+    embedded_reply: pass
   alpha_artifact_sha256: 64a151bd1faa7f7453f38b4c8d1b3b5e7bf79a93cfcd4bd48444369c17f2afac
   package_commits:
     - 54bc429
@@ -281,6 +335,58 @@ topics:status
 
 Credential references belong in the private OBBBA credential vault. This
 runbook must not name a key value or expose a vault payload.
+
+```yaml
+credential_identities:
+  naming_contract:
+    discourse_key_description: connected_public_site_plus_key_role
+    selected_user_and_request_actor: discourse_forum_identity
+    vault_filename: forum_plus_actor_plus_purpose_plus_creation_date
+    example_description: diagnostics key
+    example_actor: obbba-bot
+    example_vault_filename: repealobbba-forum-obbba-bot-diagnostics-key-20260725.txt
+  durable_publishing:
+    name: publishing granular key
+    vault_filename: repealobbba-forum-obbba-bot-publishing-key-20260721.txt
+    purpose: runtime_publishing
+    scope: granular
+    use: [publish-new, sync-existing, publish-and-sync, check-discourse_basic_limits]
+    prohibited_use: [setup_diagnostics, site_settings_reads, admin_troubleshooting]
+  durable_diagnostics:
+    name: diagnostics key
+    vault_filename: repealobbba-forum-obbba-bot-diagnostics-key-20260725.txt
+    purpose: diagnostics_and_setup
+    scope: global
+    use: [check-discourse, setup_verification, site_settings, capabilities, embed_topic_reconciliation, controlled_troubleshooting]
+    runtime_or_deploy_path: prohibited
+  durable_read_only_diagnostics:
+    name: read-only diagnostics key
+    vault_filename: repealobbba-forum-obbba-bot-read-only-diagnostics-key-20260725.txt
+    purpose: read_only_diagnostics_and_planning
+    scope: read-only
+    use: [GET_preflight, comparison_reports, routine_setup_verification, site_settings, capabilities, embed_topic_checks]
+    preferred_for_GET_only_work: true
+  temporary_bulk:
+    name: bulk/diagnostics/import key
+    vault_filename_pattern: repealobbba-forum-obbba-bot-bulk-diagnostics-import-key-TEMP-YYYYMMDD.txt
+    metadata_only_template_may_exist_without_key: true
+    purpose: bounded_bulk_diagnostics_and_import
+    scope: global
+    use: [bulk_comparison, import, migration, raw_source_collection, recovery]
+    create_only_when_narrower_keys_cannot_complete_task: true
+scope_change_rule: inspect_all_current_consumers_before_changing_any_durable_identity
+current_key_existence:
+  operator_confirmed_at: 2026-07-25
+  publishing_granular: active_existing
+  diagnostics_global: active_new
+  diagnostics_read_only: active_new
+  bulk_diagnostics_import: not_created
+temporary_bulk_lifecycle:
+  create: only_for_bounded_work_requiring_broader_reads
+  use: import_comparison_or_migration_window
+  revoke_and_delete: after_completion_and_evidence_review
+  normal_per_run_churn: prohibited
+```
 
 ## 6. Safe Diagnostics Command
 
@@ -619,7 +725,7 @@ OBBBA Starlight integration invariant:
 ```yaml
 page_boundary_component: src/components/MarkdownContent.astro
 starlight_wiring: starlight.components.MarkdownContent
-content_schema: docsSchema extended with Discussion Bridge fields
+content_schema: docsSchema extended with DiscussionBridge fields
 per_page_explicit_Discussion_component: prohibited_when_boundary_override_active
 verified_single_fullInteractive_instances:
   - { section: 10101, topic_id: 434, count: 1, hero: true }
@@ -868,15 +974,25 @@ source_disclosure:
   safe_links_only: absolute_http_https
   no_safe_link_behavior: render_notice_without_link
 comments_boundary_credit:
-  implementation_state: planned_not_current_artifact
-  candidate_text:
-    - Discussion connection by Discussion Bridge
-    - Discourse connection by Discussion Bridge
-  canonical_product_link: required
-  accessible_and_visually_secondary: required
+  implementation_state: implemented_in_package_contract
+  canonical_contract: docs/MACHINE_MANUAL.md comments_credit
+  default_text: Connected by DiscussionBridge
+  canonical_product_link: https://discussionbridge.dev/
+  enabled_by_default: true
+  operator_disable_supported: true
+  safe_customization: [prefix_plain_text, label_plain_text, absolute_http_https_href]
+  accessible_and_visually_secondary: true
+  placement: centered_after_complete_discussion_surface
+  full_interactive_placement: outside_cross_origin_iframe
+  reduced_motion: true
   modes: [simple, full, fullInteractive]
   site_content_hard_coding: prohibited
-  final_wording_default_config: unresolved
+  independent_of_discourse_powered_by: true
+  stable_classes:
+    - discussion-bridge-credit
+    - discussion-bridge-credit__prefix
+    - discussion-bridge-credit__brand
+  stable_data_hooks: [data-discussion-bridge-credit]
 ```
 
 ```yaml
@@ -1047,7 +1163,7 @@ failure handling, migration steps, or recovery:
 
 1. update this Machine Runbook;
 2. update the OBBBA Human Runbook;
-3. update the general Discussion Bridge manuals when the fact is reusable;
+3. update the general DiscussionBridge manuals when the fact is reusable;
 4. route implementation changes to Bridge Boss;
 5. route code review to Code Boss;
 6. route manual quality review to Manual Boss;

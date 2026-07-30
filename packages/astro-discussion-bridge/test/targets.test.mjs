@@ -84,16 +84,16 @@ test("explicit connection jobs require complete reader-facing metadata", () => {
     parseDiscussionConnectionJobs(JSON.stringify({
       community: {
         purpose: "product support",
-        audience: "Discussion Bridge Community",
-        callToAction: "Ask the Discussion Bridge Community",
+        audience: "DiscussionBridge Community",
+        callToAction: "Ask the DiscussionBridge Community",
         description: "Get implementation help and share what you learn.",
       },
     })),
     {
       community: {
         purpose: "product support",
-        audience: "Discussion Bridge Community",
-        callToAction: "Ask the Discussion Bridge Community",
+        audience: "DiscussionBridge Community",
+        callToAction: "Ask the DiscussionBridge Community",
         description: "Get implementation help and share what you learn.",
       },
     },

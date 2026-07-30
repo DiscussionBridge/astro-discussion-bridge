@@ -6,6 +6,36 @@ import { pathToFileURL } from "node:url";
 import test from "node:test";
 import discussionBridge from "../dist/index.js";
 
+test("credit defaults are public and unsafe link protocols fail closed", async () => {
+  let plugins = [];
+  const integration = discussionBridge({
+    discourseUrl: "https://community.example.com",
+  });
+  await integration.hooks["astro:config:setup"]({
+    config: { root: pathToFileURL(`${process.cwd()}${path.sep}`) },
+    updateConfig(config) {
+      plugins = config.vite?.plugins ?? [];
+    },
+  });
+  const resolved = plugins[0].resolveId("virtual:discussion-bridge/config");
+  const source = plugins[0].load(resolved);
+  const config = JSON.parse(source.replace(/^export default /, "").replace(/;$/, ""));
+
+  assert.deepEqual(config.comments.credit, {
+    enabled: true,
+    prefix: "Connected by",
+    label: "DiscussionBridge",
+    href: "https://discussionbridge.dev/",
+  });
+  assert.throws(
+    () => discussionBridge({
+      discourseUrl: "https://community.example.com",
+      comments: { credit: { href: "javascript:alert(1)" } },
+    }),
+    /comments\.credit\.href must be an absolute HTTP\(S\) URL/,
+  );
+});
+
 test("invalid site-level connection jobs fail during integration setup", () => {
   assert.throws(
     () => discussionBridge({
@@ -14,8 +44,8 @@ test("invalid site-level connection jobs fail during integration setup", () => {
         jobs: {
           community: {
             purpose: "product support",
-            audience: "Discussion Bridge Community",
-            callToAction: "Ask the Discussion Bridge Community",
+            audience: "DiscussionBridge Community",
+            callToAction: "Ask the DiscussionBridge Community",
             description: "Get implementation help.",
             unsupported: undefined,
           },

@@ -18,7 +18,7 @@ test("CLI accepts --post-as and reports the selected request actor", async () =>
       path.join(docsDir, "actor.md"),
       [
         "---",
-        'title: "Discussion Bridge Request Actor Test"',
+        'title: "DiscussionBridge Request Actor Test"',
         "---",
         "",
         "This dry run verifies the selected Discourse request actor.",

@@ -1,12 +1,12 @@
 # Discourse Field Notes
 
-This is a living list of Discourse issues, feature needs, wishlist items, shortcomings, and real-world examples discovered while building and testing Discussion Bridge for Astro.
+This is a living list of Discourse issues, feature needs, wishlist items, shortcomings, and real-world examples discovered while building and testing DiscussionBridge for Astro.
 
 ## Real-World Test Context
 
 - Forum: `https://forum.discussionbridge.dev`
 - Astro demo target: `https://astro.demo.discussionbridge.dev`
-- Astro/Starlight demo target: `https://astrostarlight.demo.discussionbridge.dev`
+- Astro/Starlight demo target: `https://astrostarlightdemo.discussionbridge.dev`
 - Primary category: `Discussion Bridge for Astro`, category ID `5`
 - Bot user: `discussbridge-bot`
 - Current key model under test:
@@ -73,7 +73,7 @@ This is a living list of Discourse issues, feature needs, wishlist items, shortc
 ### Cloudflare-CDN-backed production forum
 
 Field confirmation on 2026-07-22 established that `forum.repealobbba.org` is
-served through Cloudflare CDN. Discussion Bridge successfully exercised
+served through Cloudflare CDN. DiscussionBridge successfully exercised
 `check-discourse` and API reads, Discourse-to-Astro imports, target/topic
 reconciliation, protected source links, `fullInteractive` comments, signed-in
 reply behavior, five live source disclosures, and no-writeback safety against
@@ -83,7 +83,7 @@ This is evidence for the tested deployment, not a universal CDN/WAF guarantee.
 Cloudflare configuration must preserve API paths, JSON endpoints, embed and
 full-app routes, authentication/cookies, and websockets. If a request behaves
 differently through the edge than at origin, inspect caching and WAF behavior
-before changing Discussion Bridge.
+before changing DiscussionBridge.
 
 - Tier 1 should stay API-only and useful without a Discourse plugin.
 - Tier 1 should document a practical two-key model:
@@ -112,6 +112,33 @@ before changing Discussion Bridge.
   - `Embed support markdown`: yes
   - `Embed set canonical URL`: yes
   - `Embed unlisted`: yes
+
+### Proven cross-site full-app sign-in: OBBBA
+
+On 2026-07-26, the full-app embed from `onebigbeautifulbill.us` to
+`forum.repealobbba.org` rendered correctly but remained at **Waiting for
+sign-in** after a successful top-level login. Unlike the Citizen Activist
+same-site pairing, these hosts use different registrable domains and therefore
+form a genuinely cross-site iframe relationship.
+
+The self-hosted forum uses the two-container Discourse layout. The authorized
+operator entered the `web_only` container's production Rails console, recorded
+`SiteSetting.same_site_cookies` as `"Lax"`, and changed it to `"None"`. No
+rebuild was required. With a fresh forum session, the embed recognized the
+signed-in user, returned to the open editor, and successfully submitted a
+reply.
+
+Operational lessons:
+
+- Hidden settings may not appear in Discourse Admin search.
+- Do not use `./launcher enter app` on a two-container installation; identify
+  and enter the actual web container.
+- Use the production Rails environment explicitly.
+- Record the exact prior value before changing it so rollback is deterministic.
+- Do not keep repeating the popup sign-in flow when the iframe cannot receive
+  the cookie.
+- `SameSite=None` requires HTTPS/Secure cookies and narrowly authorized embed
+  origins. Keep `Embed any origin` disabled and retain CSRF protections.
 
 ## Possible Meta/Feature Request Topics
 

@@ -1,4 +1,4 @@
-# Discussion Bridge Core/Adapter Architecture
+# DiscussionBridge Core/Adapter Architecture
 
 Status: Authoritative product architecture  
 Decision date: 2026-07-25  
@@ -7,7 +7,7 @@ current Astro implementation has already been separated
 
 ## Canonical Definition
 
-Discussion Bridge is a Discourse-centered, adapter-driven content and
+DiscussionBridge is a Discourse-centered, adapter-driven content and
 discussion orchestration system whose portable core connects Discourse with one
 or more external publishing systems while preserving authority, provenance,
 policy, and auditability.
@@ -23,7 +23,7 @@ The intact decision statement is preserved as source evidence in
 
 ## System Boundaries
 
-### Discussion Bridge Core
+### DiscussionBridge Core
 
 The portable core owns domain behavior that must remain consistent across every
 host and publishing system:
@@ -41,7 +41,7 @@ frontmatter shape, or Statamic collection shape to be understood or tested.
 Host- and adapter-specific representations translate to and from portable core
 contracts.
 
-### Discussion Bridge for Discourse
+### DiscussionBridge for Discourse
 
 The Discourse plugin hosts and operates the core. It is the natural control
 plane and primary operating surface for almost all Bridge work:
@@ -137,7 +137,7 @@ testable with fake credentials and fixtures.
 
 ## Ownership And Collaboration
 
-- **Bridge Boss** owns Discussion Bridge behavior, core/adapter implementation,
+- **Bridge Boss** owns DiscussionBridge behavior, core/adapter implementation,
   integration choices, acceptance evidence, and coordinated gates.
 - **Discourse Boss** is the close platform partner for plugin architecture,
   Discourse conventions and internals, compatibility, installation, operations,
@@ -150,7 +150,7 @@ testable with fake credentials and fixtures.
   ownership decisions.
 
 General Discourse core/plugin work remains with Discourse Boss unless it is
-specifically Discussion Bridge product behavior. Bridge-specific plugin work is
+specifically DiscussionBridge product behavior. Bridge-specific plugin work is
 led by Bridge Boss with close Discourse Boss support.
 
 ## Portability Rule
@@ -163,16 +163,16 @@ approval, or audit semantics.
 
 ## One Product Family
 
-Everything remains under the Discussion Bridge tent:
+Everything remains under the DiscussionBridge tent:
 
-- Discussion Bridge for Discourse is the free, fully featured plugin and local
+- DiscussionBridge for Discourse is the free, fully featured plugin and local
   host.
-- Discussion Bridge for Astro is the free, fully featured Astro adapter.
-- Discussion Bridge SaaS is the paid, managed standalone host for multi-CMS,
+- DiscussionBridge for Astro is the free, fully featured Astro adapter.
+- DiscussionBridge SaaS is the paid, managed standalone host for multi-CMS,
   multi-site, and multi-community orchestration.
-- Discussion Bridge Services provides paid implementation, migration,
+- DiscussionBridge Services provides paid implementation, migration,
   customization, training, operations, and extensive support.
-- Discussion Bridge Community provides public documentation and community
+- DiscussionBridge Community provides public documentation and community
   support, with team participation as capacity permits.
 
 These are deployment and service models over one product architecture, not

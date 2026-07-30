@@ -1,6 +1,6 @@
 ---
-title: "Discussion Bridge for Astro: Plain Markdown Demo"
-description: A plain Markdown page proving Discussion Bridge for Astro docs do not need to become MDX.
+title: "DiscussionBridge for Astro: Plain Markdown Demo"
+description: A plain Markdown page proving DiscussionBridge for Astro docs do not need to become MDX.
 discourseTopicId: 20
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/existing-md-page/20"
 
@@ -9,8 +9,8 @@ discussionLastSyncedAt: "2026-07-16T19:20:33.442Z"
 
 ---
 
-# Discussion Bridge for Astro: Plain Markdown Demo
+# DiscussionBridge for Astro: Plain Markdown Demo
 
 This page is intentionally `.md`, not `.mdx`.
 
-The Starlight `MarkdownContent` override renders the Discussion Bridge component after the document content.
+The Starlight `MarkdownContent` override renders the DiscussionBridge component after the document content.

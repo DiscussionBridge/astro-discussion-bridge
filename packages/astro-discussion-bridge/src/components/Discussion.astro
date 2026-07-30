@@ -9,6 +9,7 @@ import {
 } from "astro-discussion-bridge/targets";
 import DiscourseDiscussion from "./DiscourseDiscussion.astro";
 import DiscourseReplies from "./DiscourseReplies.astro";
+import DiscussionCredit from "./DiscussionCredit.astro";
 
 interface Props {
   class?: string;
@@ -66,6 +67,9 @@ const discourseUrl = presentation.primary?.discourseUrl ?? Astro.props.discourse
 const targetLabels = Astro.props.targetLabels ?? {};
 const primaryJob = presentation.primary?.connectionJob;
 const heading = Astro.props.heading ?? primaryJob?.callToAction;
+const discussionRendered = display === "full"
+  ? config.replies.enabled && Boolean(topicId)
+  : config.comments.enabled;
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value : undefined;
@@ -159,6 +163,8 @@ function booleanValue(value: unknown): boolean | undefined {
     </ul>
   </nav>
 )}
+
+{discussionRendered && <DiscussionCredit />}
 
 <style>
   .discussion-bridge-connection {

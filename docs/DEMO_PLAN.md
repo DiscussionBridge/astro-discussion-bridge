@@ -2,13 +2,13 @@
 
 ## Goal
 
-Develop in public with a visible path from local preview to a live Cloudflare demo backed by a real Discourse sandbox. Discussion Bridge is Discourse-first; the Astro demo should prove an excellent Discourse integration across Astro, Starlight, and deployment targets.
+Develop in public with a visible path from local preview to a live Cloudflare demo backed by a real Discourse sandbox. DiscussionBridge is Discourse-first; the Astro demo should prove an excellent Discourse integration across Astro, Starlight, and deployment targets.
 
 ## Demo Source Ownership
 
 Canonical demo implementations live with the product package that proves them.
 
-- `astro-discussion-bridge` owns canonical package code, tests, examples, and demo source for Discussion Bridge for Astro.
+- `astro-discussion-bridge` owns canonical package code, tests, examples, and demo source for DiscussionBridge for Astro.
 - `discussionbridge.dev` owns the apex/product site, docs/site ecosystem, demo presentation/index pages, links, and support structure.
 
 Do not duplicate demo source into `discussionbridge.dev` just because a deploy target is easier to wire that way. If a separate deploy repo is intentionally needed later, make that a named architecture decision rather than an ad hoc copy.
@@ -27,7 +27,7 @@ Do not duplicate demo source into `discussionbridge.dev` just because a deploy t
 
 3. Live Astro/Starlight demo on Cloudflare
    - Deploy the Starlight docs demo fixture to a public Cloudflare URL.
-   - Use `astrostarlight.demo.discussionbridge.dev` as the stable Astro/Starlight demo hostname.
+   - Use `astrostarlightdemo.discussionbridge.dev` as the stable Astro/Starlight demo hostname.
    - Use this as the real docs-site embed-host test target.
 
 4. Live Discourse category for Astro
@@ -42,7 +42,7 @@ Do not duplicate demo source into `discussionbridge.dev` just because a deploy t
    - Current fallback: global/admin-capable diagnostics key for setup checks; granular publishing key where it can perform create/update/tag/read actions.
    - Use `check-discourse` as the read-only lane readiness check before live publishing. It reads `/site/settings.json` for client-visible authoring limits, `/site.json` for user-specific tag capabilities such as `can_tag_topics` and `can_create_tag`, `/categories.json` for the configured category, and `/tags.json` for requested tag inventory. Current granular publishing key returns `403` for some site-level endpoints, so diagnostics may need a global key or explicit configured limits.
    - Topic visibility and retitling replied topics require a Discourse user with enough topic-management authority.
-   - Enable embedding for localhost preview, `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, and `astrostarlight.demo.discussionbridge.dev`.
+   - Enable embedding for localhost preview, `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, and `astrostarlightdemo.discussionbridge.dev`.
    - Pre-integration backup checkpoint: `discussion-bridge-forum-2026-07-16-140054-v20260715090434.tar.gz`.
 
 ## Test Matrix
@@ -75,7 +75,7 @@ Do not duplicate demo source into `discussionbridge.dev` just because a deploy t
 
 Use maintenance syncs as explicit tests, not one-off commands. Before syncing existing live topics, confirm the local demo package is current by checking the installed CLI output or searching the installed package for the expected companion-body text. Then run a lane dry run with `--details`, inspect the computed title, page URL, topic ID, output status, and reason text, run the live sync, and verify both Discourse and Astro. Use `--force` when the maintenance intent is to rewrite first posts even though page source hashes are unchanged, such as after changing the companion topic template.
 
-When testing live deployed Astro behavior, run sync from the canonical demo source for the deployed site. For Discussion Bridge for Astro demos, that source should live under `C:\CodeProjects\CodeWorksLabs\astro-discussion-bridge\examples\...`. Transitional deploy copies under `discussionbridge.dev` should be treated as deployment artifacts or cleanup candidates, not as long-term source of truth.
+When testing live deployed Astro behavior, run sync from the canonical demo source for the deployed site. For DiscussionBridge for Astro demos, that source should live under `C:\CodeProjects\CodeWorksLabs\astro-discussion-bridge\examples\...`. Transitional deploy copies under `discussionbridge.dev` should be treated as deployment artifacts or cleanup candidates, not as long-term source of truth.
 
 Blog lane smoke test:
 
@@ -83,7 +83,7 @@ Blog lane smoke test:
 npx astro-discussion-bridge sync-existing src/content/blog `
   --route-base blog `
   --discourse-url https://forum.discussionbridge.dev `
-  --site-url https://astrostarlight.demo.discussionbridge.dev `
+  --site-url https://astrostarlightdemo.discussionbridge.dev `
   --category-id 5 `
   --tags discussionbridge,starlight-demo,blog `
   --force `
@@ -101,11 +101,15 @@ Use `demo.discussionbridge.dev` as the public demo hub, then put each runnable d
 
 - `demo.discussionbridge.dev` for the demo index/chooser.
 - `astro.demo.discussionbridge.dev` for the plain Astro/core demo.
-- `astrostarlight.demo.discussionbridge.dev` for the Astro + Starlight demo.
+- `astrostarlightdemo.discussionbridge.dev` for the Astro + Starlight demo.
 - `stockstarlight.demo.discussionbridge.dev` for a clean stock Starlight control site.
 - Future integration lanes should follow the same pattern, such as `statamic.demo.discussionbridge.dev` and a more specific Statamic demo host when needed.
 
-Older internal/test hostnames such as `astrodemo.discussionbridge.dev`, `astro.discussionbridge.dev`, `astrostarlight.discussionbridge.dev`, and `astrostarlightdemo.discussionbridge.dev` should be treated as transitional test artifacts, redirects, or retired names, not the public Alpha naming pattern.
+Older internal/test hostnames such as `astrodemo.discussionbridge.dev`,
+`astro.discussionbridge.dev`, `astrostarlight.discussionbridge.dev`, and the
+BB2-introduced `astrostarlight.demo.discussionbridge.dev` are transitional test
+artifacts, redirects, or retired names. The settled Astro + Starlight hostname
+is `astrostarlightdemo.discussionbridge.dev`.
 
 As part of the Alpha gate, verify each public demo hostname, Discourse embed host setting, companion topic URL, Cloudflare Pages project, and docs link uses the public hostname rather than a transitional test hostname.
 
@@ -149,8 +153,8 @@ node scripts/tag-discourse-topics.mjs --tag historical-reference 20 21 24 28
 - 2026-07-16: Starlight demo synced existing first posts for topics 20 and 21.
   - Follow-up `sync-existing --dry-run` reported both pages unchanged.
   - Source tracking frontmatter now includes `discussionSourceHash` and `discussionLastSyncedAt`.
-- 2026-07-16: Naming pass aligned the demo with the Discussion Bridge product-family strategy.
-  - Astro lane name: Discussion Bridge for Astro.
+- 2026-07-16: Naming pass aligned the demo with the DiscussionBridge product-family strategy.
+  - Astro lane name: DiscussionBridge for Astro.
   - Topic 20 title updated through the bot key because the topic has no replies.
   - Topic 21 first post synced, but its topic title remained unchanged through the topic update API after replies existed.
   - Promoting `discussbridge-bot` to moderator allowed `sync-existing --unlist` to unlist topics 20 and 21.
@@ -170,7 +174,7 @@ node scripts/tag-discourse-topics.mjs --tag historical-reference 20 21 24 28
   - Intended public URL: `https://stockstarlight.demo.discussionbridge.dev/`
   - `npm install` completed with 0 vulnerabilities.
   - `npm run build` completed.
-  - The clean stock control still emitted `Entry docs -> 404 was not found`, so that warning is not caused by Discussion Bridge wiring.
+  - The clean stock control still emitted `Entry docs -> 404 was not found`, so that warning is not caused by DiscussionBridge wiring.
   - Investigation found the likely source in `@astrojs/starlight/utils/routing/data.ts`: Starlight's generated 404 route calls `getEntry('docs', '404')` to check for an optional user 404 entry. When no `src/content/docs/404.md` exists, Astro logs the missing entry even though Starlight falls back correctly.
   - `disable404Route: true` removes the warning, confirming it is tied to the injected Starlight 404 route.
   - Adding `src/content/docs/404.md` removes the missing-entry warning but creates a route conflict warning because the docs catch-all also tries to render `/404`, so that is not a clean workaround.
@@ -197,14 +201,12 @@ C:\CodeProjects\Planning\Procedure Docs\standards\product-demo-domain-pattern.md
 - `discussionbridge.com` redirects to `discussionbridge.dev`.
 - `demo.discussionbridge.dev` hosts the public demo index/chooser.
 - `astro.demo.discussionbridge.dev` hosts the live plain Astro/core demo.
-- `astrostarlight.demo.discussionbridge.dev` hosts the live Astro/Starlight demo.
+- `astrostarlightdemo.discussionbridge.dev` hosts the live Astro/Starlight demo.
 - `stockstarlight.demo.discussionbridge.dev` hosts the clean stock Starlight control.
 - `forum.discussionbridge.dev` hosts the Discourse instance.
-- Discussion Bridge is the umbrella product family.
-- Discussion Bridge for Astro is this Astro/Starlight integration and demo lane.
-- Future integration lanes can use parallel names such as Discussion Bridge for Statamic.
+- DiscussionBridge is the umbrella product family.
+- DiscussionBridge for Astro is this Astro/Starlight integration and demo lane.
+- Future integration lanes can use parallel names such as DiscussionBridge for Statamic.
 - Public demo hostnames should sit under the demo lane, then start with the integration family: `astro.demo`, `astrostarlight.demo`, `statamic.demo`, `statamicsomething.demo`.
 - Tags should carry product, integration, demo, and provider details such as `discussionbridge`, `astro`, `astro-demo`, `starlight-demo`, `cloudflare-demo`.
-
-
 

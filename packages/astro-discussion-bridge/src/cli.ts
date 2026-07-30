@@ -577,7 +577,7 @@ function countNavigationNodes(nodes: NavigationNode[]): number {
 function printUsage(error?: string) {
   if (error) console.error(error);
   if (error) console.error("");
-  console.error("Discussion Bridge for Astro CLI");
+  console.error("DiscussionBridge for Astro CLI");
   console.error("");
   console.error("Usage:");
   console.error("  astro-discussion-bridge publish-new [docsDir] [options]");
@@ -666,7 +666,7 @@ function printUsage(error?: string) {
 }
 
 function printMissingConfiguration(input: { command: string; missing: string[]; dryRun: boolean }) {
-  console.error("Discussion Bridge is missing required configuration.");
+  console.error("DiscussionBridge is missing required configuration.");
   console.error("");
   console.error(`Command: ${input.command}${input.dryRun ? " --dry-run" : ""}`);
   console.error("Missing:");

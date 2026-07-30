@@ -1,0 +1,112 @@
+import assert from "node:assert/strict";
+import {
+  access, mkdir, mkdtemp, readFile, rm, writeFile,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+import { randomUUID } from "node:crypto";
+
+import {
+  commitLawTreeAndEvidence,
+} from "../write-obbba-law-as-amended-pages.mjs";
+
+async function staged(root) {
+  const stage = join(root, "stage");
+  const ownershipToken = randomUUID();
+  await mkdir(stage);
+  await writeFile(join(stage, "page.md"), "page", "utf8");
+  await writeFile(join(stage, ".discussionbridge-owner"), ownershipToken,
+    "utf8");
+  return { stage, ownershipToken };
+}
+
+test("whole-tree commit and evidence succeed as one unit", async () => {
+  const root = await mkdtemp(join(tmpdir(), "obbba-law-writer-"));
+  try {
+    const { stage: stageRoot, ownershipToken } = await staged(root);
+    const destinationRoot = join(root, "law-as-amended");
+    const evidencePath = join(root, "review.json");
+    await commitLawTreeAndEvidence({
+      stageRoot, destinationRoot, evidencePath, review: { ok: true },
+      ownershipToken,
+    });
+    assert.equal(await readFile(join(destinationRoot, "page.md"), "utf8"),
+      "page");
+    assert.deepEqual(JSON.parse(await readFile(evidencePath, "utf8")),
+      { ok: true });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("late destination competitor is preserved and evidence stays absent", async () => {
+  const root = await mkdtemp(join(tmpdir(), "obbba-law-root-race-"));
+  try {
+    const { stage: stageRoot, ownershipToken } = await staged(root);
+    const destinationRoot = join(root, "law-as-amended");
+    const evidencePath = join(root, "review.json");
+    await assert.rejects(commitLawTreeAndEvidence({
+      stageRoot,
+      destinationRoot,
+      evidencePath,
+      review: { ok: true },
+      ownershipToken,
+      beforeTreeCommit: async () => {
+        await mkdir(destinationRoot);
+        await writeFile(join(destinationRoot, "competitor"), "keep", "utf8");
+      },
+    }));
+    assert.equal(
+      await readFile(join(destinationRoot, "competitor"), "utf8"), "keep",
+    );
+    await assert.rejects(access(evidencePath));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("late evidence competitor rolls back only the owned tree", async () => {
+  const root = await mkdtemp(join(tmpdir(), "obbba-law-evidence-race-"));
+  try {
+    const { stage: stageRoot, ownershipToken } = await staged(root);
+    const destinationRoot = join(root, "law-as-amended");
+    const evidencePath = join(root, "review.json");
+    await assert.rejects(commitLawTreeAndEvidence({
+      stageRoot,
+      destinationRoot,
+      evidencePath,
+      review: { ok: true },
+      ownershipToken,
+      beforeEvidenceCommit: async () => {
+        await writeFile(evidencePath, "competitor", "utf8");
+      },
+    }), { code: "EEXIST" });
+    await assert.rejects(access(destinationRoot));
+    assert.equal(await readFile(evidencePath, "utf8"), "competitor");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("review mutation rolls back the owned tree and writes no evidence", async () => {
+  const root = await mkdtemp(join(tmpdir(), "obbba-law-review-mutation-"));
+  try {
+    const { stage: stageRoot, ownershipToken } = await staged(root);
+    const destinationRoot = join(root, "law-as-amended");
+    const evidencePath = join(root, "review.json");
+    const review = { ok: true };
+    await assert.rejects(commitLawTreeAndEvidence({
+      stageRoot,
+      destinationRoot,
+      evidencePath,
+      review,
+      ownershipToken,
+      beforeEvidenceCommit: () => { review.ok = false; },
+    }), /changed before commit/);
+    await assert.rejects(access(destinationRoot));
+    await assert.rejects(access(evidencePath));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

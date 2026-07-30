@@ -1,10 +1,28 @@
 # Product Build/Launch Checklists
 
-Use these checklists as the product dashboard for Discussion Bridge for Astro. They are organized around the operating loop:
+Use these checklists as the product dashboard for DiscussionBridge for Astro. They are organized around the operating loop:
 
 publish -> sync -> diagnose -> maintain -> recover -> document
 
 ## Alpha Readiness Checklist
+
+### Connected Public-Site Release Gate
+
+- [ ] Create and Product-review a fresh connected-public-site inventory from
+      settled hostnames, current approved repositories, authoritative source
+      boundaries, and current deployment evidence. Record each site's intended
+      product job, reviewed candidate, public status, DiscussionBridge/forum
+      binding, deployment owner, rollback boundary, and exact open acceptance
+      gate. Route every repair or cutover as a separate approved site lane. For
+      OBBBA, begin from the protected pre-BB2 baseline plus approved clean
+      package, credit, and `fullInteractive` behavior; do not reuse quarantined
+      BB2 imports, generated navigation, relationships, counts, or repair
+      assumptions.
+- [ ] Publish branded custom 404 pages on relevant Astro sites and verify both
+      the rendered experience and HTTP 404 status for unknown routes.
+- [ ] Complete a new connected-forum embed matrix from the settled public
+      hostnames. Authorize exact public hosts only, keep `embed any origin`
+      disabled by default, and preserve a direct-topic fallback.
 
 ### Release-Scope Doctrine
 
@@ -29,11 +47,11 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       implementation labor, handholding, managed hosting/operations,
       customization, support, and consulting; third-party infrastructure
       remains operator-paid.
-- [x] Settle the product architecture: Discussion Bridge is a
+- [x] Settle the product architecture: DiscussionBridge is a
       Discourse-centered, adapter-driven orchestration system. The portable
       core owns connections, identities, mappings, policies, jobs,
       comparisons, approvals, retries, provenance, and audit evidence; the
-      Discussion Bridge for Discourse plugin is its present operational home
+      DiscussionBridge for Discourse plugin is its present operational home
       and natural control plane.
 - [x] Treat Astro, Statamic, and future integrations as well-featured adapters,
       not separate control planes. Support one Discourse installation
@@ -41,12 +59,12 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Preserve Tier 1 API-only operation as a useful compatibility capability,
       while no longer describing it as the product's natural operational
       center.
-- [x] Keep every offering under one Discussion Bridge product family:
-      fully featured free Discussion Bridge for Discourse and Discussion
-      Bridge for Astro; paid managed Discussion Bridge SaaS for multi-CMS,
+- [x] Keep every offering under one DiscussionBridge product family:
+      fully featured free DiscussionBridge for Discourse and Discussion
+      Bridge for Astro; paid managed DiscussionBridge SaaS for multi-CMS,
       multi-site, and multi-community orchestration; paid professional
       services; and public community support.
-- [x] Require the free products to remain genuinely capable. Discussion Bridge
+- [x] Require the free products to remain genuinely capable. DiscussionBridge
       SaaS must sell managed operation, scale, governance, convenience, and
       operational relief rather than escape from artificial limitations.
 - [ ] Inventory current Astro behavior and classify each item as portable-core
@@ -111,7 +129,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       usable for the bounded OBBBA proof. Keep any broader ownership/Cloudflare
       placement decision in Ops; do not expose protected paths or values.
 
-- [ ] Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
+- [ ] Reconfigure DiscussionBridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
 - [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: canonical
       docs URLs are 200, but raw
       `https://docs-discussionbridge-dev.pages.dev/` still returns 200. Add and
@@ -141,7 +159,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Create live Discourse Alpha Support category, route `alphasupport@discussionbridge.dev` into Discourse, and wire final channel links into README, docs, package metadata, demo pages, and release notes. Phil/Ops owns the live category and email route; Codex owns final link wiring after those exist.
 - [x] Product docs URL decided: use `docs.discussionbridge.dev` with Starlight. Keep `discussionbridge.dev/docs` only as a redirect or fallback if needed.
 - [x] Deploy the Starlight docs site source for `docs.discussionbridge.dev` into the repo under `sites/docs`, generated from repository `docs/*.md`.
-- [ ] Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan before Alpha: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles. Phil/Ops prerequisite.
+- [ ] Reconfigure DiscussionBridge Cloudflare under the new ownership/account plan before Alpha: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles. Phil/Ops prerequisite.
 - [ ] Complete Cloudflare Pages work for `docs.discussionbridge.dev`: canonical
       docs URLs are live; configure the raw
       `docs-discussionbridge-dev.pages.dev` hostname to return 301 to the
@@ -269,7 +287,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       cache-rule configuration.
 - [ ] Verify topic creation so pages from different Astro hosts do not collide or create confusing duplicate topics.
 - [ ] Confirm `embed_url` maps each Astro page to the correct companion topic across hosts.
-- [x] Verify public Alpha demo domains use the demo-lane pattern: `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, `astrostarlight.demo.discussionbridge.dev`, `stockstarlight.demo.discussionbridge.dev`, and future parallel integration hosts.
+- [x] Verify public Alpha demo domains use the settled hostnames: `demo.discussionbridge.dev`, `astro.demo.discussionbridge.dev`, `astrostarlightdemo.discussionbridge.dev`, `stockstarlight.demo.discussionbridge.dev`, and future reviewed integration hosts.
 - [x] Add and build clean stock Starlight control site to compare framework warnings and upgrades.
 - [x] Apply demo topic lifecycle policy in Discourse: tagged old/transitional topics `20`, `21`, `24`, and `28` as `historical-reference`; reserve deletion/permanent deletion for true mistakes or sensitive/unsafe content.
 - [x] Retire or clearly mark transitional demo deploy copies under `discussionbridge.dev` after public demo projects build from `astro-discussion-bridge`.
@@ -316,6 +334,39 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       another documented prerelease channel after Alpha learning.
 - [ ] Confirm release pages, README, package metadata, and demo pages point to the same support and feedback channels after the Alpha Support category and email route are live.
 
+## OBBBA Law As Amended Checklist
+
+- [x] Record the 2026-07-27 clean-room reset: the inherited Law pipeline is
+      abandoned as an implementation base and retained only as inert
+      lessons-learned provenance.
+- [x] Establish an empty OBBBA-specific site/adapter evidence boundary with
+      zero legacy imports, artifacts, or salvaged assets. Do not place the
+      replacement in DiscussionBridge Core or the reusable Astro package.
+- [ ] Admit a legacy asset only through a separate path-specific, hash-bound,
+      evidence-backed salvage decision with Code Boss and appropriate
+      Product/Manual review. Current legacy implementation salvage is not
+      authorized.
+- [ ] Establish scope and legal state from authoritative external official
+      sources before reading or joining optional forum context.
+- [ ] Preserve only optional verbatim forum titles, organization
+      (tags/category/authored index), legislative-drafting context, topic
+      identity, and discussion bindings. Reject forum bodies, OBBBA Text,
+      diagnostics, derivatives, caches, and historical generated evidence as
+      legal body, scope, or cardinality authority.
+- [ ] Keep the historical 309 count limited to forum identity/discussion
+      inventory. It must not constrain official-source discovery.
+- [ ] Enforce settled section facts independently: Section 20009 is mandatory;
+      Section 70310 does not exist and targeted searching stays closed;
+      Section 71119 requires official-source-first binding. Contradictory
+      controlling evidence stops work as
+      `BLOCKED - DOCTRINE/EVIDENCE CONFLICT`.
+- [ ] Define and review the new official-source acquisition, neutral parsing,
+      evidence, presentation, navigation, correction, and accessibility
+      contracts in small clean-room increments.
+- [ ] Obtain separate Product, Code Boss, Manual Boss, and Boss approvals at
+      their named gates before publication, Gate 2 work, deployment, or
+      portable adoption.
+
 ## Product Roadmap Checklist
 
 - [x] Keep Tier 1 API-only and useful without a Discourse plugin.
@@ -336,7 +387,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       wire the canonical source notice near the article start, clean-build and
       deploy adoption commit `aa7846d`, and verify exactly one correct source
       notice/link on all five live Title I routes independently from comments.
-- [ ] Add an unobtrusive, configurable comments-boundary credit such as `Discussion connection by Discussion Bridge` or `Discourse connection by Discussion Bridge`; verify wording, link destination, accessibility, and behavior across `simple`, `full`, and `fullInteractive` modes.
+- [x] Add the unobtrusive, configurable `Connected by DiscussionBridge` comments-boundary credit; verify its canonical link, operator disable control, accessibility, reduced-motion behavior, and placement after `simple`, `full`, and `fullInteractive`.
 - [ ] Consider optional mapping from Astro/template content tags to Discourse topic tags.
 - [ ] Package the setup/diagnostics/docs workflow for self-serve users and paid assisted setup.
 - [x] Use the OBBBA implementation lane as a real-world Discourse-to-Astro
@@ -351,7 +402,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [x] Use canonical hostname `forum.citizenactivist.network` and public
       description “A community of activists”; keep Cloudflare/account ownership
       placement as a separate Ops decision.
-- [x] Configure that forum as an explicit Discussion Bridge target and select
+- [x] Configure that forum as an explicit DiscussionBridge target and select
       clearly labeled `onebigbeautifulbill.us` proof pages without changing the
       production OBBBA lanes on `forum.repealobbba.org`.
 - [x] Prove the same selected `onebigbeautifulbill.us` page uses an explicit
@@ -362,7 +413,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       unintended writes to any other target. Post-proof interaction also
       confirmed Citizen Activist topic 9 accepted public post 2 while the Astro
       page continued to render primary Repeal OBBBA topic 434.
-- [ ] Add one or two clearly labeled Discussion Bridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages as part of the bounded many-to-many proof without claiming a general administration plane.
+- [ ] Add one or two clearly labeled DiscussionBridge demo/credit pages on `onebigbeautifulbill.us` whose companion discussions live on `forum.discussionbridge.dev`; keep the production OBBBA source lane on `forum.repealobbba.org` and use the cross-forum pages as part of the bounded many-to-many proof without claiming a general administration plane.
 - [x] Persist each target's topic ID/URL, source hash, sync state, sanitized
       error, and attempt time independently in target-keyed bindings.
 - [ ] Complete any per-target display-policy model beyond the implemented
@@ -420,7 +471,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Use `repealobbbaact.us` as an Alpha end-stage package-installed test for Discourse-source structured pages, source-mode safety, comments rendering, and Cloudflare deployment.
 - [x] Phil confirmed the optional Discourse plugin vertical slice belongs in
       cumulative Alpha scope.
-- [ ] Build an optional `Discussion Bridge for
+- [ ] Build an optional `DiscussionBridge for
       Discourse` v0.1 Alpha slice for `fullInteractive` Mermaid/table rendering
       parity plus the architecture/test baseline for later control-plane work.
       Keep Tier 1 API-only and fully usable without plugin installation.
@@ -430,7 +481,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       embed-context detection, and tests. Do not make Tier 1 depend on it.
 - [x] Correct Mermaid terminology: Discourse Mermaid is the official
       **theme component** documented at Meta topic `218242` and repository
-      `discourse/discourse-mermaid-theme-component`, never the Discussion Bridge
+      `discourse/discourse-mermaid-theme-component`, never the DiscussionBridge
       plugin.
 - [ ] Choose explicitly among the existing official theme component, a
       fork/extension of that theme component, the separate optional Discussion
@@ -458,7 +509,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       separately assigned admin/category/API authority because group membership
       grants none.
 - [ ] Finalize and availability-check collision-safe role+origin identities.
-      Current candidates: `editorbridgeforum` / Discussion Bridge Forum Editor
+      Current candidates: `editorbridgeforum` / DiscussionBridge Forum Editor
       and `editorcanforum` / CAN Forum Editor. Preserve `obbba-bot`.
 - [ ] Complete topic-36 editor-ownership acceptance: transfer first-post
       ownership from `discourseadmin`, edit as the selected editor, overwrite
@@ -522,29 +573,6 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       file-page numbers. Enforce HTTPS Congress.gov hosts through final redirect.
 - [x] Fail closed or require review when official matching is missing,
       duplicated, or ambiguous. Never silently rewrite community text.
-- [x] Produce a comparison-only batch report counting `exact`,
-      `presentation-only`, `substantive-difference`, and `unresolved`, with
-      zero content writes and bounded non-substantive normalization. The final
-      2026-07-24 Public Law 119-21 run compared 307 actual OBBBA Text sections:
-      48 exact, 28 presentation-only, 231 substantive-difference, and zero
-      unresolved. It made zero Discourse and zero Astro content writes; see
-      `docs/evidence/OBBBA_OFFICIAL_SOURCE_COMPARISON_FINAL_2026-07-24.md`.
-- [x] Recompare all 307 source topics against the enrolled H.R. 1 baseline
-      actually used for population. Final zero-write result: 301 normalized
-      exact, four presentation-only, two initially flagged source-content
-      exceptions, and zero unresolved. Author disposition and direct raw-post
-      verification characterized both: Section 10401 is intentional
-      community-only annotation/legacy color residue. Section 40005 contains
-      its operative embedded `§ 20306` heading but omits the repeated 13-token
-      table-of-sections entry from subsection `(b) Clerical amendment`; see
-      `docs/evidence/OBBBA_ENROLLED_SOURCE_COMPARISON_2026-07-24.md`.
-- [x] Set the reader-facing disposition for the two enrolled-source exceptions:
-      exclude Section 10401's author-confirmed footnote from authoritative
-      OBBBA Text while retaining it as community text; restore Section 40005's
-      repeated `§ 20306` clerical table-of-sections entry in authoritative
-      Astro output without writing back to the protected Discourse source.
-- [ ] Create the explicit population manifest. Preserve the signed Public Law
-      comparison as separate later-stage authority evidence.
 - [ ] Classify Impact topics before population. Do not publish an Astro Impact
       page while its source topic still contains the canonical placeholder
       prompt (reference: Section 82001/topic 1002). Retain its `sectionId` and
@@ -585,7 +613,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 - [ ] Review OBBBA npm findings (1 low, 1 moderate, 6 high) without automatic
       `npm audit fix`.
 - [x] Implement verified docs update metadata at `02206f7`: title row shows
-      Last updated plus `Applies to: Discussion Bridge Alpha`; footer repeats
+      Last updated plus `Applies to: DiscussionBridge Alpha`; footer repeats
       only Last updated and links the exact canonical GitHub source. Desktop
       1440 and mobile 390 visual/DOM checks passed.
 - [x] Track exact synchronized-source membership, `lastUpdated`, and SHA-256 in

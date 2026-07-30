@@ -1,6 +1,6 @@
 # Attribution And Licensing Review — Candidate b09dbce
 
-This is the sanitized durable review record for the exact Discussion Bridge
+This is the sanitized durable review record for the exact DiscussionBridge
 Alpha attribution/licensing candidate ending at commit `b09dbce`, atop product
 documentation commit `7127eb1` and automated-gate implementation commit
 `462b3ae`.

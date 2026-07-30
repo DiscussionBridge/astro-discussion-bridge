@@ -39,6 +39,7 @@ Keep commercial strategy, pricing, services positioning, and private brand plann
 - [Core/Adapter Implementation Roadmap](./CORE_ADAPTER_IMPLEMENTATION_ROADMAP.md)
 - [Discourse-Centered Doctrine Source Evidence](./evidence/DISCUSSION_BRIDGE_DISCOURSE_CENTERED_DOCTRINE_2026-07-25.md)
 - [Product Family Doctrine Source Evidence](./evidence/DISCUSSION_BRIDGE_PRODUCT_FAMILY_DOCTRINE_2026-07-25.md)
+- [DiscussionBridge Mission Source Evidence](./evidence/DISCUSSION_BRIDGE_MISSION_2026-07-25.md)
 - [Demo Plan](./DEMO_PLAN.md)
 - [Discourse Field Notes](./DISCOURSE_FIELD_NOTES.md)
 - [Product Notes](./PRODUCT_NOTES.md)

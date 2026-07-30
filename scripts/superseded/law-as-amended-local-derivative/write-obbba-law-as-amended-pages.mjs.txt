@@ -1,0 +1,577 @@
+import { createHash, randomUUID } from "node:crypto";
+import {
+  lstat, mkdir, readFile, readdir, rename, rm, writeFile,
+} from "node:fs/promises";
+import {
+  basename, dirname, isAbsolute, parse, relative, resolve,
+} from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+import { normalizeLegalText } from
+  "../packages/astro-discussion-bridge/dist/official-source.js";
+import {
+  validateEnactedDerivativeManifest,
+} from "./build-obbba-law-enacted-derivative-manifest.mjs";
+import {
+  validateRenderingCommitments,
+} from "./build-obbba-law-uslm-rendering-commitments.mjs";
+import {
+  validateUscSectionStoreEvidence,
+} from "./build-obbba-law-usc-comparison-index.mjs";
+import {
+  buildUslmOperativeAst,
+} from "./obbba-law-uslm-ast-lib.mjs";
+import {
+  renderUslmAstMarkdown,
+} from "./obbba-law-uslm-markdown-lib.mjs";
+import {
+  renderEnactedOnlyLawPage,
+  renderOfficialLawPage,
+} from "./obbba-law-as-amended-page-renderer.mjs";
+
+const ROOT = fileURLToPath(new URL("../", import.meta.url));
+const HASHES = {
+  pagePlan: "b2b5abde4e24d878501c007faf0e460d3a7badcabb0272c4728b29580a1e243b",
+  renderings: "4798677ffa04d2237a60359465108f5e12d46b6dc4d9101e23a3ade1a8e66422",
+  enacted: "1c183bf7d93d37af2f095b2817f857092cb9449a34d303a9b91d5b5f48a9b0b4",
+  store: "90e1f677227f510fd2b25f370d200ba49d5cc6476706d3be50bad66092177cdd",
+};
+const STORE_BASENAME = "obbba-law-usc-selected-sections-2026-07-26";
+const OWNERSHIP_MARKER = ".discussionbridge-owner";
+
+export async function writeObbbaLawAsAmendedPages({ onProgress } = {}) {
+  const siteRoot = resolve(
+    ROOT,
+    "../../Projects/OBBBA/sites/onebigbeautifulbill.us/astro",
+  );
+  return runObbbaLawAsAmendedWriterWithCommitments({
+    onProgress,
+    pagePlanPath: resolve(ROOT,
+      "docs/evidence/OBBBA_LAW_AS_AMENDED_PAGE_INPUT_PLAN_2026-07-26.json"),
+    renderingPath: resolve(ROOT,
+      "docs/evidence/OBBBA_LAW_USLM_RENDERING_COMMITMENTS_2026-07-26.json"),
+    enactedPath: resolve(ROOT,
+      "docs/evidence/OBBBA_LAW_ENACTED_DERIVATIVE_MANIFEST_2026-07-26.json"),
+    storePath: resolve(ROOT,
+      "docs/evidence/OBBBA_LAW_USC_VERSIONED_SECTION_STORE_2026-07-26.json"),
+    fragmentRoot: resolve(ROOT, ".discussionbridge-cache",
+      STORE_BASENAME, "sections"),
+    obbbaTextRoot: resolve(siteRoot, "src/content/docs/obbba-text"),
+    destinationRoot: resolve(siteRoot, "src/content/docs/law-as-amended"),
+    reviewEvidencePath: resolve(ROOT,
+      "docs/evidence/OBBBA_LAW_AS_AMENDED_WRITER_REVIEW_2026-07-26.json"),
+    hashes: HASHES,
+  });
+}
+
+export async function runObbbaLawAsAmendedWriterWithCommitments(options) {
+  const destinationRoot = resolve(options.destinationRoot);
+  const evidencePath = resolve(options.reviewEvidencePath);
+  await Promise.all([assertAbsent(destinationRoot), assertAbsent(evidencePath)]);
+  await requireSafeAncestry(dirname(destinationRoot));
+  const [plan, renderings, enacted, store] = await Promise.all([
+    readPinnedJson(options.pagePlanPath, options.hashes.pagePlan, "page plan"),
+    readPinnedJson(options.renderingPath, options.hashes.renderings,
+      "rendering commitments"),
+    readPinnedJson(options.enactedPath, options.hashes.enacted,
+      "enacted derivatives"),
+    readPinnedJson(options.storePath, options.hashes.store, "section store"),
+  ]);
+  const selection = validatePagePlan(plan);
+  validateRenderingCommitments(renderings, {
+    expectedTargets: 313,
+    expectedRenderings: 590,
+    pagePlanSha256: options.hashes.pagePlan,
+    storeEvidenceSha256: options.hashes.store,
+  });
+  validateEnactedDerivativeManifest(enacted, {
+    pagePlanSha256: options.hashes.pagePlan,
+    enrolledAuthoritySha256:
+      "f10f9b688ed8c7ff0168b72587cfdea2ddc30a55ee0390e659f901b4616309b2",
+  });
+  validateUscSectionStoreEvidence(store);
+  const renderingMap = exactRenderingMap(renderings, selection.targets);
+  const storeMap = new Map(store.entries.map((entry) =>
+    [`${entry.uscTitle}:${entry.uscSection}`, entry]));
+  const enactedMap = new Map(enacted.entries.map((entry) =>
+    [entry.sectionId, entry]));
+  const siteRoot = resolve(destinationRoot, "../../../..");
+  const ownershipToken = randomUUID();
+  const stageRoot = resolve(siteRoot,
+    `.law-as-amended-stage-${randomUUID()}`);
+  if (!/^\.law-as-amended-stage-[0-9a-f-]{36}$/.test(
+    basename(stageRoot),
+  ) || dirname(stageRoot) !== siteRoot) {
+    throw new Error("Law writer staging path is invalid.");
+  }
+  await requireSafeAncestry(siteRoot);
+  await mkdir(stageRoot, { recursive: false });
+  await writeFile(resolve(stageRoot, OWNERSHIP_MARKER), ownershipToken, {
+    encoding: "utf8",
+    flag: "wx",
+  });
+  const pageEvidence = [];
+  try {
+    for (const entry of selection.pages) {
+      const outputRelative = entry.outputPath.replace(/^law-as-amended\//, "");
+      requireSafeRelative(outputRelative);
+      const stagePath = resolve(stageRoot, ...outputRelative.split("/"));
+      requireContained(stageRoot, stagePath);
+      await mkdir(dirname(stagePath), { recursive: true });
+      let page;
+      if (entry.outcome === "official-law-page-candidate") {
+        const targets = [];
+        for (const target of [
+          ...entry.officialLawTargets,
+          ...entry.contextTargets,
+        ]) {
+          targets.push(await rerenderTarget(
+            target, storeMap, renderingMap, options.fragmentRoot,
+          ));
+        }
+        page = renderOfficialLawPage(entry, targets);
+      } else {
+        page = await renderVerifiedEnactedPage(
+          entry, enactedMap.get(entry.sectionId), options.obbbaTextRoot,
+        );
+      }
+      await writeFile(stagePath, page, { encoding: "utf8", flag: "wx" });
+      pageEvidence.push({
+        sectionId: entry.sectionId,
+        outputPath: entry.outputPath,
+        outcome: entry.outcome,
+        sha256: sha256(page),
+      });
+      await options.onProgress?.({
+        completed: pageEvidence.length,
+        total: selection.pages.length,
+      });
+      await options.afterStagePage?.({
+        completed: pageEvidence.length,
+        stageRoot,
+      });
+    }
+    await revalidateStage(stageRoot, pageEvidence);
+    const review = writerReviewEvidence(selection, pageEvidence, options);
+    validateWriterReviewEvidence(review, options.hashes);
+    await commitLawTreeAndEvidence({
+      stageRoot,
+      destinationRoot,
+      evidencePath,
+      review,
+      beforeTreeCommit: options.beforeTreeCommit,
+      beforeEvidenceCommit: options.beforeEvidenceCommit,
+      ownershipToken,
+    });
+    return review;
+  } catch (error) {
+    await rm(stageRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+export async function commitLawTreeAndEvidence({
+  stageRoot,
+  destinationRoot,
+  evidencePath,
+  review,
+  beforeTreeCommit,
+  beforeEvidenceCommit,
+  ownershipToken,
+}) {
+  const reviewBytes = `${JSON.stringify(review, null, 2)}\n`;
+  if (typeof ownershipToken !== "string"
+    || await readFile(resolve(stageRoot, OWNERSHIP_MARKER), "utf8")
+      !== ownershipToken) {
+    throw new Error("Law writer staging ownership marker is invalid.");
+  }
+  await beforeTreeCommit?.({ stageRoot, destinationRoot });
+  await requireSafeAncestry(dirname(destinationRoot));
+  await assertAbsent(destinationRoot);
+  await rename(stageRoot, destinationRoot);
+  let treeOwned = true;
+  try {
+    await beforeEvidenceCommit?.(review);
+    if (`${JSON.stringify(review, null, 2)}\n` !== reviewBytes) {
+      throw new Error("Law writer review evidence changed before commit.");
+    }
+    await writeFile(evidencePath, reviewBytes, {
+      encoding: "utf8",
+      flag: "wx",
+    });
+    treeOwned = false;
+  } catch (error) {
+    if (treeOwned) {
+      if (await proveOwnedRoot(destinationRoot, ownershipToken)) {
+        await rm(destinationRoot, { recursive: true, force: false });
+      } else {
+        throw new AggregateError(
+          [error],
+          "Law writer rollback could not prove tree ownership; "
+            + "the destination was preserved for manual cleanup.",
+        );
+      }
+    }
+    throw error;
+  }
+}
+
+export function validateWriterReviewEvidence(value, hashes) {
+  if (!value || value.version !== 1
+    || value.mode !== "obbba-law-as-amended-writer-review"
+    || value.inputs?.pagePlanSha256 !== hashes.pagePlan
+    || value.inputs?.renderingCommitmentsSha256 !== hashes.renderings
+    || value.inputs?.enactedDerivativeManifestSha256 !== hashes.enacted
+    || value.inputs?.sectionStoreEvidenceSha256 !== hashes.store
+    || value.summary?.pages !== 300 || value.summary?.excluded !== 9
+    || !Array.isArray(value.pages) || value.pages.length !== 300
+    || !Array.isArray(value.excluded) || value.excluded.length !== 9) {
+    throw new Error("Law writer review evidence is invalid.");
+  }
+  const pageSections = new Set();
+  const pagePaths = new Set();
+  for (const page of value.pages) {
+    if (!/^\d+[A-Za-z]?$/.test(page.sectionId ?? "")
+      || pageSections.has(page.sectionId)
+      || !/^law-as-amended\/title-(?:i|ii|iii|iv|v|vi|vii|viii|ix|x)\/[a-z0-9-]+\.md$/.test(
+        page.outputPath ?? "")
+      || pagePaths.has(page.outputPath?.toLowerCase())
+      || !["official-law-page-candidate", "enacted-law-only"].includes(
+        page.outcome,
+      )
+      || !/^[a-f0-9]{64}$/.test(page.sha256 ?? "")) {
+      throw new Error("Law writer review page is invalid.");
+    }
+    pageSections.add(page.sectionId);
+    pagePaths.add(page.outputPath.toLowerCase());
+  }
+  const excluded = new Map();
+  for (const item of value.excluded) {
+    if (!/^\d+[A-Za-z]?$/.test(item.sectionId ?? "")
+      || excluded.has(item.sectionId)
+      || ![
+        "attribution-review-required",
+        "enrolled-section-authority-and-local-derivative-are-absent",
+      ].includes(item.reason)) {
+      throw new Error("Law writer excluded evidence is invalid.");
+    }
+    excluded.set(item.sectionId, item.reason);
+  }
+  if (excluded.get("20009")
+      !== "enrolled-section-authority-and-local-derivative-are-absent"
+    || [...excluded.values()].filter((reason) =>
+      reason === "attribution-review-required").length !== 8) {
+    throw new Error("Law writer exclusion set is invalid.");
+  }
+}
+
+function validatePagePlan(plan) {
+  if (!plan || plan.version !== 1
+    || plan.mode !== "obbba-law-as-amended-page-input-plan"
+    || plan.summary?.pages !== 309
+    || !Array.isArray(plan.entries) || plan.entries.length !== 309) {
+    throw new Error("Law writer page plan is invalid.");
+  }
+  const outcomes = countBy(plan.entries, "outcome");
+  if (outcomes["official-law-page-candidate"] !== 219
+    || outcomes["enacted-law-only"] !== 82
+    || outcomes["review-required"] !== 8) {
+    throw new Error("Law writer page-plan outcomes drifted.");
+  }
+  const sections = new Set();
+  const topics = new Set();
+  const paths = new Set();
+  const pages = [];
+  const excluded = [];
+  const targets = new Set();
+  for (const entry of plan.entries) {
+    if (!/^\d+[A-Za-z]?$/.test(entry.sectionId ?? "")
+      || sections.has(entry.sectionId)
+      || !Number.isSafeInteger(entry.topicId) || topics.has(entry.topicId)
+      || !/^law-as-amended\/title-(?:i|ii|iii|iv|v|vi|vii|viii|ix|x)\/[a-z0-9-]+\.md$/.test(
+        entry.outputPath ?? "")
+      || paths.has(entry.outputPath.toLowerCase())
+      || !/^https:\/\/forum\.repealobbba\.org\/t\/\d+$/.test(
+        entry.discussionUrl ?? "")) {
+      throw new Error("Law writer page-plan identity drifted.");
+    }
+    sections.add(entry.sectionId);
+    topics.add(entry.topicId);
+    paths.add(entry.outputPath.toLowerCase());
+    if (entry.outcome === "review-required") {
+      excluded.push({
+        sectionId: entry.sectionId,
+        reason: "attribution-review-required",
+      });
+      continue;
+    }
+    if (entry.sectionId === "20009") {
+      excluded.push({
+        sectionId: "20009",
+        reason:
+          "enrolled-section-authority-and-local-derivative-are-absent",
+      });
+      continue;
+    }
+    if (entry.outcome === "official-law-page-candidate"
+      && (!Array.isArray(entry.reviewTargets) || entry.reviewTargets.length)) {
+      throw new Error("Official page contains review targets.");
+    }
+    pages.push(entry);
+    for (const target of [
+      ...(entry.officialLawTargets ?? []),
+      ...(entry.contextTargets ?? []),
+    ]) targets.add(`${target.uscTitle}:${target.uscSection}`);
+  }
+  if (pages.length !== 300 || excluded.length !== 9
+    || targets.size !== 313
+    || !excluded.some(({ sectionId }) => sectionId === "20009")) {
+    throw new Error("Law writer selection counts drifted.");
+  }
+  return { pages, excluded, targets };
+}
+
+function exactRenderingMap(renderings, expectedTargets) {
+  const result = new Map();
+  const usedTargets = new Set();
+  for (const entry of renderings.entries) {
+    const key = `${entry.uscTitle}:${entry.uscSection}:${entry.role}`;
+    if (result.has(key)) throw new Error("Rendering identity is duplicated.");
+    result.set(key, entry);
+    usedTargets.add(`${entry.uscTitle}:${entry.uscSection}`);
+  }
+  if (usedTargets.size !== expectedTargets.size
+    || [...usedTargets].some((value) => !expectedTargets.has(value))) {
+    throw new Error("Rendering target set does not match page selection.");
+  }
+  return result;
+}
+
+async function rerenderTarget(target, storeMap, renderingMap, fragmentRoot) {
+  const identity = `${target.uscTitle}:${target.uscSection}`;
+  const stored = storeMap.get(identity);
+  if (!stored) throw new Error(`Law writer store target missing: ${identity}.`);
+  const output = {
+    uscTitle: target.uscTitle,
+    uscSection: target.uscSection,
+    beforeExpected: stored.versions.before.state === "present",
+  };
+  for (const role of ["before", "current"]) {
+    const version = stored.versions[role];
+    if (version.state === "absent") {
+      if (renderingMap.has(`${identity}:${role}`)) {
+        throw new Error("Absent role has a rendering commitment.");
+      }
+      output[role] = undefined;
+      continue;
+    }
+    const path = resolve(fragmentRoot, ...version.relativePath.split("/"));
+    requireContained(resolve(fragmentRoot), path);
+    const bytes = await readFile(path);
+    if (bytes.length !== version.bytes || sha256(bytes) !== version.sha256) {
+      throw new Error(`Law writer fragment drift: ${identity}:${role}.`);
+    }
+    const ast = buildUslmOperativeAst(bytes.toString("utf8"), {
+      expectedTitle: target.uscTitle,
+      expectedSection: target.uscSection,
+    });
+    const rendered = renderUslmAstMarkdown(ast, { releaseRole: role });
+    const expected = renderingMap.get(`${identity}:${role}`);
+    if (!expected
+      || JSON.stringify(projectRendering(target, role, version, rendered))
+        !== JSON.stringify(expected)) {
+      throw new Error(`Law writer rendering drift: ${identity}:${role}.`);
+    }
+    output[role] = rendered;
+    if (role === "current") output.currentStatus = ast.ast.status;
+  }
+  if (!output.current) throw new Error("Current law rendering is absent.");
+  return output;
+}
+
+function projectRendering(target, role, version, rendered) {
+  return JSON.parse(JSON.stringify({
+    uscTitle: target.uscTitle,
+    uscSection: target.uscSection,
+    role,
+    sourceFragmentSha256: version.sha256,
+    canonicalAstSha256: rendered.canonicalAstSha256,
+    operativeTextCommitment: rendered.operativeTextCommitment,
+    visibleTextCommitment: rendered.visibleTextCommitment,
+    bodySha256: rendered.bodySha256,
+    referenceMapProfile: rendered.referenceMapProfile,
+    references: rendered.references,
+    tables: rendered.tables,
+  }));
+}
+
+async function renderVerifiedEnactedPage(entry, manifest, root) {
+  if (!manifest) throw new Error("Enacted derivative commitment is missing.");
+  const path = resolve(root, ...manifest.localRelativePath.split("/"));
+  requireContained(resolve(root), path);
+  const bytes = await readFile(path);
+  const parsed = parseDerivative(bytes.toString("utf8"));
+  const semantic = sha256(normalizeLegalText(stripMarkdownLinks(parsed.body)));
+  if (sha256(bytes) !== manifest.localFileSha256
+    || sha256(parsed.body) !== manifest.bodySha256
+    || semantic !== manifest.enrolledSemanticSha256
+    || parsed.sectionId !== entry.sectionId
+    || parsed.sectionId !== manifest.frontmatter.sectionId
+    || parsed.topicId !== manifest.frontmatter.discourseTopicId
+    || parsed.contentLens !== "obbba-text" || parsed.discussionSync !== false) {
+    throw new Error(`Enacted derivative drift: ${entry.sectionId}.`);
+  }
+  return renderEnactedOnlyLawPage(entry, parsed.body);
+}
+
+function writerReviewEvidence(selection, pages, options) {
+  return {
+    version: 1,
+    mode: "obbba-law-as-amended-writer-review",
+    inputs: {
+      pagePlanSha256: options.hashes.pagePlan,
+      renderingCommitmentsSha256: options.hashes.renderings,
+      enactedDerivativeManifestSha256: options.hashes.enacted,
+      sectionStoreEvidenceSha256: options.hashes.store,
+    },
+    summary: { pages: 300, excluded: 9 },
+    pages,
+    excluded: selection.excluded.sort((a, b) =>
+      a.sectionId.localeCompare(b.sectionId, undefined, { numeric: true })),
+  };
+}
+
+async function revalidateStage(root, expected) {
+  const files = (await listFiles(root)).filter((path) =>
+    basename(path) !== OWNERSHIP_MARKER);
+  if (files.length !== 300) throw new Error("Law writer staged count drifted.");
+  const byPath = new Map(expected.map((entry) => [
+    entry.outputPath.replace(/^law-as-amended\//, ""), entry,
+  ]));
+  for (const path of files) {
+    const rel = relative(root, path).replaceAll("\\", "/");
+    const evidence = byPath.get(rel);
+    const bytes = await readFile(path);
+    if (!evidence || sha256(bytes) !== evidence.sha256) {
+      throw new Error("Law writer staged page drifted.");
+    }
+    byPath.delete(rel);
+  }
+  if (byPath.size) throw new Error("Law writer staged page is missing.");
+}
+
+function parseDerivative(value) {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/.exec(value);
+  if (!match) throw new Error("Enacted derivative frontmatter is malformed.");
+  const field = (name) =>
+    new RegExp(`^${name}:\\s*"?([^"\\r\\n]+)"?\\s*$`, "m")
+      .exec(match[1])?.[1];
+  return {
+    sectionId: field("sectionId"),
+    topicId: Number(field("discourseTopicId")),
+    contentLens: field("contentLens"),
+    discussionSync: field("discussionSync") === "false" ? false : undefined,
+    body: match[2],
+  };
+}
+
+async function readPinnedJson(path, hash, label) {
+  const bytes = await readFile(resolve(path));
+  if (sha256(bytes) !== hash) {
+    throw new Error(`Law writer ${label} bytes do not match review.`);
+  }
+  return JSON.parse(bytes.toString("utf8"));
+}
+
+async function requireSafeAncestry(path) {
+  const resolved = resolve(path);
+  const root = parse(resolved).root;
+  let cursor = root;
+  for (const segment of relative(root, resolved).split(/[\\/]/).filter(Boolean)) {
+    cursor = resolve(cursor, segment);
+    const info = await lstat(cursor);
+    if (!info.isDirectory() || info.isSymbolicLink()) {
+      throw new Error(`Law writer path ancestry is unsafe: ${cursor}.`);
+    }
+  }
+}
+
+async function assertAbsent(path) {
+  try {
+    await lstat(path);
+    throw new Error(`Law writer output already exists: ${path}.`);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
+}
+
+async function proveOwnedRoot(root, token) {
+  try {
+    const info = await lstat(root);
+    if (!info.isDirectory() || info.isSymbolicLink()) return false;
+    await requireSafeAncestry(dirname(root));
+    return await readFile(resolve(root, OWNERSHIP_MARKER), "utf8") === token;
+  } catch {
+    return false;
+  }
+}
+
+function requireSafeRelative(value) {
+  if (!value || isAbsolute(value) || value.startsWith("../")
+    || value.includes("\\") || value.split("/").includes("..")) {
+    throw new Error("Law writer relative path is unsafe.");
+  }
+}
+
+function requireContained(root, candidate) {
+  const rel = relative(root, candidate);
+  if (!rel || isAbsolute(rel) || rel === ".."
+    || rel.startsWith("../") || rel.startsWith("..\\")) {
+    throw new Error("Law writer path escapes its root.");
+  }
+}
+
+async function listFiles(root) {
+  const output = [];
+  for (const item of await readdir(root, { withFileTypes: true })) {
+    const path = resolve(root, item.name);
+    if (item.isDirectory()) output.push(...await listFiles(path));
+    else if (item.isFile()) output.push(path);
+    else throw new Error("Law writer staged tree has a special entry.");
+  }
+  return output;
+}
+
+function stripMarkdownLinks(value) {
+  return value.replace(/\[([^\]]+)\]\((?:[^()]|\([^)]*\))*\)/g, "$1");
+}
+
+function countBy(values, key) {
+  return Object.fromEntries([...new Set(values.map((value) => value[key]))]
+    .map((name) => [
+      name, values.filter((value) => value[key] === name).length,
+    ]));
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+async function main() {
+  const result = await writeObbbaLawAsAmendedPages({
+    onProgress: ({ completed, total }) => {
+      if (completed === total || completed % 10 === 0) {
+        process.stdout.write(`Staged ${completed}/${total} pages.\n`);
+      }
+    },
+  });
+  process.stdout.write(`Law as Amended pages committed: ${result.summary.pages}.\n`);
+}
+
+if (process.argv[1]
+  && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  main().catch((error) => {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+  });
+}

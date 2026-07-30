@@ -76,6 +76,66 @@ test("relationship manifest connects lenses by section ID including one-to-many 
   }
 });
 
+test("relationship sources keep authored directories separate from public route bases", async () => {
+  const projectRoot = await mkdtemp(path.join(tmpdir(), "discussion-bridge-relations-route-bases-"));
+
+  try {
+    await writePage(
+      path.join(projectRoot, "src", "content", "docs", "obbba-text"),
+      "title-i/sec-10101.md",
+      {
+        title: "Section 10101 Text",
+        contentLens: "obbba-text",
+        sectionId: "10101",
+      },
+    );
+    await writePage(
+      path.join(projectRoot, "src", "content", "docs", "title i"),
+      "sec-10101-impact.md",
+      {
+        title: "Section 10101 Impact",
+        contentLens: "impact",
+        sectionId: "10101",
+      },
+    );
+
+    const manifest = await buildContentRelationshipManifest({
+      projectRoot,
+      siteUrl: "https://onebigbeautifulbill.us",
+      sources: [
+        { docsDir: "src/content/docs/obbba-text", routeBase: "obbba-text" },
+        { docsDir: "src/content/docs/title i", routeBase: "title-i" },
+      ],
+    });
+
+    assert.deepEqual(
+      manifest.entries.map(({ contentLens, sectionIds, title, url }) => ({
+        contentLens,
+        sectionIds,
+        title,
+        url,
+      })),
+      [
+        {
+          contentLens: "obbba-text",
+          sectionIds: ["10101"],
+          title: "Section 10101 Text",
+          url: "https://onebigbeautifulbill.us/obbba-text/title-i/sec-10101/",
+        },
+        {
+          contentLens: "impact",
+          sectionIds: ["10101"],
+          title: "Section 10101 Impact",
+          url: "https://onebigbeautifulbill.us/title-i/sec-10101-impact/",
+        },
+      ],
+    );
+    assert.equal(manifest.entries.some((entry) => /%20| /.test(entry.url)), false);
+  } finally {
+    await rm(projectRoot, { force: true, recursive: true });
+  }
+});
+
 test("relationship manifest fails closed for incomplete or duplicate records", async () => {
   const projectRoot = await mkdtemp(path.join(tmpdir(), "discussion-bridge-relations-invalid-"));
   const docsDir = path.join(projectRoot, "docs");

@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "created": "2026-07-27",
+  "status": "clean-room-disposition-review-required",
+  "decision": "abandon-legacy-implementation-salvage-only-by-explicit-proof",
+  "defaultDisposition": "lessons-learned-only",
+  "cleanRoomRoot": "sites/obbba-law-as-amended-clean-room",
+  "productPlacement": "obbba-specific-site-adapter-evidence-not-portable-core",
+  "classes": {
+    "controlling-doctrine": [
+      "docs/evidence/OBBBA_LAW_CLEAN_ROOM_RESET_DECISION_2026-07-27.md",
+      "docs/evidence/OBBBA_LAW_GATE1_DOCTRINE_FACT_SOURCE_MATRIX_2026-07-26.json"
+    ],
+    "historical-governance-provenance": [
+      "docs/evidence/OBBBA_LAW_AS_AMENDED_PLAN_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_GATE1_BASELINE_AND_REACHABILITY_INVENTORY_2026-07-26.md"
+      ,"docs/evidence/OBBBA_LAW_USC_SOURCE_CACHE_POLICY_2026-07-26.md"
+      ,"docs/evidence/OBBBA_LAW_VERSIONED_SOURCE_AND_ATTRIBUTION_MODEL_2026-07-26.md"
+    ],
+    "inert-existing-provenance": [
+      "scripts/superseded/law-as-amended-local-derivative/build-obbba-law-enacted-derivative-manifest.mjs.txt",
+      "scripts/superseded/law-as-amended-local-derivative/obbba-law-enacted-derivative-manifest.test.mjs.txt",
+      "scripts/superseded/law-as-amended-local-derivative/write-obbba-law-as-amended-pages.mjs.txt",
+      "scripts/superseded/law-as-amended-local-derivative/obbba-law-as-amended-writer-transaction.test.mjs.txt",
+      "scripts/superseded/law-as-amended-local-derivative/build-obbba-law-uslm-rendering-commitments.mjs.txt",
+      "scripts/superseded/law-as-amended-local-derivative/obbba-law-uslm-rendering-commitments.test.mjs.txt",
+      "docs/evidence/OBBBA_LAW_ENACTED_DERIVATIVE_MANIFEST_2026-07-26.json"
+    ],
+    "legacy-contaminated-active-code": [
+      "scripts/check-obbba-law-active-boundary.mjs",
+      "scripts/obbba-law-authority-map-lib.mjs",
+      "scripts/fetch-obbba-law-authority-map.mjs",
+      "scripts/obbba-law-as-amended-page-plan-lib.mjs",
+      "scripts/build-obbba-law-as-amended-page-plan.mjs",
+      "scripts/obbba-law-incorporation-window-plan-lib.mjs",
+      "scripts/build-obbba-law-incorporation-window-plan.mjs",
+      "scripts/obbba-law-usc-release-plan-lib.mjs",
+      "scripts/build-obbba-law-usc-release-plan.mjs",
+      "scripts/obbba-law-usc-archive-collector.mjs",
+      "scripts/fetch-obbba-law-incorporation-window-archives.mjs",
+      "scripts/obbba-law-usc-xml-extractor.mjs",
+      "scripts/extract-obbba-law-incorporation-window-xml.mjs",
+      "scripts/build-obbba-law-usc-section-store.mjs",
+      "scripts/obbba-law-usc-comparison-lib.mjs",
+      "scripts/build-obbba-law-usc-comparison-index.mjs",
+      "scripts/build-obbba-law-usc-attribution-index.mjs",
+      "scripts/analyze-obbba-law-usc-target-presence.mjs",
+      "scripts/build-obbba-law-as-amended-metadata.mjs",
+      "scripts/obbba-law-as-amended-metadata-lib.mjs"
+    ],
+    "legacy-contaminated-tests": [
+      "scripts/test/fetch-obbba-law-authority-map.test.mjs",
+      "scripts/test/obbba-law-authority-map.test.mjs",
+      "scripts/test/obbba-law-as-amended-page-plan.test.mjs",
+      "scripts/test/obbba-law-incorporation-window-plan.test.mjs",
+      "scripts/test/obbba-law-usc-release-plan.test.mjs",
+      "scripts/test/obbba-law-usc-archive-collector.test.mjs",
+      "scripts/test/obbba-law-usc-xml-extractor.test.mjs",
+      "scripts/test/obbba-law-usc-section-store.test.mjs",
+      "scripts/test/obbba-law-usc-comparison.test.mjs",
+      "scripts/test/obbba-law-usc-comparison-runner.test.mjs",
+      "scripts/test/obbba-law-usc-attribution-runner.test.mjs",
+      "scripts/test/obbba-law-as-amended-metadata.test.mjs",
+      "scripts/test/obbba-law-as-amended-page-renderer.test.mjs",
+      "scripts/test/obbba-law-official-reference-map.test.mjs",
+      "scripts/test/obbba-law-usc-section-selector.test.mjs",
+      "scripts/test/obbba-law-uslm-ast.test.mjs",
+      "scripts/test/obbba-law-uslm-markdown.test.mjs",
+      "scripts/test/obbba-law-uslm-renderer-registry.test.mjs"
+    ],
+    "legacy-derived-artifacts": [
+      "docs/evidence/OBBBA_LAW_OFFICIAL_AUTHORITY_MAP_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_RELEASE_INPUT_PLAN_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_RELEASE_INPUT_PLAN_V2_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_RELEASE_INPUT_PLAN_V3_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_INCORPORATION_WINDOW_INPUT_PLAN_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_VERSIONED_SECTION_STORE_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_STATE_COMPARISON_INDEX_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_ATTRIBUTION_INDEX_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_ATTRIBUTION_INDEX_V2_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_AS_AMENDED_PAGE_INPUT_PLAN_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USLM_RENDERING_COMMITMENTS_2026-07-26.json"
+    ],
+    "candidate-only-requires-independent-revalidation": [
+      "docs/evidence/OBBBA_LAW_AS_AMENDED_FORUM_METADATA_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_INCORPORATION_WINDOW_ARCHIVE_EVIDENCE_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_INCORPORATION_WINDOW_XML_EVIDENCE_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_ARCHIVE_EVIDENCE_2026-07-26.json",
+      "docs/evidence/OBBBA_LAW_USC_XML_EVIDENCE_2026-07-26.json",
+      "scripts/obbba-law-usc-section-selector-lib.mjs",
+      "scripts/obbba-law-official-reference-map.mjs",
+      "scripts/obbba-law-uslm-ast-lib.mjs",
+      "scripts/obbba-law-uslm-markdown-lib.mjs",
+      "scripts/obbba-law-uslm-renderer-registry.mjs",
+      "scripts/obbba-law-as-amended-page-renderer.mjs"
+    ],
+    "clean-room-boundary": [
+      "sites/obbba-law-as-amended-clean-room/README.md",
+      "sites/obbba-law-as-amended-clean-room/boundary.json"
+    ]
+  },
+  "commitmentAlgorithm": "For each class, sort records by repository-relative path using ordinal order. For each cache root, sort records by cache-root-relative path using ordinal order. Encode each row as path, TAB, byte length, TAB, lowercase SHA-256; join rows with LF; SHA-256 the UTF-8 bytes.",
+  "classCommitments": [
+    { "classification": "candidate-only-requires-independent-revalidation", "files": 11, "bytes": 251670, "sha256": "4b31ddbd671755a67921971baee658ee70608601b25592dfa4f7baf9baf04a2a", "reachability": "legacy-reference-only-denied-to-clean-room", "proposedDestination": "quarantine-in-place-denied-to-clean-room" },
+    { "classification": "clean-room-boundary", "files": 2, "bytes": 1789, "sha256": "22270c87727f48e98bf2ba16a3cd3ab03bac6c7342f80ed2c0d18eaa95b4704b", "reachability": "clean-room-governance-only-no-implementation", "proposedDestination": "retain-in-place" },
+    { "classification": "controlling-doctrine", "files": 2, "bytes": 39313, "sha256": "47f305584bd9b86096da9889ad59fa96aec39218cc7b4c18d7d5387bbf571f4f", "reachability": "governance-input", "proposedDestination": "retain-in-place" },
+    { "classification": "historical-governance-provenance", "files": 4, "bytes": 334960, "sha256": "a9d68c9b76afc570d928c25cce179c4a3fb9f9b82b57691c23a4b5a29a6929b2", "reachability": "documentation-reference-only", "proposedDestination": "retain-in-place-as-historical" },
+    { "classification": "inert-existing-provenance", "files": 7, "bytes": 140639, "sha256": "f17ede5c464af0247f06a6e208355eeda8c896a323595e4348253f024f91eb24", "reachability": "inert-nonimportable-or-superseded-evidence", "proposedDestination": "retain-in-place-inert" },
+    { "classification": "legacy-contaminated-active-code", "files": 20, "bytes": 195914, "sha256": "e594449159c6fbaff1732c937a4517f4ce804234a1fad42bfdb08ee87bd5b229", "reachability": "direct-entrypoint-or-active-import-graph", "proposedDestination": "scripts/superseded/law-as-amended-clean-room-reset-2026-07-27/" },
+    { "classification": "legacy-contaminated-tests", "files": 18, "bytes": 129312, "sha256": "0f5ffe82623bafbd01a0b7f18cb3e3244ed78b07ff844e602cf748a7d6233b12", "reachability": "test-import-graph", "proposedDestination": "scripts/superseded/law-as-amended-clean-room-reset-2026-07-27/tests/" },
+    { "classification": "legacy-derived-artifacts", "files": 11, "bytes": 6315194, "sha256": "73e45d4974922f832ebbbeaa68828f0a4a5054978f65ab6575e399d93770bf8a", "reachability": "pinned-or-consumed-by-legacy-code", "proposedDestination": "docs/evidence/superseded/law-as-amended-clean-room-reset-2026-07-27/" }
+  ],
+  "cacheCommitments": [
+    { "path": ".discussionbridge-cache/obbba-law-usc-archives-2026-07-26", "files": 40, "bytes": 156205615, "sha256": "6f2abddcc721bcfeeeaae6672a78d8ee8a6a9dcda67951882bbe0b3c4943c68f", "classification": "official-looking-raw-cache-revalidation-candidate", "reachability": "legacy-script-reference-denied-to-clean-room", "proposedDestination": "quarantine-in-place-denied-to-clean-room" },
+    { "path": ".discussionbridge-cache/obbba-law-usc-incorporation-archives-2026-07-26", "files": 40, "bytes": 155942341, "sha256": "eb0bb60dfe339d478fd1d44690a3e1b304410ac7e5517b4fbc48f8f877b9707a", "classification": "official-looking-raw-cache-revalidation-candidate", "reachability": "legacy-script-reference-denied-to-clean-room", "proposedDestination": "quarantine-in-place-denied-to-clean-room" },
+    { "path": ".discussionbridge-cache/obbba-law-usc-incorporation-xml-2026-07-26", "files": 40, "bytes": 996545696, "sha256": "0024a5827ba8c2ccb6c696a1391a8532d51b205b4cb63dbe5d1e4798e0f960ca", "classification": "official-looking-extracted-cache-revalidation-candidate", "reachability": "legacy-script-reference-denied-to-clean-room", "proposedDestination": "quarantine-in-place-denied-to-clean-room" },
+    { "path": ".discussionbridge-cache/obbba-law-usc-selected-sections-2026-07-26", "files": 1240, "bytes": 90833453, "sha256": "dd59a3715d105674bf1e63b4b402a0b0da667f57da9d79dc18c69a9849eb1c7d", "classification": "legacy-derived-cache", "reachability": "legacy-script-reference-denied-to-clean-room", "proposedDestination": "inert-lessons-learned-cache" },
+    { "path": ".discussionbridge-cache/obbba-law-usc-xml-2026-07-26", "files": 40, "bytes": 999248682, "sha256": "6a14c04f9aaecd392eb14c538c32c0f133add37dac0100f4b9f4f1013a91052a", "classification": "official-looking-extracted-cache-revalidation-candidate", "reachability": "legacy-script-reference-denied-to-clean-room", "proposedDestination": "quarantine-in-place-denied-to-clean-room" }
+  ],
+  "salvageRequirements": [
+    "exact path and sha256",
+    "independent neutral or authoritative purpose",
+    "no forum-derived official scope",
+    "no legacy-derived input dependency",
+    "bounded input and output contract",
+    "fresh doctrine-derived tests",
+    "Code Boss review",
+    "Product or Manual review when applicable"
+  ],
+  "publicationAuthorized": false,
+  "gate2Authorized": false,
+  "portableCoreAdoptionAuthorized": false,
+  "secretsIncluded": false
+}

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "lens": "obbba-text",
+  "officialSource": {
+    "profile": "us-public-law",
+    "law": "Public Law 119-21",
+    "congressUrl": "https://www.congress.gov/bill/119th-congress/house-bill/1/text",
+    "xmlUrl": "https://www.congress.gov/119/plaws/publ21/PLAW-119publ21_uslm.xml",
+    "textUrl": "https://www.congress.gov/bill/119th-congress/house-bill/1/text/pl?format=txt",
+    "pdfUrl": "https://www.congress.gov/119/plaws/publ21/PLAW-119publ21.pdf"
+  }
+}

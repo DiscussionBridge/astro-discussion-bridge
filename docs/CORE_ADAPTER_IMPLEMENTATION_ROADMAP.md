@@ -1,4 +1,4 @@
-# Discussion Bridge Core/Adapter Implementation Roadmap
+# DiscussionBridge Core/Adapter Implementation Roadmap
 
 Status: Authoritative migration roadmap; phase gates require normal review  
 Architecture: [`CORE_ADAPTER_ARCHITECTURE.md`](./CORE_ADAPTER_ARCHITECTURE.md)  
@@ -130,7 +130,7 @@ Outcome: additional adapters can be developed without inventing another Bridge.
 Gate: a new adapter can implement the contract without importing Astro or
 Discourse host internals.
 
-## Phase 7 — Discussion Bridge SaaS
+## Phase 7 — DiscussionBridge SaaS
 
 Outcome: the same portable core operates as a paid, managed standalone control
 plane for multiple CMSs, sites, adapters, and Discourse communities.
@@ -147,7 +147,7 @@ plane for multiple CMSs, sites, adapters, and Discourse communities.
   create SaaS demand by withholding normal local functionality.
 
 Gate: SaaS proves real multi-system operational value and a documented
-migration/export path without forking the Discussion Bridge Core or trust
+migration/export path without forking the DiscussionBridge Core or trust
 model.
 
 ## Immediate Work Sequence
@@ -166,6 +166,6 @@ model.
 - Per-run key creation and revocation as normal operation.
 - A second policy/control plane inside Astro, Statamic, or another adapter.
 - A standalone host before the Discourse-hosted core proves its boundaries.
-- Detailed Discussion Bridge SaaS packaging, pricing, tenancy, and service
+- Detailed DiscussionBridge SaaS packaging, pricing, tenancy, and service
   levels until the portable core and adapter contracts are proven.
 - General Discourse core changes without Discourse Boss/upstream routing.

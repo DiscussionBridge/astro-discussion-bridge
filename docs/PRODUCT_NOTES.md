@@ -1,8 +1,25 @@
 # Product Notes
 
+## Mission
+
+> Between people and institutions.
+>
+> Communities and their knowledge.
+>
+> Published information and living discussion.
+>
+> Local autonomy and broader coordination.
+>
+> Systems that should cooperate but no longer do.
+>
+> Discussion Bridge is simply that mission made concrete in software.
+
+The intact mission statement is preserved in
+`docs/evidence/DISCUSSION_BRIDGE_MISSION_2026-07-25.md`.
+
 ## Strategy Discovered Through Building
 
-Discussion Bridge started with a practical need: Astro pages should have real Discourse discussions. Building the bridge revealed the larger system around that need:
+DiscussionBridge started with a practical need: Astro pages should have real Discourse discussions. Building the bridge revealed the larger system around that need:
 
 - publishing lanes
 - source-of-truth rules
@@ -27,7 +44,7 @@ connection problem exposed the operating model one real constraint at a time.
 
 ## Discourse-Centered, Adapter-Driven Architecture
 
-Discussion Bridge is a Discourse-centered, adapter-driven content and
+DiscussionBridge is a Discourse-centered, adapter-driven content and
 discussion orchestration system. Its portable core connects Discourse with one
 or more external publishing systems while preserving authority, provenance,
 policy, and auditability.
@@ -77,22 +94,22 @@ The authoritative system boundaries and migration sequence are maintained in
 `docs/CORE_ADAPTER_ARCHITECTURE.md` and
 `docs/CORE_ADAPTER_IMPLEMENTATION_ROADMAP.md`.
 
-## One Discussion Bridge Product Family
+## One DiscussionBridge Product Family
 
-Everything stays under the Discussion Bridge tent. Discussion Bridge for
+Everything stays under the DiscussionBridge tent. DiscussionBridge for
 Discourse is the free, fully featured plugin and local operational center.
-Discussion Bridge for Astro is the free, fully featured Astro adapter.
-Discussion Bridge SaaS is the paid, managed standalone control plane for
+DiscussionBridge for Astro is the free, fully featured Astro adapter.
+DiscussionBridge SaaS is the paid, managed standalone control plane for
 multiple CMSs, sites, adapters, and Discourse communities.
 
-Discussion Bridge Services provides paid implementation, migration,
-customization, training, operations, and extensive support. Discussion Bridge
+DiscussionBridge Services provides paid implementation, migration,
+customization, training, operations, and extensive support. DiscussionBridge
 Community provides public documentation and community support, with the team
 helping as capacity permits.
 
 The free products must be genuinely capable. SaaS sells managed orchestration,
 scale, governance, convenience, and operational relief—not freedom from
-artificial limitations. All offerings share the portable Discussion Bridge
+artificial limitations. All offerings share the portable DiscussionBridge
 Core, contracts, policies, terminology, identity model, and trust boundaries.
 They are deployment and service models within one product ecosystem, not
 fragmented products.
@@ -158,19 +175,64 @@ atop `7127eb1` and `462b3ae`, with no remaining findings. The
 records reviewed paths and the correction history. Later candidates require a
 new semantic review.
 
+## OBBBA Law As Amended Lens
+
+`Law as Amended` remains a planned OBBBA content lens alongside `OBBBA Text`
+and `Impact`. Its reader outcome and information architecture remain useful:
+Astro should present reviewed official legal states, citations, provenance,
+navigation, and accessible discussion connections.
+
+The implementation boundary was reset on 2026-07-27. The inherited Bridge Boss
+2 Law pipeline is abandoned as an implementation base. Its code, tests,
+schemas, fixtures, parsers, caches, generated evidence, cardinalities, and
+derivative source models are inert lessons-learned provenance. None is a
+Product requirement or presumptively reusable input.
+
+The replacement starts empty and official-source-first:
+
+1. authoritative external official sources establish scope and legal state;
+2. raw source identity, retrieval evidence, bytes, hashes, and neutral parsing
+   support reviewed internal evidence;
+3. Astro presents the reviewed material; and
+4. optional Discourse context is joined only after official scope exists.
+
+Discourse may contribute an optional verbatim title, organization
+(tags/category/authored index), legislative drafting, topic identity, and
+discussion binding. Forum bodies, OBBBA Text, local derivatives, diagnostics,
+and the historical 309-item forum inventory never establish legal body,
+official scope, or official cardinality.
+
+Settled facts remain independent of the abandoned implementation:
+
+- Section 20009 is enacted, present, and mandatory; omission is parser or
+  artifact failure.
+- Phil/Boss has settled that Section 70310 does not exist. Do not reopen a
+  targeted search. A neutral exhaustive official-source inventory must not be
+  distorted to preserve that conclusion; contradictory controlling evidence
+  stops work as `BLOCKED - DOCTRINE/EVIDENCE CONFLICT`.
+- Section 71119 is official-source-first. Optional forum identity cannot
+  establish its enacted binding.
+- The historical count of 309 describes forum identities/discussion bindings
+  only and must not constrain official-source discovery.
+
+The clean-room work is OBBBA-specific site/adapter evidence. It is not
+DiscussionBridge Core or reusable Astro-package behavior. Publication,
+Gate 2, legacy salvage, and portable adoption each require their own explicit
+approval.
+
 ## Product Frame
 
-Discussion Bridge shows a path from static publishing to living community infrastructure.
+DiscussionBridge shows a path from static publishing to living community infrastructure.
 
 Publish from Astro. Discuss in Discourse. Keep the relationship alive.
 
-Static sites are excellent at clarity, speed, ownership, and presentation. Discourse is excellent at memory, reply, trust, moderation, notification, and continuity. Discussion Bridge gives organizations a practical path between those worlds without forcing them to give up either one.
+Static sites are excellent at clarity, speed, ownership, and presentation. Discourse is excellent at memory, reply, trust, moderation, notification, and continuity. DiscussionBridge gives organizations a practical path between those worlds without forcing them to give up either one.
 
 ## Operating Principle
 
 WebSynergetics finds the durable system by doing the useful work.
 
-For Discussion Bridge, the durable product loop is:
+For DiscussionBridge, the durable product loop is:
 
 publish -> sync -> diagnose -> maintain -> recover -> document
 
@@ -178,14 +240,16 @@ Every feature should make that loop more usable, understandable, and recoverable
 
 ## Product Identity At The Comments Boundary
 
-A restrained credit near the comments boundary may help readers understand what
-connects the page and forum. Candidate wording is `Discussion connection by
-Discussion Bridge` or `Discourse connection by Discussion Bridge`. The final
-wording, default, and configuration are not yet decided.
+DiscussionBridge renders the restrained, linked credit `Connected by
+DiscussionBridge` after the complete discussion surface. It is enabled by
+default, works in `simple`, `full`, and `fullInteractive`, and can be disabled or
+plain-text customized through `comments.credit` without changing comments or
+Discourse settings.
 
-The credit should link to the canonical product page, remain visually secondary,
-be accessible, work in `simple`, `full`, and `fullInteractive`, and be emitted by
-package configuration rather than hard-coded into site content.
+The credit remains visually secondary, inherits host-site theme tokens, provides
+equivalent hover and keyboard-focus treatment, respects reduced-motion
+preferences, and is emitted by package configuration rather than hard-coded
+site content. It is independent of Discourse's `Powered by Discourse` setting.
 
 ## Bounded Cross-Forum Proof
 
@@ -270,7 +334,7 @@ placement remains an Ops decision.
 
 ### Every connection has a job
 
-Discussion Bridge does not pour every conversation into one shared comment
+DiscussionBridge does not pour every conversation into one shared comment
 stream. It connects each page to the right community for a declared reason.
 Every connection tells people who the conversation is for, what they can do
 there, and where the durable source lives. Each community keeps its own members,
@@ -326,7 +390,7 @@ current package suite passes 79/79.
 
 Many-to-many operation must not create identical or visually ambiguous
 nonhuman identities across forums. Service identities encode role plus origin:
-candidate forum-source editors are `editorbridgeforum` / **Discussion Bridge
+candidate forum-source editors are `editorbridgeforum` / **DiscussionBridge
 Forum Editor** and `editorcanforum` / **CAN Forum Editor**, subject to each
 forum's normalized username rules and availability. Astro-origin actors name
 their source site/brand; established `obbba-bot` remains the OBBBA source
@@ -384,14 +448,14 @@ moderator-approved promotion, public/private eligibility, attribution/return
 link, target-specific title/CTA/description, one-way first-post sync,
 independent replies, target-specific recovery/idempotency, and moderation
 ownership at both levels. Optional posting as chapter identity is later scope.
-Current Discussion Bridge does not claim full forum-to-forum orchestration.
+Current DiscussionBridge does not claim full forum-to-forum orchestration.
 These governance mappings and approvals belong in future optional plugin/control-
 plane design; they must not become a Tier 1 plugin dependency.
 
 ## CDN-Backed Discourse Field Proof
 
 `forum.repealobbba.org` is served through Cloudflare CDN. The completed OBBBA
-work therefore proves Discussion Bridge compatibility with this production
+work therefore proves DiscussionBridge compatibility with this production
 CDN-backed Discourse deployment across the workflows actually exercised:
 diagnostics/API reads, imports, topic reconciliation and protected source links,
 `fullInteractive` comments and signed-in replies, source disclosure, and
@@ -409,7 +473,7 @@ edges and general administration remain separate scope.
 Source provenance is implemented and reviewed at `a9d2097` (Code Boss PASS,
 68/68). `DiscussionSource.astro` gives imported and Discourse-managed pages a
 quiet, accessible source notice near the article start. It is deliberately
-separate from comments and the proposed Discussion Bridge credit.
+separate from comments and the proposed DiscussionBridge credit.
 
 The helper resolves only `discourse-imported` and `discourse-managed`; Astro-
 managed and unknown modes produce no notice. It prefers an explicit URL, then
@@ -534,7 +598,7 @@ map, and passed clean build plus live verification on Worker version
 
 For active Alpha consideration on CAN, use the existing Discourse Mermaid theme
 component as the immediate baseline for normal topics, and start a bounded
-optional `Discussion Bridge for Discourse` slice for Mermaid inside full-app
+optional `DiscussionBridge for Discourse` slice for Mermaid inside full-app
 embeds, table presentation parity, embed-context detection, and tests. This is a
 proposal pending design/review; it is not completed. Tier 1 remains API-only and
 must not require the plugin.
@@ -562,9 +626,9 @@ plugin, or upstream answer; it is not fixed by the `full` implementation.
 The official Discourse Mermaid offering is specifically the official
 **Discourse Mermaid theme component**, not a plugin. Keep four paths distinct:
 use the existing theme component, fork/extend that theme component, build the
-separate optional `Discussion Bridge for Discourse` plugin, or pursue an
+separate optional `DiscussionBridge for Discourse` plugin, or pursue an
 upstream Discourse change. Never call the official theme component the
-“Discussion Bridge Mermaid plugin.” Tier 1 remains API-only and independent.
+“DiscussionBridge Mermaid plugin.” Tier 1 remains API-only and independent.
 
 Commit `d7800d7` passed Code Boss review and 51/51 package tests plus plain Astro
 and Starlight production builds. This implementation pass made no OBBBA content
@@ -594,7 +658,7 @@ capability during Beta, but Beta is not the planned home for central pillars we
 already understand.
 
 Tier 1 remains the free/self-serve, API-only floor and must remain useful without
-installing a Discourse plugin. A separate optional `Discussion Bridge for
+installing a Discourse plugin. A separate optional `DiscussionBridge for
 Discourse` plugin is accepted Alpha product work, pending implementation design
 and proof. Its bounded v0.1 vertical slice provides
 `fullInteractive` Mermaid/table rendering parity inside the Discourse-owned
@@ -611,7 +675,7 @@ items remain active unless Phil explicitly removes them.
 
 All three Alpha software tracks remain free/open source unless a later explicit
 decision changes that: `astro-discussion-bridge`, the optional light
-`Discussion Bridge for Discourse` plugin, and public docs/community support.
+`DiscussionBridge for Discourse` plugin, and public docs/community support.
 Paid value is implementation help, handholding, managed hosting and operations,
 customization, support, and consulting. Operators remain responsible for
 third-party infrastructure costs.
@@ -784,34 +848,6 @@ characters with zero substantive differences. The official citation is Public
 Law 119-21, Section 10101, 139 Stat. 80–81. This represents that section only;
 it does not establish that all OBBBA topics match.
 
-The final 2026-07-24 comparison-only batch covered all 307 actual section nodes
-in the OBBBA Text navigation manifest. It found 48 exact, 28
-presentation-only, 231 substantive-difference, and zero unresolved results,
-with zero Discourse writes and zero Astro content writes. The 76 exact or
-presentation-only sections form the immediate no-substantive-difference queue.
-The 231 review-required results are conservative: many are capitalization-only,
-while some expose structured-extraction differences that require inspection.
-The machine-readable result and concise interpretation are in
-`docs/evidence/OBBBA_OFFICIAL_SOURCE_COMPARISON_FINAL_2026-07-24.json` and its
-companion Markdown record.
-
-The source-stage follow-up used `BILLS-119hr1enr.xml`, the enrolled H.R. 1
-legacy GPO/HTML source from which the forum text was populated. After correcting
-inline small-cap and authored-hierarchy boundaries while preserving quoted
-internal legal structures, the final result was 301 normalized exact, four
-presentation-only, two bounded source-content exceptions, and zero unresolved.
-Section 10401 contains an author-confirmed community-only footnote plus legacy
-color residue; it is not OBBBA Text. Direct first-post raw Markdown inspection
-confirmed that Section 40005 contains the operative embedded `§ 20306` heading.
-Its remaining difference is at the end of subsection `(b) Clerical amendment`:
-the community post ends after “by adding at the end the following:” and omits
-the enrolled text's repeated 13-token table entry. No changed operative
-provision is demonstrated. The settled population disposition is to restore
-that repeated `§ 20306` table-of-sections entry in authoritative Astro output
-without writing back to the protected Discourse source. This establishes the
-enrolled bill as the provenance baseline and keeps the signed Public Law
-comparison as distinct later-stage authority evidence.
-
 Public pages should independently link **Content source** to the protected
 Discourse source topic and **Official text** to the identified law/section and
 citation. Wiki status, when present, is optional metadata. Keep this
@@ -886,9 +922,8 @@ describe this specific topic as a wiki. It remains the protected
 `discourse-managed` source under the Bridge source-mode contract. These GETs
 produced no post or write.
 
-Batch official-source comparison beyond Section 10101, additional OBBBA Text
-imports/lenses, Law as Amended, broader scale/accessibility proof, and the
-reported dependency vulnerabilities remain open.
+Broader scale/accessibility proof and the reported dependency vulnerabilities
+remain open.
 
 Public Discourse 429 handling uses sequential tag-group reads, retries only
 429, allows at most three retries, honors bounded `Retry-After` seconds/date or
@@ -904,7 +939,7 @@ with 52 files and 86,864 bytes.
 
 Docs-site commit `02206f7` implements verified page-update metadata. Each
 readable page shows **Last updated** and
-**Applies to: Discussion Bridge Alpha** directly below its title. The footer
+**Applies to: DiscussionBridge Alpha** directly below its title. The footer
 repeats only Last updated and links to the exact canonical source on GitHub.
 Desktop 1440 and mobile 390 visual/DOM checks passed.
 
@@ -985,7 +1020,7 @@ until the successor restates the following checkpoint and Phil accepts it:
 5. The exact next action.
 6. Explicitly out-of-scope alternatives and expansions.
 
-For Discussion Bridge, the checkpoint must always state:
+For DiscussionBridge, the checkpoint must always state:
 
 - every Bridge operation is authorized by a user-created Discourse API key;
 - durable identities are operating records around those keys, never alternate

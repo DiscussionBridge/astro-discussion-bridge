@@ -1,6 +1,6 @@
-# Discussion Bridge for Astro Machine Manual
+# DiscussionBridge for Astro Machine Manual
 
-This is the exact, reusable implementation memory for Discussion Bridge for
+This is the exact, reusable implementation memory for DiscussionBridge for
 Astro. Use it with the [Human Manual](./HUMAN_MANUAL.md) to generate a
 site-specific runbook. It may name variables, paths, endpoints, and scopes; it
 must never contain real secret values.
@@ -8,9 +8,9 @@ must never contain real secret values.
 ## 1. Product And Package
 
 ```yaml
-product: Discussion Bridge
+product: DiscussionBridge
 architecture: Discourse-centered_adapter-driven
-operational_home: Discussion Bridge for Discourse
+operational_home: DiscussionBridge for Discourse
 control_plane_host: Discourse
 portable_core:
   owns:
@@ -58,7 +58,7 @@ product_family:
     team_help: as_capacity_permits
   commercial_rule: SaaS_sells_managed_operation_scale_governance_convenience_and_operational_relief_not_artificial_limit_removal
   shared_foundation: portable_Discussion_Bridge_Core_contracts_policies_terminology_identity_and_trust_model
-Astro_product: Discussion Bridge for Astro
+Astro_product: DiscussionBridge for Astro
 Astro_package: astro-discussion-bridge
 package_root: packages/astro-discussion-bridge
 cli_source: packages/astro-discussion-bridge/src/cli.ts
@@ -273,7 +273,7 @@ service_identity:
   collision_rule: no_actual_or_visually_ambiguous_nonhuman_identity_across_forums
   naming_rule: role_plus_origin_system
   candidates:
-    - { username: editorbridgeforum, public_name: Discussion Bridge Forum Editor }
+    - { username: editorbridgeforum, public_name: DiscussionBridge Forum Editor }
     - { username: editorcanforum, public_name: CAN Forum Editor }
   verify_before_create: [normalized_username, site_length_limits, availability]
   preserved_source_identity: obbba-bot
@@ -708,7 +708,7 @@ Stock Starlight `docsSchema()` may strip custom bridge fields, and imported
 Markdown pages do not contain a hand-written `<Discussion>` component. A
 Starlight consumer must:
 
-1. extend `docsSchema` with the Discussion Bridge frontmatter fields;
+1. extend `docsSchema` with the DiscussionBridge frontmatter fields;
 2. install `src/components/MarkdownContent.astro` at the page boundary;
 3. wire it through `starlight.components.MarkdownContent`;
 4. remove per-page explicit `<Discussion>` instances when the boundary override
@@ -904,21 +904,31 @@ type DiscourseEmbedConfig =
 Do not model `topicId` and `discourseEmbedUrl` as simultaneously required or
 freely co-present; they represent alternative ownership/linking paths.
 
-Planned boundary-credit contract (not implemented in the current reviewed
-artifact):
+Current comments-boundary credit behavior and configuration:
 
 ```yaml
 comments_credit:
-  configurable: required
-  candidate_text:
-    - Discussion connection by Discussion Bridge
-    - Discourse connection by Discussion Bridge
-  canonical_product_link: required
-  visually_secondary: required
-  accessible: required
+  enabled_by_default: true
+  operator_disable_supported: true
+  prefix: Connected by
+  label: DiscussionBridge
+  href: https://discussionbridge.dev/
+  href_protocols: [http, https]
+  escaped_plain_text: [prefix, label]
+  independent_of_discourse_powered_by: true
+  placement: centered_after_complete_discussion_surface
+  full_interactive_placement: outside_cross_origin_iframe
+  visually_secondary: true
+  accessible: true
+  reduced_motion: true
   supported_modes: [simple, full, fullInteractive]
   hard_coded_in_site_content: false
-  final_default_and_schema: unresolved
+  stable_classes:
+    - discussion-bridge-credit
+    - discussion-bridge-credit__prefix
+    - discussion-bridge-credit__brand
+  stable_data_hooks:
+    - data-discussion-bridge-credit
 ```
 
 ## 10. Cloudflare Pages / Domain Verification
@@ -981,7 +991,7 @@ Verification:
 
 1. Pages deployment corresponds to the intended commit and canonical source.
 2. Custom domain resolves and HTTPS is valid.
-3. Astro `site`, Discussion Bridge `siteUrl`, CLI `SITE_URL`, and the public
+3. Astro `site`, DiscussionBridge `siteUrl`, CLI `SITE_URL`, and the public
    hostname agree.
 4. Discourse allows that exact embed hostname.
 5. A lane page and its companion topic resolve in both directions.
@@ -1694,146 +1704,6 @@ official_source_enrichment:
     path: review_or_explicit_per_entry_override
     reason: may_identify_legal_defined_terms_or_identifiers
   batch_mode: { report_all_result_counts: true, content_writes: 0 }
-batch_comparison_evidence:
-  command: compare-official-sources
-  request_policy:
-    method: GET_only
-    sequential: true
-    minimum_interval_ms: 350
-    retry_statuses: [429]
-    max_retries: 3
-    Retry_After: bounded
-  scope:
-    authored_navigation_nodes: 381
-    actual_section_nodes: 307
-  results:
-    exact: 48
-    presentation-only: 28
-    substantive-difference: 231
-    unresolved: 0
-  immediately_clear_of_substantive_difference: 76
-  writes: { Discourse: 0, Astro_content: 0 }
-  evidence:
-    - docs/evidence/OBBBA_OFFICIAL_SOURCE_COMPARISON_FINAL_2026-07-24.json
-    - docs/evidence/OBBBA_OFFICIAL_SOURCE_COMPARISON_FINAL_2026-07-24.md
-  next_gate:
-    - use_enrolled_source_provenance_baseline
-    - create_explicit_approved_population_manifest
-    - generate_Impact_links_during_approved_population_run
-enrolled_source_comparison:
-  source_stage: enrolled_HR1_119th_Congress
-  source_file: BILLS-119hr1enr.xml
-  actual_format: legacy_GPO_HTML_markup
-  parser_boundaries:
-    inline_small_caps: join_without_invented_whitespace
-    authored_hierarchy: stop_section
-    quoted_internal_legal_structure: preserve_inside_section
-    attestation: stop_section
-  results:
-    total: 307
-    normalized_exact: 301
-    presentation_only: 4
-    word_difference: 2
-    unresolved: 0
-  exceptions:
-    section_10401:
-      disposition: intentional_community_only_annotation_and_legacy_color_residue
-      authoritative_OBBBA_Text: exclude_annotation
-    section_40005:
-      operative_embedded_20306_heading: present
-      omitted_text: repeated_13_token_table_of_sections_entry
-      location: subsection_b_clerical_amendment
-      disposition: restore_in_authoritative_Astro_output
-      protected_source_writeback: false
-  changed_operative_provisions_demonstrated: 0
-  writes: { Discourse: 0, Astro_content: 0 }
-  evidence:
-    - docs/evidence/OBBBA_ENROLLED_SOURCE_COMPARISON_2026-07-24.json
-    - docs/evidence/OBBBA_ENROLLED_SOURCE_COMPARISON_2026-07-24.md
-impact_population_gate:
-  credential_rule:
-    authority: user_created_Discourse_API_key
-    alternate_credential_scheme: forbidden
-    durable_identity_backing: user_created_Discourse_API_key
-    per_run_key_churn: forbidden
-    protected_storage_provider_changes_authority: false
-    preferred_operator_input:
-      option: --diagnostics-api-key-file
-      environment: DISCOURSE_DIAGNOSTICS_API_KEY_FILE
-      source: existing_protected_vault_record
-      required_key_lines: 1
-      key_shape: 64_hex_characters_unformatted
-      secret_in_argv_or_history: false
-  preflight:
-    command: preflight-impact-population
-    scope: frozen_placeholder_topic_only
-    collector_and_auth_path: same_as_full_plan
-    report_created: false
-    writes: { Discourse: 0, Astro_content: 0 }
-    required_result: Preflight_PASS
-  command: plan-impact-population
-  command_inputs:
-    config: examples/obbba-impact-population.config.json
-    report_out: docs/evidence/OBBBA_IMPACT_POPULATION_DRY_RUN_2026-07-24.json
-    credentials: session_only_environment
-  collector:
-    methods: [GET]
-    redirects: blocked
-    runtime_config_revalidation: required
-    report_create_only: true
-    progress: per_topic_completion
-    rate_limit_waits: visible
-  operator_policy:
-    credential_source: approved_vault_mechanism
-    paste_secret_into_shell_command: forbidden
-    maximum_failed_attempts: 2
-    after_limit: stop_and_return_evidence_to_implementation_lane
-  canonical_placeholder_reference:
-    section_id: "82001"
-    topic_id: 1002
-    post_id: 1009
-    topic_url: https://forum.repealobbba.org/t/sec-82001-loan-repayment-impact/1002
-    snapshot_required:
-      - post_id
-      - captured_at
-      - normalization_version
-      - normalized_content_sha256
-    future_topic_edits_change_baseline: false
-  production_inventory:
-    total_sources: 307
-    existing_Astro_Impact_routes: 15
-  classification:
-    input: normalized_first_post_source_content
-    evidence: sha256
-    title_or_topic_id_only: forbidden
-    outcomes:
-      - placeholder_suppressed
-      - publication_candidate
-      - review_required
-    nonmatching_hash_implies_publication_approval: false
-    review_required_when:
-      - minor_placeholder_edit
-      - partial_placeholder_removal
-      - mixed_placeholder_and_developed_content
-      - normalization_uncertainty
-  placeholder_suppressed:
-    publish_Astro_Impact_page: false
-    retain_relationship: true
-    relationship_target: protected_Discourse_topic_url
-    link_label_must_not_imply_published_analysis: true
-  publication_candidate:
-    publish_Astro_Impact_page: eligible_after_normal_review
-    relationship_target: published_Astro_Impact_route
-  published_page_drift:
-    auto_delete_or_replace: false
-    operator_review_required: true
-  dry_run:
-    report_separate_counts:
-      - placeholder_suppressed
-      - publication_candidate
-      - review_required
-    per_topic_disposition: required
-    Discourse_writes: 0
 bounded_field_evidence:
   Discourse: { topic_id: 34, post_id: 40 }
   section: 10101
@@ -1854,6 +1724,49 @@ relationship_graph:
   manual_per_page_links: prohibited
   adapters: [Starlight, plain_Astro]
   provenance_and_authority_separate_from_related_navigation: true
+law_as_amended_authority:
+  reset_date: 2026-07-27
+  legacy_implementation:
+    disposition: inert_lessons_learned_only
+    repair_base: false
+    salvage_authorized: false
+    prohibited_inputs:
+      - legacy_code_tests_schemas_fixtures
+      - legacy_parsers_caches_generated_evidence
+      - forum_derived_scope_or_cardinality
+      - derivative_source_models
+  clean_room:
+    placement: OBBBA_specific_site_adapter_evidence
+    portable_Core: false
+    reusable_Astro_package: false
+    admitted_legacy_imports: 0
+    admitted_legacy_artifacts: 0
+    salvaged_assets: 0
+  authority_order:
+    - authoritative_official_source_discovery
+    - preserve_raw_identity_retrieval_bytes_hashes
+    - neutral_parse
+    - reviewed_official_scope_and_legal_state
+    - Astro_presentation
+    - optional_forum_context_and_discussion
+  forum_allowed_after_official_scope:
+    - optional_verbatim_title
+    - optional_tags_category_authored_index
+    - optional_legislative_drafting_context
+    - optional_topic_and_discussion_binding
+  forum_prohibited:
+    - legal_body_authority
+    - official_scope
+    - official_cardinality
+  settled_invariants:
+    section_20009: present_mandatory
+    section_70310: phil_boss_settled_does_not_exist_no_targeted_search
+    section_71119: official_source_first_binding
+    forum_count_309: identity_discussion_inventory_only
+    contradiction: BLOCKED_DOCTRINE_EVIDENCE_CONFLICT
+  publication_authorized: false
+  gate_2_authorized: false
+  portable_adoption_authorized: false
 implementation_evidence:
   profile: us-public-law
   manifest_version: 2
@@ -1928,7 +1841,7 @@ docs_page_metadata:
   rendered_contract:
     title_row:
       - "Last updated: verified source date"
-      - "Applies to: Discussion Bridge Alpha"
+      - "Applies to: DiscussionBridge Alpha"
     footer:
       - Last_updated_only
       - exact_canonical_GitHub_edit_link

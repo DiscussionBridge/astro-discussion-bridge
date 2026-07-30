@@ -274,7 +274,7 @@ test("import discovery rejects invalid runtime manifest options before network a
 });
 
 test("validates titles before publishing to Discourse", () => {
-  assert.deepEqual(validateDiscourseTopicTitle("Discussion Bridge for Astro"), []);
+  assert.deepEqual(validateDiscourseTopicTitle("DiscussionBridge for Astro"), []);
   assert.match(validateDiscourseTopicTitle("Beta")[0].reason, /too short/);
   assert.equal(validateDiscourseTopicTitle("aaaa bbbb cccc").some((issue) => /unclear/.test(issue.reason)), true);
 });
@@ -387,7 +387,7 @@ test("import manifest preserves source category drift through preview and atomic
       if (pathname === "/t/36.json") {
         return jsonResponse({
           id: 36,
-          title: "How to Choose a Discussion Bridge Source Mode",
+          title: "How to Choose a DiscussionBridge Source Mode",
           category_id: categoryId,
           post_stream: {
             posts: [{
@@ -828,7 +828,7 @@ test("check-discourse discovers client settings and tag capabilities", async () 
         return jsonResponse({
           category_list: {
             categories: [
-              { id: 5, name: "Discussion Bridge for Astro", slug: "discussion-bridge-for-astro", read_restricted: false },
+              { id: 5, name: "DiscussionBridge for Astro", slug: "discussion-bridge-for-astro", read_restricted: false },
             ],
           },
         });
@@ -878,7 +878,7 @@ test("check-discourse discovers client settings and tag capabilities", async () 
     assert.equal(result.limits.maxPostLength, 32000);
     assert.equal(result.limits.maxTagsPerTopic, 5);
     assert.equal(result.tagCapabilities.canTagTopics, true);
-    assert.equal(result.category.name, "Discussion Bridge for Astro");
+    assert.equal(result.category.name, "DiscussionBridge for Astro");
     assert.deepEqual(result.requestedTags.map((tag) => [tag.name, tag.exists]), [
       ["blog", true],
       ["discussionbridge", true],
@@ -965,7 +965,7 @@ test("check-discourse reports category and tag setup issues", async () => {
       if (parsed.pathname === "/categories.json") {
         return jsonResponse({
           category_list: {
-            categories: [{ id: 5, name: "Discussion Bridge for Astro" }],
+            categories: [{ id: 5, name: "DiscussionBridge for Astro" }],
           },
         });
       }
@@ -1115,7 +1115,7 @@ test("publish-new reports Discourse offline failures clearly", async () => {
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Offline Publish"',
+        'title: "DiscussionBridge for Astro: Offline Publish"',
         "---",
         "",
         "# Offline Publish",
@@ -1264,11 +1264,11 @@ test("preflight validates configured title, body, and tag limits before network 
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: This Title Is Too Long"',
+        'title: "DiscussionBridge for Astro: This Title Is Too Long"',
         'discussionTags: "discussionbridge, starlight-demo, blog, excessive-tag"',
         "---",
         "",
-        "# Discussion Bridge for Astro: This Title Is Too Long",
+        "# DiscussionBridge for Astro: This Title Is Too Long",
         "",
         "This body deliberately exceeds the configured test limit.",
       ].join("\n"),
@@ -1276,7 +1276,7 @@ test("preflight validates configured title, body, and tag limits before network 
     globalThis.fetch = mockDiscourseFetch(calls, {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: This Title Is Too Long",
+        title: "DiscussionBridge for Astro: This Title Is Too Long",
         category_id: 5,
         visible: true,
         post_stream: { posts: [{ id: 101, post_number: 1 }] },
@@ -1558,12 +1558,12 @@ test("sync-existing can update topic metadata and unlist when source content is 
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Starlight Demo"',
+        'title: "DiscussionBridge for Astro: Starlight Demo"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/discussionbridge-starlight-demo/21"',
         "---",
         "",
-        "# Discussion Bridge for Astro: Starlight Demo",
+        "# DiscussionBridge for Astro: Starlight Demo",
         "",
         "The source body stays stable.",
       ].join("\n"),
@@ -1573,7 +1573,7 @@ test("sync-existing can update topic metadata and unlist when source content is 
     globalThis.fetch = mockDiscourseFetch(firstCalls, {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Starlight Demo",
+        title: "DiscussionBridge for Astro: Starlight Demo",
         category_id: 5,
         visible: false,
         post_stream: { posts: [{ id: 101, post_number: 1 }] },
@@ -1611,7 +1611,7 @@ test("sync-existing can update topic metadata and unlist when source content is 
       updatedTopic: {
         basic_topic: {
           id: 21,
-          title: "Discussion Bridge for Astro: Starlight Demo",
+          title: "DiscussionBridge for Astro: Starlight Demo",
           category_id: 5,
           slug: "discussion-bridge-for-astro-starlight-demo",
         },
@@ -1666,7 +1666,7 @@ test("sync-existing force updates the managed first post even when source hash i
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Force Sync"',
+        'title: "DiscussionBridge for Astro: Force Sync"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/force-sync/21"',
         "---",
@@ -1681,7 +1681,7 @@ test("sync-existing force updates the managed first post even when source hash i
     globalThis.fetch = mockDiscourseFetch(seedCalls, {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Force Sync",
+        title: "DiscussionBridge for Astro: Force Sync",
         category_id: 5,
         visible: true,
         post_stream: { posts: [{ id: 101, post_number: 1 }] },
@@ -1717,7 +1717,7 @@ test("sync-existing force updates the managed first post even when source hash i
     globalThis.fetch = mockDiscourseFetch(forceCalls, {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Force Sync",
+        title: "DiscussionBridge for Astro: Force Sync",
         category_id: 5,
         visible: true,
         post_stream: { posts: [{ id: 101, post_number: 1 }] },
@@ -1763,7 +1763,7 @@ test("sync-existing treats an Astro title change as source-of-truth drift", asyn
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Updated Title"',
+        'title: "DiscussionBridge for Astro: Updated Title"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/original-title/21"',
         'discussionSourceHash: "old-hash"',
@@ -1777,7 +1777,7 @@ test("sync-existing treats an Astro title change as source-of-truth drift", asyn
     globalThis.fetch = mockDiscourseFetch(calls, {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Original Title",
+        title: "DiscussionBridge for Astro: Original Title",
         slug: "original-title",
         category_id: 5,
         visible: true,
@@ -1786,7 +1786,7 @@ test("sync-existing treats an Astro title change as source-of-truth drift", asyn
       updatedTopic: {
         basic_topic: {
           id: 21,
-          title: "Discussion Bridge for Astro: Updated Title",
+          title: "DiscussionBridge for Astro: Updated Title",
           category_id: 5,
           slug: "updated-title",
         },
@@ -1811,7 +1811,7 @@ test("sync-existing treats an Astro title change as source-of-truth drift", asyn
     assert.match(postUpdateCall.body.post.raw, /The source body did not need a heading/);
 
     const topicUpdateCall = calls.find((call) => call.pathname === "/t/-/21.json" && call.method === "PUT");
-    assert.equal(topicUpdateCall.body.title, "Discussion Bridge for Astro: Updated Title");
+    assert.equal(topicUpdateCall.body.title, "DiscussionBridge for Astro: Updated Title");
 
     const syncedSource = await readFile(filePath, "utf8");
     assert.match(syncedSource, /discourseTopicUrl: "https:\/\/forum\.example\.com\/t\/updated-title\/21"/);
@@ -1834,7 +1834,7 @@ test("sync-existing corrects manual Discourse topic title drift by topic ID", as
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Canonical Astro Title"',
+        'title: "DiscussionBridge for Astro: Canonical Astro Title"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/old-title/21"',
         "---",
@@ -1849,7 +1849,7 @@ test("sync-existing corrects manual Discourse topic title drift by topic ID", as
     globalThis.fetch = mockDiscourseFetch(seedCalls, {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Canonical Astro Title",
+        title: "DiscussionBridge for Astro: Canonical Astro Title",
         slug: "canonical-astro-title",
         category_id: 5,
         visible: true,
@@ -1881,7 +1881,7 @@ test("sync-existing corrects manual Discourse topic title drift by topic ID", as
       updatedTopic: {
         basic_topic: {
           id: 21,
-          title: "Discussion Bridge for Astro: Canonical Astro Title",
+          title: "DiscussionBridge for Astro: Canonical Astro Title",
           category_id: 5,
           slug: "canonical-astro-title",
         },
@@ -1905,7 +1905,7 @@ test("sync-existing corrects manual Discourse topic title drift by topic ID", as
     assert.equal(driftCalls.some((call) => call.pathname === "/posts/101.json" && call.method === "PUT"), false);
 
     const topicUpdateCall = driftCalls.find((call) => call.pathname === "/t/-/21.json" && call.method === "PUT");
-    assert.equal(topicUpdateCall.body.title, "Discussion Bridge for Astro: Canonical Astro Title");
+    assert.equal(topicUpdateCall.body.title, "DiscussionBridge for Astro: Canonical Astro Title");
     assert.equal(await readFile(filePath, "utf8"), afterSeed);
   } finally {
     globalThis.fetch = originalFetch;
@@ -1925,7 +1925,7 @@ test("sync-existing reports a clear recovery error when a linked topic cannot be
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Missing Linked Topic"',
+        'title: "DiscussionBridge for Astro: Missing Linked Topic"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/missing-linked-topic/21"',
         'discussionSourceHash: "old-hash"',
@@ -1984,7 +1984,7 @@ test("sync-existing reports a clear recovery error when a linked topic has no fi
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Missing First Post"',
+        'title: "DiscussionBridge for Astro: Missing First Post"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/missing-first-post/21"',
         'discussionSourceHash: "old-hash"',
@@ -1999,7 +1999,7 @@ test("sync-existing reports a clear recovery error when a linked topic has no fi
     globalThis.fetch = mockDiscourseFetch([], {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Missing First Post",
+        title: "DiscussionBridge for Astro: Missing First Post",
         category_id: 5,
         visible: true,
         post_stream: { posts: [{ id: 102, post_number: 2 }] },
@@ -2094,13 +2094,13 @@ test("sync-existing fails when Discourse accepts a tag update without changing t
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Tag Drift Test"',
+        'title: "DiscussionBridge for Astro: Tag Drift Test"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/tag-drift-test/21"',
         'discussionSourceHash: "old-hash"',
         "---",
         "",
-        "# Discussion Bridge for Astro: Tag Drift Test",
+        "# DiscussionBridge for Astro: Tag Drift Test",
         "",
         "Stable content.",
       ].join("\n"),
@@ -2109,7 +2109,7 @@ test("sync-existing fails when Discourse accepts a tag update without changing t
     globalThis.fetch = mockDiscourseFetch([], {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Tag Drift Test",
+        title: "DiscussionBridge for Astro: Tag Drift Test",
         category_id: 5,
         visible: true,
         tags: [{ id: 1, name: "old-tag", slug: "old-tag" }],
@@ -2118,7 +2118,7 @@ test("sync-existing fails when Discourse accepts a tag update without changing t
       updatedTopic: {
         basic_topic: {
           id: 21,
-          title: "Discussion Bridge for Astro: Tag Drift Test",
+          title: "DiscussionBridge for Astro: Tag Drift Test",
           category_id: 5,
           slug: "tag-drift-test",
         },
@@ -2156,7 +2156,7 @@ test("sync-existing dry run reports source hash changes", async () => {
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Changed Title"',
+        'title: "DiscussionBridge for Astro: Changed Title"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/old-title/21"',
         'discussionSourceHash: "old-hash"',
@@ -2199,7 +2199,7 @@ test("publish-and-sync updates linked pages and creates missing companion topics
       existingPath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Existing Page"',
+        'title: "DiscussionBridge for Astro: Existing Page"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/existing-page/21"',
         "---",
@@ -2213,7 +2213,7 @@ test("publish-and-sync updates linked pages and creates missing companion topics
       newPath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: New Page"',
+        'title: "DiscussionBridge for Astro: New Page"',
         "---",
         "",
         "# New Page",
@@ -2226,7 +2226,7 @@ test("publish-and-sync updates linked pages and creates missing companion topics
     globalThis.fetch = mockDiscourseFetch(calls, {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Existing Page",
+        title: "DiscussionBridge for Astro: Existing Page",
         category_id: 5,
         visible: false,
         tags: [
@@ -2283,7 +2283,7 @@ test("publish-new reconciles an existing Discourse embed topic when embed info i
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Release Lane Reconcile"',
+        'title: "DiscussionBridge for Astro: Release Lane Reconcile"',
         "---",
         "",
         "# Release Lane Reconcile",
@@ -2325,7 +2325,7 @@ test("publish-new reconciles an existing Discourse embed topic when embed info i
         return jsonResponse({
           topics: [{
             id: 24,
-            title: "Discussion Bridge for Astro: Release Lane Reconcile",
+            title: "DiscussionBridge for Astro: Release Lane Reconcile",
             slug: "discussion-bridge-for-astro-release-lane-reconcile",
           }],
           posts: [{ id: 501, topic_id: 24 }],
@@ -2372,7 +2372,7 @@ test("publish-new reconciles an existing Discourse embed topic when embed info i
       }
 
       if (method === "PUT" && parsed.pathname === "/t/-/24.json") {
-        assert.equal(body.title, "Discussion Bridge for Astro: Release Lane Reconcile");
+        assert.equal(body.title, "DiscussionBridge for Astro: Release Lane Reconcile");
         assert.equal(body.category_id, 5);
         assert.deepEqual(body.tags, [{ name: "discussionbridge" }, { name: "releases" }]);
         return jsonResponse({
@@ -2539,7 +2539,7 @@ test("frontmatter can override lane category, tags, visibility, and failure reci
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Release Lane"',
+        'title: "DiscussionBridge for Astro: Release Lane"',
         "discussionCategoryId: 18",
         'discussionTags: "releases, launchlight"',
         "discussionUnlisted: true",
@@ -2609,7 +2609,7 @@ test("publish-new can label a page with an active discussion target", async () =
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Targeted Page"',
+        'title: "DiscussionBridge for Astro: Targeted Page"',
         "---",
         "",
         "# Targeted Page",
@@ -2662,7 +2662,7 @@ test("sync skips pages assigned to a different discussion target", async () => {
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Targeted Page"',
+        'title: "DiscussionBridge for Astro: Targeted Page"',
         'discussionTarget: "community"',
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/targeted-page/21"',
@@ -2677,7 +2677,7 @@ test("sync skips pages assigned to a different discussion target", async () => {
     globalThis.fetch = mockDiscourseFetch(calls, {
       topic: {
         id: 21,
-        title: "Discussion Bridge for Astro: Targeted Page",
+        title: "DiscussionBridge for Astro: Targeted Page",
         category_id: 5,
         visible: true,
         post_stream: { posts: [{ id: 101, post_number: 1 }] },
@@ -3058,7 +3058,7 @@ test("routeBase maps content lane files to their public URL prefix", async () =>
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro 2.1 Release Lane Demo"',
+        'title: "DiscussionBridge for Astro 2.1 Release Lane Demo"',
         "---",
         "",
         "# Release Lane",
@@ -3112,9 +3112,9 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
       },
       post: {
         id: 101,
-        name: "Discussion Bridge Forum Editor",
+        name: "DiscussionBridge Forum Editor",
         username: "editorbridgeforum",
-        display_username: "Discussion Bridge Forum Editor",
+        display_username: "DiscussionBridge Forum Editor",
         post_number: 1,
         topic_id: 21,
         topic_slug: "imported-discourse-topic",
@@ -3143,7 +3143,7 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
     assert.match(source, /title: "Imported Discourse Topic"/);
     assert.match(source, /discussionSourceMode: "discourse-imported"/);
     assert.match(source, /discussionSourceAuthorUsername: "editorbridgeforum"/);
-    assert.match(source, /discussionSourceAuthorName: "Discussion Bridge Forum Editor"/);
+    assert.match(source, /discussionSourceAuthorName: "DiscussionBridge Forum Editor"/);
     assert.match(source, /discussionSourceCategoryId: 5/);
     assert.match(source, /discussionSync: false/);
     assert.match(source, /discourseTopicId: 21/);
@@ -3222,7 +3222,7 @@ test("import-existing can preserve Discourse as the managed source", async () =>
     globalThis.fetch = mockDiscourseFetch([], {
       topic: {
         id: 36,
-        title: "How to Choose a Discussion Bridge Source Mode",
+        title: "How to Choose a DiscussionBridge Source Mode",
         category_id: 6,
         visible: true,
         post_stream: {
@@ -3626,7 +3626,7 @@ test("import-existing overwrite refreshes changed Discourse source ownership", a
   const originalFetch = globalThis.fetch;
   const topic = {
     id: 36,
-    title: "How to Choose a Discussion Bridge Source Mode",
+    title: "How to Choose a DiscussionBridge Source Mode",
     category_id: 6,
     visible: true,
     post_stream: {
@@ -3678,17 +3678,17 @@ test("import-existing overwrite refreshes changed Discourse source ownership", a
         post_stream: {
           posts: [{
             ...topic.post_stream.posts[0],
-            name: "Discussion Bridge Forum Editor",
+            name: "DiscussionBridge Forum Editor",
             username: "editorbridgeforum",
-            display_username: "Discussion Bridge Forum Editor",
+            display_username: "DiscussionBridge Forum Editor",
           }],
         },
       },
       post: {
         ...topic.post_stream.posts[0],
-        name: "Discussion Bridge Forum Editor",
+        name: "DiscussionBridge Forum Editor",
         username: "editorbridgeforum",
-        display_username: "Discussion Bridge Forum Editor",
+        display_username: "DiscussionBridge Forum Editor",
         raw: "Choose one source of truth after the ownership transfer.",
       },
     });
@@ -3699,7 +3699,7 @@ test("import-existing overwrite refreshes changed Discourse source ownership", a
       "utf8",
     );
     assert.match(source, /discussionSourceAuthorUsername: "editorbridgeforum"/);
-    assert.match(source, /discussionSourceAuthorName: "Discussion Bridge Forum Editor"/);
+    assert.match(source, /discussionSourceAuthorName: "DiscussionBridge Forum Editor"/);
     assert.match(source, /discussionSourceCategoryId: 7/);
     assert.doesNotMatch(source, /discourseadmin|Discourse Admin/);
     assert.match(source, /discussionSourceMode: "discourse-managed"/);
@@ -3733,7 +3733,7 @@ test("frontmatter failure recipients receive page-specific publish errors", asyn
       filePath,
       [
         "---",
-        'title: "Discussion Bridge for Astro: Release Lane Failure"',
+        'title: "DiscussionBridge for Astro: Release Lane Failure"',
         'discussionNotifyRecipients: "forum-admin,ops-bot"',
         "---",
         "",

@@ -1,0 +1,145 @@
+---
+const homeUrl = new URL("/", Astro.site ?? Astro.url);
+const supportUrl = new URL("/support-and-feedback/", Astro.site ?? Astro.url);
+const searchUrl = new URL("/product-notes/", Astro.site ?? Astro.url);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex" />
+    <title>Page not found | DiscussionBridge Docs</title>
+    <meta
+      name="description"
+      content="The requested DiscussionBridge documentation page could not be found."
+    />
+  </head>
+  <body>
+    <main>
+      <a class="brand" href={homeUrl}>DiscussionBridge Docs</a>
+      <section aria-labelledby="not-found-title">
+        <p class="eyebrow">404 · Relationship not found</p>
+        <h1 id="not-found-title">This bridge does not reach that page.</h1>
+        <p class="lede">
+          The address may have changed, or the relationship may not have been
+          connected yet. Start from the documentation home or tell the
+          community what you were trying to find.
+        </p>
+        <nav aria-label="404 recovery">
+          <a class="primary" href={homeUrl}>Browse the documentation</a>
+          <a href={supportUrl}>Get support or report the link</a>
+          <a href={searchUrl}>Read the product notes</a>
+        </nav>
+      </section>
+      <blockquote>
+        “Published information and living discussion.”
+      </blockquote>
+    </main>
+  </body>
+</html>
+
+<style>
+  :root {
+    color-scheme: dark;
+    font-family:
+      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif;
+    background: #08111f;
+    color: #edf5ff;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    background:
+      radial-gradient(circle at 12% 18%, rgb(30 102 138 / 30%), transparent 34rem),
+      radial-gradient(circle at 88% 78%, rgb(78 53 146 / 24%), transparent 30rem),
+      #08111f;
+  }
+
+  main {
+    width: min(72rem, calc(100% - 2rem));
+    min-height: 100vh;
+    margin: auto;
+    display: grid;
+    align-content: center;
+    gap: clamp(2rem, 8vw, 6rem);
+    padding: 2rem 0;
+  }
+
+  .brand {
+    width: fit-content;
+    color: #a9dff5;
+    font-weight: 750;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+
+  section {
+    max-width: 54rem;
+  }
+
+  .eyebrow {
+    margin: 0 0 1rem;
+    color: #78d7c5;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    max-width: 15ch;
+    margin: 0;
+    font-size: clamp(3rem, 9vw, 7rem);
+    line-height: 0.95;
+    letter-spacing: -0.055em;
+  }
+
+  .lede {
+    max-width: 43rem;
+    margin: 2rem 0;
+    color: #b8c8db;
+    font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+    line-height: 1.65;
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+
+  nav a {
+    border: 1px solid #35506c;
+    border-radius: 999px;
+    padding: 0.75rem 1rem;
+    color: #d8e8f7;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  nav a:hover,
+  nav a:focus-visible {
+    border-color: #78d7c5;
+    outline: none;
+  }
+
+  nav .primary {
+    border-color: #78d7c5;
+    background: #78d7c5;
+    color: #07131c;
+  }
+
+  blockquote {
+    margin: 0;
+    color: #6f8499;
+    font-size: 0.95rem;
+  }
+</style>

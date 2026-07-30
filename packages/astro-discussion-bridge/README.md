@@ -96,7 +96,7 @@ The discussion engine is Discourse. The `provider: "discourse"` field remains ex
 
 ## Product Model
 
-Discussion Bridge is designed to be generous without making implementation labor free.
+DiscussionBridge is designed to be generous without making implementation labor free.
 
 The bridge works because the publication and the conversation keep their own strengths. Astro keeps pages fast, structured, versioned, and pleasant to read. Discourse keeps identity, trust levels, notifications, moderation, quoting, reactions, and the long-running social context that makes a community useful after the original page has shipped. When the comments are not decoration, Discourse becomes the living edge of the page.
 
@@ -162,7 +162,7 @@ For `discourse-imported`, the default notice says the page originated in Discour
 
 Imports also record `discussionSourceCategoryId`. When an overwrite observes a category change, CLI output reports the old and new category IDs while leaving the Astro file, public route, and navigation lane unchanged. Route/navigation movement requires an explicit reviewed category-to-output mapping; the import never moves a page merely because a Discourse user reorganized the source topic. `astro-managed` pages render no source notice.
 
-Use the `message`, `linkLabel`, and `sourceLabel` props to match the public site's voice without obscuring provenance. This notice belongs with the article content; the comments boundary remains responsible for discussion controls and Discussion Bridge credit.
+Use the `message`, `linkLabel`, and `sourceLabel` props to match the public site's voice without obscuring provenance. This notice belongs with the article content; the comments boundary remains responsible for discussion controls and DiscussionBridge credit.
 
 ## Content Lanes
 
@@ -237,6 +237,22 @@ Recommended Discourse embedding settings for `fullInteractive`:
 - `Embed any origin`: no. Prefer explicit embeddable hosts.
 - `Embed topics list`: no unless you are intentionally building topic-list widgets.
 - `Allowed embed selectors`: empty/default unless you are using Discourse's native page-scraping embed flow and need to target a specific page region.
+
+`Same site cookies` is a hidden Discourse setting and may return no results in
+Admin search. On a self-hosted two-container installation, an authorized
+operator must use the production Rails console in the web container (commonly
+`web_only`) and record the prior value before setting
+`SiteSetting.same_site_cookies = "None"`. Do not use the standalone
+`./launcher enter app` command for a two-container installation. A managed
+Discourse host must make the hidden-setting change for the site administrator.
+
+After changing the setting, mint a fresh forum session: clear only the forum
+cookies or use a clean browser profile, sign in to Discourse at the top level,
+return to the embedding page, and verify that the waiting state resolves and an
+authorized embedded action succeeds. `SameSite=None` broadens cross-site cookie
+availability, so HTTPS and Secure cookies are mandatory; keep allowed embed
+origins narrow, keep `Embed any origin` disabled, and retain Discourse CSRF
+protections.
 
 `DiscourseDiscussion.astro` is also exported for provider-specific usage, and `DiscourseComments.astro` remains as a compatibility alias.
 
@@ -689,6 +705,4 @@ DiscussionBridge is Discourse-first. The main expansion path is framework and pl
 - Potential future integrations for frameworks such as Next.js, Nuxt, SvelteKit, or static site generators
 
 An optional Discourse plugin is a likely Layer 3 control plane. It can provide bridge-aware admin settings, source mappings, health/status endpoints, duplicate detection, richer notifications, and a native operations surface for Astro, Statamic, and future adapters.
-
-
 

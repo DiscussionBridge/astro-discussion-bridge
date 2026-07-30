@@ -1,0 +1,842 @@
+{
+  "version": 2,
+  "mode": "obbba-law-gate1-doctrine-fact-source-matrix",
+  "createdOn": "2026-07-26",
+  "status": "gate-1-controlling-recovery-record",
+  "authorityBoundary": "Inventory and governance evidence only. This artifact is not publication authority and does not authorize Gate 2 or later work.",
+  "schema": {
+    "rootKeys": [
+      "version",
+      "mode",
+      "createdOn",
+      "status",
+      "authorityBoundary",
+      "schema",
+      "entries",
+      "conflictRule"
+    ],
+    "rowKeys": [
+      "id",
+      "claim",
+      "status",
+      "statusDetail",
+      "authorityClass",
+      "evidence",
+      "permittedUses",
+      "prohibitedUses",
+      "knownContradictoryOrIncompleteArtifacts",
+      "failureRule",
+      "coverageFailures",
+      "reviewOwner",
+      "reviewDate"
+    ],
+    "evidenceKeys": [
+      "role",
+      "identifier",
+      "path",
+      "sha256",
+      "commitmentStatus"
+    ],
+    "statusValues": [
+      "settled-fact",
+      "provisional-derived-fact",
+      "product-decision",
+      "diagnostic-observation"
+    ],
+    "commitmentStatusValues": [
+      "reviewed",
+      "pending"
+    ],
+    "constraints": {
+      "uniqueRowIds": true,
+      "nonemptyStringFields": [
+        "id",
+        "claim",
+        "statusDetail",
+        "authorityClass",
+        "reviewOwner"
+      ],
+      "nonemptyArrayFields": [
+        "evidence",
+        "permittedUses",
+        "prohibitedUses"
+      ],
+      "isoDateFields": [
+        "reviewDate"
+      ],
+      "sha256Pattern": "^[a-f0-9]{64}$",
+      "nullableEvidenceFields": [
+        "path",
+        "sha256"
+      ],
+      "uniformRowShape": true,
+      "uniformEvidenceShape": true
+    }
+  },
+  "entries": [
+    {
+      "id": "law-authority-boundary",
+      "claim": "Law as Amended legal content comes from authoritative external sources.",
+      "status": "product-decision",
+      "statusDetail": "settled-product-invariant",
+      "authorityClass": "durable-product-doctrine",
+      "evidence": [
+        {
+          "role": "product-doctrine",
+          "identifier": "law-as-amended-authority-boundary-20260726",
+          "path": "C:/CodeProjects/Planning/DiscussionBridge/law-as-amended-authority-boundary-20260726.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "govern all Law as Amended source and publication design"
+      ],
+      "prohibitedUses": [
+        "forum bodies or local derivatives as legal authority"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "superseded enacted-derivative manifest and writer substituted local OBBBA Text derivatives"
+      ],
+      "failureRule": "Stop as BLOCKED — DOCTRINE/EVIDENCE CONFLICT if a proposed source violates this boundary.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "forum-role",
+      "claim": "The forum contributes only verbatim title, tags/category/index identity, and discussion-topic binding.",
+      "status": "product-decision",
+      "statusDetail": "settled-product-invariant",
+      "authorityClass": "durable-product-doctrine",
+      "evidence": [
+        {
+          "role": "product-doctrine",
+          "identifier": "law-as-amended-authority-boundary-20260726",
+          "path": "C:/CodeProjects/Planning/DiscussionBridge/law-as-amended-authority-boundary-20260726.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "forum metadata binding",
+        "discussion and drafting connection"
+      ],
+      "prohibitedUses": [
+        "post body or cooked HTML as legal content",
+        "forum writeback from generated Law pages"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "cancelled forum-body writer path remains historical diagnostic provenance"
+      ],
+      "failureRule": "Any Law pipeline consuming forum body content fails this invariant.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "planned-enacted-authority",
+      "claim": "The planned controlling authority class for enacted legal text is direct GovInfo enacted Public Law 119-21.",
+      "status": "product-decision",
+      "statusDetail": "approved-recovery-contract-pending-source-selection",
+      "authorityClass": "planned-official-source-role",
+      "evidence": [
+        {
+          "role": "governance-approval",
+          "identifier": "code-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "governance-approval",
+          "identifier": "product-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "governance-approval",
+          "identifier": "boss-gate-1-authorization",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "Gate 2 source-selection and Gate 3 acquisition design"
+      ],
+      "prohibitedUses": [
+        "claiming that an exact rendition, member, or byte artifact is already selected",
+        "enrolled bill, OBBBA Text, or forum derivative substitution"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "exact controlling GovInfo rendition, member, bytes, and hashes remain unselected until Gates 2 and 3",
+        "307-entry enrolled artifact is not enacted Public Law authority"
+      ],
+      "failureRule": "No enacted body may be generated until the exact official source is selected and separately approved.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "section-20009",
+      "claim": "Section 20009 is present in enacted Public Law 119-21 and is a mandatory identity.",
+      "status": "settled-fact",
+      "statusDetail": "settled-enacted-law-presence",
+      "authorityClass": "controlling-user-and-boss-correction",
+      "evidence": [
+        {
+          "role": "boss-accountability-doctrine",
+          "identifier": "boss-doctrine-enforcement-accountability-20260726",
+          "path": "C:/CodeProjects/Planning/Codex Tools/boss-doctrine-enforcement-accountability-20260726.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "require exact later GovInfo rendition, locator, bytes, structure, and hash binding"
+      ],
+      "prohibitedUses": [
+        "absence branch",
+        "authority-conflict branch",
+        "quarantine or product-choice branch for existence"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "docs/evidence/OBBBA_ENROLLED_SECTION_AUTHORITY_2026-07-26.json omits Section 20009",
+        "docs/evidence/OBBBA_LAW_ENACTED_DERIVATIVE_MANIFEST_2026-07-26.json falsely treated Section 20009 as unresolved"
+      ],
+      "failureRule": "Any parser, inventory, plan, or writer omission is artifact or parser failure.",
+      "coverageFailures": [
+        "defective 307-entry enrolled artifact",
+        "superseded local derivative inventory"
+      ],
+      "reviewOwner": "Boss and Product Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "forum-cardinality-309",
+      "claim": "The repaired forum identity and discussion-binding inventory currently contains 309 identities.",
+      "status": "provisional-derived-fact",
+      "statusDetail": "forum-inventory-count-not-enacted-cardinality",
+      "authorityClass": "forum-metadata-inventory",
+      "evidence": [
+        {
+          "role": "forum-metadata",
+          "identifier": "obbba-law-as-amended-forum-metadata-20260726",
+          "path": "docs/evidence/OBBBA_LAW_AS_AMENDED_FORUM_METADATA_2026-07-26.json",
+          "sha256": "434761fa42bbd67e2b9b6b8e1523d87fb85b238a5e376c0d6c5ab004e0a16f67",
+          "commitmentStatus": "reviewed"
+        }
+      ],
+      "permittedUses": [
+        "forum identity and binding reconciliation"
+      ],
+      "prohibitedUses": [
+        "establishing enacted-law cardinality",
+        "forcing Gate 4 official-source results"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "official enacted cardinality remains pending direct controlling GovInfo inventory"
+      ],
+      "failureRule": "Gate 4 official-source results must not be forced to equal this forum count.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "section-71119",
+      "claim": "Section 71119 is a Law as Amended source/status item whose exact enacted binding must be established from authoritative official sources.",
+      "status": "official-source-status-pending",
+      "statusDetail": "official-enacted-binding-pending",
+      "authorityClass": "authoritative-official-source-required",
+      "evidence": [
+        {
+          "role": "controlling-boss-phil-correction",
+          "identifier": "section-71119-official-source-first-correction-20260727",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "reviewed"
+        }
+      ],
+      "permittedUses": [
+        "authoritative official-source status and enacted-binding work",
+        "optional forum title, tag, category, index, topic, and discussion-binding context"
+      ],
+      "prohibitedUses": [
+        "claiming completed official enacted binding",
+        "using forum or Discourse metadata as authority",
+        "leading Section 71119 analysis with forum identity"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "authoritative official-source enacted binding remains pending",
+        "docs/evidence/OBBBA_ENROLLED_SECTION_AUTHORITY_2026-07-26.json omits Section 71119, but that diagnostic omission cannot establish Law status or a coverage failure"
+      ],
+      "failureRule": "Official enacted use requires an exact authoritative official-source binding; forum or Discourse context cannot establish it.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "section-70310",
+      "claim": "Section 70310 does not exist and must not be pursued as a missing enacted section.",
+      "status": "settled-fact",
+      "statusDetail": "nonexistent-not-a-search-target",
+      "authorityClass": "controlling-user-and-boss-correction",
+      "evidence": [
+        {
+          "role": "canonical-doc-claim",
+          "identifier": "product-notes-70310-claim",
+          "path": "docs/PRODUCT_NOTES.md",
+          "sha256": "8563f5a0a379ebe714906ad9097af4200f81b41c29b3e6477425acd5c349a447",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "canonical-doc-claim",
+          "identifier": "obbba-human-runbook-70310-claim",
+          "path": "docs/runbooks/OBBBA_ONEBIGBEAUTIFULBILL_HUMAN.md",
+          "sha256": "e10ab5e7ddd342c62c6d00c52087bb0b8d003f55b06e831bbb3850b79d36756f",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "canonical-doc-claim",
+          "identifier": "build-launch-checklists-70310-claim",
+          "path": "docs/BUILD_LAUNCH_CHECKLISTS.md",
+          "sha256": "1abab637bfedf8dcd59f9276e1e1858abf0765fa5179f4f45871380d496b9fee",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "generated-doc-claim",
+          "identifier": "generated-product-notes-70310-claim",
+          "path": "sites/docs/src/content/docs/product-notes.md",
+          "sha256": "dd915017f3b264811aff1bf06ea8da82be32e80d744557584c3ffad147f6d6bb",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "generated-doc-claim",
+          "identifier": "generated-obbba-human-runbook-70310-claim",
+          "path": "sites/docs/src/content/docs/runbooks-obbba-onebigbeautifulbill-human.md",
+          "sha256": "6a1330c2714a10eb22868e4f8557f8671e4815a7e3f979347b773d9ac2f40bdd",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "generated-doc-claim",
+          "identifier": "generated-build-launch-checklists-70310-claim",
+          "path": "sites/docs/src/content/docs/build-launch-checklists.md",
+          "sha256": "1619673dff7d1ac2b32f0178dc4944c89cbfa7409a9f5d5dfcba4b49344c9a34",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "post-sync-generated-manifest",
+          "identifier": "docs-generated-post-sync-manifest-20260727",
+          "path": "docs/evidence/DOCS_GENERATED_POST_SYNC_MANIFEST_2026-07-27.json",
+          "sha256": "7f211f6709fd254568343bae9732dc99271650431fc0346242f1a00f1a5e8f0b",
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "correction of prior artifacts, documentation, and plans that treated Section 70310 as pending or missing"
+      ],
+      "prohibitedUses": [
+        "searching for Section 70310",
+        "treating Section 70310 as a provisional open source-status item",
+        "pursuing Section 70310 as a missing enacted section"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "the three canonical and three generated documents were inspected and corrected on 2026-07-27",
+        "a complete 28-file pre-sync manifest was not captured, so the post-sync evidence does not claim that none of the other 25 generated pages changed during the first sync"
+      ],
+      "failureRule": "Stop any search or missing-section workflow for Section 70310 and correct obsolete pending treatment.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Manual Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "artifact-absence-rule",
+      "claim": "Absence from a derivative, import, diagnostic artifact, local inventory, topic set, or generated coverage report establishes only artifact coverage failure.",
+      "status": "product-decision",
+      "statusDetail": "settled-evidence-doctrine",
+      "authorityClass": "boss-accountability-doctrine",
+      "evidence": [
+        {
+          "role": "boss-accountability-doctrine",
+          "identifier": "boss-doctrine-enforcement-accountability-20260726",
+          "path": "C:/CodeProjects/Planning/Codex Tools/boss-doctrine-enforcement-accountability-20260726.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "diagnose incomplete artifacts and parsers"
+      ],
+      "prohibitedUses": [
+        "infer absence from law, statute, source authority, or product truth"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "307-entry enrolled artifact omissions were previously promoted into false Law uncertainty"
+      ],
+      "failureRule": "Any contrary inference stops as BLOCKED — DOCTRINE/EVIDENCE CONFLICT.",
+      "coverageFailures": [],
+      "reviewOwner": "Every Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "source-role-separation",
+      "claim": "Current OLRC, prior-state OLRC, first incorporation release, earlier historical baseline, direct GovInfo enacted law, causation evidence, and forum discussion binding are distinct, non-substitutable roles.",
+      "status": "product-decision",
+      "statusDetail": "approved-recovery-contract",
+      "authorityClass": "source-role-policy",
+      "evidence": [
+        {
+          "role": "governance-approval",
+          "identifier": "code-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "governance-approval",
+          "identifier": "product-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "governance-approval",
+          "identifier": "boss-gate-1-authorization",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "validate role-specific evidence and presentation"
+      ],
+      "prohibitedUses": [
+        "silently substitute a source valid for one role into another role"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "exact Gate 2 enacted source and final current-release selection remain pending"
+      ],
+      "failureRule": "A role substitution is a doctrine conflict and stops the gate.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "state-versus-causation",
+      "claim": "Release-state differences are state evidence only; causal attribution requires exact Public Law 119-21 classification, editorial, or provision evidence.",
+      "status": "product-decision",
+      "statusDetail": "settled-attribution-invariant",
+      "authorityClass": "attribution-policy",
+      "evidence": [
+        {
+          "role": "governance-approval",
+          "identifier": "code-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "governance-approval",
+          "identifier": "product-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "neutral comparison wording"
+      ],
+      "prohibitedUses": [
+        "infer amendment causation from text differences alone"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "current comparison artifacts establish state evidence but cannot alone establish causation"
+      ],
+      "failureRule": "Unsupported causal wording is review-required and cannot publish.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "single-writer-no-writeback",
+      "claim": "Law generation is single-writer and no-writeback.",
+      "status": "product-decision",
+      "statusDetail": "settled-publication-invariant",
+      "authorityClass": "publication-policy",
+      "evidence": [
+        {
+          "role": "governance-approval",
+          "identifier": "code-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "governance-approval",
+          "identifier": "product-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "rebuild Astro content only through reviewed authority and approved write gates"
+      ],
+      "prohibitedUses": [
+        "Discourse mutation",
+        "official-source byte mutation",
+        "automatic legal-content mutation"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "superseded writer remains directly executable until Gate 1 reachability remediation"
+      ],
+      "failureRule": "Any unexpected write or writeback stops the gate.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "fail-closed-review",
+      "claim": "Missing, duplicate, ambiguous, cross-section, unsupported, stale, causally uncertain, or contradictory evidence cannot silently publish.",
+      "status": "product-decision",
+      "statusDetail": "settled-review-invariant",
+      "authorityClass": "review-policy",
+      "evidence": [
+        {
+          "role": "governance-approval",
+          "identifier": "code-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "governance-approval",
+          "identifier": "product-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "produce a named review-required state and stop the applicable gate"
+      ],
+      "prohibitedUses": [
+        "silent omission",
+        "fabricated fallback",
+        "unreviewed publication"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "eight provisional review-required mappings remain subject to later exact review",
+        "freshness and official enacted-source decisions remain pending"
+      ],
+      "failureRule": "Named uncertainty is review-required and blocks publication unless an approved public treatment exists.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "enrolled-chain-boundary",
+      "claim": "The enrolled analyzer, library, authority builder, tests, and 307-entry artifact are diagnostic and QA inputs only.",
+      "status": "diagnostic-observation",
+      "statusDetail": "gate-1-qa-only-classification",
+      "authorityClass": "diagnostic-evidence",
+      "evidence": [
+        {
+          "role": "enrolled-qa-artifact",
+          "identifier": "obbba-enrolled-section-authority-20260726",
+          "path": "docs/evidence/OBBBA_ENROLLED_SECTION_AUTHORITY_2026-07-26.json",
+          "sha256": "f10f9b688ed8c7ff0168b72587cfdea2ddc30a55ee0390e659f901b4616309b2",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "enrolled-analyzer",
+          "identifier": "analyze-enrolled-source",
+          "path": "scripts/analyze-enrolled-source.mjs",
+          "sha256": "08797cb8682493f9d604bc9944dfa1ad3e4083c3bc0daed6a17f2111db44b2e5",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "enrolled-library",
+          "identifier": "enrolled-source-lib",
+          "path": "scripts/enrolled-source-lib.mjs",
+          "sha256": "1cd429a93b10940e0b809478503e308cf647add57463bc0cd682b77705241695",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "enrolled-authority-builder",
+          "identifier": "build-obbba-enrolled-section-authority",
+          "path": "scripts/build-obbba-enrolled-section-authority.mjs",
+          "sha256": "47eee2c053486a2f5a926b6ff373a532ec8aaa0820579e6dfb5edbf621be266a",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "enrolled-analyzer-test",
+          "identifier": "enrolled-source-analyzer-test",
+          "path": "packages/astro-discussion-bridge/test/enrolled-source-analyzer.test.mjs",
+          "sha256": "3ab98f8baeb9a62885f1e08fe88cdf37f26ef1c0331873378a90ef8b74407be4",
+          "commitmentStatus": "reviewed"
+        }
+      ],
+      "permittedUses": [
+        "bounded OBBBA Text QA and import validation"
+      ],
+      "prohibitedUses": [
+        "Law authority",
+        "Law body",
+        "Law cardinality",
+        "Law rendering or writer input"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "artifact has 307 entries and omits 20009; its omissions of Section 71119 and nonexistent Section 70310 do not establish Law coverage failures",
+        "superseded enacted-derivative builder consumed this QA artifact in the Law lane"
+      ],
+      "failureRule": "Machine enforcement must preserve bounded Text-lane use and reject every Law-lane use.",
+      "coverageFailures": [
+        "20009 omitted"
+      ],
+      "reviewOwner": "Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "rendering-generator-boundary",
+      "claim": "The existing USLM rendering-commitment generator and test are partial and unsafe because the generator explicitly excludes Section 20009.",
+      "status": "diagnostic-observation",
+      "statusDetail": "gate-1-blocker-regeneration-prohibited",
+      "authorityClass": "unsafe-derived-evidence-generator",
+      "evidence": [
+        {
+          "role": "rendering-commitment-generator",
+          "identifier": "build-obbba-law-uslm-rendering-commitments",
+          "path": "scripts/build-obbba-law-uslm-rendering-commitments.mjs",
+          "sha256": "e91aaa2356636e9e8990acadb555900d7d8c5c8a43fbfaac11d8d4313ff32e63",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "rendering-commitment-test",
+          "identifier": "obbba-law-uslm-rendering-commitments-test",
+          "path": "scripts/test/obbba-law-uslm-rendering-commitments.test.mjs",
+          "sha256": "4ddd927ac1ca15f398c4b80666651c739ec71b1a3f4f61121c062bcf96c58bda",
+          "commitmentStatus": "reviewed"
+        }
+      ],
+      "permittedUses": [
+        "read-only provenance inventory"
+      ],
+      "prohibitedUses": [
+        "regeneration before corrected design and review"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "generator line 272 explicitly excludes Section 20009",
+        "existing 479867 artifact contains no Section 20009 identity"
+      ],
+      "failureRule": "Any invocation before later corrected design and approval is prohibited.",
+      "coverageFailures": [
+        "identity-specific Section 20009 exclusion"
+      ],
+      "reviewOwner": "Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "retained-artifact-boundary",
+      "claim": "Retained OLRC and USLM artifacts are candidate derived evidence and do not self-authorize legal truth or publication.",
+      "status": "diagnostic-observation",
+      "statusDetail": "gate-1-retained-candidate-evidence",
+      "authorityClass": "candidate-derived-evidence",
+      "evidence": [
+        {
+          "role": "official-authority-map",
+          "identifier": "obbba-law-official-authority-map-20260726",
+          "path": "docs/evidence/OBBBA_LAW_OFFICIAL_AUTHORITY_MAP_2026-07-26.json",
+          "sha256": "977639eacd190746b9bf347fb933bf7434cbf80891d1b7255007c9daf2edcf26",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "usc-release-plan",
+          "identifier": "obbba-law-usc-release-input-plan-v3-20260726",
+          "path": "docs/evidence/OBBBA_LAW_USC_RELEASE_INPUT_PLAN_V3_2026-07-26.json",
+          "sha256": "5a76438265c076c3be6188fed52ebf21078ea928177a8659e03be1fc209bb6c7",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "incorporation-window-plan",
+          "identifier": "obbba-law-incorporation-window-input-plan-20260726",
+          "path": "docs/evidence/OBBBA_LAW_INCORPORATION_WINDOW_INPUT_PLAN_2026-07-26.json",
+          "sha256": "562759559ff62101394fe512c38e68593fbbc8ce2d10f3719f101d351d875c10",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "incorporation-archive-evidence",
+          "identifier": "obbba-law-incorporation-window-archive-evidence-20260726",
+          "path": "docs/evidence/OBBBA_LAW_INCORPORATION_WINDOW_ARCHIVE_EVIDENCE_2026-07-26.json",
+          "sha256": "5dc17fedeaaccfa834ce41732047685b80006d4158151a103b3ad1ec68d63f79",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "incorporation-xml-evidence",
+          "identifier": "obbba-law-incorporation-window-xml-evidence-20260726",
+          "path": "docs/evidence/OBBBA_LAW_INCORPORATION_WINDOW_XML_EVIDENCE_2026-07-26.json",
+          "sha256": "84136240ddc76309e82dd7d39ca8c4cd4fce08a0bdd737ce0075aa55f0829577",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "versioned-section-store",
+          "identifier": "obbba-law-usc-versioned-section-store-20260726",
+          "path": "docs/evidence/OBBBA_LAW_USC_VERSIONED_SECTION_STORE_2026-07-26.json",
+          "sha256": "90e1f677227f510fd2b25f370d200ba49d5cc6476706d3be50bad66092177cdd",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "state-comparison-index",
+          "identifier": "obbba-law-usc-state-comparison-index-20260726",
+          "path": "docs/evidence/OBBBA_LAW_USC_STATE_COMPARISON_INDEX_2026-07-26.json",
+          "sha256": "c2de89f8b5ff24485c19a4dc1c5658ce0a86ada9fba5030ec8de9adfccda76e5",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "attribution-index-v2",
+          "identifier": "obbba-law-usc-attribution-index-v2-20260726",
+          "path": "docs/evidence/OBBBA_LAW_USC_ATTRIBUTION_INDEX_V2_2026-07-26.json",
+          "sha256": "ea33c90c3c860385d016a58e10cdc92f5eb97e4620a3e406fa8696074fbc3ec7",
+          "commitmentStatus": "reviewed"
+        },
+        {
+          "role": "rendering-commitments",
+          "identifier": "obbba-law-uslm-rendering-commitments-20260726",
+          "path": "docs/evidence/OBBBA_LAW_USLM_RENDERING_COMMITMENTS_2026-07-26.json",
+          "sha256": "4798677ffa04d2237a60359465108f5e12d46b6dc4d9101e23a3ade1a8e66422",
+          "commitmentStatus": "reviewed"
+        }
+      ],
+      "permittedUses": [
+        "later exact-gate validation"
+      ],
+      "prohibitedUses": [
+        "authority inferred only from artifact identity or hash"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "role and authority proof remains pending at later gates",
+        "rendering commitments require exact target-role validation",
+        "no retained SHA independently authorizes publication"
+      ],
+      "failureRule": "Every artifact must be revalidated against its exact later-gate source and role.",
+      "coverageFailures": [],
+      "reviewOwner": "Code Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "pending-product-policies",
+      "claim": "Current-law freshness, amendment-history scope, public legal-information scope, correction intake, withdrawal and rollback ownership, and post-release cadence are required Product decisions.",
+      "status": "product-decision",
+      "statusDetail": "settled-obligations-values-pending",
+      "authorityClass": "approved-recovery-plan",
+      "evidence": [
+        {
+          "role": "governance-approval",
+          "identifier": "product-boss-recovery-plan-sign-off",
+          "path": null,
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "named later-gate Product decisions"
+      ],
+      "prohibitedUses": [
+        "inventing final wording or values during Gate 1"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "exact current release and as-of behavior pending",
+        "Alpha amendment-history scope pending",
+        "legal-information wording pending",
+        "correction and withdrawal ownership pending",
+        "post-release cadence pending"
+      ],
+      "failureRule": "Later publication gates remain blocked until their named Product decisions are approved.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Manual Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "portable-core-boundary",
+      "claim": "OBBBA one-off recovery behavior remains site evidence until separately reviewed for portable Discussion Bridge Core adoption.",
+      "status": "product-decision",
+      "statusDetail": "settled-architecture-principle",
+      "authorityClass": "product-family-doctrine",
+      "evidence": [
+        {
+          "role": "product-architecture-doctrine",
+          "identifier": "manual-architecture-and-task-roles-20260721",
+          "path": "C:/CodeProjects/Planning/DiscussionBridge/manual-architecture-and-task-roles-20260721.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "product-family-doctrine",
+          "identifier": "product-family-doctrine-20260725",
+          "path": "C:/CodeProjects/Planning/DiscussionBridge/product-family-doctrine-20260725.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "deliberate classification of prototype and adapter behavior"
+      ],
+      "prohibitedUses": [
+        "silent generalization into Core product contract"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [],
+      "failureRule": "Portable Core adoption requires a separate explicit product and architecture review.",
+      "coverageFailures": [],
+      "reviewOwner": "Product Boss and Boss",
+      "reviewDate": "2026-07-27"
+    },
+    {
+      "id": "operating-rules",
+      "claim": "Lane ownership, explicit status reporting, durable manual capture, and the no-secrets rule remain mandatory.",
+      "status": "product-decision",
+      "statusDetail": "settled-operating-doctrine",
+      "authorityClass": "boss-and-manual-doctrine",
+      "evidence": [
+        {
+          "role": "machine-manual-doctrine",
+          "identifier": "machine-manual-seed",
+          "path": "C:/CodeProjects/Planning/DiscussionBridge/machine-manual-seed.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "manual-architecture-doctrine",
+          "identifier": "manual-architecture-and-task-roles-20260721",
+          "path": "C:/CodeProjects/Planning/DiscussionBridge/manual-architecture-and-task-roles-20260721.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        },
+        {
+          "role": "boss-operating-doctrine",
+          "identifier": "boss-operating-package-20260721",
+          "path": "C:/CodeProjects/Planning/Codex Tools/boss-operating-package-20260721.md",
+          "sha256": null,
+          "commitmentStatus": "pending"
+        }
+      ],
+      "permittedUses": [
+        "govern execution, review, routing, and documentation"
+      ],
+      "prohibitedUses": [
+        "silent completion",
+        "secret values in records",
+        "lane substitution without routing"
+      ],
+      "knownContradictoryOrIncompleteArtifacts": [
+        "Bridge Boss previously stopped without explicit status and required user prompting"
+      ],
+      "failureRule": "Every active step requires explicit status and the current Boss approval boundary.",
+      "coverageFailures": [],
+      "reviewOwner": "Boss and Manual Boss",
+      "reviewDate": "2026-07-27"
+    }
+  ],
+  "conflictRule": "BLOCKED — DOCTRINE/EVIDENCE CONFLICT"
+}

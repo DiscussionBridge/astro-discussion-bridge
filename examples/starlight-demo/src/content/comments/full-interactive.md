@@ -4,7 +4,7 @@ description: "A demo route for Discourse's full app iframe embed."
 date: "2026-07-17"
 discourseTopicId: 33
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/full-comments-mode/33"
-discussionEmbedUrl: "https://astrostarlight.demo.discussionbridge.dev/comments/full/"
+discussionEmbedUrl: "https://astrostarlightdemo.discussionbridge.dev/comments/full/"
 discussionCommentsDisplay: "fullInteractive"
 discussionSync: false
 ---

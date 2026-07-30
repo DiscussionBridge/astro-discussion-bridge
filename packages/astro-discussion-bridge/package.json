@@ -67,6 +67,7 @@
     "./DiscourseReplies.astro": "./src/components/DiscourseReplies.astro",
     "./DiscourseDiscussion.astro": "./src/components/DiscourseDiscussion.astro",
     "./Discussion.astro": "./src/components/Discussion.astro",
+    "./DiscussionCredit.astro": "./src/components/DiscussionCredit.astro",
     "./DiscussionSource.astro": "./src/components/DiscussionSource.astro",
     "./DiscussionRelations.astro": "./src/components/DiscussionRelations.astro",
     "./DiscussionNavigation.astro": "./src/components/DiscussionNavigation.astro"

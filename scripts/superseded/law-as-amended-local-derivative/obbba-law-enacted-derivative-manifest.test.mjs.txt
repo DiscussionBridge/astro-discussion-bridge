@@ -1,0 +1,121 @@
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+
+import {
+  commitEnactedDerivativeManifestCreateOnly,
+  validateEnactedDerivativeManifest,
+} from "../build-obbba-law-enacted-derivative-manifest.mjs";
+
+const HASH = "a".repeat(64);
+const expected = {
+  pagePlanSha256: HASH,
+  enrolledAuthoritySha256: HASH,
+};
+
+function fixture() {
+  const entries = Array.from({ length: 81 }, (_, index) => {
+    const sectionId = String(30000 + index);
+    const topicId = 1000 + index;
+    return {
+      sectionId,
+      localRelativePath: `title-i/sec-${sectionId}.md`,
+      localFileSha256: HASH,
+      frontmatter: {
+        title: `Sec. ${sectionId}. Test`,
+        sectionId,
+        contentLens: "obbba-text",
+        discourseTopicId: topicId,
+        discussionSync: false,
+      },
+      bodySha256: HASH,
+      enrolledSemanticProfile: "enrolled-legal-text",
+      enrolledSemanticSha256: HASH,
+      enrolledAuthority: {
+        sourceUrl: `https://forum.repealobbba.org/t/${topicId}`,
+        topicId,
+      },
+      govInfoSourceUrl:
+        "https://www.govinfo.gov/app/details/PLAW-119publ21",
+    };
+  });
+  return {
+    version: 1,
+    mode: "obbba-law-enacted-derivative-manifest",
+    authorityBoundary:
+      "Local Markdown is a verified publication derivative of enrolled "
+      + "Public Law 119-21 authority; directory presence is not authority.",
+    inputs: {
+      pagePlanSha256: HASH,
+      enrolledAuthoritySha256: HASH,
+    },
+    summary: {
+      plannedEnactedOnly: 82,
+      verifiedDerivatives: 81,
+      unresolved: 1,
+    },
+    entries,
+    unresolved: [{
+      sectionId: "20009",
+      reason:
+        "enrolled-section-authority-and-local-derivative-are-absent",
+    }],
+  };
+}
+
+test("strictly validates 81 derivatives plus unresolved 20009", () => {
+  validateEnactedDerivativeManifest(fixture(), expected);
+  for (const mutate of [
+    (value) => { value.extra = true; },
+    (value) => { value.entries[0].body = "legal text canary"; },
+    (value) => { value.entries[0].localRelativePath = "../escape.md"; },
+    (value) => { value.entries[0].frontmatter.contentLens = "impact"; },
+    (value) => { value.entries[0].enrolledSemanticSha256 = "bad"; },
+    (value) => { value.unresolved[0].sectionId = "20010"; },
+    (value) => { value.entries[1].sectionId = value.entries[0].sectionId; },
+  ]) {
+    const value = fixture();
+    mutate(value);
+    assert.throws(() => validateEnactedDerivativeManifest(value, expected));
+  }
+});
+
+test("post-validation mutation leaves output absent", async () => {
+  const root = await mkdtemp(join(tmpdir(), "obbba-enacted-mutation-"));
+  try {
+    const output = join(root, "output.json");
+    await assert.rejects(
+      commitEnactedDerivativeManifestCreateOnly(
+        fixture(),
+        output,
+        (value) => {
+          value.entries[0].localFileSha256 = "b".repeat(64);
+        },
+      ),
+      /changed after validation/,
+    );
+    await assert.rejects(readFile(output), { code: "ENOENT" });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("late wx collision preserves competing bytes", async () => {
+  const root = await mkdtemp(join(tmpdir(), "obbba-enacted-race-"));
+  try {
+    const output = join(root, "output.json");
+    await assert.rejects(
+      commitEnactedDerivativeManifestCreateOnly(
+        fixture(),
+        output,
+        async () => writeFile(output, "competitor", "utf8"),
+      ),
+      { code: "EEXIST" },
+    );
+    assert.equal(await readFile(output, "utf8"), "competitor");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

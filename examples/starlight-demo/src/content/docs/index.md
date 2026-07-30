@@ -1,5 +1,5 @@
 ---
-title: "Discussion Bridge for Astro: Starlight Demo"
+title: "DiscussionBridge for Astro: Starlight Demo"
 discourseTopicId: 21
 discourseTopicUrl: "https://forum.discussionbridge.dev/t/discussionbridge-starlight-demo/21"
 
@@ -8,9 +8,9 @@ discussionLastSyncedAt: "2026-07-17T15:44:45.769Z"
 
 ---
 
-# Discussion Bridge for Astro: Starlight Demo
+# DiscussionBridge for Astro: Starlight Demo
 
-This is a demo Starlight site for Discussion Bridge for Astro. It installs `astro-discussion-bridge` from the local package directory for package development.
+This is a demo Starlight site for DiscussionBridge for Astro. It installs `astro-discussion-bridge` from the local package directory for package development.
 
 The discussion section is added by a Starlight `MarkdownContent` override, so this page can remain plain Markdown while comments stay attached to the page body.
 

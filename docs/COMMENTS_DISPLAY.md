@@ -98,20 +98,6 @@ discussionBridge({
 });
 ```
 
-## Discussion Bridge Credit
-
-The discussion boundary should support a restrained product credit near the
-comments section. Candidate language includes:
-
-- `Discussion connection by Discussion Bridge`
-- `Discourse connection by Discussion Bridge`
-
-The credit should link to the canonical Discussion Bridge product page, remain
-visually secondary to the article and discussion, and work consistently across
-`simple`, `full`, and `fullInteractive`. Its final wording, default behavior,
-configuration surface, and accessibility treatment remain an implementation
-decision; it should not be hard-coded into site content.
-
 Without `refreshEndpoint`, browser refresh reads directly from `https://forum.example.com/t/{topicId}.json`. That requires the Discourse site to allow browser CORS from the Astro site. Static deployments can avoid CORS by adding a same-origin proxy route and pointing `refreshEndpoint` at it.
 
 When Discourse is unavailable, `full` should keep the article shell intact and show a temporary unavailable state with an "Open the full discussion" link when the topic URL is available.
@@ -144,12 +130,12 @@ Keep four possible paths distinct:
 1. use the existing official theme component for supported normal-topic
    behavior;
 2. fork or extend that theme component;
-3. build the separate optional `Discussion Bridge for Discourse` plugin for
+3. build the separate optional `DiscussionBridge for Discourse` plugin for
    bounded full-app embed context/table/Mermaid parity;
 4. pursue an upstream Discourse change.
 
-Never call the official theme component the “Discussion Bridge Mermaid plugin.”
-The optional Discussion Bridge plugin is separate, and Tier 1 API-only operation
+Never call the official theme component the “DiscussionBridge Mermaid plugin.”
+The optional DiscussionBridge plugin is separate, and Tier 1 API-only operation
 must remain fully functional without either extension.
 
 Recommended Discourse settings:
@@ -165,6 +151,52 @@ Recommended Discourse settings:
 - `Allowed embed selectors`: empty/default unless using Discourse's native page-scraping embed flow
 
 Test `fullInteractive` on a page with enough article body to push comments below the first viewport. Short demo pages can make the fixed Discourse composer or sign-in button appear immediately, which can make the UX look different from a real article.
+
+## DiscussionBridge Credit
+
+DiscussionBridge renders one restrained credit after the complete discussion
+surface in `simple`, `full`, and `fullInteractive`:
+
+> Connected by [DiscussionBridge](https://discussionbridge.dev/)
+
+The credit is enabled by default. Operators may disable it without disabling
+comments or changing Discourse:
+
+```js
+discussionBridge({
+  provider: "discourse",
+  discourseUrl: "https://forum.example.com",
+  comments: {
+    credit: {
+      enabled: true,
+      prefix: "Connected by",
+      label: "DiscussionBridge",
+      href: "https://discussionbridge.dev/",
+    },
+  },
+});
+```
+
+Set `enabled: false` to remove the credit completely. `prefix` and `label` are
+plain text and are escaped by Astro. `href` must be an absolute HTTP(S) URL;
+unsafe or malformed protocols fail during configuration.
+
+Only the label is linked. The default presentation is centered, visually
+secondary, and inherits the host site's small-text, muted-color, and accent
+tokens. Hover and keyboard focus shift the linked label to the accent color and
+grow a short underline beneath it. Reduced-motion preferences remove the
+animation without removing the underline or focus indication.
+
+Stable styling hooks are:
+
+- `.discussion-bridge-credit`
+- `.discussion-bridge-credit__prefix`
+- `.discussion-bridge-credit__brand`
+- `[data-discussion-bridge-credit]`
+
+The DiscussionBridge credit and Discourse's `Powered by Discourse` control are
+independent. DiscussionBridge does not query or mirror that Discourse setting.
+In `fullInteractive`, the Bridge credit remains outside the cross-origin iframe.
 
 ## Support Notes
 

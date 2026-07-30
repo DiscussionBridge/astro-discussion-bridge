@@ -1,6 +1,6 @@
 # TODO
 
-Use this as the working roadmap for Discussion Bridge for Astro. Keep the operating loop in view:
+Use this as the working roadmap for DiscussionBridge for Astro. Keep the operating loop in view:
 
 publish -> sync -> diagnose -> maintain -> recover -> document
 
@@ -27,7 +27,7 @@ quality review before Product Boss approval.
 
 #### Phil/Ops Prerequisites Before Alpha Can Be Public
 
-- Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
+- Reconfigure DiscussionBridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
 - Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain.
 - Create live Discourse Alpha Support category.
 - Route `alphasupport@discussionbridge.dev` into Discourse.
@@ -54,7 +54,7 @@ quality review before Product Boss approval.
 - Create live Discourse Alpha Support category, route `alphasupport@discussionbridge.dev` into Discourse, and wire final channel links into README, package metadata, demo pages, and release notes. Phil/Ops owns the live category and email route; Codex owns final link wiring after those exist.
 - Product docs URL decided: use `docs.discussionbridge.dev` with Starlight. Keep `discussionbridge.dev/docs` only as a redirect or fallback if needed.
 - Deployed the Starlight docs site source into the repo under `sites/docs`, generated from repository `docs/*.md`.
-- Reconfigure Discussion Bridge Cloudflare under the new ownership/account plan before Alpha: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles. Phil/Ops prerequisite.
+- Reconfigure DiscussionBridge Cloudflare under the new ownership/account plan before Alpha: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles. Phil/Ops prerequisite.
 - Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain. Phil/Ops prerequisite.
 - Make `discussionbridge.dev` live in a credible public form before showing Alpha outside the working circle.
 - Added proper attribution, ownership, and licensing notes to docs where appropriate as an Alpha gate item. Treat this as a once-and-done pass unless ownership, dependencies, copied examples, or source material changes.
@@ -100,7 +100,7 @@ quality review before Product Boss approval.
 - Until then, keep the fallback explicit: global/admin-capable diagnostics key for setup checks; granular publishing key where it can perform create/update/tag/read actions.
 - Consider reading Discourse title/body/tag constraints from the target instance in `check-discourse`, while keeping explicit CLI/env limits for dry runs and restricted keys.
 - Add `check-discourse` examples for global diagnostics key, granular publishing key, and explicit configured limits.
-- Investigate whether a Discourse admin/bot API key can post or send messages as another Discourse user, what endpoint/scope enables it if supported, and whether that behavior is appropriate for Discussion Bridge. Potential future use case: one trusted configuration/control-plane bot publishing notices or dashboard/admin messages across multiple users, sites, channels, or client forums in a multisite/agency setup. Possible future config shape: `postAs: "username"` in site/lane config or `discussionPostAs: "username"` in frontmatter. If supported, CLI/check output should make the operating key user and effective posting user explicit.
+- Investigate whether a Discourse admin/bot API key can post or send messages as another Discourse user, what endpoint/scope enables it if supported, and whether that behavior is appropriate for DiscussionBridge. Potential future use case: one trusted configuration/control-plane bot publishing notices or dashboard/admin messages across multiple users, sites, channels, or client forums in a multisite/agency setup. Possible future config shape: `postAs: "username"` in site/lane config or `discussionPostAs: "username"` in frontmatter. If supported, CLI/check output should make the operating key user and effective posting user explicit.
 
 ### Maintain
 
@@ -152,7 +152,7 @@ quality review before Product Boss approval.
 - Maintain an Astro compatibility matrix for Astro 6 and 7. Treat Astro 5 as possible future legacy support only after explicit testing.
 - Test demo installs after Astro core and official integration releases, especially `@astrojs/cloudflare`.
 - Add a `doctor` or `check-upgrade` command that reports installed Astro, adapter, preset, provider, package version, and likely configuration issues.
-- Document the recommended order: upgrade Astro official packages first, then verify Discussion Bridge.
+- Document the recommended order: upgrade Astro official packages first, then verify DiscussionBridge.
 - Keep Starlight optional so Astro core sites are not forced to install it.
 - Before any Alpha tag/release, run package tests, local demo build, dry-run CLI checks, and at least one live smoke sync.
 - Alpha release channel decided: use GitHub release plus repo-installable. Hold npm until late Beta, after the first support/docs loop survives real use.
@@ -169,10 +169,10 @@ quality review before Product Boss approval.
 - Preserve future multi-Discourse compatibility by avoiding hard-coded single-forum assumptions in names, helper APIs, and docs language where `discussion target` fits.
 - Keep multiple content lanes first-class through config and frontmatter.
 - Consider optional mapping from Astro/template content tags to Discourse topic tags. Keep it opt-in so a site's editorial taxonomy is not automatically forced into its forum taxonomy.
-- Use the OBBBA implementation lane as a real-world Discourse-to-Astro proof path: import/prune a `forum.repealobbba.org` topic into `onebigbeautifulbill.us`, keep it `discourse-imported` until explicit promotion, and feed lessons back into Discussion Bridge.
+- Use the OBBBA implementation lane as a real-world Discourse-to-Astro proof path: import/prune a `forum.repealobbba.org` topic into `onebigbeautifulbill.us`, keep it `discourse-imported` until explicit promotion, and feed lessons back into DiscussionBridge.
 - Preserve a path for community-authored legislation and structured-document sites where Discourse is the drafting/revision layer and Astro is the public presentation layer. First likely proof: `repealobbbaact.us`.
 - Preserve many-to-one now and many-to-many later: multiple public sites may share one forum backbone, and future users may connect multiple sites to multiple forums by lane, region, chapter, language, audience, or campaign.
-- Design a restrained, configurable comments-boundary credit. Candidate wording is `Discussion connection by Discussion Bridge` or `Discourse connection by Discussion Bridge`; final wording, default state, and configuration remain open. It must link to the canonical product page, remain visually secondary, be accessible in every comments mode, and come from package configuration rather than site content.
+- [x] Ship the restrained, configurable `Connected by DiscussionBridge` comments-boundary credit with a canonical link, operator disable control, accessible hover/focus treatment, reduced-motion behavior, and one placement after the complete discussion surface in every comments mode.
 - Add one or two clearly labeled `onebigbeautifulbill.us` demo/credit pages targeting companion topics on `forum.discussionbridge.dev`. Use explicit per-page target selection, keep production OBBBA content on `forum.repealobbba.org`, and document the result as a bounded cross-forum topology proof—not full many-to-many support.
 
 ### Tier 2: Assisted Setup And Services
@@ -190,7 +190,7 @@ quality review before Product Boss approval.
 
 ## Future Frameworks And Platforms
 
-- Use Discussion Bridge for Statamic as the next parallel naming/integration lane when that work begins.
+- Use DiscussionBridge for Statamic as the next parallel naming/integration lane when that work begins.
 - Research future Discourse integrations for Next.js, Nuxt, SvelteKit, Hugo/static sites, and Cloudflare Workers.
 - Design metadata so Discourse-specific fields can coexist with generic discussion fields without breaking existing Discourse users.
 - Define, but do not fully implement yet, the future shape for one Astro site connected to multiple Discourse instances. Use cases include public plus private communities, regional/language forums, internal staff plus public user forums, and central advocacy or industry organizations pushing canonical content into chapter or regional discussion communities.

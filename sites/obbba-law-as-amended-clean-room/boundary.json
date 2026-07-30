@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "status": "empty-clean-room-boundary",
+  "productPlacement": "obbba-specific-site-adapter-evidence-not-portable-core",
+  "authority": "authoritative-external-official-sources-only",
+  "legacyImportsAllowed": [],
+  "legacyArtifactsAllowed": [],
+  "salvagedAssets": [],
+  "legacyImplementationSalvageAuthorized": false,
+  "productOriginTurn": "019f9fe7-0ec3-70a0-9b16-0c073b90e8f4",
+  "forumRole": [
+    "optional-verbatim-title",
+    "optional-tags-category-index-context",
+    "optional-topic-discussion-binding"
+  ],
+  "forumProhibitedRoles": [
+    "enacted-authority",
+    "official-scope",
+    "official-cardinality",
+    "legal-body-source"
+  ],
+  "settledInvariants": {
+    "section20009": "present-and-mandatory",
+    "section70310": "phil-boss-settled-does-not-exist-stop-looking-neutral-contradiction-blocks",
+    "section71119": "official-source-first-binding-required",
+    "forumInventory309": "forum-identity-and-discussion-binding-count-only"
+  },
+  "publicationAuthorized": false,
+  "gate2Authorized": false,
+  "portableCoreAdoptionAuthorized": false
+}

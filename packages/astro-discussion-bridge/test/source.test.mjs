@@ -56,14 +56,14 @@ test("source notices expose a safe Discourse source-author profile", () => {
       mode: "discourse-managed",
       sourceUrl: "https://forum.example.com/t/managed-guide/36",
       sourceAuthorUsername: "editorbridgeforum",
-      sourceAuthorName: "Discussion Bridge Forum Editor",
+      sourceAuthorName: "DiscussionBridge Forum Editor",
     }),
     {
       mode: "discourse-managed",
       message: "This page is managed in Discourse and published here for easier reading.",
       sourceUrl: "https://forum.example.com/t/managed-guide/36",
       sourceAuthorUsername: "editorbridgeforum",
-      sourceAuthorName: "Discussion Bridge Forum Editor",
+      sourceAuthorName: "DiscussionBridge Forum Editor",
       sourceAuthorProfileUrl: "https://forum.example.com/u/editorbridgeforum",
     },
   );
@@ -86,7 +86,7 @@ test("source-author profiles preserve a Discourse subfolder base path", () => {
     mode: "discourse-managed",
     sourceUrl: "https://example.com/forum/t/managed-guide/36",
     sourceAuthorUsername: "editorbridgeforum",
-    sourceAuthorName: "Discussion Bridge Forum Editor",
+    sourceAuthorName: "DiscussionBridge Forum Editor",
   });
 
   assert.equal(

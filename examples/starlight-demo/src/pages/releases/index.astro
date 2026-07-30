@@ -10,13 +10,13 @@ const releases = (await getCollection("releases")).sort(
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Release Lane | Discussion Bridge for Astro</title>
+    <title>Release Lane | DiscussionBridge for Astro</title>
   </head>
   <body>
     <main>
-      <a href="/">Discussion Bridge for Astro</a>
+      <a href="/">DiscussionBridge for Astro</a>
       <h1>Release Lane</h1>
-      <p>Starlog-style release notes mapped to a dedicated Discussion Bridge content lane.</p>
+      <p>Starlog-style release notes mapped to a dedicated DiscussionBridge content lane.</p>
       <ul>
         {releases.map((entry) => (
           <li>

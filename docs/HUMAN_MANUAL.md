@@ -1,21 +1,21 @@
-# Discussion Bridge for Astro Human Manual
+# DiscussionBridge for Astro Human Manual
 
 This manual is the operator-facing path for connecting Astro pages to Discourse.
 It explains the decisions, safe sequence, expected results, and points where an
 operator should stop. Use the [Machine Manual](./MACHINE_MANUAL.md) beside it
 when exact commands, fields, scopes, or recovery checks matter.
 
-Discussion Bridge keeps each system doing the job it does well:
+DiscussionBridge keeps each system doing the job it does well:
 
 - Astro or another publishing system owns its fast, structured public pages.
 - Discourse owns identity, replies, moderation, notifications, and community
   memory and is the present operational home for Bridge orchestration.
-- Discussion Bridge Core maintains the declared relationships, policies,
+- DiscussionBridge Core maintains the declared relationships, policies,
   provenance, jobs, recovery state, and audit evidence.
 - Astro, Statamic, and future integrations adapt that portable contract to
   their publishing systems; they are not independent control planes.
 
-The natural product center is the Discussion Bridge for Discourse plugin,
+The natural product center is the DiscussionBridge for Discourse plugin,
 hosting and operating the portable core through Discourse's users,
 permissions, jobs, UI, database, APIs, and operational machinery. One Discourse
 installation may connect to more than one publishing system at the same time.
@@ -29,12 +29,12 @@ CMS adapter. The current Astro package proves important domain behavior; the
 transition to the portable core, Discourse host, and adapter boundaries is
 planned work and is not yet complete.
 
-Everything remains under one Discussion Bridge tent. Discussion Bridge for
-Discourse and Discussion Bridge for Astro are fully featured free products.
+Everything remains under one DiscussionBridge tent. DiscussionBridge for
+Discourse and DiscussionBridge for Astro are fully featured free products.
 Public documentation and community support are free, with team help as
 capacity permits. Implementation, migration, customization, training,
 operations, and extensive hand-holding are paid professional services.
-Discussion Bridge SaaS is the paid, managed standalone control plane for
+DiscussionBridge SaaS is the paid, managed standalone control plane for
 multi-CMS, multi-site, and multi-community orchestration.
 
 The SaaS offering sells managed operation, scale, governance, convenience, and
@@ -193,7 +193,7 @@ separately; group membership grants none of those by itself.
 
 For connected forums, prevent actual and visually ambiguous service-account
 collisions. Candidate forum-source editors are `editorbridgeforum` /
-**Discussion Bridge Forum Editor** and `editorcanforum` / **CAN Forum Editor**.
+**DiscussionBridge Forum Editor** and `editorcanforum` / **CAN Forum Editor**.
 Verify normalized username length and availability before creation.
 Astro-origin actors should identify the source site or brand; keep established
 `obbba-bot` as the OBBBA source identity.
@@ -258,12 +258,6 @@ machine identity is a durable operating record for one of those keys and its
 Discourse actor, scope, owner, storage reference, audit policy, and rotation
 policy. It is not an alternate credential system. Routine operations reuse the
 appropriately scoped key; they do not create or revoke a key per run.
-
-The established protected-record workflow is supported directly with
-`--diagnostics-api-key-file` or `DISCOURSE_DIAGNOSTICS_API_KEY_FILE`. The
-record may contain human metadata but must contain exactly one unformatted
-64-character Discourse API key line. Discussion Bridge reads the record without
-placing the key in command arguments, terminal paste, or shell history.
 
 Prefer `DISCOURSE_POST_AS`; retain `DISCOURSE_API_USERNAME` only for backward
 compatibility. `postAs` selects the request actor but does not silently change
@@ -575,16 +569,17 @@ fixed.
 **Video placeholder:** sign in, reply, like, and return to the Astro page in
 `fullInteractive` mode.
 
-### Planned Comments-Boundary Credit
+### Comments-Boundary Credit
 
-A future configurable credit may say `Discussion connection by Discussion
-Bridge` or `Discourse connection by Discussion Bridge`. Final wording, default
-behavior, and configuration remain undecided. It must link to the canonical
-product page, remain visually secondary, be accessible, work across all three
-comments modes, and not be hard-coded into site content.
+DiscussionBridge displays `Connected by DiscussionBridge` after the complete
+discussion surface by default. Only `DiscussionBridge` is linked. The credit
+works across all three comments modes, remains outside the Discourse iframe in
+`fullInteractive`, inherits host-site theme tokens, and includes equivalent
+hover, keyboard-focus, and reduced-motion behavior.
 
-This is a roadmap item and does not change the current reviewed artifact or its
-deployment gate.
+Disable or customize the escaped plain-text credit through `comments.credit`.
+Its link must be an absolute HTTP(S) URL. The setting is independent of
+Discourse's `Powered by Discourse` control and never changes comments behavior.
 
 ## 8. Content Lanes And Route Bases
 
@@ -603,13 +598,13 @@ unless an explicit mapping is introduced later.
 
 ## 9. Deploy And Verify On Cloudflare Pages
 
-Discussion Bridge does not require Cloudflare Pages, but the Alpha demos use it.
+DiscussionBridge does not require Cloudflare Pages, but the Alpha demos use it.
 For a static Astro site:
 
 1. Build from the canonical repository and the intended site/example root.
 2. Use the project's normal install and `npm run build` commands.
 3. Confirm the output directory matches the Astro/Cloudflare project settings.
-4. Set the final public URL in Astro `site` and Discussion Bridge `siteUrl`.
+4. Set the final public URL in Astro `site` and DiscussionBridge `siteUrl`.
 5. Attach the intended custom domain and wait for HTTPS to become valid.
 6. Add that exact hostname to Discourse's allowed embed hosts.
 7. Verify the homepage, a lane route, its companion topic, and comments.
@@ -634,7 +629,7 @@ topic first. Then test with a cache-bypassing request or clear only the relevant
 Cloudflare cache. Do not treat a confirmed sync as failed until cache state is
 ruled out.
 
-Discussion Bridge has now been exercised against the production
+DiscussionBridge has now been exercised against the production
 Cloudflare-CDN-backed Discourse deployment at `forum.repealobbba.org`.
 Diagnostics/API reads, topic imports, target reconciliation and source-topic
 links, `fullInteractive` comments, signed-in replies, five live source notices,
@@ -713,7 +708,7 @@ This does not move every future or Layer 3 idea into Alpha.
 
 Tier 1 operation remains API-only, free/self-serve, and independent of a
 Discourse plugin as a compatibility capability. The settled product
-architecture nevertheless makes the Discussion Bridge for Discourse plugin the
+architecture nevertheless makes the DiscussionBridge for Discourse plugin the
 natural operational home for the portable core and almost all orchestration
 and policy. The first Alpha plugin slice remains bounded to
 `fullInteractive` Mermaid/table parity and an architecture/test baseline.
@@ -731,7 +726,7 @@ Discourse Mermaid is the official **theme component** documented at
 [Meta topic 218242](https://meta.discourse.org/t/discourse-mermaid/218242) and
 [discourse/discourse-mermaid-theme-component](https://github.com/discourse/discourse-mermaid-theme-component).
 It is not a plugin. Keep it distinct from a fork/extension of that theme
-component, the separate optional `Discussion Bridge for Discourse` plugin, and
+component, the separate optional `DiscussionBridge for Discourse` plugin, and
 an upstream Discourse change.
 
 The optional plugin is a separate product/repository under Boss routing. Its
@@ -788,7 +783,7 @@ which synchronized 20 documentation sources and generated 21 HTML pages in this
 documentation pass.
 
 <figure>
-<pre role="img" aria-label="Two separate Discussion Bridge connections. An Astro-managed blog publishes to forum topic 37. Forum wiki topic 36 publishes to an Astro guide. Their reply streams remain separate.">
+<pre role="img" aria-label="Two separate DiscussionBridge connections. An Astro-managed blog publishes to forum topic 37. Forum wiki topic 36 publishes to an Astro guide. Their reply streams remain separate.">
 Astro-managed blog ──publishes──▶ Forum topic 37
 
 Forum wiki topic 36 ──publishes──▶ Discourse-managed Astro guide
@@ -824,7 +819,7 @@ for the live markers and claim boundary.
 
 The topic-36 editor-ownership acceptance test remains open. A human operator
 must change the wiki first-post owner from `discourseadmin` to the selected
-Discussion Bridge Forum editor, edit the wiki while signed in as that editor,
+DiscussionBridge Forum editor, edit the wiki while signed in as that editor,
 re-import/refresh the `discourse-managed` guide with overwrite, then verify
 content and source ownership, build/deploy/live markers, and no Astro
 writeback. Actor configuration alone does not complete this test.
@@ -948,7 +943,7 @@ future design, not current capability.
 
 Pages imported from or managed in Discourse should disclose their source near
 the start of the article. This notice is separate from comments and from any
-Discussion Bridge credit at the comments boundary.
+DiscussionBridge credit at the comments boundary.
 
 Wire `DiscussionSource` into the canonical page boundary:
 
@@ -1059,7 +1054,7 @@ The intended support split is:
 
 - GitHub Issues for confirmed bugs, reproducible failures, docs gaps, and
   feature work;
-- the Discussion Bridge Alpha Support category for setup questions, field
+- the DiscussionBridge Alpha Support category for setup questions, field
   reports, screenshots, and community help;
 - `alphasupport@discussionbridge.dev` as email intake routed into Discourse;
 - paid help for private implementation and migration work.
@@ -1071,7 +1066,7 @@ fields to include.
 
 ## Navigation Strategy For Deep Structured Content
 
-Discussion Bridge should make a complete body of structured content reachable
+DiscussionBridge should make a complete body of structured content reachable
 without expanding the entire hierarchy on every page. For the proposed OBBBA
 redesign, Bill Structure contains separate content lenses: **OBBBA Text**
 first, **Impact** second, and **Law as Amended** later when suitable.
@@ -1121,6 +1116,47 @@ locked.
 > **Still open:** broader laptop/tablet, keyboard, and screen-reader proof as
 > more content is imported. Law as Amended is not in current Astro adoption.
 
+### Law As Amended Authority Boundary
+
+The inherited Law as Amended implementation was abandoned on 2026-07-27.
+Treat it only as inert lessons-learned provenance. Do not repair it, copy its
+schemas or fixtures, or use its parsers, caches, cardinalities, generated
+evidence, or derivative models as the new starting point.
+
+The replacement begins empty. Authoritative external official sources establish
+scope and legal state first. Only after that review may Discourse add:
+
+- an optional section topic title, preserved verbatim;
+- optional tags, category, and authored-index organization;
+- legislative-drafting context; and
+- an optional discussion topic binding.
+
+Forum bodies, OBBBA Text, local derivatives, diagnostics, legacy caches, and
+the historical 309-item forum inventory cannot define legal content, official
+scope, or official cardinality.
+
+The historical count of 309 describes forum identities and discussion bindings
+only. Section 20009 is enacted and mandatory. Phil/Boss has settled that
+Section 70310 does not exist; do not reopen a targeted search. Section 71119
+requires official-source-first binding. If a neutral exhaustive official-source
+inventory produces contradictory controlling evidence, stop as
+`BLOCKED - DOCTRINE/EVIDENCE CONFLICT`.
+
+The clean-room sequence is:
+
+1. discover and preserve authoritative official-source identity and evidence;
+2. parse neutrally and establish reviewed official scope and legal state;
+3. generate accessible Astro presentation from reviewed evidence;
+4. join optional verbatim forum context and discussion only afterward; and
+5. obtain the separately required Product, Code, Manual, and Boss approvals.
+
+> **Stop if:** any legacy asset is treated as presumptively reusable, forum
+> context determines official scope, an official locator is missing or
+> ambiguous, or settled doctrine conflicts with controlling evidence.
+
+This clean room is OBBBA-specific site/adapter evidence. It does not authorize
+publication, Gate 2, reusable Astro-package behavior, or portable Core adoption.
+
 ## Official Text, Community Source, And Related Pages
 
 For community-maintained legal or public-record content, show two separate
@@ -1146,78 +1182,6 @@ Before publishing a comparison:
 4. classify the result as exact, presentation-only, substantive-difference, or
    unresolved;
 5. route substantive or unresolved results for review.
-
-For an OBBBA Text batch, run `compare-official-sources` from the package CLI
-with the reviewed navigation/config inputs, an HTTPS `DISCOURSE_URL`, and
-read-only Discourse credentials supplied through the environment. The command
-must produce a create-only, zero-write report. Read its four outcomes as:
-
-- `exact`: the compared text is identical;
-- `presentation-only`: only approved formatting/presentation differences
-  remain;
-- `substantive-difference`: words, numbering, or legal case differ and require
-  an explicit disposition before population;
-- `unresolved`: identity, retrieval, or extraction did not produce one safe
-  comparison and must stop the entry.
-
-The signed Public Law report is later-stage authority evidence. For the current
-population, the enrolled H.R. 1 source `BILLS-119hr1enr.xml`—identified and
-preserved by SHA-256—is the provenance baseline because it is the official
-document used to populate the forum text. Do not silently substitute one source
-stage for the other.
-
-The reviewed enrolled batch resolved 307 sections with zero writes: 301
-normalized exact, four presentation-only, two bounded word differences, and
-zero unresolved. Section 10401's author-confirmed clarity footnote remains in
-community text but is excluded from authoritative OBBBA Text. Section 40005's
-operative `§ 20306` heading is already present; restore the omitted repeated
-`§ 20306` clerical table-of-sections line in authoritative Astro output without
-writing back to the protected Discourse topic.
-
-After those dispositions are encoded, create and review the explicit population
-manifest. Add official-source metadata and generate reciprocal Impact links
-during that population run, rather than hand-editing source posts or individual
-Astro pages. Preserve both comparison reports as acceptance evidence.
-
-Impact links do not automatically authorize Impact-page publication. Many
-Impact topics were created with one shared prompt asking what the section does
-and inviting community stories. Use Section 82001/topic 1002 as the canonical
-placeholder reference. Freeze that reference once with its post identity,
-capture date, normalization version, and normalized-content SHA-256; later
-edits to topic 1002 do not redefine the baseline. During the dry run, normalize
-and hash each Impact topic's first-post source content:
-
-- if it still matches the placeholder, do not create an Astro Impact page, but
-  retain the `sectionId` and link the OBBBA Text page to the protected Discourse
-  topic with a label that identifies a forum discussion rather than published
-  Impact analysis;
-- if it clearly contains developed content, classify it only as a publication
-  candidate; it must still pass the normal reviewed Astro publication gate;
-- if it contains a minor placeholder edit, partial removal, mixed
-  placeholder/developed content, or uncertain normalization, require operator
-  review.
-
-Do not classify by title or topic number, and do not rewrite the placeholder
-topic. The dry-run report must show placeholder-suppressed,
-publication-candidate, and review-required counts plus every per-topic
-disposition. If an already-published source later approaches the placeholder,
-report drift for review; do not automatically delete or replace the Astro page.
-
-The reviewed OBBBA inventory contains 307 unique Impact source topics and 15
-existing Astro Impact routes. The frozen placeholder is topic 1002, first post
-1009. First run `preflight-impact-population` with
-`examples/obbba-impact-population.config.json`. This bounded, zero-write check
-reads only that frozen topic through the exact collector and authentication
-path used by the full plan. Continue only after `Preflight PASS`.
-
-Then run `plan-impact-population` with
-`examples/obbba-impact-population.config.json`, a diagnostics key loaded only
-into the current shell, and a new `--report-out` path. The collector revalidates
-the full runtime config, blocks redirects and non-GET requests, verifies the
-frozen first-post identity, prints each completed topic and rate-limit wait, and
-creates only the zero-write report. Never paste the key into a PowerShell
-command. Stop after two failed operator attempts and return the evidence to the
-implementation lane.
 
 Presentation-only comparison may ignore Markdown links, wrapping/whitespace,
 typographic punctuation, page furniture, and official side notes. It must not
@@ -1279,7 +1243,7 @@ The refreshed live Worker is `8dc5a047-feb5-45e1-8c40-b1425cfd63c4`.
 ## Verified Documentation Dates
 
 Readable docs display **Last updated** and
-**Applies to: Discussion Bridge Alpha** directly under the page title. The
+**Applies to: DiscussionBridge Alpha** directly under the page title. The
 footer repeats only Last updated and provides an edit link to the exact
 canonical Markdown source on GitHub.
 

@@ -179,6 +179,98 @@ Body.
   }
 });
 
+test("navigation content sources keep authored directories separate from public route bases", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-navigation-route-bases-"));
+  const textDir = path.join(dir, "src", "content", "docs", "obbba-text", "title-i");
+  const impactDir = path.join(dir, "src", "content", "docs", "title i");
+  await Promise.all([
+    mkdir(textDir, { recursive: true }),
+    mkdir(impactDir, { recursive: true }),
+  ]);
+  await Promise.all([
+    writeFile(
+      path.join(textDir, "sec-10101.md"),
+      `---
+title: Section 10101 Text
+contentLens: obbba-text
+discourseTopicId: 101
+---
+`,
+    ),
+    writeFile(
+      path.join(impactDir, "sec-10101-impact.md"),
+      `---
+title: Section 10101 Impact
+contentLens: impact
+discourseTopicId: 201
+---
+`,
+    ),
+  ]);
+  try {
+    const bindings = await buildNavigationContentBindings({
+      projectRoot: dir,
+      siteUrl: "https://example.com",
+      sources: [
+        { docsDir: "src/content/docs/obbba-text", routeBase: "obbba-text" },
+        { docsDir: "src/content/docs/title i", routeBase: "title-i" },
+      ],
+    });
+    assert.deepEqual(
+      bindings.map((entry) => entry.url).sort(),
+      [
+        "https://example.com/obbba-text/title-i/sec-10101/",
+        "https://example.com/title-i/sec-10101-impact/",
+      ],
+    );
+  } finally {
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("navigation discovery rejects duplicate public destinations across content sources", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-navigation-duplicate-route-"));
+  const firstDir = path.join(dir, "first");
+  const secondDir = path.join(dir, "second");
+  await Promise.all([
+    mkdir(firstDir, { recursive: true }),
+    mkdir(secondDir, { recursive: true }),
+    writeFile(
+      path.join(firstDir, "same.md"),
+      `---
+title: First
+contentLens: impact
+discourseTopicId: 301
+---
+`,
+    ),
+    writeFile(
+      path.join(secondDir, "same.md"),
+      `---
+title: Second
+contentLens: impact
+discourseTopicId: 302
+---
+`,
+    ),
+  ]);
+  try {
+    await assert.rejects(
+      buildNavigationContentBindings({
+        projectRoot: dir,
+        siteUrl: "https://example.com",
+        sources: [
+          { docsDir: "first", routeBase: "shared" },
+          { docsDir: "second", routeBase: "shared" },
+        ],
+      }),
+      /Multiple Astro pages claim public destination \/shared\/same/,
+    );
+  } finally {
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("navigation discovery rejects category drift and missing tag groups", async () => {
   const base = {
     discourseUrl: "https://forum.example.com",

@@ -30,6 +30,13 @@ export type DiscussionBridgeProvider = "discourse";
 export type DiscussionBridgeCommentsDisplay = "simple" | "full" | "fullInteractive";
 export type DiscussionBridgePreset = "astro" | "starlight";
 
+export interface DiscussionBridgeCreditOptions {
+  enabled?: boolean;
+  prefix?: string;
+  label?: string;
+  href?: string;
+}
+
 export interface DiscussionBridgeOptions {
   provider?: DiscussionBridgeProvider;
   preset?: DiscussionBridgePreset;
@@ -45,6 +52,7 @@ export interface DiscussionBridgeOptions {
     display?: DiscussionBridgeCommentsDisplay;
     embedHeight?: string;
     className?: string;
+    credit?: DiscussionBridgeCreditOptions;
   };
   replies?: {
     enabled?: boolean;
@@ -107,6 +115,12 @@ interface PublicOptions {
     display: DiscussionBridgeCommentsDisplay;
     embedHeight: string;
     className?: string;
+    credit: {
+      enabled: boolean;
+      prefix: string;
+      label: string;
+      href: string;
+    };
   };
   replies: {
     enabled: boolean;
@@ -340,6 +354,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
       display: options.comments?.display ?? "simple",
       embedHeight: options.comments?.embedHeight ?? "800px",
       className: options.comments?.className,
+      credit: resolveCreditOptions(options.comments?.credit),
     },
     replies: {
       enabled: options.replies?.enabled ?? true,
@@ -484,6 +499,26 @@ function toPublicOptions(options: ResolvedOptions): PublicOptions {
 
 function normalizeBaseUrl(value: string): string {
   return new URL(value).href.replace(/\/+$/, "");
+}
+
+function resolveCreditOptions(options: DiscussionBridgeCreditOptions | undefined) {
+  const href = options?.href?.trim() || "https://discussionbridge.dev/";
+  let parsedHref: URL;
+  try {
+    parsedHref = new URL(href);
+  } catch {
+    throw new Error("comments.credit.href must be an absolute HTTP(S) URL.");
+  }
+  if (!["http:", "https:"].includes(parsedHref.protocol)) {
+    throw new Error("comments.credit.href must be an absolute HTTP(S) URL.");
+  }
+
+  return {
+    enabled: options?.enabled ?? true,
+    prefix: options?.prefix?.trim() || "Connected by",
+    label: options?.label?.trim() || "DiscussionBridge",
+    href: parsedHref.href,
+  };
 }
 
 function numberFromEnv(name: string): number | undefined {

@@ -1,0 +1,1642 @@
+{
+  "version": 1,
+  "mode": "obbba-law-enacted-derivative-manifest",
+  "authorityBoundary": "Local Markdown is a verified publication derivative of enrolled Public Law 119-21 authority; directory presence is not authority.",
+  "inputs": {
+    "pagePlanSha256": "b2b5abde4e24d878501c007faf0e460d3a7badcabb0272c4728b29580a1e243b",
+    "enrolledAuthoritySha256": "f10f9b688ed8c7ff0168b72587cfdea2ddc30a55ee0390e659f901b4616309b2"
+  },
+  "summary": {
+    "plannedEnactedOnly": 82,
+    "verifiedDerivatives": 81,
+    "unresolved": 1
+  },
+  "entries": [
+    {
+      "sectionId": "10104",
+      "localRelativePath": "title-i/sec-10104-restrictions-on-internet-expenses.md",
+      "localFileSha256": "a7928abc30f4b8a29a234a69a6d6379fa512f2cbcb040d05b2f07108a1d82167",
+      "frontmatter": {
+        "title": "Sec. 10104. Restrictions on internet expenses",
+        "sectionId": "10104",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 37,
+        "discussionSync": false
+      },
+      "bodySha256": "32ab4ce1338df72f3e585230c706b5187985352d21d72670234c36eec9cc02dc",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "4d95937afc06083cb7e45946647106bd0c1f7c43e47682192ffa759f63b3e56a",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/37",
+        "topicId": 37
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "10201",
+      "localRelativePath": "title-i/sec-10201-rescission-of-amounts-for-forestry.md",
+      "localFileSha256": "39a1594108d94e54064b6ba1ceaeb795cfbc9b74f2f12776d71994a11edc7cf0",
+      "frontmatter": {
+        "title": "Sec. 10201. Rescission of amounts for forestry",
+        "sectionId": "10201",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 43,
+        "discussionSync": false
+      },
+      "bodySha256": "f2a0a714d431f17f5ea4fdcfd175606d612584bb42b9826ec35708f89b218aa3",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "bc899df5f94b28368ea53da96cf5de32b28f24c4671212a8b264a1d10788481d",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/43",
+        "topicId": 43
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "10502",
+      "localRelativePath": "title-i/sec-10502-area-based-crop-insurance-coverage-and-affordability.md",
+      "localFileSha256": "d4ed6b8ab8a90ac23c6a35f05670bda092c774806274578a7c8034a881065f1e",
+      "frontmatter": {
+        "title": "Sec. 10502. Area-based crop insurance coverage and affordability",
+        "sectionId": "10502",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 63,
+        "discussionSync": false
+      },
+      "bodySha256": "14f1d549bc35f5ab353200b64c6ce08105a49dab45a083881c5de65f52b4716d",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "affd20b98417c6845381918646a96fd62a718ad44bbb64a3bc26ede24099a42a",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/63",
+        "topicId": 63
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "10503",
+      "localRelativePath": "title-i/sec-10503-administrative-and-operating-expense-adjustments.md",
+      "localFileSha256": "104048ddb4e766bca802b363d4830962f3729ab7b043e400a4573605fdd9b289",
+      "frontmatter": {
+        "title": "Sec. 10503. Administrative and operating expense adjustments",
+        "sectionId": "10503",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 64,
+        "discussionSync": false
+      },
+      "bodySha256": "9cec7c17b9ff9de4fede0bcb5d02ce2fa37605a4e59008f2a2206984705ebe18",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "3a244d3d2b25e6dbbc9781f640cbb5e44444a13d6e9c44ef1e8518bad9114cf4",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/64",
+        "topicId": 64
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "10504",
+      "localRelativePath": "title-i/sec-10504-premium-support.md",
+      "localFileSha256": "3d9d57ef9c73142c59e3cae7ba1c1810ce606b1825f24192ca564d22f6a4cf1e",
+      "frontmatter": {
+        "title": "Sec. 10504. Premium support",
+        "sectionId": "10504",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 65,
+        "discussionSync": false
+      },
+      "bodySha256": "25e2d0bcf49c99c8088c3dee1fcca7863e27cf2879280378ddfd7e4db593aba8",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "26f7f96ffd239fb326f893896c1f80d7cf07b8898a3f7a16b2591cade2255d6e",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/65",
+        "topicId": 65
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20002",
+      "localRelativePath": "title-ii/sec-20002-enhancement-of-department-of-defense-resources-for-shipbuilding.md",
+      "localFileSha256": "79d0d6fed0952b03264ad5027cd1895467e2e4a4ea109e9253848393c9825180",
+      "frontmatter": {
+        "title": "Sec. 20002. Enhancement of Department of Defense resources for shipbuilding",
+        "sectionId": "20002",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 79,
+        "discussionSync": false
+      },
+      "bodySha256": "3acf76075937e8f6a3541c5de334426b9e6e79734c05e42ab8f52140f9b81675",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "d8a98ce3022cca612daacf89d24927fdd8d5f266cb547e7ff89fbb4999b78ffc",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/79",
+        "topicId": 79
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20003",
+      "localRelativePath": "title-ii/sec-20003-enhancement-of-department-of-defense-resources-for-integrated-air-and-missile-defense.md",
+      "localFileSha256": "a6a6dba6f86443a3e5e828edd72726f2b1a5234aa57be1b56f0305fed98cff11",
+      "frontmatter": {
+        "title": "Sec. 20003. Enhancement of Department of Defense resources for integrated air and missile defense",
+        "sectionId": "20003",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 80,
+        "discussionSync": false
+      },
+      "bodySha256": "db301a06984b080f546b4af7b0a37fd83b2e48abfe23dbe11534455bdbafaa1f",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "c45fec8a80b3f51c488f2e9c409b825c7cab8748db3d632281476f33fc37abe3",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/80",
+        "topicId": 80
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20004",
+      "localRelativePath": "title-ii/sec-20004-enhancement-of-department-of-defense-resources-for-munitions-and-defense-supply-chain-resiliency.md",
+      "localFileSha256": "94ed09930e53a03b99697e527d94ba1e2fd744d3c2dc74ed88fd56739f956540",
+      "frontmatter": {
+        "title": "Sec. 20004. Enhancement of Department of Defense resources for munitions and defense supply chain resiliency",
+        "sectionId": "20004",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 81,
+        "discussionSync": false
+      },
+      "bodySha256": "44e37b767535d2da4e240df0214b6dadf0ac57d68567ce2ef9b913840e4ae035",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "329ae9525aa3dcb19f4c42454d753308364735ab07fe4e22648cbd8176030641",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/81",
+        "topicId": 81
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20005",
+      "localRelativePath": "title-ii/sec-20005-enhancement-of-department-of-defense-resources-for-scaling-low-cost-weapons-into-production.md",
+      "localFileSha256": "9d59892a41eeb6ea70ef9de698850bea90a9b17533de53977709a5e0773d3370",
+      "frontmatter": {
+        "title": "Sec. 20005. Enhancement of Department of Defense resources for scaling low-cost weapons into production",
+        "sectionId": "20005",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 82,
+        "discussionSync": false
+      },
+      "bodySha256": "f609e03b57c8b0b1680df981cc63e5f4ab5da47e7423f5ce3e14b2cc5c84fa5d",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "931c37cdc8b00014abf68f4801e2cd68dd07760e5a3300f9c43e51ab8fde0fae",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/82",
+        "topicId": 82
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20006",
+      "localRelativePath": "title-ii/sec-20006-enhancement-of-department-of-defense-resources-for-improving-the-efficiency-and-cybersecurity-of-the-department-of-defense.md",
+      "localFileSha256": "23a68bff9ed075729424fbf8bacf6c11d0cd640e2507bfe7e93fe445915d29b0",
+      "frontmatter": {
+        "title": "Sec. 20006. Enhancement of Department of Defense resources for improving the efficiency and cybersecurity of the Department of Defense",
+        "sectionId": "20006",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 83,
+        "discussionSync": false
+      },
+      "bodySha256": "64e47c2a143c088dbb91ad34d29b90c35113b82d5e9bc1800d15ef5befba9ce9",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "0aa0eb4fdda8f0dbf49ba932d86158b99c50cfb128ece8c390ca28ec6fa6e514",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/83",
+        "topicId": 83
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20007",
+      "localRelativePath": "title-ii/sec-20007-enhancement-of-department-of-defense-resources-for-air-superiority.md",
+      "localFileSha256": "f320936a9b2cbbe788c915794c92b3a9722e1d370ce469fbf30954989b719a39",
+      "frontmatter": {
+        "title": "Sec. 20007. Enhancement of Department of Defense resources for air superiority",
+        "sectionId": "20007",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 84,
+        "discussionSync": false
+      },
+      "bodySha256": "fe7933c9b8609df38d3712f493a169f7a4c844bede77611bfe06ddeae5a7f7dd",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "57e888a4056f76d1049797cae564135174a10e4c95723ecc4f4954f06744844f",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/84",
+        "topicId": 84
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20008",
+      "localRelativePath": "title-ii/sec-20008-enhancement-of-resources-for-nuclear-forces.md",
+      "localFileSha256": "2d80a086284fff2a4224c9641efd7c9efcbb2911b66cf1a7998de355faa548b7",
+      "frontmatter": {
+        "title": "Sec. 20008. Enhancement of resources for nuclear forces",
+        "sectionId": "20008",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 85,
+        "discussionSync": false
+      },
+      "bodySha256": "91b4ac4b97cf0661058654da2ac432ead2850cb30c459d905771cdbd7de62c5a",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "5bda0847a7102f87da0c143a7d83150e3f361295bfe97c8697c6fcecf60548a7",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/85",
+        "topicId": 85
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20010",
+      "localRelativePath": "title-ii/sec-20010-enhancement-of-department-of-defense-resources-for-improving-the-readiness-of-the-department-of-defense.md",
+      "localFileSha256": "852e458c73bd7cad0764d05eb01240dc6452e67c1b1ccf194374ef9fd1773cbe",
+      "frontmatter": {
+        "title": "Sec. 20010. Enhancement of Department of Defense resources for improving the readiness of the Department of Defense",
+        "sectionId": "20010",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 87,
+        "discussionSync": false
+      },
+      "bodySha256": "0b9466d0ad1b05c6086f8a22a03ace5ebebc154cf027246bb19cef74e8b7fe0c",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "45fd24e4ce712a32dfe3f8af291adda9b61bfd9f282847cae530a60d53915582",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/87",
+        "topicId": 87
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20011",
+      "localRelativePath": "title-ii/sec-20011-improving-department-of-defense-border-support-and-counter-drug-missions.md",
+      "localFileSha256": "12c5faa442aec41d7de25dbfc5e329d20f8f4e29708496363b7fed29a38b655c",
+      "frontmatter": {
+        "title": "Sec. 20011. Improving Department of Defense border support and counter-drug missions",
+        "sectionId": "20011",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 88,
+        "discussionSync": false
+      },
+      "bodySha256": "e9496737e70973452387ef010583b067359b4a22df0261b53a4d60100a044e7d",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "a938fa384a77b14b287d3a9ed2da82fbfae8043d3ff6629126e34fca881cfd91",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/88",
+        "topicId": 88
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20012",
+      "localRelativePath": "title-ii/sec-20012-department-of-defense-oversight.md",
+      "localFileSha256": "bf084631ae15b4a15f537207c6678e1935fde591d1ce9e4ef36b2ae5106a8c5c",
+      "frontmatter": {
+        "title": "Sec. 20012. Department of Defense oversight",
+        "sectionId": "20012",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 89,
+        "discussionSync": false
+      },
+      "bodySha256": "ab02576c477f556b9e5a02dc4299c321786bf90d1fa588d4b873f31fad703c28",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "68656ccc8e2128e9ffbc6a564e2c6882c3dab59d60556090f8b9a3aef8da4d05",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/89",
+        "topicId": 89
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "20013",
+      "localRelativePath": "title-ii/sec-20013-military-construction-projects-authorized.md",
+      "localFileSha256": "728f370da829fa9bfcff9380295af8266ae784404e925d23adcb343b49d77c4e",
+      "frontmatter": {
+        "title": "Sec. 20013. Military construction projects authorized",
+        "sectionId": "20013",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 90,
+        "discussionSync": false
+      },
+      "bodySha256": "fc9c3f65fabb2de60cfcd444868d6e297d4986447529ddbedc4fc06abdbad9d4",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "49189efc9febd9ceda5234c4815908c5039fd782d1eef3abcc8e206d03b1efbc",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/90",
+        "topicId": 90
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "30002",
+      "localRelativePath": "title-iii/sec-30002-rescission-of-funds-for-green-and-resilient-retrofit-program-for-multifamily-housing.md",
+      "localFileSha256": "26692db1e815d637a745287e98852c2160c125884b4f83335e44452e23a45d27",
+      "frontmatter": {
+        "title": "Sec. 30002. Rescission of funds for Green and Resilient Retrofit Program for Multifamily Housing",
+        "sectionId": "30002",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 92,
+        "discussionSync": false
+      },
+      "bodySha256": "24d73759df508e4ddc77b2b0d89cd5ea5f26fdac28d45603098e0744b71447ac",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "50b0622e758131ea5dfe96c777fc5fe75fdfaa13838e4d3a958e4e7f0d82305e",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/92",
+        "topicId": 92
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "30004",
+      "localRelativePath": "title-iii/sec-30004-appropriations-for-defense-production-act.md",
+      "localFileSha256": "fe0989fd30394b95c88ad9b1d4961f227d3fc21bf67e8a285ca255c8dbad4ee3",
+      "frontmatter": {
+        "title": "Sec. 30004. Appropriations for Defense Production Act",
+        "sectionId": "30004",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 94,
+        "discussionSync": false
+      },
+      "bodySha256": "ba181aff646665c479917436befc2dbdd181b3d5899544db4a3f666d35f561a1",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "f50984f1bdb9f7b76d813e5aeb9c8331d7a190efb5b5bc1f9add898122d7df05",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/94",
+        "topicId": 94
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "40003",
+      "localRelativePath": "title-iv/sec-40003-air-traffic-control-improvements.md",
+      "localFileSha256": "88d4903d59189732749c2fff921a3f65a76c3d8fbf819fcf0ffa09898a2aa324",
+      "frontmatter": {
+        "title": "Sec. 40003. Air traffic control improvements",
+        "sectionId": "40003",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 97,
+        "discussionSync": false
+      },
+      "bodySha256": "e17e3deb9a997129e9a55667cec006f2e33090b74fd61345bba2430ad7c72d3d",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "5c3f31e3551a1914671b2790071be7913997c2e625f74cd59404c12210b7609b",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/97",
+        "topicId": 97
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "40008",
+      "localRelativePath": "title-iv/sec-40008-rescission-of-certain-amounts-for-the-national-oceanic-and-atmospheric-administration.md",
+      "localFileSha256": "cc9fe5f2ea9a06a8117f0e69220b396cbf9536cc423b244e841445002ecaf00a",
+      "frontmatter": {
+        "title": "Sec. 40008. Rescission of certain amounts for the National Oceanic and Atmospheric Administration",
+        "sectionId": "40008",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 102,
+        "discussionSync": false
+      },
+      "bodySha256": "1b1ff3e465642ef055b40497dff6f247cf6dd4a11e65484d6951f053ed99644c",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "5691efd1ca52b476a0f1e98333f747c8462448461dd417b70ed3a8840a58ca5b",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/102",
+        "topicId": 102
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "40010",
+      "localRelativePath": "title-iv/sec-40010-treatment-of-unobligated-funds-for-alternative-fuel-and-low-emission-aviation-technology.md",
+      "localFileSha256": "10d7ab395922d1327bb2e37da950d1c2babcf231cf86e7e2e2e9c0a7467660cd",
+      "frontmatter": {
+        "title": "Sec. 40010. Treatment of unobligated funds for alternative fuel and low-emission aviation technology",
+        "sectionId": "40010",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 104,
+        "discussionSync": false
+      },
+      "bodySha256": "3432e74d0a9895bc204d7677efe9a6602b6748063cbe1cb9daa06e35b7080a96",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "f59603c62374c2b423c9160fffeb02aa11b06816ec1060ce4e62dafaf937603c",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/104",
+        "topicId": 104
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "40011",
+      "localRelativePath": "title-iv/sec-40011-rescission-of-amounts-appropriated-to-public-wireless-supply-chain-innovation-fund.md",
+      "localFileSha256": "25220a2fae9b4f7f9d2c918db1ec527097679d81495c3c9ac19397c1b5669bcf",
+      "frontmatter": {
+        "title": "Sec. 40011. Rescission of amounts appropriated to Public Wireless Supply Chain Innovation Fund",
+        "sectionId": "40011",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 105,
+        "discussionSync": false
+      },
+      "bodySha256": "0679b8dd1aaf43929f628cb2546709355b18f92b1cf639ee6911cbb0a7ec48fc",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "e91fb847c9f2dca93907a692fcee62df9518862b688e2a88cdfd89bae4ed5607",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/105",
+        "topicId": 105
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "50201",
+      "localRelativePath": "title-v/sec-50201-coal-leasing.md",
+      "localFileSha256": "902e4f79c495b8d3f18f4b6553c1d141180448d0ec6e62efd8560d0039f2d566",
+      "frontmatter": {
+        "title": "Sec. 50201. Coal leasing",
+        "sectionId": "50201",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 113,
+        "discussionSync": false
+      },
+      "bodySha256": "9b1694841d5f64436292b261b9c9ff5d8e07e53581a8d5fae238d41383a3aa1c",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "4c9631b185f7fa23a26e9ee17b982d8017cfc4f4848c5514c08aec69347f351a",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/113",
+        "topicId": 113
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "50304",
+      "localRelativePath": "title-v/sec-50304-rescission-of-national-park-service-and-bureau-of-land-management-funds.md",
+      "localFileSha256": "7b98def87bfa5d38704ad94b87e81977ed2b3dbaa52fc31f5162229c289e8726",
+      "frontmatter": {
+        "title": "Sec. 50304. Rescission of National Park Service and Bureau of Land Management funds",
+        "sectionId": "50304",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 120,
+        "discussionSync": false
+      },
+      "bodySha256": "ae552aba17bb8e25cb9b45b4a605797c31f8997fcf58f741b5354ba22893b36a",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "3e43f074ed4fd7be9d0db85d0f3df20f1f46dfc993f202bad87463b44d10d8cb",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/120",
+        "topicId": 120
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "50305",
+      "localRelativePath": "title-v/sec-50305-celebrating-america-s-250th-anniversary.md",
+      "localFileSha256": "7e3c9ebfcc6602c8ac75c681cf17eac99a3bf366cdf7ed4ed7558f761aceffc2",
+      "frontmatter": {
+        "title": "Sec. 50305. Celebrating America’s 250th anniversary",
+        "sectionId": "50305",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 121,
+        "discussionSync": false
+      },
+      "bodySha256": "37f4adf0ea73f862e3cebbf20b434e726f949fbb5eb8d8742d77fd47b55f80ce",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "fc4a8d1414fbd5ddf5ff0f421dcfdeb7a8701d5ecab27bd6ec2744d328686a90",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/121",
+        "topicId": 121
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "50402",
+      "localRelativePath": "title-v/sec-50402-repeals-rescissions.md",
+      "localFileSha256": "199381f216395e6d39b65c9ec6fe580c4c648b0d9c54a627f9388e2973805c74",
+      "frontmatter": {
+        "title": "Sec. 50402. Repeals; rescissions",
+        "sectionId": "50402",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 123,
+        "discussionSync": false
+      },
+      "bodySha256": "10bd9bb994822f355fa6714228b7673a2c06f08fbfe38482160cedd977cd79e9",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "4e895b2e40fe402cd3b921d1c82194add384c1e614695b099b95e7677c565926",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/123",
+        "topicId": 123
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "50501",
+      "localRelativePath": "title-v/sec-50501-water-conveyance-and-surface-water-storage-enhancement.md",
+      "localFileSha256": "9883afceb92f920a4ea61a6393ad6f05496c5abe6944c7cc8c98729bbf8510b5",
+      "frontmatter": {
+        "title": "Sec. 50501. Water conveyance and surface water storage enhancement",
+        "sectionId": "50501",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 126,
+        "discussionSync": false
+      },
+      "bodySha256": "818c1938b720385e523bcfd30481683dec6acab49b13e10e3db4fd7dd3d959e0",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "fd3c1848da187c4d63ad036a1897f9630622873ae2ec07d8f64275411fc90d65",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/126",
+        "topicId": 126
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60001",
+      "localRelativePath": "title-vi/sec-60001-rescission-of-funding-for-clean-heavy-duty-vehicles.md",
+      "localFileSha256": "c1f21514c4092f31759d3ae663e6341747e46e223005668f6870d061cdd60f93",
+      "frontmatter": {
+        "title": "Sec. 60001. Rescission of funding for clean heavy-duty vehicles",
+        "sectionId": "60001",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 132,
+        "discussionSync": false
+      },
+      "bodySha256": "61d3a42e13ee788700d85ca1a2a675b9869713674d5dc86219a6599425010677",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "0b6fa8091180b1aaafd0026905834cc87acbad569aa6b33e829fdeff70c3f4fa",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/132",
+        "topicId": 132
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60003",
+      "localRelativePath": "title-vi/sec-60003-rescission-of-funding-for-diesel-emissions-reductions.md",
+      "localFileSha256": "c641718f80ffd3d18d8ffb477c98f1410efa5511e4b81c37ca9296c890589b1f",
+      "frontmatter": {
+        "title": "Sec. 60003. Rescission of funding for diesel emissions reductions",
+        "sectionId": "60003",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 134,
+        "discussionSync": false
+      },
+      "bodySha256": "651abb94d2d0cad1e241beb0509fec1c692bd56eb365be7780d946eb59d4ac46",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "997ed80ded1c85916d74dac54527e782793a86650f4209a79ed66f466921568f",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/134",
+        "topicId": 134
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60004",
+      "localRelativePath": "title-vi/sec-60004-rescission-of-funding-to-address-air-pollution.md",
+      "localFileSha256": "8036c1f92eaab7b4910ccad2d456fe54c59ba5cb61185a8aa7612aba32d46acd",
+      "frontmatter": {
+        "title": "Sec. 60004. Rescission of funding to address air pollution",
+        "sectionId": "60004",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 135,
+        "discussionSync": false
+      },
+      "bodySha256": "63d40ffb76bfb93c012b0029f8f12bf62efb6ad4c33fb9dda6db5236c53ee5ea",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "cc2840b6e1f866206ef24c779c71dc8708f555ae96e34c35a0ba8614438c996c",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/135",
+        "topicId": 135
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60005",
+      "localRelativePath": "title-vi/sec-60005-rescission-of-funding-to-address-air-pollution-at-schools.md",
+      "localFileSha256": "dabb93b9dafd647ccdd349486b9b11a03b54adc40b2ae101e32b5d68b341c32b",
+      "frontmatter": {
+        "title": "Sec. 60005. Rescission of funding to address air pollution at schools",
+        "sectionId": "60005",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 136,
+        "discussionSync": false
+      },
+      "bodySha256": "5e252e2fd386f560e51599694b71bf14415f7adf1f4e5804c27c6e384d75b3fd",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "2d7626dc03e34dd2c98ed259e0a12440017b0002d3c630c65441cb0e6ed92a0a",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/136",
+        "topicId": 136
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60006",
+      "localRelativePath": "title-vi/sec-60006-rescission-of-funding-for-the-low-emissions-electricity-program.md",
+      "localFileSha256": "da7b8540a728040be543ced465798615155079bea0799fa794f4012c14cee19e",
+      "frontmatter": {
+        "title": "Sec. 60006. Rescission of funding for the low emissions electricity program",
+        "sectionId": "60006",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 137,
+        "discussionSync": false
+      },
+      "bodySha256": "42231b8e61c306d05180dbc78d7ee62ac82ce3949c8d34129d682cbcacf4f4c2",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "6f66111f401b87e9ed326ca8b3c57e6228adb3147e97ae65e0f97aaf99bf0362",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/137",
+        "topicId": 137
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60007",
+      "localRelativePath": "title-vi/sec-60007-rescission-of-funding-for-section-211-o-of-the-clean-air-act.md",
+      "localFileSha256": "cdaeb9c203a136a577c1f936bd5d647ab694268ff64c744f577adebb318e4ced",
+      "frontmatter": {
+        "title": "Sec. 60007. Rescission of funding for section 211(o) of the Clean Air Act",
+        "sectionId": "60007",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 138,
+        "discussionSync": false
+      },
+      "bodySha256": "f3cd57dd18a47043a0f08579f4f02ac39b6c9a2d9a70c5d95178018519646c7f",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "876624246a2b96845a4dd1d05530de0b2dfd39e807587848811fb3e4de80cd85",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/138",
+        "topicId": 138
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60008",
+      "localRelativePath": "title-vi/sec-60008-rescission-of-funding-for-implementation-of-the-american-innovation-and-manufacturing-act.md",
+      "localFileSha256": "dde6ae214c772f7ade46a55f4e9db0cffee1ba125623575695d9cdf13ab8ed02",
+      "frontmatter": {
+        "title": "Sec. 60008. Rescission of funding for implementation of the American Innovation and Manufacturing Act",
+        "sectionId": "60008",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 139,
+        "discussionSync": false
+      },
+      "bodySha256": "0657688dc8b75ea387866c9b96072673099ce47571d5ab41b0564ad7b57dd45b",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "e83bddc0ee8c09cba23ec366636dbf7fa74075c736236434a93d3c7be5ca1368",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/139",
+        "topicId": 139
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60009",
+      "localRelativePath": "title-vi/sec-60009-rescission-of-funding-for-enforcement-technology-and-public-information.md",
+      "localFileSha256": "21354e146ce267f6b59124c9332afa3d32cc5dca8c1a04065fd3f535fff1319e",
+      "frontmatter": {
+        "title": "Sec. 60009. Rescission of funding for enforcement technology and public information",
+        "sectionId": "60009",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 140,
+        "discussionSync": false
+      },
+      "bodySha256": "5eb5082469034bdabe922d66e93bd79eb8864322be1f84a7af22ded73826bb11",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "c98a2fbdcab23d3959734b81665af86be3182ede0d5cb3c7afc19ad995a37ad3",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/140",
+        "topicId": 140
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60010",
+      "localRelativePath": "title-vi/sec-60010-rescission-of-funding-for-greenhouse-gas-corporate-reporting.md",
+      "localFileSha256": "5cd64a6375064b116936fae262c876ebd177e511fb7720ae0d8038d4ceaaa443",
+      "frontmatter": {
+        "title": "Sec. 60010. Rescission of funding for greenhouse gas corporate reporting",
+        "sectionId": "60010",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 141,
+        "discussionSync": false
+      },
+      "bodySha256": "d65ccad76ccc19a3cf2dba1891be17d122d2fd3fc783aa5424ce96fa50fba856",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "f51ece44fa57626d76e2046365dd284a30c13b1c6141a4862e869d320c06a2aa",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/141",
+        "topicId": 141
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60011",
+      "localRelativePath": "title-vi/sec-60011-rescission-of-funding-for-environmental-product-declaration-assistance.md",
+      "localFileSha256": "277b8a99bc976910c93d33ed1421aab5f29fd4479dbb26b5e68b3b5b7415c3b0",
+      "frontmatter": {
+        "title": "Sec. 60011. Rescission of funding for environmental product declaration assistance",
+        "sectionId": "60011",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 142,
+        "discussionSync": false
+      },
+      "bodySha256": "d87aad3877b80aacd22ed73f2ab3acd7d0440b12a88aec39a89424a1f17f46c8",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "6f365824f96f29ad112364888589e41ec355bdc410334a0fab36b33e70b4f0c5",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/142",
+        "topicId": 142
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60013",
+      "localRelativePath": "title-vi/sec-60013-rescission-of-funding-for-greenhouse-gas-air-pollution-plans-and-implementation-grants.md",
+      "localFileSha256": "ede97a1549dad7653735d02e0cd23cfa440578783dcd76e6ae83369976839858",
+      "frontmatter": {
+        "title": "Sec. 60013. Rescission of funding for greenhouse gas air pollution plans and implementation grants",
+        "sectionId": "60013",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 144,
+        "discussionSync": false
+      },
+      "bodySha256": "59e62a4924fa839e8c9f8a1032df49e06c4cd08e459f8574618fbe932a72e479",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "41b9a3af523e8518d09cba1d75a8a50068497c12c8a39a13cf9b4d0017555029",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/144",
+        "topicId": 144
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60014",
+      "localRelativePath": "title-vi/sec-60014-rescission-of-funding-for-environmental-protection-agency-efficient-accurate-and-timely-reviews.md",
+      "localFileSha256": "57493e2a0df0f05a769c4ea25b8a843d538ee9d27fc9f1d1c643bba62c7b13e1",
+      "frontmatter": {
+        "title": "Sec. 60014. Rescission of funding for environmental protection agency efficient, accurate, and timely reviews",
+        "sectionId": "60014",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 145,
+        "discussionSync": false
+      },
+      "bodySha256": "1f99643795fdab9fdcef5e64e4cc03ca4bc7ca470cd1a2393ac33f87bbb349c0",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "3d571e7cf0ff882f950224dbdcebaffebfc77d3fda7d064501722391ad657612",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/145",
+        "topicId": 145
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60015",
+      "localRelativePath": "title-vi/sec-60015-rescission-of-funding-for-low-embodied-carbon-labeling-for-construction-materials.md",
+      "localFileSha256": "2728c687c1ac768c910b0013ec9139d3315838c4dc7543a418d3d15071e54042",
+      "frontmatter": {
+        "title": "Sec. 60015. Rescission of funding for low-embodied carbon labeling for construction materials",
+        "sectionId": "60015",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 146,
+        "discussionSync": false
+      },
+      "bodySha256": "9477da867fbc62d66112c40807454f96a8abe14f6a6b3c20ce7df3e54a31f333",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "b19d5b410bb188f6ae99c7f9c5e2e2eb28304b4dae0ee97ccd946c65e310d7cb",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/146",
+        "topicId": 146
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60016",
+      "localRelativePath": "title-vi/sec-60016-rescission-of-funding-for-environmental-and-climate-justice-block-grants.md",
+      "localFileSha256": "e37594330d90b19eee2d8e3f385de13c9520201609989b513d114d68547344ff",
+      "frontmatter": {
+        "title": "Sec. 60016. Rescission of funding for environmental and climate justice block grants",
+        "sectionId": "60016",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 147,
+        "discussionSync": false
+      },
+      "bodySha256": "235663eff4367af5cde821d43e28266f9663f58181324e4446f2bd32cd6e2d02",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "d04c75f29cc720f9c5f968664d7687abc8154c10c7913921eb7901aa4cff455d",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/147",
+        "topicId": 147
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60017",
+      "localRelativePath": "title-vi/sec-60017-rescission-of-funding-for-esa-recovery-plans.md",
+      "localFileSha256": "9cf65fcda19bc47e30a87e68cff5009b8f12ec57d3b378dfeeddef39448b807b",
+      "frontmatter": {
+        "title": "Sec. 60017. Rescission of funding for ESA recovery plans",
+        "sectionId": "60017",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 148,
+        "discussionSync": false
+      },
+      "bodySha256": "900311aab75370372c5d2e6e4366394addf636d4260f5072aff597a6aae03710",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "f050b9c5d9831d9c0044070bc6e5aedf5f2097692568ebc2f4cfd7e91024fdbd",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/148",
+        "topicId": 148
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60018",
+      "localRelativePath": "title-vi/sec-60018-rescission-of-funding-for-environmental-and-climate-data-collection.md",
+      "localFileSha256": "db97f26bd170b42222c7061ed3bc17db9ca2d8cc7dfb8ca66a534253f0c03c61",
+      "frontmatter": {
+        "title": "Sec. 60018. Rescission of funding for environmental and climate data collection",
+        "sectionId": "60018",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 149,
+        "discussionSync": false
+      },
+      "bodySha256": "3bb02612682c09502bdbe00b8b6370bd71cd27e84379554bb61a41324b6325b4",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "802e871a48acc226634c4a790ab931b7d30fedc25e40bea49987e1e7396932f3",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/149",
+        "topicId": 149
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60019",
+      "localRelativePath": "title-vi/sec-60019-rescission-of-neighborhood-access-and-equity-grant-program.md",
+      "localFileSha256": "b96a5c9ab2f6a4b2b0a099c7afee7bbb9c69bee4014e5c3da25fd011bba06b88",
+      "frontmatter": {
+        "title": "Sec. 60019. Rescission of neighborhood access and equity grant program",
+        "sectionId": "60019",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 150,
+        "discussionSync": false
+      },
+      "bodySha256": "f9af1d6b278ed5928d1f517081d8d9cb3ee120fef496b651af4a1ca0bb81eb45",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "9d3735fd8a5ec1afb98c673bdaf864afcc0c57950651f898ce8492a472e68700",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/150",
+        "topicId": 150
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60020",
+      "localRelativePath": "title-vi/sec-60020-rescission-of-funding-for-federal-building-assistance.md",
+      "localFileSha256": "1cef0c7bd028033c72e54f8b8f3a4c6faa62f26da09ccaf680b238f221ac8bf3",
+      "frontmatter": {
+        "title": "Sec. 60020. Rescission of funding for Federal building assistance",
+        "sectionId": "60020",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 151,
+        "discussionSync": false
+      },
+      "bodySha256": "89b56c7e4f77c0894e815557b5daab16a4f96aea72e718cf86fbf0f950f61dc8",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "ae3dbeebdab7324dbb21138233d8b3317e84adfbe01f5addf34c0bdfb64b3ab1",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/151",
+        "topicId": 151
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60021",
+      "localRelativePath": "title-vi/sec-60021-rescission-of-funding-for-low-carbon-materials-for-federal-buildings.md",
+      "localFileSha256": "4a88231e8d82d942ecdca4a59a68813e59c389448c8af4dd20d5c4ce684c3366",
+      "frontmatter": {
+        "title": "Sec. 60021. Rescission of funding for low-carbon materials for Federal buildings",
+        "sectionId": "60021",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 152,
+        "discussionSync": false
+      },
+      "bodySha256": "5afb51faa25182d0696d2cd1aabeb54c6334363fd6788ebe70e886eb06025209",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "8944cb1896b56ad8531e6affb639cdc9bcabb199ce80d2ef73a943d7c914d158",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/152",
+        "topicId": 152
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60022",
+      "localRelativePath": "title-vi/sec-60022-rescission-of-funding-for-gsa-emerging-and-sustainable-technologies.md",
+      "localFileSha256": "4aa682ed61fec921ef4cc42c6b73035b2a4c4225f4d2c261b5f5768bb05afd20",
+      "frontmatter": {
+        "title": "Sec. 60022. Rescission of funding for GSA emerging and sustainable technologies",
+        "sectionId": "60022",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 153,
+        "discussionSync": false
+      },
+      "bodySha256": "d483fd8798df26f70df418de8fed1a7959b9ae124dd90754167c648351ba78a3",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "936304c9be19fde0bca24f5e72ecfedab73b0773bee29f6a189846e5a9a691ac",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/153",
+        "topicId": 153
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60023",
+      "localRelativePath": "title-vi/sec-60023-rescission-of-environmental-review-implementation-funds.md",
+      "localFileSha256": "c6f80d1ed771bd202f0a3af0288cb27ace99471ec86c44f9ed6b135052dd80b8",
+      "frontmatter": {
+        "title": "Sec. 60023. Rescission of environmental review implementation funds",
+        "sectionId": "60023",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 154,
+        "discussionSync": false
+      },
+      "bodySha256": "cbf8fd2eaaab67e0320a514cf9e68ea99748e7a051ffe7edd1922c2d037e7c56",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "beac4a6d190e3c9f77fce3b3e98ac491fbd03cc990f1d5108f7cd0fe1692cff7",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/154",
+        "topicId": 154
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60024",
+      "localRelativePath": "title-vi/sec-60024-rescission-of-low-carbon-transportation-materials-grants.md",
+      "localFileSha256": "0ca6f7a7cfc0d808e74cbb2abaac04c8c06ec0ced6e638f2e3e3b479c1bdc647",
+      "frontmatter": {
+        "title": "Sec. 60024. Rescission of low-carbon transportation materials grants",
+        "sectionId": "60024",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 155,
+        "discussionSync": false
+      },
+      "bodySha256": "bd24065a36ccb480652430f333bc0af55f61d965a211efea7b068b79e230cb20",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "24a32406a107baacb9b52b89c89fba4e0067c09f38d983be2b5045a9d2f59c09",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/155",
+        "topicId": 155
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "60025",
+      "localRelativePath": "title-vi/sec-60025-john-f-kennedy-center-for-the-performing-arts.md",
+      "localFileSha256": "ef4c1c70614caa22ffd1ff6b6f1a033085e6437368c154c8c0fa7ef49b58a7bb",
+      "frontmatter": {
+        "title": "Sec. 60025. John F. Kennedy Center for the Performing Arts",
+        "sectionId": "60025",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 158,
+        "discussionSync": false
+      },
+      "bodySha256": "69231ba329d3e016de5c65dfac23467f5298c9307e6e6fe9e7cb0b93d677b020",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "9f4e740b41aec24017820d8a9ce6c3460dbed4b596693f77fda755ec3c5adb98",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/158",
+        "topicId": 158
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "70438",
+      "localRelativePath": "title-vii/sec-70438-extension-of-rules-for-treatment-of-certain-disaster-related-personal-casualty-losses.md",
+      "localFileSha256": "d73826845876538a1fc32e825f2c5b0467392d3b8a8372ccf780180ba9212003",
+      "frontmatter": {
+        "title": "Sec. 70438. Extension of rules for treatment of certain disaster-related personal casualty losses",
+        "sectionId": "70438",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 271,
+        "discussionSync": false
+      },
+      "bodySha256": "f82d7961084556d2df63088793acc6aa7e98816bf7d1d010bf97f3b2270ab781",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "64bdcc53fa00e720055d5cf5f35839dd3092b52b0b49f9e673a0e20ee625989b",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/271",
+        "topicId": 271
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "70607",
+      "localRelativePath": "title-vii/sec-70607-task-force-on-the-replacement-of-direct-file.md",
+      "localFileSha256": "d2dae580a3bec2f93f5accc16e597c20778237b44f704028ccc9f5e16ebef5f1",
+      "frontmatter": {
+        "title": "Sec. 70607. Task force on the replacement of Direct File",
+        "sectionId": "70607",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 306,
+        "discussionSync": false
+      },
+      "bodySha256": "f774f1c43f4b9eb30e11b1e18f3a110afeb02feb3280833260b217a0f586a9ad",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "1bd5c06e37f24a1b2df92ec232691dc23a89b547f63813efec2bfcebfac00a35",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/306",
+        "topicId": 306
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "71101",
+      "localRelativePath": "title-vii/sec-71101-moratorium-on-implementation-of-rule-relating-to-eligibility-and-enrollment-in-medicare-savings-programs.md",
+      "localFileSha256": "a21d1472202fa47b589ff813cc20d2e38617c38229f52afa437816a6cc512ea6",
+      "frontmatter": {
+        "title": "Sec. 71101. Moratorium on implementation of rule relating to eligibility and enrollment in Medicare Savings Programs",
+        "sectionId": "71101",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 309,
+        "discussionSync": false
+      },
+      "bodySha256": "45802ceaebf56b1f4d41112aff20cf5cea89fe356213d0b080566b01ea96c55b",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "3763e2fb529ce3a19a96a10466877b3b87a8659b0030f15d18e2af8f2c2b8c4c",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/309",
+        "topicId": 309
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "71102",
+      "localRelativePath": "title-vii/sec-71102-moratorium-on-implementation-of-rule-relating-to-eligibility-and-enrollment-for-medicaid-chip-and-the-basic-health-program.md",
+      "localFileSha256": "7175020339945d1d4292b37a2d37d996796cce1187a3be76c352a7f9cf8eb154",
+      "frontmatter": {
+        "title": "Sec. 71102. Moratorium on implementation of rule relating to eligibility and enrollment for Medicaid, CHIP, and the Basic Health Program",
+        "sectionId": "71102",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 310,
+        "discussionSync": false
+      },
+      "bodySha256": "b9be41238c917050e37944eaefc341aac86080742a9157c0c919fc40fc5806be",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "e23961bacdd4437afc7265a2f0f83040d790a0ca7fec57e0bcdc797b9a06ab10",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/310",
+        "topicId": 310
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "71105",
+      "localRelativePath": "title-vii/sec-71105-ensuring-deceased-providers-do-not-remain-enrolled.md",
+      "localFileSha256": "c6d4549036912dbc5dd4d47116be4f9887bdfb7ce80083550892ebfb9c846f0e",
+      "frontmatter": {
+        "title": "Sec. 71105. Ensuring deceased providers do not remain enrolled",
+        "sectionId": "71105",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 313,
+        "discussionSync": false
+      },
+      "bodySha256": "43ba0464eb0c40852a5365c73881c29d6284e690e1d77b8c08e88a8637285b1c",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "8a0fc0eced925d83da219159c8e82cf0e09f7fb3a1f23a941dab672998607f01",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/313",
+        "topicId": 313
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "71111",
+      "localRelativePath": "title-vii/sec-71111-moratorium-on-implementation-of-rule-relating-to-staffing-standards-for-long-term-care-facilities-under-the-medicare-and-medicaid-programs.md",
+      "localFileSha256": "3d8e1c1ca2886b200f1e05118b8b5faf7be432f8a59a11ecaa305cad37e1fda6",
+      "frontmatter": {
+        "title": "Sec. 71111. Moratorium on implementation of rule relating to staffing standards for long-term care facilities under the Medicare and Medicaid programs",
+        "sectionId": "71111",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 320,
+        "discussionSync": false
+      },
+      "bodySha256": "16d3f6f1076b576f126fa27db257ca29c9dfe4ea687676319f42c2c65db402ee",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "3bd82233da112e8bd5906fcf7b7207b554ad647bf450c19ce2ddcdb4b47e26c6",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/320",
+        "topicId": 320
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "71113",
+      "localRelativePath": "title-vii/sec-71113-federal-payments-to-prohibited-entities.md",
+      "localFileSha256": "ad90ffef3439c5ca4e13c7cce2e0b0ac91d899fc10eb941cf48aa250c6ec3e15",
+      "frontmatter": {
+        "title": "Sec. 71113. Federal payments to prohibited entities",
+        "sectionId": "71113",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 322,
+        "discussionSync": false
+      },
+      "bodySha256": "4999a7d0db8f568328f35c09ae08ce09155f9dd5b56876c596c01ceeeec2ff96",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "023a29b195e46e5840b5fdd4cc5c355192a05e2fdcce999efe69e93b707912a6",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/322",
+        "topicId": 322
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "83004",
+      "localRelativePath": "title-viii/sec-83004-federal-pell-grant-exclusion-relating-to-other-grant-aid.md",
+      "localFileSha256": "d77df0e2626ceb73f5f50a3fc036ae3898f3d3a8d5d4fb104e43e8178865902d",
+      "frontmatter": {
+        "title": "Sec. 83004. Federal Pell Grant exclusion relating to other grant aid",
+        "sectionId": "83004",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 374,
+        "discussionSync": false
+      },
+      "bodySha256": "f238fed70b90f8357abb2b650948b65343513eb071f869c7142d9688094ee041",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "e1222b8ce43771d53000d49598a7403bc8ac00254ff583f02bdbee3493dfa3c1",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/374",
+        "topicId": 374
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "85001",
+      "localRelativePath": "title-viii/sec-85001-delay-of-rule-relating-to-borrower-defense-to-repayment.md",
+      "localFileSha256": "85351a281dd0559ce93aede3f3662a95fffa52c7866a2ab4b3e072c897894179",
+      "frontmatter": {
+        "title": "Sec. 85001. Delay of rule relating to borrower defense to repayment",
+        "sectionId": "85001",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 378,
+        "discussionSync": false
+      },
+      "bodySha256": "bf2fb0c19b5b6362bc23be64da3ef6fd1baff9336937e4ab1221db719eb9504c",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "9bbc3220290236c3403c57d55418b2d9a25341c7047e128d87f369b0e6764b6f",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/378",
+        "topicId": 378
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "85002",
+      "localRelativePath": "title-viii/sec-85002-delay-of-rule-relating-to-closed-school-discharges.md",
+      "localFileSha256": "69908a417bf760d460355ed472992e7ad9ac60c13cb6d27a142900f9ecaf4873",
+      "frontmatter": {
+        "title": "Sec. 85002. Delay of rule relating to closed school discharges",
+        "sectionId": "85002",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 379,
+        "discussionSync": false
+      },
+      "bodySha256": "98ede3842508cea3489e07e12dfd7a5b991477bf88f1144a1ee3f7028259db6d",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "c24385b96139d7bf4913b618ef66a1c3a3a7a07b72b1646764cceb8ddb54e301",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/379",
+        "topicId": 379
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "86001",
+      "localRelativePath": "title-viii/sec-86001-garden-of-heroes.md",
+      "localFileSha256": "2a70c30e9ba8fa8e862a0fe3075ad2234912e739ed9bc9df3b9cf63867d1137c",
+      "frontmatter": {
+        "title": "Sec. 86001. Garden of Heroes",
+        "sectionId": "86001",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 382,
+        "discussionSync": false
+      },
+      "bodySha256": "a4edece12ef53224af2d2a98ffea312b822788387422ba13705c8fa64972fc4f",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "67a6c931f7b1dd7801130b3cd9b5bc3fd2c62400f4fbfa49c4a855cfc2df5574",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/382",
+        "topicId": 382
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "87001",
+      "localRelativePath": "title-viii/sec-87001-potential-sponsor-vetting-for-unaccompanied-alien-children-appropriation.md",
+      "localFileSha256": "499669942f8854f90c2c7531c9ab11e4f9b9d8eb90061508aff8bee74d0dd280",
+      "frontmatter": {
+        "title": "Sec. 87001. Potential sponsor vetting for unaccompanied alien children appropriation",
+        "sectionId": "87001",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 383,
+        "discussionSync": false
+      },
+      "bodySha256": "bbde64834262b8ac127eed77bdcc928425742bfdc4f0d23bef0b3f8785408b0d",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "08eecf1c9774b9f16d62dd5d0c44802fb6901140ba8d276d2259108cd008a5cb",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/383",
+        "topicId": 383
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "90001",
+      "localRelativePath": "title-ix/sec-90001-border-infrastructure-and-wall-system.md",
+      "localFileSha256": "2e67e2a2edddc236cc1608ad317497b29efe2c98dde5df11bf81035d019ac106",
+      "frontmatter": {
+        "title": "Sec. 90001. Border infrastructure and wall system",
+        "sectionId": "90001",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 386,
+        "discussionSync": false
+      },
+      "bodySha256": "e3c18815627d06f2ab86eb726093c14e905c93399056589254ee0e94348c9147",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "3d10092f84dbbe3655cd222f485c4904f6e39425a9efc1a72d5a1663df84670c",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/386",
+        "topicId": 386
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "90002",
+      "localRelativePath": "title-ix/sec-90002-u-s-customs-and-border-protection-personnel-fleet-vehicles-and-facilities.md",
+      "localFileSha256": "661b788d307849a0fe10ced4d60b2b3e8e95b9167b9a351bdcf5f96067853635",
+      "frontmatter": {
+        "title": "Sec. 90002. U.S. Customs and Border Protection personnel, fleet vehicles, and facilities",
+        "sectionId": "90002",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 387,
+        "discussionSync": false
+      },
+      "bodySha256": "5dca3bf939bfd0b228bb4547b00fbd8bce8d2500e20058086926fea3aafe1fb0",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "3ea6360ad2da81c01bacf06262f0a08fde1fb6ec19b69228b6f586a11b480c9b",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/387",
+        "topicId": 387
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "90003",
+      "localRelativePath": "title-ix/sec-90003-detention-capacity.md",
+      "localFileSha256": "90274a62a5d23bc3751fdf40182ce15bf0a1d16d3a369447f5fe65fbfe81cee6",
+      "frontmatter": {
+        "title": "Sec. 90003. Detention capacity",
+        "sectionId": "90003",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 388,
+        "discussionSync": false
+      },
+      "bodySha256": "a6c4ab5ee0b4e9f781bfeb542c1157ba46ce4a9906262f2061d266b10a1e5e1f",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "5f8308606674486f16b8766261a4594338595f7c6098cf53c9d83ccbaf7326bf",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/388",
+        "topicId": 388
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "90004",
+      "localRelativePath": "title-ix/sec-90004-border-security-technology-and-screening.md",
+      "localFileSha256": "28e6199f4560f0d9b54808cc8e4d88ec70b910d791aaf2bb605b5efc9f456c93",
+      "frontmatter": {
+        "title": "Sec. 90004. Border security, technology, and screening",
+        "sectionId": "90004",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 389,
+        "discussionSync": false
+      },
+      "bodySha256": "c3a888391da6f1293c16fc2969c8701b8b3eb0f83c1c6dc40c313d1ce7e57bed",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "fba74da55d779460dcdade0ad162918f0ea49d2eeba427b92f1bae66351cf16a",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/389",
+        "topicId": 389
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "90006",
+      "localRelativePath": "title-ix/sec-90006-presidential-residence-protection.md",
+      "localFileSha256": "fb13660ea997a7c65cb75fd66761e60a96d14dc12384985e2078f1ccd60beec2",
+      "frontmatter": {
+        "title": "Sec. 90006. Presidential residence protection",
+        "sectionId": "90006",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 391,
+        "discussionSync": false
+      },
+      "bodySha256": "88d1bd30b511f45020ef6eccbba387bb93d890e308b373307fe2ca39a6c52460",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "347ba7fa8201593de12cc248a7f6b34e2aff25b9402429656c11e31ab3b9039f",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/391",
+        "topicId": 391
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "90007",
+      "localRelativePath": "title-ix/sec-90007-department-of-homeland-security-appropriations-for-border-support.md",
+      "localFileSha256": "03bef677c1d0ee6339e232b3fceffc07032c5819f08f079a98914f7034180f9f",
+      "frontmatter": {
+        "title": "Sec. 90007. Department of Homeland Security appropriations for border support",
+        "sectionId": "90007",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 392,
+        "discussionSync": false
+      },
+      "bodySha256": "d2062139fdde79f820ba3117e1a70ac79548c10e8e6ec7ae14fdd884b9d96832",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "54cc52db441fccb4d1dd8b6bc8a709230b1aaf19586d9392c16195d1205d1ebb",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/392",
+        "topicId": 392
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "90103",
+      "localRelativePath": "title-ix/sec-90103-appropriation-for-the-office-of-management-and-budget.md",
+      "localFileSha256": "b9761db130bfdbb89d4ceac0343dd035ea70acc94832695d8bf63aae39b96cd5",
+      "frontmatter": {
+        "title": "Sec. 90103. Appropriation for the Office of Management and Budget",
+        "sectionId": "90103",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 396,
+        "discussionSync": false
+      },
+      "bodySha256": "7409495e4090ff4d5448461ea542e4572f73bb47e53c49ceca9ebf8a805420d3",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "9e6a012a0f77ae3c3669af4043e53a4fdac9f4f61b1f02829b06b748e0504d09",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/396",
+        "topicId": 396
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100051",
+      "localRelativePath": "title-x/sec-100051-appropriation-for-the-department-of-homeland-security.md",
+      "localFileSha256": "340e401cb2d9c7ec544a8405028ad097cac7c6d7085240c2b75b921d9c931722",
+      "frontmatter": {
+        "title": "Sec. 100051. Appropriation for the Department of Homeland Security",
+        "sectionId": "100051",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 422,
+        "discussionSync": false
+      },
+      "bodySha256": "fbcdd8161532afb47e74b8a1fee3815081f2f177d0de1325f9998a0ae841df11",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "0f4ddcf2ee7260552f371482194d283ff5c623f089c27bdb3ffd7668a8938ae3",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/422",
+        "topicId": 422
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100052",
+      "localRelativePath": "title-x/sec-100052-appropriation-for-u-s-immigration-and-customs-enforcement.md",
+      "localFileSha256": "7048ab774d762c9e28ffe7bd1642f74c27ea3194c874b430299d9aacaa327bba",
+      "frontmatter": {
+        "title": "Sec. 100052. Appropriation for U.S. Immigration and Customs Enforcement",
+        "sectionId": "100052",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 423,
+        "discussionSync": false
+      },
+      "bodySha256": "d94dfcaa043db70420e6b00c34b753be857479b80c8fb3adce09a0d4939e3c91",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "fbbce275201ebdda363b39baac04df74dfc3ee80f23b286340ab63b7d15fbb3f",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/423",
+        "topicId": 423
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100053",
+      "localRelativePath": "title-x/sec-100053-appropriation-for-federal-law-enforcement-training-centers.md",
+      "localFileSha256": "d7c06ef6a6ed2b3bff66efa080dcd37cfdacb6e935762cf0c5be7661f36ea4ec",
+      "frontmatter": {
+        "title": "Sec. 100053. Appropriation for Federal Law Enforcement Training Centers",
+        "sectionId": "100053",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 424,
+        "discussionSync": false
+      },
+      "bodySha256": "db66a77e55d810e5a56b05ce4bef091b8a785df9c31acb6ec0708c937a7a01c4",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "23dffdccfb3d887556f3458c267fe8efcfdd4373f3f72a7c970fcd2365c2957a",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/424",
+        "topicId": 424
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100054",
+      "localRelativePath": "title-x/sec-100054-appropriation-for-the-department-of-justice.md",
+      "localFileSha256": "2c889688c46c10764200f1e59f8ec01a8d4bca200db047910f9abe17b5a0d651",
+      "frontmatter": {
+        "title": "Sec. 100054. Appropriation for the Department of Justice",
+        "sectionId": "100054",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 425,
+        "discussionSync": false
+      },
+      "bodySha256": "4c3fc1bbdb524168bd0ffdc6226ff99c032e57dbebe8d26691b5718cdaef2449",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "f4e7eedc5abd6dd700224d10439cf876cf19fa49e0793cda88af791fd583f7ea",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/425",
+        "topicId": 425
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100056",
+      "localRelativePath": "title-x/sec-100056-appropriation-for-the-bureau-of-prisons.md",
+      "localFileSha256": "0af94e0aff2745b2aae81f1623c4269bd0138492e0cf9ed0a464a2e6d2b9be52",
+      "frontmatter": {
+        "title": "Sec. 100056. Appropriation for the Bureau of Prisons",
+        "sectionId": "100056",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 427,
+        "discussionSync": false
+      },
+      "bodySha256": "7161074c3755c5d0a9871ea8f5d257e6a11b792a857a9fba5917ed1ce2c4ccc4",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "c2bc073ff5d5f32d49d08fc38b3d8d8a34465c908952f58e6733c945518be44f",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/427",
+        "topicId": 427
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100057",
+      "localRelativePath": "title-x/sec-100057-appropriation-for-the-united-states-secret-service.md",
+      "localFileSha256": "8356d7656a3750a3fe1550ba90ec02f3ae3fe6379e6b78ac730b55e4fab52ba5",
+      "frontmatter": {
+        "title": "Sec. 100057. Appropriation for the United States Secret Service",
+        "sectionId": "100057",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 428,
+        "discussionSync": false
+      },
+      "bodySha256": "d1f964febbcd013b02e7b2794ae8f365b6fcc0a5cb58081cd86e3eac34f50d61",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "f6fd008fc4ba4b010d88f9224a8767e63a867c15d31fa627f3fa123d8ac42117",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/428",
+        "topicId": 428
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100101",
+      "localRelativePath": "title-x/sec-100101-appropriation-to-the-administrative-office-of-the-united-states-courts.md",
+      "localFileSha256": "645dd358ae77d15ee94604f730389cfcc41883a49fce317f0735f033052c6fcc",
+      "frontmatter": {
+        "title": "Sec. 100101. Appropriation to the Administrative Office of the United States Courts",
+        "sectionId": "100101",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 400,
+        "discussionSync": false
+      },
+      "bodySha256": "41c04fea4d24e2372a10364f8283995452748fe954fb5795cb891d69ddf5fc7c",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "cfaefad27d0754566b96d8daa379ffe0f7421dc8b6010071f3943d352ebd8f86",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/400",
+        "topicId": 400
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100102",
+      "localRelativePath": "title-x/sec-100102-appropriation-to-the-federal-judicial-center.md",
+      "localFileSha256": "5a16cc075a2c5edee0202c88bb78ab3f7083ec876a787531622b5a81baa009b2",
+      "frontmatter": {
+        "title": "Sec. 100102. Appropriation to the Federal Judicial Center",
+        "sectionId": "100102",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 401,
+        "discussionSync": false
+      },
+      "bodySha256": "39ccdc9da5bd0089fc746cb7f2c37425683365caf1862f778b9bff265bfc47e8",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "23864df8feea786a1a42fceddbc2e327aaade97697bded8dd60b361217210194",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/401",
+        "topicId": 401
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100202",
+      "localRelativePath": "title-x/sec-100202-claims-relating-to-atmospheric-testing.md",
+      "localFileSha256": "86125b2cdd62edb93194fe52381a1238deae0611f8232c573eb1c9c9e3430ef4",
+      "frontmatter": {
+        "title": "Sec. 100202. Claims relating to atmospheric testing",
+        "sectionId": "100202",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 31,
+        "discussionSync": false
+      },
+      "bodySha256": "632a75e94a12a93159841d5721b8577e8604611920bb71991777252a8179bc00",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "ef2d67ce857629d30392d4e46932be44e0f0b95f6afe9d8eb16a35a5e3e26da3",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/31",
+        "topicId": 31
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100203",
+      "localRelativePath": "title-x/sec-100203-claims-relating-to-uranium-mining.md",
+      "localFileSha256": "9ea04fb7fbad23b03d2ccd91eacc6c6cb295aeef6fe649cc875bbd63a871c3db",
+      "frontmatter": {
+        "title": "Sec. 100203. Claims relating to uranium mining",
+        "sectionId": "100203",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 30,
+        "discussionSync": false
+      },
+      "bodySha256": "7be326ccdf96eb466bdee37d6f1a270731207ca36fd181390d61a939ecc69c92",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "4464ddf6e1af0f0d28d0569bd1833cd4e9f99fd21d9cfb8c2dfea6203b6245be",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/30",
+        "topicId": 30
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100204",
+      "localRelativePath": "title-x/sec-100204-claims-relating-to-manhattan-project-waste.md",
+      "localFileSha256": "647719e2052c18f4e882fbdad8288461c36567322d40f86a7ce502a277f14d91",
+      "frontmatter": {
+        "title": "SEC. 100204. Claims relating to Manhattan Project waste",
+        "sectionId": "100204",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 29,
+        "discussionSync": false
+      },
+      "bodySha256": "6633735c93a075b886489697207d1b622aa401ff4fe67e54769f052ba71c014b",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "0d9fba4e75ead4c3300682adb2c384bc57b94d23d33955f2bc3c9ca2f8e28664",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/29",
+        "topicId": 29
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    },
+    {
+      "sectionId": "100205",
+      "localRelativePath": "title-x/sec-100205-limitations-on-claims.md",
+      "localFileSha256": "a8dfa62de509da80580253964a512a6c13b12aeffb62e03daf212f003fce8c8a",
+      "frontmatter": {
+        "title": "SEC. 100205. Limitations on claims",
+        "sectionId": "100205",
+        "contentLens": "obbba-text",
+        "discourseTopicId": 28,
+        "discussionSync": false
+      },
+      "bodySha256": "0c051e4d60644a072e82bd0bf3d9c2c0df2eac56e225f2e4a3a5e4fe51cc335b",
+      "enrolledSemanticProfile": "enrolled-legal-text",
+      "enrolledSemanticSha256": "09493c793b260a395eb383ab307999501063da7cd2536359f4f1f845cab7ef80",
+      "enrolledAuthority": {
+        "sourceUrl": "https://forum.repealobbba.org/t/28",
+        "topicId": 28
+      },
+      "govInfoSourceUrl": "https://www.govinfo.gov/app/details/PLAW-119publ21"
+    }
+  ],
+  "unresolved": [
+    {
+      "sectionId": "20009",
+      "reason": "enrolled-section-authority-and-local-derivative-are-absent"
+    }
+  ]
+}
