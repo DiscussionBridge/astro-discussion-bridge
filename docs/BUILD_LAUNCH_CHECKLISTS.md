@@ -21,7 +21,7 @@ publish -> sync -> diagnose -> maintain -> recover -> document
 
 ### Connected Public-Site Release Gate
 
-- [ ] Create and Product-review a fresh connected-public-site inventory from
+- [x] Create and Product-review a fresh connected-public-site inventory from
       settled hostnames, current approved repositories, authoritative source
       boundaries, and current deployment evidence. Record each site's intended
       product job, reviewed candidate, public status, DiscussionBridge/forum
@@ -30,7 +30,8 @@ publish -> sync -> diagnose -> maintain -> recover -> document
       OBBBA, begin from the protected pre-BB2 baseline plus approved clean
       package, credit, and `fullInteractive` behavior; do not reuse quarantined
       BB2 imports, generated navigation, relationships, counts, or repair
-      assumptions.
+      assumptions. Reviewed inventory:
+      `docs/evidence/CONNECTED_PUBLIC_SITE_INVENTORY_2026-07-31.md`.
 - [ ] Publish branded custom 404 pages on relevant Astro sites and verify both
       the rendered experience and HTTP 404 status for unknown routes.
 - [ ] Complete a new connected-forum embed matrix from the settled public
