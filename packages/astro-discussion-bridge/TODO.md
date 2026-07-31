@@ -45,6 +45,18 @@ quality review before Product Boss approval.
 
 ### Publish
 
+- After the Bridge Boss 2 cleanup is complete, make DiscussionBridge-controlled
+  publication the recommended/default companion-topic creation path. An
+  operator-authorized user-created Discourse API key creates the topic under
+  the selected forum actor before the comments embed is exposed, and Astro
+  stores the durable topic ID. Treat Discourse Core visitor-triggered embed
+  creation (`system` author, page fetch on first embed view) as a separate,
+  explicit operator-selected zero-touch mode rather than a silent fallback.
+  Preserve final forum authority over category, visibility/listing,
+  permissions, and moderation. Topic 38 on `forum.discussionbridge.dev`, bound
+  to `astro.demo.discussionbridge.dev/blog/community-continuity/`, is the Alpha
+  evidence case for this distinction. Do not implement this item until the BB2
+  remediation sequence is closed.
 - Confirmed final CLI command names and help output are clear: `publish-new`, `sync-existing`, `publish-and-sync`, `discover-imports`, `import-existing`, and `check-discourse`.
 - Decide whether to add a configurable topic title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
 - Keep local preflight validation available for dry runs and unauthenticated checks.
