@@ -124,7 +124,14 @@ deployment identities, and rollback targets before and after cutover.
 
 As part of the Alpha gate, verify each public demo hostname, Discourse embed host setting, companion topic URL, Cloudflare Pages project, and docs link uses the public hostname rather than a transitional test hostname.
 
-Cloudflare Pages projects for public package demos should normally build from `DiscussionBridge/astro-discussion-bridge` with the appropriate example root directory, such as `examples/astro-demo` or `examples/starlight-demo`. `DiscussionBridge/discussionbridge.dev` should point to those demos from the product site rather than owning their implementation source.
+Public demos are independently owned repositories and Cloudflare Workers with
+static assets. The current repositories are
+`DiscussionBridge/astro-demo-discussionbridge-dev`,
+`DiscussionBridge/astrostarlight-demo-discussionbridge-dev`, and
+`DiscussionBridge/stockstarlight-demo-discussionbridge-dev`. The product
+repository owns the adapter; it does not own deployable demo applications.
+`DiscussionBridge/discussionbridge.dev` links to those demos without owning
+their implementation source.
 
 ## Demo Topic Lifecycle
 
@@ -181,11 +188,14 @@ node scripts/tag-discourse-topics.mjs --tag historical-reference 20 21 24 28
   - Linking `src/content/releases/2_1.md` to topic 24 and running `sync-existing --route-base releases` reconciled the topic.
   - Product note: embedded Discourse topics can exist before CLI publishing. The package now reconciles existing-topic collisions through `/embed/info?embed_url=...` and exact URL search fallback. Live temporary-file test against topic 24 succeeded with the global publishing key; the current granular publishing key could not read `/embed/info` or search, so minimal granular scopes still need confirmation.
 - 2026-07-19: Plain Astro demo created locally and published companion topic 34.
-  - Source route: `examples/astro-demo/src/content/blog/core-astro-bridge.md`
+  - Current source route:
+    `DiscussionBridge/astro-demo-discussionbridge-dev/src/content/blog/core-astro-bridge.md`
   - Intended public URL: `https://astro.demo.discussionbridge.dev/blog/core-astro-bridge/`
   - Companion topic: https://forum.discussionbridge.dev/t/core-astro-discussion-bridge-demo/34
   - The page renders Astro content tags as site/template metadata and publishes Discourse tags through CLI/lane config.
-- 2026-07-19: Stock Starlight control site added at `examples/stock-starlight`.
+- 2026-07-19: Stock Starlight control site was first added in the adapter
+  repository and later moved to
+  `DiscussionBridge/stockstarlight-demo-discussionbridge-dev`.
   - Intended public URL: `https://stockstarlight.demo.discussionbridge.dev/`
   - `npm install` completed with 0 vulnerabilities.
   - `npm run build` completed.

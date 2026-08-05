@@ -24,7 +24,8 @@ Entry docs -> 404 was not found.
 
 **Confirmed reproduction:**
 
-- a clean stock Starlight control at `examples/stock-starlight`
+- the independent stock Starlight control repository at
+  `DiscussionBridge/stockstarlight-demo-discussionbridge-dev`
 - Astro `^7.0.4`
 - Starlight `^0.41.2`
 - no DiscussionBridge integration or component wiring required
@@ -90,8 +91,7 @@ diagnostic during an otherwise successful build.
    `Entry docs -> 404 was not found.`
 
 A minimal control is available in
-`examples/stock-starlight` in the DiscussionBridge/astro-discussion-bridge
-repository.
+`DiscussionBridge/stockstarlight-demo-discussionbridge-dev`.
 
 ### Additional findings
 
