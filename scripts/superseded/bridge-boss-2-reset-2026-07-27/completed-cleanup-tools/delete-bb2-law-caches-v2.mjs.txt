@@ -1,0 +1,429 @@
+import { createHash } from "node:crypto";
+import {
+  lstat,
+  mkdir,
+  readFile,
+  readdir,
+  realpath,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const APPROVED_REPO = "C:\\CodeProjects\\CodeWorksLabs\\astro-discussion-bridge";
+const APPROVED_PARENT = `${APPROVED_REPO}\\.discussionbridge-cache\\superseded\\law-as-amended-clean-room-reset-2026-07-27`;
+const selfPath = fileURLToPath(import.meta.url);
+const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const parent = path.join(
+  repo,
+  ".discussionbridge-cache",
+  "superseded",
+  "law-as-amended-clean-room-reset-2026-07-27",
+);
+const names = [
+  "obbba-law-usc-archives-2026-07-26",
+  "obbba-law-usc-incorporation-archives-2026-07-26",
+  "obbba-law-usc-incorporation-xml-2026-07-26",
+  "obbba-law-usc-selected-sections-2026-07-26",
+  "obbba-law-usc-xml-2026-07-26",
+];
+const manifestPath = path.join(
+  repo,
+  "docs/evidence/BB2_LAW_CACHE_DELETION_MANIFEST_2026-07-31.json",
+);
+const operationRoot = path.join(
+  repo,
+  "docs/evidence/bb2-law-cache-deletion-operation-2026-07-31",
+);
+const planPath = path.join(operationRoot, "PLAN.json");
+const completePath = path.join(operationRoot, "COMPLETE.json");
+const expectedManifest =
+  "c947e2e979e108846939f068d13cbed019a79f09e70cbbe8340bcc19aadd61b8";
+
+const preserved = [
+  [
+    "docs/evidence/BB2_LAW_CACHE_DELETION_PROPOSAL_2026-07-31.md",
+    "d7563b54f0be3b821371cf79ad6a4d126997f7369b2278bd482b1ca9b327ff55",
+  ],
+  [
+    "docs/evidence/superseded/law-as-amended-clean-room-reset-2026-07-27/governance-lessons-learned/OBBBA_LAW_LEGACY_DISPOSITION_MANIFEST_2026-07-27.json",
+    "f203b07d19f79e1e2ef0e01c0f42d9be14b5ac846deaf02836a80380585daace",
+  ],
+  [
+    "docs/evidence/OBBBA_LAW_CLEAN_ROOM_RESET_DECISION_2026-07-27.md",
+    "c29674bc045d39809033c5dc7e1c0c5d03897c5f1b91f7f7a25e06f73b50b304",
+  ],
+  [
+    "docs/evidence/BRIDGE_BOSS_2_FORENSIC_LEDGER_2026-07-27.md",
+    "1ceb5265a3c4b20e3cd13f80b87386b54220b71b46b6a29affebbf3ee1eedc5a",
+  ],
+  [
+    "docs/evidence/BB2_EMERGENCY_PROVENANCE_RETENTION_INVENTORY_2026-07-31.md",
+    "5afe38174a70b03b8c6e545a7e6a96e11d3abe04695018d103c3e4d81bbf82c5",
+  ],
+  [
+    "docs/evidence/superseded/law-as-amended-clean-room-reset-2026-07-27/candidate-only/OBBBA_LAW_USC_ARCHIVE_EVIDENCE_2026-07-26.json",
+    "51ac2da3eebd6b81f0db22cd5fc59db11f55d7a2b2b337089e8f025a25986522",
+  ],
+  [
+    "docs/evidence/superseded/law-as-amended-clean-room-reset-2026-07-27/candidate-only/OBBBA_LAW_USC_XML_EVIDENCE_2026-07-26.json",
+    "4c6d63d0139f37d7094f12af9660c2c936b315f5ae69fb983ac6832c44935df6",
+  ],
+  [
+    "docs/evidence/superseded/law-as-amended-clean-room-reset-2026-07-27/candidate-only/OBBBA_LAW_INCORPORATION_WINDOW_ARCHIVE_EVIDENCE_2026-07-26.json",
+    "5dc17fedeaaccfa834ce41732047685b80006d4158151a103b3ad1ec68d63f79",
+  ],
+  [
+    "docs/evidence/superseded/law-as-amended-clean-room-reset-2026-07-27/candidate-only/OBBBA_LAW_INCORPORATION_WINDOW_XML_EVIDENCE_2026-07-26.json",
+    "84136240ddc76309e82dd7d39ca8c4cd4fce08a0bdd737ce0075aa55f0829577",
+  ],
+];
+
+const retirements = [
+  {
+    source: "scripts/maintenance/build-bb2-law-cache-deletion-manifest.mjs",
+    destination:
+      "scripts/superseded/bridge-boss-2-reset-2026-07-27/law-cache-deletion-evidence/build-bb2-law-cache-deletion-manifest.mjs",
+    sha256: "a93e9f9b659c9cfc78859b53f651b31db996c33abcd6aa283d1a558b4f31ee34",
+  },
+  {
+    source: "scripts/maintenance/delete-bb2-law-caches.mjs",
+    destination:
+      "scripts/superseded/bridge-boss-2-reset-2026-07-27/law-cache-deletion-evidence/delete-bb2-law-caches-v1.mjs.txt",
+    sha256: "5fcebada919194cdd36bf0e74537ad8440cd538dc11ab82fb30afc8ecc5f59df",
+  },
+];
+
+const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const winPathEqual = (left, right) =>
+  path.resolve(left).toLowerCase() === path.resolve(right).toLowerCase();
+const absolute = (relative) => path.join(repo, ...relative.split("/"));
+
+async function exists(target) {
+  try {
+    await stat(target);
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+async function exactFile(relative, sha256) {
+  const bytes = await readFile(absolute(relative));
+  const actual = digest(bytes);
+  if (actual !== sha256) throw new Error(`Preserved-file mismatch: ${relative} -> ${actual}`);
+  return bytes;
+}
+
+async function realDirectory(target, expectedParent = null) {
+  const info = await lstat(target);
+  if (!info.isDirectory() || info.isSymbolicLink()) {
+    throw new Error(`Not a real directory: ${target}`);
+  }
+  const resolved = await realpath(target);
+  if (expectedParent !== null && !winPathEqual(path.dirname(resolved), expectedParent)) {
+    throw new Error(`Real-path containment failure: ${target} -> ${resolved}`);
+  }
+  return resolved;
+}
+
+async function members(root, current = root) {
+  const entries = await readdir(current, { withFileTypes: true });
+  const result = [];
+  for (const entry of entries) {
+    const target = path.join(current, entry.name);
+    const info = await lstat(target);
+    if (info.isSymbolicLink()) throw new Error(`Linked cache member forbidden: ${target}`);
+    if (entry.isDirectory()) result.push(...(await members(root, target)));
+    else if (entry.isFile()) {
+      const bytes = await readFile(target);
+      result.push({
+        path: path.relative(root, target).split(path.sep).join("/"),
+        bytes: bytes.length,
+        sha256: digest(bytes),
+      });
+    } else throw new Error(`Unsupported cache member: ${target}`);
+  }
+  return result.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+}
+
+function assertTarget(target) {
+  if (!winPathEqual(path.dirname(target), parent) || !names.includes(path.basename(target))) {
+    throw new Error(`Target is outside the exact allowlist: ${target}`);
+  }
+}
+
+async function verifyTarget(target, expected, parentReal, allowExactSubset = false) {
+  assertTarget(target);
+  await realDirectory(target, parentReal);
+  const actual = await members(target);
+  if (!allowExactSubset) {
+    if (JSON.stringify(actual) !== JSON.stringify(expected.records)) {
+      throw new Error(`Cache membership mismatch: ${target}`);
+    }
+    return { files: actual.length, partial: false };
+  }
+  const expectedByPath = new Map(expected.records.map((record) => [record.path, record]));
+  for (const record of actual) {
+    const expectedRecord = expectedByPath.get(record.path);
+    if (!expectedRecord || JSON.stringify(record) !== JSON.stringify(expectedRecord)) {
+      throw new Error(`Partial cache contains a new or changed member: ${target}/${record.path}`);
+    }
+  }
+  return { files: actual.length, partial: actual.length !== expected.records.length };
+}
+
+async function states(targets) {
+  return Promise.all(
+    targets.map(async ({ name, target }) => ({ name, present: await exists(target) })),
+  );
+}
+
+async function verifyRetirements() {
+  for (const item of retirements) {
+    const sourcePresent = await exists(absolute(item.source));
+    const destinationPresent = await exists(absolute(item.destination));
+    if (sourcePresent === destinationPresent) {
+      throw new Error(`Retirement must exist at exactly one path: ${item.source}`);
+    }
+    const file = sourcePresent ? item.source : item.destination;
+    await exactFile(file, item.sha256);
+  }
+}
+
+async function incidentFiles() {
+  if (!(await exists(operationRoot))) return [];
+  return (await readdir(operationRoot)).filter((name) => /^INCIDENT-.*\.json$/.test(name)).sort();
+}
+
+if (!winPathEqual(repo, APPROVED_REPO) || !winPathEqual(parent, APPROVED_PARENT)) {
+  throw new Error(`Wrong checkout: ${repo}`);
+}
+if (!winPathEqual(await realpath(repo), APPROVED_REPO)) throw new Error("Repository real path mismatch.");
+const parentReal = await realDirectory(parent);
+if (!winPathEqual(parentReal, APPROVED_PARENT)) throw new Error("Cache-parent real path mismatch.");
+
+const manifestBytes = await exactFile(
+  "docs/evidence/BB2_LAW_CACHE_DELETION_MANIFEST_2026-07-31.json",
+  expectedManifest,
+);
+const manifest = JSON.parse(manifestBytes.toString("utf8"));
+const selfBytes = await readFile(selfPath);
+const selfSha256 = digest(selfBytes);
+if (
+  manifest.deletionAuthorized !== false ||
+  manifest.publicationAuthorized !== false ||
+  manifest.implementationUseAuthorized !== false ||
+  manifest.secretsIncluded !== false ||
+  manifest.membership.roots !== 5 ||
+  manifest.membership.files !== 1400 ||
+  manifest.membership.bytes !== 2398775787
+) {
+  throw new Error("Manifest boundary mismatch.");
+}
+for (const [file, sha256] of preserved) await exactFile(file, sha256);
+
+const targets = names.map((name) => {
+  const expected = manifest.caches.find((item) => item.path.endsWith(`/${name}`));
+  if (!expected) throw new Error(`Manifest target missing: ${name}`);
+  const target = path.join(parent, name);
+  assertTarget(target);
+  return { name, target, expected };
+});
+const supersededRoot = path.dirname(parent);
+const unrelated = (await readdir(supersededRoot))
+  .filter((name) => name !== path.basename(parent))
+  .sort();
+
+const plan = {
+  schemaVersion: 2,
+  status: "pre-mutation-plan",
+  operation: "permanent-delete-five-bb2-law-cache-trees",
+  repoRoot: APPROVED_REPO,
+  cacheParent: APPROVED_PARENT,
+  manifest: { bytes: manifestBytes.length, sha256: expectedManifest },
+  executor: {
+    path: path.relative(repo, selfPath).split(path.sep).join("/"),
+    bytes: selfBytes.length,
+    sha256: selfSha256,
+    executionRequiresMatchingSha256Argument: true,
+  },
+  preserved: preserved.map(([file, sha256]) => ({ file, sha256 })),
+  retirements,
+  unrelatedCacheSiblings: unrelated,
+  targets: targets.map(({ name, target, expected }) => ({
+    name,
+    absolutePath: target,
+    files: expected.files,
+    bytes: expected.bytes,
+    sha256: expected.sha256,
+  })),
+  totals: manifest.membership,
+  rollbackAvailable: false,
+  publicationAuthorized: false,
+  deploymentAuthorized: false,
+};
+const planText = `${JSON.stringify(plan, null, 2)}\n`;
+const planSha256 = digest(Buffer.from(planText, "utf8"));
+
+function validateCompletion(value) {
+  const keys = [
+    "completed",
+    "deletedFiles",
+    "deletedTrees",
+    "payloadRollbackAvailable",
+    "planSha256",
+    "publicationOrDeploymentPerformed",
+    "reclaimedLogicalBytes",
+    "retainedManifestSha256",
+    "retirements",
+    "schemaVersion",
+    "status",
+  ].sort();
+  if (
+    JSON.stringify(Object.keys(value).sort()) !== JSON.stringify(keys) ||
+    value.schemaVersion !== 2 ||
+    value.status !== "complete" ||
+    Number.isNaN(Date.parse(value.completed)) ||
+    value.planSha256 !== planSha256 ||
+    value.deletedTrees !== 5 ||
+    value.deletedFiles !== 1400 ||
+    value.reclaimedLogicalBytes !== 2398775787 ||
+    value.payloadRollbackAvailable !== false ||
+    value.retainedManifestSha256 !== expectedManifest ||
+    JSON.stringify(value.retirements) !== JSON.stringify(retirements) ||
+    value.publicationOrDeploymentPerformed !== false
+  ) {
+    throw new Error("Completion contract mismatch.");
+  }
+}
+
+async function verifyPreservedPostState() {
+  await realDirectory(parent);
+  const after = (await readdir(supersededRoot))
+    .filter((name) => name !== path.basename(parent))
+    .sort();
+  if (JSON.stringify(after) !== JSON.stringify(unrelated)) {
+    throw new Error("Unrelated cache siblings changed.");
+  }
+  for (const [file, sha256] of preserved) await exactFile(file, sha256);
+  await verifyRetirements();
+}
+
+const planExists = await exists(planPath);
+if (await exists(completePath)) {
+  if (!planExists || (await readFile(planPath, "utf8")) !== planText) {
+    throw new Error("Completion requires the exact durable pre-mutation PLAN.json.");
+  }
+  validateCompletion(JSON.parse(await readFile(completePath, "utf8")));
+  const current = await states(targets);
+  if (current.some((item) => item.present)) throw new Error("Completed target exists.");
+  await verifyPreservedPostState();
+  console.log("COMPLETE VERIFIED: five cache trees remain absent; retained evidence is exact.");
+  process.exit(0);
+}
+
+if (planExists && (await readFile(planPath, "utf8")) !== planText) {
+  throw new Error("Existing PLAN.json differs from the deterministic plan.");
+}
+const before = await states(targets);
+const absent = before.filter((item) => !item.present);
+if (!planExists && absent.length) {
+  throw new Error(`Fresh run has absent targets: ${absent.map((item) => item.name).join(", ")}`);
+}
+const partialTargets = [];
+for (const { name, target, expected } of targets) {
+  if (await exists(target)) {
+    const verification = await verifyTarget(target, expected, parentReal, planExists);
+    if (verification.partial) partialTargets.push(name);
+  }
+}
+await verifyRetirements();
+const incidents = await incidentFiles();
+
+if (!process.argv.includes("--execute")) {
+  console.log(
+    `DRY RUN PASS: resume=${planExists}; present=${5 - absent.length}; absent=${absent.length}; partial=${partialTargets.length}; incidents=${incidents.length}; files=1400; bytes=2398775787; no mutation.`,
+  );
+  process.exit(0);
+}
+if ((absent.length || partialTargets.length || incidents.length) && !process.argv.includes("--resume-after-incident")) {
+  throw new Error("Partial/incident state requires explicit --resume-after-incident authorization.");
+}
+const approvedExecutorArgument = process.argv.find((argument) =>
+  argument.startsWith("--approved-executor-sha256="),
+);
+if (approvedExecutorArgument !== `--approved-executor-sha256=${selfSha256}`) {
+  throw new Error(
+    `Execution requires the exact reviewed identity argument: --approved-executor-sha256=${selfSha256}`,
+  );
+}
+if (!planExists) {
+  await mkdir(operationRoot, { recursive: true });
+  await writeFile(planPath, planText, { encoding: "utf8", flag: "wx" });
+}
+
+try {
+  for (const item of retirements) {
+    if (await exists(absolute(item.destination))) continue;
+    await mkdir(path.dirname(absolute(item.destination)), { recursive: true });
+    await rename(absolute(item.source), absolute(item.destination));
+    await exactFile(item.destination, item.sha256);
+    if (await exists(absolute(item.source))) throw new Error(`Retirement source remains: ${item.source}`);
+  }
+
+  for (const { target, expected } of targets) {
+    if (!(await exists(target))) continue;
+    await verifyTarget(
+      target,
+      expected,
+      parentReal,
+      planExists && process.argv.includes("--resume-after-incident"),
+    );
+    await rm(target, { recursive: true, force: false });
+    if (await exists(target)) throw new Error(`Deletion target remains: ${target}`);
+  }
+
+  if ((await states(targets)).some((item) => item.present)) throw new Error("Not all targets are absent.");
+  await verifyPreservedPostState();
+  const completion = {
+    schemaVersion: 2,
+    status: "complete",
+    completed: new Date().toISOString(),
+    planSha256,
+    deletedTrees: 5,
+    deletedFiles: 1400,
+    reclaimedLogicalBytes: 2398775787,
+    payloadRollbackAvailable: false,
+    retainedManifestSha256: expectedManifest,
+    retirements,
+    publicationOrDeploymentPerformed: false,
+  };
+  await writeFile(completePath, `${JSON.stringify(completion, null, 2)}\n`, {
+    encoding: "utf8",
+    flag: "wx",
+  });
+  console.log("COMPLETE: permanently deleted 1,400 files / 2,398,775,787 logical bytes.");
+} catch (error) {
+  const incident = {
+    schemaVersion: 2,
+    status: "partial-deletion-incident-stop",
+    recorded: new Date().toISOString(),
+    planSha256,
+    message: error instanceof Error ? error.message : String(error),
+    targets: await states(targets),
+    automaticRecoveryPerformed: false,
+    resumeRequiresExplicitAuthorization: true,
+  };
+  await mkdir(operationRoot, { recursive: true });
+  await writeFile(
+    path.join(operationRoot, `INCIDENT-${Date.now()}.json`),
+    `${JSON.stringify(incident, null, 2)}\n`,
+    { encoding: "utf8", flag: "wx" },
+  );
+  throw error;
+}

@@ -30,17 +30,17 @@ npm install astro-discussion-bridge
 
 Start with the public Alpha docs when wiring a real site:
 
-- [Human Manual](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/HUMAN_MANUAL.md)
-- [Machine Manual](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/MACHINE_MANUAL.md)
-- [Alpha Setup Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/ALPHA_SETUP.md)
-- [Key Management Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/KEY_MANAGEMENT.md)
-- [Support And Feedback](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/SUPPORT_AND_FEEDBACK.md)
-- [Comments Display Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/COMMENTS_DISPLAY.md)
-- [Content Lanes Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/CONTENT_LANES.md)
-- [Discussion-Safe Markdown Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/DISCUSSION_SAFE_MARKDOWN.md)
-- [Troubleshooting Guide](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/TROUBLESHOOTING.md)
-- [Attribution, Ownership, And Licensing](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/ATTRIBUTION_OWNERSHIP_LICENSE.md)
-- [Build/Launch Checklists](https://github.com/DiscussionBridge/astro-discussion-bridge/blob/main/docs/BUILD_LAUNCH_CHECKLISTS.md)
+- [Human Manual](https://github.com/DiscussionBridge/docs/blob/main/docs/HUMAN_MANUAL.md)
+- [Machine Manual](https://github.com/DiscussionBridge/docs/blob/main/docs/MACHINE_MANUAL.md)
+- [Alpha Setup Guide](https://github.com/DiscussionBridge/docs/blob/main/docs/ALPHA_SETUP.md)
+- [Key Management Guide](https://github.com/DiscussionBridge/docs/blob/main/docs/KEY_MANAGEMENT.md)
+- [Support And Feedback](https://github.com/DiscussionBridge/docs/blob/main/docs/SUPPORT_AND_FEEDBACK.md)
+- [Comments Display Guide](https://github.com/DiscussionBridge/docs/blob/main/docs/COMMENTS_DISPLAY.md)
+- [Content Lanes Guide](https://github.com/DiscussionBridge/docs/blob/main/docs/CONTENT_LANES.md)
+- [Discussion-Safe Markdown Guide](https://github.com/DiscussionBridge/docs/blob/main/docs/DISCUSSION_SAFE_MARKDOWN.md)
+- [Troubleshooting Guide](https://github.com/DiscussionBridge/docs/blob/main/docs/TROUBLESHOOTING.md)
+- [Attribution, Ownership, And Licensing](https://github.com/DiscussionBridge/docs/blob/main/docs/ATTRIBUTION_OWNERSHIP_LICENSE.md)
+- [Build/Launch Checklists](https://github.com/DiscussionBridge/docs/blob/main/docs/BUILD_LAUNCH_CHECKLISTS.md)
 
 Built by Phil Henry / WebSynergetics with AI-assisted development. DiscussionBridge is independent and is not affiliated with, sponsored by, endorsed by, or officially connected to Astro, Starlight, Discourse, WordPress, Coding Horror, or the Astro Starlog example.
 
@@ -220,7 +220,17 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 
 Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, then refreshes from Discourse again on page load by default so new replies and like counts can appear without an Astro rebuild. It also renders Discourse Mermaid code blocks in the browser and applies readable, horizontally scrollable table styling. Mermaid support is lazy-loaded only when a reply contains a Mermaid block and can be disabled with `replies.renderMermaid: false`. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
 
-Use `comments.display: "fullInteractive"` when you want Discourse's native full app embed inside the page. This keeps logged-in reply, like, quote, and other interaction inside Discourse's iframe instead of reimplementing user actions in Astro. The target Discourse site must support and enable full app embeds in its embedding settings.
+Use `comments.display: "fullInteractive"` when you want Discourse's native full app embed inside the page. This keeps logged-in reply, like, quote, and other interaction inside Discourse's iframe instead of reimplementing user actions in Astro. The target Discourse site must support and enable full app embeds in its embedding settings. DiscussionBridge enables Discourse's dynamic iframe height by default, clamped between 360 and 900 pixels and additionally capped at 70 percent of the viewport. Short content still shrinks naturally, while a long companion first post cannot make the nested comments viewport dominate the host page.
+
+For Alpha, core-only `fullInteractive` is a compatibility/development preview,
+not the recommended public-production mode. The responsive ceiling limits the
+outer viewport but does not remove a long companion first post from Discourse's
+embedded document, so an internal scrollbar can remain extremely long.
+Production-quality comments-only `fullInteractive` requires the separately
+installed DiscussionBridge for Discourse plugin after that capability passes.
+Use plugin-free `simple` or `full` for current public production.
+
+These controls are `fullInteractive`-only: operators may tune `embedHeight`, `embedMinHeight`, `embedMaxHeight`, and `embedViewportMaxHeight`; use `embedViewportMaxHeight: "none"` to remove only the responsive ceiling, or set `dynamicHeight: false` to retain `embedHeight` as a fixed iframe height.
 
 `fullInteractive` content is rendered inside Discourse's cross-origin iframe, so Astro styles and scripts cannot repair its tables or transform Mermaid blocks. Put embed-specific presentation in the Discourse theme's Embedded CSS or `common/embedded.scss`. Discourse theme-component JavaScript that works on normal topic pages may not run in the full-app embed application; verify Mermaid and other client-rendered extensions in the embed itself. Set `comments.className` (or the component's `embedClassName` prop) to add a stable class to the iframe document for targeted embedded CSS.
 
@@ -262,7 +272,11 @@ discussionBridge({
   discourseUrl: "https://forum.example.com",
   comments: {
     display: "simple", // simple | full | fullInteractive
-    embedHeight: "800px",
+    embedHeight: "800px", // initial fullInteractive height before resize
+    dynamicHeight: true,
+    embedMinHeight: "360",
+    embedMaxHeight: "900",
+    embedViewportMaxHeight: "70vh",
     className: "discussion-bridge-embed",
   },
   replies: {
@@ -599,6 +613,38 @@ discussionBridge({
 
 Pages can override the lane defaults when a single release, post, or doc belongs somewhere else in Discourse.
 
+For a forum with the DiscussionBridge plugin, prefer forum-controlled creation
+over Core API-key publication. The build remains the server-side caller, while
+Discourse makes the final actor, category, tag, lane, and visibility decision.
+
+```js
+publishOnBuild: {
+  enabled: true,
+  lanes: [{
+    name: "plugin-sandbox",
+    docsDir: "src/content/comments/plugin-sandbox",
+    routeBase: "comments/plugin-sandbox",
+    discourseUrl: "https://sandbox-forum.example.com",
+    controlledCreation: {
+      connectionIdEnv: "DISCUSSIONBRIDGE_CONNECTION_ID",
+      connectionSecretEnv: "DISCUSSIONBRIDGE_CONNECTION_SECRET",
+      lane: "comments",
+      visibility: "listed",
+    },
+  }],
+},
+```
+
+The connection secret is server-only and is not exposed through the virtual
+browser configuration. The plugin may enforce a different effective visibility
+or placement than the adapter requests. A successful response writes only the
+returned `discourseTopicId` and `discourseTopicUrl`; it does not claim that the
+Astro page body was synchronized to the forum. Controlled creation currently
+creates or resolves missing bindings only—existing-topic updates remain
+forum-owned. Keep the endpoint disabled except during an authorized connection
+window, and use environment variables rather than checking secrets into Astro
+configuration.
+
 Use `routeBase` when the source directory does not publish at the site root. For example, `docsDir: "src/content/releases"` with `routeBase: "releases"` maps `src/content/releases/2_1.md` to `https://docs.example.com/releases/2_1/`.
 
 ```yaml
@@ -705,4 +751,3 @@ DiscussionBridge is Discourse-first. The main expansion path is framework and pl
 - Potential future integrations for frameworks such as Next.js, Nuxt, SvelteKit, or static site generators
 
 An optional Discourse plugin is a likely Layer 3 control plane. It can provide bridge-aware admin settings, source mappings, health/status endpoints, duplicate detection, richer notifications, and a native operations surface for Astro, Statamic, and future adapters.
-
