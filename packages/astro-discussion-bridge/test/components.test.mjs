@@ -23,6 +23,7 @@ test("native embeds pass an existing topic ID to Discourse", async () => {
   assert.match(discussion, /job\?\.callToAction/);
   assert.match(discussion, /discussion-bridge-additional__description/);
   assert.match(discussion, /discourseUrl=\{discourseUrl\}/);
+  assert.match(discussion, /discourseUrlFromTopicUrl\(topicUrl\)/);
   assert.match(
     discourseDiscussion,
     /\.\.\.\(topicId \? \{ topicId \} : \{ discourseEmbedUrl: embedUrl \}\)/,
@@ -33,6 +34,13 @@ test("native embeds pass an existing topic ID to Discourse", async () => {
   );
   assert.match(discussion, /embedClassName=\{Astro\.props\.embedClassName\}/);
   assert.match(discourseComments, /embedClassName=\{Astro\.props\.embedClassName\}/);
+  assert.match(
+    discourseDiscussion,
+    /\{ fullApp: true, embedHeight, dynamicHeight, embedMinHeight, embedMaxHeight \}/,
+  );
+  assert.match(discourseDiscussion, /embedViewportMaxHeight/);
+  assert.match(discourseDiscussion, /iframe\.style\.maxHeight = embedViewportMaxHeight/);
+  assert.match(discourseDiscussion, /new MutationObserver/);
 });
 
 test("full replies preserve Mermaid rendering and readable tables", async () => {

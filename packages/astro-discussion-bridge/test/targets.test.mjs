@@ -2,9 +2,22 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   discussionTargetLabel,
+  discourseUrlFromTopicUrl,
   parseDiscussionConnectionJobs,
   resolveDiscussionPresentation,
 } from "../dist/targets.js";
+
+test("discussion forum URL follows the bound topic origin and base path", () => {
+  assert.equal(
+    discourseUrlFromTopicUrl("https://sandbox-forum.example.com/community/t/plugin-topic/10"),
+    "https://sandbox-forum.example.com/community",
+  );
+  assert.equal(discourseUrlFromTopicUrl(undefined), undefined);
+  assert.equal(discourseUrlFromTopicUrl("data:text/html,/t/topic/10"), undefined);
+  assert.equal(discourseUrlFromTopicUrl("https://forum.example.com/categories"), undefined);
+  assert.equal(discourseUrlFromTopicUrl("https://forum.example.com/t/topic/not-a-number"), undefined);
+  assert.equal(discourseUrlFromTopicUrl("https://user:secret@forum.example.com/t/topic/10"), undefined);
+});
 
 test("discussion presentation merges a protected source topic with additional targets", () => {
   const presentation = resolveDiscussionPresentation({

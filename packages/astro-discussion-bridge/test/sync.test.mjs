@@ -3085,6 +3085,38 @@ test("routeBase maps content lane files to their public URL prefix", async () =>
   }
 });
 
+test("routeBase maps a lane-root index file to the lane root", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-route-index-"));
+  const docsDir = path.join(dir, "src", "content", "comments", "plugin-sandbox");
+  const filePath = path.join(docsDir, "index.md");
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Plugin-Controlled Full Interactive Comments"',
+        "---",
+        "",
+        "Sandbox content.",
+      ].join("\n"),
+    );
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      routeBase: "comments/plugin-sandbox",
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      dryRun: true,
+    });
+
+    assert.equal(results[0].pageUrl, "https://docs.example.com/comments/plugin-sandbox/");
+  } finally {
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("import-existing writes linked Astro Markdown from a Discourse topic URL", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-"));
   const docsDir = path.join(dir, "blog");

@@ -2,6 +2,7 @@
 import config from "virtual:discussion-bridge/config";
 import {
   discussionTargetLabel,
+  discourseUrlFromTopicUrl,
   parseDiscussionConnectionJobs,
   resolveDiscussionPresentation,
   type DiscussionConnectionJobs,
@@ -63,7 +64,9 @@ const presentation = resolveDiscussionPresentation({
 });
 const topicId = presentation.primary?.topicId ?? Astro.props.topicId;
 const topicUrl = presentation.primary?.topicUrl ?? Astro.props.topicUrl;
-const discourseUrl = presentation.primary?.discourseUrl ?? Astro.props.discourseUrl;
+const discourseUrl = presentation.primary?.discourseUrl
+  ?? Astro.props.discourseUrl
+  ?? discourseUrlFromTopicUrl(topicUrl);
 const targetLabels = Astro.props.targetLabels ?? {};
 const primaryJob = presentation.primary?.connectionJob;
 const heading = Astro.props.heading ?? primaryJob?.callToAction;

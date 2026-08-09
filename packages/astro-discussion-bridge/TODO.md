@@ -25,10 +25,12 @@ quality review before Product Boss approval.
 
 ### Brutal Current Split
 
-#### Phil/Ops Prerequisites Before Alpha Can Be Public
+#### Remaining Phil/Ops Prerequisites Before Alpha Can Be Public
 
-- Reconfigure DiscussionBridge Cloudflare under the new ownership/account plan: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles.
-- Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain.
+- Resolve only the still-open DiscussionBridge Cloudflare account/ownership and
+  operator-role decisions. The six public Astro-family sites already use
+  reviewed, checked-in Wrangler deployments; do not reopen their completed
+  migration or describe the docs site as a future Pages project.
 - Create live Discourse Alpha Support category.
 - Route `alphasupport@discussionbridge.dev` into Discourse.
 - Confirm final public support links after the live support category and email route exist.
@@ -45,18 +47,20 @@ quality review before Product Boss approval.
 
 ### Publish
 
-- After the Bridge Boss 2 cleanup is complete, make DiscussionBridge-controlled
-  publication the recommended/default companion-topic creation path. An
-  operator-authorized user-created Discourse API key creates the topic under
-  the selected forum actor before the comments embed is exposed, and Astro
-  stores the durable topic ID. Treat Discourse Core visitor-triggered embed
-  creation (`system` author, page fetch on first embed view) as a separate,
-  explicit operator-selected zero-touch mode rather than a silent fallback.
-  Preserve final forum authority over category, visibility/listing,
-  permissions, and moderation. Topic 38 on `forum.discussionbridge.dev`, bound
+- [x] Make DiscussionBridge-controlled publication the preferred Alpha
+  companion-topic creation path. The server-side adapter authenticates with a
+  configured connection ID and secret to the plugin create-or-resolve endpoint;
+  the forum enforces the operating actor, category, tags, and visibility before
+  Astro stores the durable topic ID and exposes the comments embed. Direct Core
+  API-key publication remains a separate operator-selected adapter mode. Treat
+  Discourse Core visitor-triggered embed creation (`system` author, page fetch
+  on first embed view) as a separate explicit zero-touch mode rather than a
+  silent fallback. Preserve final forum authority over permissions and
+  moderation. Topic 38 on `forum.discussionbridge.dev`, bound
   to `astro.demo.discussionbridge.dev/blog/community-continuity/`, is the Alpha
-  evidence case for this distinction. Do not implement this item until the BB2
-  remediation sequence is closed.
+  evidence case for this distinction. BB2 remediation is complete; the adapter
+  implementation and disposable-sandbox acceptance are complete, while stable
+  preproduction and production promotion remain separate gates.
 - Confirmed final CLI command names and help output are clear: `publish-new`, `sync-existing`, `publish-and-sync`, `discover-imports`, `import-existing`, and `check-discourse`.
 - Decide whether to add a configurable topic title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
 - Keep local preflight validation available for dry runs and unauthenticated checks.
@@ -65,10 +69,16 @@ quality review before Product Boss approval.
 - Finalized the public Alpha support channel model in `docs/SUPPORT_AND_FEEDBACK.md`: GitHub Issues for formal product work, GitHub Discussions for repo-bound design/implementation discussion, Discourse Alpha Support plus `alphasupport@discussionbridge.dev` for support discovery/community memory, and cross-links when support becomes tracked work.
 - Create live Discourse Alpha Support category, route `alphasupport@discussionbridge.dev` into Discourse, and wire final channel links into README, package metadata, demo pages, and release notes. Phil/Ops owns the live category and email route; Codex owns final link wiring after those exist.
 - Product docs URL decided: use `docs.discussionbridge.dev` with Starlight. Keep `discussionbridge.dev/docs` only as a redirect or fallback if needed.
-- Deployed the Starlight docs site source into the repo under `sites/docs`, generated from repository `docs/*.md`.
-- Reconfigure DiscussionBridge Cloudflare under the new ownership/account plan before Alpha: owning account, admin email, DNS, Pages, redirects, Access, Workers, billing boundary, and operator roles. Phil/Ops prerequisite.
-- Complete Cloudflare Pages work for `docs.discussionbridge.dev`: create/configure the Pages project for `sites/docs`, attach the custom domain, confirm the live production deploy, and verify the raw Pages hostname redirects to the custom domain. Phil/Ops prerequisite.
-- Make `discussionbridge.dev` live in a credible public form before showing Alpha outside the working circle.
+- The deployed Starlight documentation source is the independent
+  `DiscussionBridge/docs` repository at
+  `C:\CodeProjects\CodeWorksLabs\DiscussionBridge\sites\docs-discussionbridge-dev`;
+  the old adapter
+  repository `sites/docs` copy is superseded and is not a deployment source.
+- Resolve the remaining Cloudflare account/ownership and operator-role decisions
+  before Alpha promotion. The six public Astro-family sites, including
+  `discussionbridge.dev` and `docs.discussionbridge.dev`, are already live from
+  reviewed Wrangler deployments; their live state is not an open Pages-build
+  task.
 - Added proper attribution, ownership, and licensing notes to docs where appropriate as an Alpha gate item. Treat this as a once-and-done pass unless ownership, dependencies, copied examples, or source material changes.
 
 ### Sync
@@ -144,7 +154,8 @@ quality review before Product Boss approval.
 
 ## Alpha Demo Matrix
 
-- Verify the local Starlight demo builds from `examples/starlight-demo`.
+- Verify the independent Starlight demo builds from
+  `C:\CodeProjects\CodeWorksLabs\DiscussionBridge\demos\astrostarlight-demo-discussionbridge-dev`.
 - Verify the live Starlight demo deploys from the deployed repo/content tree, not the package repo demo tree.
 - Before Alpha and before each release candidate, run the repeatable live smoke pass. It covers docs, releases, blog, news, and comments demo routes; `simple`, `full`, and `fullInteractive` comments modes; forum category/tag/permission settings; and these full-app embed Discourse settings:
   - `Embed full app`: yes
@@ -172,6 +183,19 @@ quality review before Product Boss approval.
 
 ## Product Roadmap
 
+### Editorial Publishing Boundary
+
+- Design multiauthor publishing and a Git-based CMS workflow only after the
+  public information architecture is settled. Treat author identity, profiles,
+  editorial review, submissions, permissions, attribution, preview, and
+  publication as one separately reviewed editorial-system boundary; do not
+  bolt these controls onto the current public site piecemeal.
+- Audit OBBBA Text display headings against authoritative official headings and
+  section-body capitalization before the next Text regeneration. The current
+  sentence-case conversion can erase acronyms and proper names (confirmed by
+  `FEHB` → `Fehb`). Produce a deterministic candidate report and review
+  ambiguous capitalization; do not apply blanket title case.
+
 ### Tier 1: API-Only Bridge
 
 - Keep Tier 1 generous and usable without a Discourse plugin.
@@ -194,9 +218,113 @@ quality review before Product Boss approval.
 
 ### Tier 3: Optional Discourse Plugin
 
-- Start a design note for an optional Discourse plugin as the Discourse-side control plane.
+- [x] Settle the Alpha direction: ship a near-full-featured free/open-source
+  `DiscussionBridge for Discourse` plugin as the Discourse-side control plane.
+  See `docs/evidence/DISCUSSIONBRIDGE_PLUGIN_ALPHA_HANDOFF_2026-08-02.md`.
 - Keep the API-only bridge useful without a plugin; the plugin should enhance, not replace, the package.
-- Explore bridge-aware admin settings, content lane management, source mappings, duplicate detection, richer native notifications, health/status endpoints, and operations topics/categories.
+- Make production-quality `fullInteractive` an Alpha plugin capability. Keep
+  core-only `fullInteractive` as a clearly labeled compatibility/development
+  preview, not a recommended public-production mode. The plugin must omit the
+  companion first post from the authorized embedded layout, including the
+  zero-reply case, while preserving native replies, login, composer, actions,
+  moderation, and normal forum-topic presentation.
+- [x] Implement the default-disabled, completed-mapping-scoped Core redirect
+  class and embed-only zero-layout first-post rule locally. Non-browser suite:
+  38/38; focused authorization/redirect suite: 7/7; RuboCop: 25/25; browser
+  suite: 4/4 for empty, replied/actions, ordinary long-topic presentation, and
+  reserved-marker injection rejection. Live installation acceptance remains
+  open.
+- [x] Complete local development-server runtime acceptance: migrations, safe
+  endpoint-disabled startup, compact empty embed, replied/actions embed,
+  unchanged ordinary topic, persistent marker after client boot, and
+  operator-disable rollback, and caller-supplied reserved-marker rejection. A
+  reviewed non-production forum install remains separate.
+- [x] Install and rehearse the exact plugin candidate in the dedicated local WSL
+  plugin-test sandbox at `/home/phil/discourse-plugin-test`: isolated
+  development/test databases, all controls default disabled, 38/38 non-browser,
+  4/4 browser, HTTP 200 runtime on port 3100, and reversible symlink
+  removal/reinstall PASS.
+- [x] Complete signed-in local browser acceptance against disposable fixtures:
+  compact comments-only empty and replied surfaces retained native replies,
+  the ordinary long topic remained an ordinary forum topic, and one reply
+  persisted through each of the three surfaces.
+- [x] Provision `sandbox-forum.discussionbridge.dev` as the disposable live
+  DiscussionBridge integration sandbox. Give it an isolated server/container,
+  database, synthetic fixtures, reset procedure, outbound-mail posture,
+  credentials, backups where needed for recovery testing, and an exact rollback
+  or rebuild plan. It may be reset and must never share the production forum's
+  database or credentials. Live end-to-end acceptance now covers a pre-change
+  backup, forum-controlled create then resolve, enforced service actor/category/
+  tag/unlisted policy, administrator-authorized failed-reservation recovery,
+  exact-host fullInteractive embedding on the public Starlight demo, and final
+  endpoint-off rollback. See
+  `../../docs/evidence/DISCUSSIONBRIDGE_PLUGIN_ASTRO_SANDBOX_END_TO_END_2026-08-04.md`.
+- [ ] After sandbox acceptance, provision `dev-forum.discussionbridge.dev` as
+  the stable preproduction acceptance forum. Keep stable fixtures and mirror
+  reviewed production settings closely enough to test upgrades, migrations,
+  adapter connections, authentication, embeds, email, mobile behavior, backup,
+  and rollback before production. Do not use it for disposable experiments.
+- Keep `forum.discussionbridge.dev` production-only. Promote only reviewed
+  plugin releases and configuration from the dev acceptance boundary; never
+  treat local or disposable-sandbox acceptance as production acceptance.
+- [x] Restore natural sizing to the comments-only full-app surface. Verify compact
+  empty state, short replied topics, long discussions with a configured
+  maximum, desktop/mobile behavior, and zero retained layout height from the
+  omitted companion first post. Local host-frame acceptance confirms compact
+  empty/replied sizing, and a browser regression proves that increasing the
+  omitted source length does not increase the Discourse app height. Retain the
+  operator-configured maximum for genuinely long discussions; do not substitute
+  another unscoped theme CSS workaround.
+- [x] Make forum-authorized plugin publication the preferred Alpha companion-topic
+  creation path: create/resolve before embed exposure under an explicitly
+  configured forum operating identity, persist the topic ID, and prevent a
+  reader's first embed view from silently creating a `system`-authored topic.
+  Keep Core visitor-triggered creation only as an explicit zero-touch
+  compatibility mode. Local sandbox acceptance proves one service-authored
+  topic, one durable mapping, idempotent retry, enforced unlisted visibility,
+  clean rejection of an underprivileged operating identity, and endpoint-off
+  rollback. Do not treat this as permission for arbitrary user impersonation.
+- [x] Add a read-only native Discourse administrator Health surface for the
+  Alpha plugin. It reports feature switches, connection readiness, operating
+  identity, forum authority, mapping state, audit counts, and explicit blockers
+  without serializing the connection credential. Focused contract: 5/5;
+  complete plugin suite: 48/48; frontend and Ruby lint: PASS. Live sandbox
+  installation and end-to-end adapter acceptance are recorded in the 2026-08-04
+  sandbox evidence; promotion to the stable dev forum remains separate.
+- [x] Use Discourse's native plugin Settings tab as the Alpha editable operator
+  surface. Preserve the connection secret as a native write-only secret and
+  reject malformed trusted origins, unavailable/system operating identities,
+  nonexistent categories, and nonexistent tags at save time. Keep incomplete
+  blank/zero setup values valid and let Health report cross-setting readiness.
+  Focused validator contract: 4/4; complete plugin suite: 52/52. Visible product
+  copy is `DiscussionBridge`; established machine identifiers remain unchanged.
+- [x] Add a read-only administrator mappings/audit inspector with server-side
+  search, state/outcome filtering, bounded pagination, safe topic/source/actor
+  evidence, and no credential or raw requested/effective payload exposure. It
+  contains no reconciliation or mutation action. Focused contract: 5/5;
+  complete plugin suite: 57/57; frontend and Ruby lint: PASS.
+- [x] Add optional forum-owned lane policy configuration. Each configured lane
+  selects an existing category and tags while retaining unlisted Alpha
+  visibility; missing or unknown lanes fail closed once lane policies are
+  present. An empty policy array preserves the global category/tag path.
+  Complete plugin coverage: 66/66 (62 non-browser plus 4 browser);
+  Ruby/frontend/style lint: PASS.
+- [x] Add a read-only administrator reconciliation queue for missing/deleted
+  topics, failed or stale mappings, unknown lanes, policy drift, system
+  authorship, and duplicate source/topic claims. Emit deterministic severity,
+  reason, and recommendation fields without repair or mutation controls.
+  Focused contract: 7/7; complete plugin suite: 73/73; Ruby/frontend/style
+  lint: PASS.
+- [x] Add the first reversible reconciliation action: an administrator may
+  authorize one adapter retry for a failed mapping or a reservation stale for
+  at least 15 minutes, then revoke it before use. Authorization/revocation are
+  audited; consumption replaces the old token and re-applies current forum
+  policy. The control does not directly create/delete topics or change
+  category, tags, visibility, mapping identity, or authorship. Focused retry
+  and reconciliation contract: 18/18; complete plugin suite: 80/80; lint: PASS.
+- Explore bridge-aware editable admin settings, content lane management, source
+  mappings, duplicate detection, richer native notifications, and operations
+  topics/categories.
 - Explore whether the plugin/control-plane model should support trusted posting, notifications, or admin dashboard messages on behalf of configured users. Treat impersonation/delegated posting as high-trust and audit-sensitive, not a casual publishing default.
 - Design the plugin surface so Astro, Statamic, and future adapters can use the same Discourse-side concepts.
 

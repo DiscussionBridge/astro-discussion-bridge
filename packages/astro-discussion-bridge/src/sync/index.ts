@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createDiscourseClient } from "../discourse/client.js";
@@ -16,8 +16,9 @@ export interface SyncDiscourseTopicsOptions {
   routeBase?: string;
   targetName?: string;
   discourseUrl: string;
-  apiKey: string;
-  apiUsername: string;
+  apiKey?: string;
+  apiUsername?: string;
+  controlledCreation?: ControlledCreationOptions;
   categoryId?: number;
   tags?: string[];
   dryRun?: boolean;
@@ -29,6 +30,19 @@ export interface SyncDiscourseTopicsOptions {
   preflightLimits?: DiscoursePreflightLimits;
   notifyOnFailure?: NotifyOnFailureOptions;
 }
+
+export interface ControlledCreationOptions {
+  connectionId: string;
+  connectionSecret: string;
+  endpointPath?: string;
+  lane?: string;
+  visibility?: "listed" | "unlisted";
+  requestTimeoutMs?: number;
+  maxResponseBytes?: number;
+}
+
+const DEFAULT_CONTROLLED_CREATION_TIMEOUT_MS = 15_000;
+const DEFAULT_CONTROLLED_CREATION_MAX_RESPONSE_BYTES = 65_536;
 
 export interface DiscoursePreflightLimits {
   minTopicTitleLength?: number;
@@ -51,7 +65,7 @@ export interface SyncedPage {
   targetName?: string;
   topicId?: number;
   topicUrl?: string;
-  status: "created" | "updated" | "skipped" | "unchanged" | "dry-run-create" | "dry-run-update";
+  status: "created" | "resolved" | "updated" | "skipped" | "unchanged" | "dry-run-create" | "dry-run-update";
   reason?: string;
 }
 
@@ -76,6 +90,7 @@ const notifiedErrors = new WeakSet<object>();
 export async function syncDiscourseTopics(
   options: SyncDiscourseTopicsOptions,
 ): Promise<SyncedPage[]> {
+  validatePublicationAuthority(options);
   const docsDir = path.resolve(options.docsDir);
   const mode = options.mode ?? "publish-new";
   const files = await findMarkdownFiles(docsDir);
@@ -124,8 +139,8 @@ export async function syncDiscourseTopics(
 
   const discourse = createDiscourseClient({
     discourseUrl: options.discourseUrl,
-    apiKey: options.apiKey,
-    apiUsername: options.apiUsername,
+    apiKey: options.apiKey ?? "",
+    apiUsername: options.apiUsername ?? "",
   });
   try {
     if (options.validateTitles !== false) {
@@ -409,6 +424,44 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
       }
 
       const lastSyncedAt = new Date().toISOString();
+      if (input.controlledCreation) {
+        const controlled = await resolveControlledCreation({
+          discourseUrl: input.discourseUrl,
+          options: input.controlledCreation,
+          request: {
+            sourceUrl: pageUrl,
+            title,
+            categoryId: page.categoryId,
+            tags: page.tags,
+          },
+        });
+        const topicUrl = `${input.discourse.discourseUrl}/t/${controlled.topicId}`;
+        const createdBindingValues = page.usesTargetBindings && resultTargetName
+          ? targetBindingFrontmatterUpdates(page, resultTargetName, {
+              topicId: controlled.topicId,
+              topicUrl,
+              status: "synced",
+            })
+          : {
+              ...(input.targetName ? { discussionTarget: input.targetName } : {}),
+              discourseTopicId: String(controlled.topicId),
+              discourseTopicUrl: topicUrl,
+            };
+
+        await fs.writeFile(filePath, updateFrontmatter(source, createdBindingValues));
+        results.push({
+          filePath,
+          title,
+          pageUrl,
+          targetName: resultTargetName,
+          topicId: controlled.topicId,
+          topicUrl,
+          status: controlled.outcome,
+          reason: controlled.reason,
+        });
+        continue;
+      }
+
       let topic: Awaited<ReturnType<typeof input.discourse.createTopic>>;
       let reconciledEmbed = false;
       try {
@@ -532,6 +585,156 @@ async function syncParsedDiscourseTopics(input: SyncDiscourseTopicsOptions & {
   }
 
   return results;
+}
+
+interface ControlledCreationResponse {
+  outcome?: unknown;
+  reason?: unknown;
+  topic_id?: unknown;
+  core_fallback?: unknown;
+}
+
+function validatePublicationAuthority(options: SyncDiscourseTopicsOptions): void {
+  if (options.dryRun) return;
+
+  if (options.controlledCreation) {
+    if (!options.controlledCreation.connectionId.trim()) {
+      throw new Error("controlledCreation requires a non-empty connectionId.");
+    }
+    if (!options.controlledCreation.connectionSecret) {
+      throw new Error("controlledCreation requires a connectionSecret.");
+    }
+    if ((options.mode ?? "publish-new") !== "publish-new") {
+      throw new Error("controlledCreation currently supports publish-new mode only; topic updates remain forum-owned.");
+    }
+    return;
+  }
+
+  if (!options.apiKey || !options.apiUsername) {
+    throw new Error("Discourse Core publication requires apiKey and apiUsername when controlledCreation is not configured.");
+  }
+}
+
+async function resolveControlledCreation(input: {
+  discourseUrl: string;
+  options: ControlledCreationOptions;
+  request: {
+    sourceUrl: string;
+    title: string;
+    categoryId?: number;
+    tags?: string[];
+  };
+}): Promise<{ outcome: "created" | "resolved"; reason: string; topicId: number }> {
+  const endpointPath = input.options.endpointPath ?? "/discussion-bridge/connections/resolve.json";
+  const endpoint = new URL(endpointPath, `${input.discourseUrl.replace(/\/+$/, "")}/`);
+  if (endpoint.origin !== new URL(input.discourseUrl).origin) {
+    throw new Error("controlledCreation endpointPath must remain on the configured Discourse origin.");
+  }
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    redirect: "error",
+    signal: AbortSignal.timeout(
+      positiveBoundedInteger(
+        input.options.requestTimeoutMs,
+        DEFAULT_CONTROLLED_CREATION_TIMEOUT_MS,
+        "controlledCreation requestTimeoutMs",
+      ),
+    ),
+    headers: {
+      "content-type": "application/json",
+      "X-DiscussionBridge-Connection": input.options.connectionId,
+      "X-DiscussionBridge-Secret": input.options.connectionSecret,
+    },
+    body: JSON.stringify({
+      connection: {
+        connection_id: input.options.connectionId,
+        adapter_id: "astro",
+        source_url: input.request.sourceUrl,
+        title: input.request.title,
+        visibility: input.options.visibility ?? "unlisted",
+        ...(input.options.lane ? { lane: input.options.lane } : {}),
+        correlation_id: randomUUID(),
+        ...(input.request.categoryId === undefined ? {} : { category_id: input.request.categoryId }),
+        ...(input.request.tags === undefined ? {} : { tags: input.request.tags }),
+      },
+    }),
+  });
+
+  const payload = await safeControlledCreationResponse(
+    response,
+    positiveBoundedInteger(
+      input.options.maxResponseBytes,
+      DEFAULT_CONTROLLED_CREATION_MAX_RESPONSE_BYTES,
+      "controlledCreation maxResponseBytes",
+    ),
+  );
+  if (!response.ok) {
+    const reason = typeof payload.reason === "string" ? payload.reason : `HTTP ${response.status}`;
+    throw new Error(`DiscussionBridge controlled creation was rejected: ${reason}.`);
+  }
+  if (payload.core_fallback !== false) {
+    throw new Error("DiscussionBridge controlled creation did not explicitly deny Core fallback.");
+  }
+  if (payload.outcome !== "created" && payload.outcome !== "resolved") {
+    throw new Error(`DiscussionBridge controlled creation returned unsupported outcome: ${String(payload.outcome)}.`);
+  }
+  if (typeof payload.topic_id !== "number" || !Number.isInteger(payload.topic_id) || payload.topic_id <= 0) {
+    throw new Error("DiscussionBridge controlled creation returned no valid topic ID.");
+  }
+
+  return {
+    outcome: payload.outcome,
+    reason: typeof payload.reason === "string" ? payload.reason : payload.outcome,
+    topicId: payload.topic_id,
+  };
+}
+
+async function safeControlledCreationResponse(
+  response: Response,
+  maxResponseBytes: number,
+): Promise<ControlledCreationResponse> {
+  try {
+    const declaredLength = Number(response.headers.get("content-length"));
+    if (Number.isFinite(declaredLength) && declaredLength > maxResponseBytes) {
+      throw new Error("response exceeds the configured size limit");
+    }
+    const reader = response.body?.getReader();
+    if (!reader) return {};
+    const chunks: Uint8Array[] = [];
+    let byteLength = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      byteLength += value.byteLength;
+      if (byteLength > maxResponseBytes) {
+        await reader.cancel();
+        throw new Error("response exceeds the configured size limit");
+      }
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(byteLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? value as ControlledCreationResponse
+      : {};
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`DiscussionBridge controlled creation returned an invalid response: ${detail}.`);
+  }
+}
+
+function positiveBoundedInteger(value: number | undefined, fallback: number, label: string): number {
+  const resolved = value ?? fallback;
+  if (!Number.isInteger(resolved) || resolved <= 0) {
+    throw new Error(`${label} must be a positive integer.`);
+  }
+  return resolved;
 }
 
 interface ParsedPage {
@@ -1159,10 +1362,12 @@ function pageUrlForFile(input: {
 }): string {
   const relative = path.relative(input.docsDir, input.filePath).replace(/\\/g, "/");
   const withoutExtension = relative.replace(/\.(md|mdx)$/i, "");
-  const slug = withoutExtension.endsWith("/index")
-    ? withoutExtension.slice(0, -"/index".length)
-    : withoutExtension;
   const routeBase = normalizeRouteBase(input.routeBase);
+  const slug = withoutExtension === "index" && routeBase
+    ? ""
+    : withoutExtension.endsWith("/index")
+      ? withoutExtension.slice(0, -"/index".length)
+      : withoutExtension;
   const pathname = [routeBase, slug].filter(Boolean).join("/");
 
   return `${input.siteUrl.replace(/\/+$/, "")}/${pathname ? `${pathname}/` : ""}`;

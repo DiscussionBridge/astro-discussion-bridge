@@ -23,10 +23,10 @@ export interface DiscourseNavigationLens {
 
 export interface NavigationNode {
   id: string;
-  topicId: number;
+  topicId?: number;
   label: string;
   kind: NavigationNodeKind;
-  sourceUrl: string;
+  sourceUrl?: string;
   url?: string;
   sourceTags?: string[];
   children: NavigationNode[];
@@ -519,19 +519,32 @@ function parseNavigationNode(value: unknown, position: string): NavigationNode {
   if (!["title", "subtitle", "chapter", "subchapter", "part", "section"].includes(kind)) {
     throw new Error(`Navigation node ${position} has unsupported kind: ${kind}.`);
   }
+  const children = value.children.map((child, childIndex) =>
+    parseNavigationNode(child, `${position}.${childIndex}`)
+  );
+  const topicId = value.topicId === undefined
+    ? undefined
+    : positiveInteger(value.topicId, `navigation node ${position}.topicId`);
+  const sourceUrl = value.sourceUrl === undefined
+    ? undefined
+    : requiredWebUrl(value.sourceUrl, `navigation node ${position}.sourceUrl`);
+  if ((topicId === undefined) !== (sourceUrl === undefined)) {
+    throw new Error(`Navigation node ${position} must provide topicId and sourceUrl together.`);
+  }
+  if (topicId === undefined && value.url === undefined && children.length === 0) {
+    throw new Error(`Navigation node ${position} has no local URL, forum binding, or children.`);
+  }
   return {
     id: requiredString(value.id, `navigation node ${position}.id`),
-    topicId: positiveInteger(value.topicId, `navigation node ${position}.topicId`),
+    ...(topicId === undefined ? {} : { topicId }),
     label: requiredString(value.label, `navigation node ${position}.label`),
     kind,
-    sourceUrl: requiredWebUrl(value.sourceUrl, `navigation node ${position}.sourceUrl`),
+    ...(sourceUrl === undefined ? {} : { sourceUrl }),
     ...(value.url === undefined ? {} : { url: requiredWebOrRootUrl(value.url, `navigation node ${position}.url`) }),
     ...(value.sourceTags === undefined
       ? {}
       : { sourceTags: normalizeUniqueStrings(value.sourceTags, `navigation node ${position} source tag`) }),
-    children: value.children.map((child, childIndex) =>
-      parseNavigationNode(child, `${position}.${childIndex}`)
-    ),
+    children,
   };
 }
 
@@ -542,9 +555,11 @@ function validateNavigationManifest(manifest: DiscussionNavigationManifest): voi
     for (const node of nodes) {
       if (ids.has(node.id)) throw new Error(`Duplicate navigation node id: ${node.id}.`);
       ids.add(node.id);
-      const topicKey = `${lens.key}:${node.topicId}`;
-      if (topics.has(topicKey)) throw new Error(`Duplicate topic ${node.topicId} in lens ${lens.key}.`);
-      topics.add(topicKey);
+      if (node.topicId !== undefined) {
+        const topicKey = `${lens.key}:${node.topicId}`;
+        if (topics.has(topicKey)) throw new Error(`Duplicate topic ${node.topicId} in lens ${lens.key}.`);
+        topics.add(topicKey);
+      }
       walk(lens, node.children);
     }
   };
@@ -553,19 +568,27 @@ function validateNavigationManifest(manifest: DiscussionNavigationManifest): voi
 
 function starlightItemForNode(node: NavigationNode): Record<string, unknown> {
   if (node.children.length) {
+    const overview = starlightLinkForNode(node);
     return {
       label: node.label,
       collapsed: true,
       items: [
-        { label: "Overview", link: node.url ?? node.sourceUrl },
+        ...(overview ? [{ label: "Overview", link: overview }] : []),
         ...node.children.map(starlightItemForNode),
       ],
     };
   }
   return {
     label: node.label,
-    link: node.url ?? node.sourceUrl,
+    link: starlightLinkForNode(node),
   };
+}
+
+function starlightLinkForNode(node: NavigationNode): string | undefined {
+  if (!node.url) return node.sourceUrl;
+  if (node.url.startsWith("/") && !node.url.startsWith("//")) return node.url;
+  const localUrl = new URL(node.url);
+  return `${localUrl.pathname}${localUrl.search}${localUrl.hash}`;
 }
 
 function findBranch(nodes: NavigationNode[], currentUrl: string): string[] | undefined {
@@ -698,7 +721,7 @@ function requiredWebUrl(value: unknown, label: string): string {
 
 function requiredWebOrRootUrl(value: unknown, label: string): string {
   const text = requiredString(value, label);
-  return text.startsWith("/") ? text : requiredWebUrl(text, label);
+  return text.startsWith("/") && !text.startsWith("//") ? text : requiredWebUrl(text, label);
 }
 
 function positiveInteger(value: unknown, label: string): number {

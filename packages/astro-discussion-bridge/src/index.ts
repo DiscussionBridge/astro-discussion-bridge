@@ -7,7 +7,12 @@ import {
   type ContentRelationshipManifest,
   type ContentRelationshipSource,
 } from "./relationships.js";
-import { syncDiscourseTopics, type DiscoursePreflightLimits, type NotifyOnFailureOptions } from "./sync/index.js";
+import {
+  syncDiscourseTopics,
+  type ControlledCreationOptions,
+  type DiscoursePreflightLimits,
+  type NotifyOnFailureOptions,
+} from "./sync/index.js";
 import {
   parseDiscussionConnectionJobs,
   type DiscussionConnectionJobs,
@@ -51,6 +56,10 @@ export interface DiscussionBridgeOptions {
     enabled?: boolean;
     display?: DiscussionBridgeCommentsDisplay;
     embedHeight?: string;
+    dynamicHeight?: boolean;
+    embedMinHeight?: string;
+    embedMaxHeight?: string;
+    embedViewportMaxHeight?: string;
     className?: string;
     credit?: DiscussionBridgeCreditOptions;
   };
@@ -92,6 +101,19 @@ export interface PublishOnBuildLaneOptions {
   categoryId?: number;
   tags?: string[];
   dryRun?: boolean;
+  controlledCreation?: ControlledCreationBuildOptions;
+}
+
+export interface ControlledCreationBuildOptions {
+  connectionId?: string;
+  connectionSecret?: string;
+  connectionIdEnv?: string;
+  connectionSecretEnv?: string;
+  endpointPath?: string;
+  lane?: string;
+  visibility?: "listed" | "unlisted";
+  requestTimeoutMs?: number;
+  maxResponseBytes?: number;
 }
 
 export interface PublishOnBuildOptions extends Omit<PublishOnBuildLaneOptions, "docsDir"> {
@@ -114,6 +136,10 @@ interface PublicOptions {
     enabled: boolean;
     display: DiscussionBridgeCommentsDisplay;
     embedHeight: string;
+    dynamicHeight: boolean;
+    embedMinHeight: string;
+    embedMaxHeight: string;
+    embedViewportMaxHeight: string;
     className?: string;
     credit: {
       enabled: boolean;
@@ -172,6 +198,7 @@ interface ResolvedPublishLane {
   categoryId?: number;
   tags?: string[];
   dryRun: boolean;
+  controlledCreation?: ControlledCreationBuildOptions;
 }
 
 const virtualModuleId = "virtual:discussion-bridge/config";
@@ -216,11 +243,12 @@ export default function discussionBridge(
 
         for (const lane of resolvedOptions.publishOnBuild.lanes) {
           const discourseUrl = lane.discourseUrl ?? resolvedOptions.discourseUrl;
-          const apiKey = lane.apiKey
-            ?? valueFromNamedEnv(lane.apiKeyEnv)
-            ?? process.env.DISCOURSE_API_KEY;
-          const postAs = resolvePostAs(lane);
-          if (!apiKey || !postAs) {
+          const controlledCreation = resolveControlledCreation(lane.controlledCreation);
+          const apiKey = controlledCreation
+            ? undefined
+            : lane.apiKey ?? valueFromNamedEnv(lane.apiKeyEnv) ?? process.env.DISCOURSE_API_KEY;
+          const postAs = controlledCreation ? undefined : resolvePostAs(lane);
+          if (!controlledCreation && (!apiKey || !postAs)) {
             const expectedKey = lane.apiKeyEnv ?? "DISCOURSE_API_KEY";
             const expectedActor = lane.postAsEnv
               ?? lane.apiUsernameEnv
@@ -238,6 +266,7 @@ export default function discussionBridge(
             activeTarget: resolvedOptions.activeTarget ?? process.env.DISCUSSION_TARGET,
             apiKey,
             apiUsername: postAs,
+            controlledCreation,
             logger,
           });
         }
@@ -292,7 +321,12 @@ export type {
   ImportDiscoveryResult,
   ImportDiscoveryStatus,
 } from "./import-discovery.js";
-export type { DiscoursePreflightLimits, SyncDiscourseTopicsOptions, SyncedPage } from "./sync/index.js";
+export type {
+  ControlledCreationOptions,
+  DiscoursePreflightLimits,
+  SyncDiscourseTopicsOptions,
+  SyncedPage,
+} from "./sync/index.js";
 export type {
   DiscussionConnectionJob,
   DiscussionConnectionJobs,
@@ -353,6 +387,10 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
       enabled: options.comments?.enabled ?? true,
       display: options.comments?.display ?? "simple",
       embedHeight: options.comments?.embedHeight ?? "800px",
+      dynamicHeight: options.comments?.dynamicHeight ?? true,
+      embedMinHeight: options.comments?.embedMinHeight ?? "360",
+      embedMaxHeight: options.comments?.embedMaxHeight ?? "900",
+      embedViewportMaxHeight: options.comments?.embedViewportMaxHeight ?? "70vh",
       className: options.comments?.className,
       credit: resolveCreditOptions(options.comments?.credit),
     },
@@ -419,7 +457,38 @@ function resolvePublishLanes(input: {
     categoryId: lane.categoryId ?? defaults?.categoryId,
     tags: lane.tags ?? defaults?.tags,
     dryRun: lane.dryRun ?? defaults?.dryRun ?? false,
+    controlledCreation: lane.controlledCreation ?? defaults?.controlledCreation,
   }));
+}
+
+function resolveControlledCreation(
+  options: ControlledCreationBuildOptions | undefined,
+): ControlledCreationOptions | undefined {
+  if (!options) return undefined;
+
+  const connectionId = nonEmptyValue(options.connectionId)
+    ?? valueFromNamedEnv(options.connectionIdEnv)
+    ?? nonEmptyValue(process.env.DISCUSSIONBRIDGE_CONNECTION_ID);
+  const connectionSecret = options.connectionSecret
+    ?? valueFromNamedEnv(options.connectionSecretEnv)
+    ?? process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET;
+  if (!connectionId || !connectionSecret) {
+    const expectedId = options.connectionIdEnv ?? "DISCUSSIONBRIDGE_CONNECTION_ID";
+    const expectedSecret = options.connectionSecretEnv ?? "DISCUSSIONBRIDGE_CONNECTION_SECRET";
+    throw new Error(
+      `controlledCreation requires a connection ID and server-only secret via configuration or ${expectedId}/${expectedSecret}.`,
+    );
+  }
+
+  return {
+    connectionId,
+    connectionSecret,
+    endpointPath: options.endpointPath,
+    lane: options.lane,
+    visibility: options.visibility,
+    requestTimeoutMs: options.requestTimeoutMs,
+    maxResponseBytes: options.maxResponseBytes,
+  };
 }
 
 function resolvePostAs(lane: ResolvedPublishLane): string | undefined {
@@ -437,8 +506,9 @@ async function publishLane(input: {
   siteUrl: string;
   discourseUrl: string;
   activeTarget?: string;
-  apiKey: string;
-  apiUsername: string;
+  apiKey?: string;
+  apiUsername?: string;
+  controlledCreation?: ControlledCreationOptions;
   logger: { info: (message: string) => void };
 }) {
   const categoryId = input.lane.categoryId ?? numberFromEnv("DISCOURSE_CATEGORY_ID");
@@ -455,6 +525,7 @@ async function publishLane(input: {
     discourseUrl: input.discourseUrl,
     apiKey: input.apiKey,
     apiUsername: input.apiUsername,
+    controlledCreation: input.controlledCreation,
     categoryId,
     tags,
     dryRun: input.lane.dryRun,
@@ -466,13 +537,14 @@ async function publishLane(input: {
     notifyOnFailure: input.lane.notifyOnFailure,
   });
   const created = results.filter((result) => result.status === "created").length;
+  const resolved = results.filter((result) => result.status === "resolved").length;
   const updated = results.filter((result) => result.status === "updated").length;
   const skipped = results.filter((result) => result.status === "skipped").length;
   const unchanged = results.filter((result) => result.status === "unchanged").length;
   const dryRun = results.filter((result) => result.status.startsWith("dry-run")).length;
 
   input.logger.info(
-    `DiscussionBridge lane "${input.lane.name}" complete: ${created} created, ${updated} updated, ${skipped} skipped, ${unchanged} unchanged, ${dryRun} dry-run.`,
+    `DiscussionBridge lane "${input.lane.name}" complete: ${created} created, ${resolved} resolved, ${updated} updated, ${skipped} skipped, ${unchanged} unchanged, ${dryRun} dry-run.`,
   );
 }
 

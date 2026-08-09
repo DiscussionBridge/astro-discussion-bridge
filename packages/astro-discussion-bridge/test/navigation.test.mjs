@@ -120,6 +120,17 @@ test("navigation manifest produces a Starlight adapter and create-only artifact"
       link: "https://forum.example.com/t/15",
     });
 
+    manifest.lenses[0].nodes[0].url = "https://example.com/title-i/?view=reader#overview";
+    const locallyBoundSidebar = navigationManifestToStarlightSidebar(manifest);
+    assert.deepEqual(locallyBoundSidebar[0].items[0].items[0], {
+      label: "Overview",
+      link: "/title-i/?view=reader#overview",
+    });
+    assert.equal(
+      locallyBoundSidebar[0].items[0].items[1].items[0].link,
+      "https://forum.example.com/t/42",
+    );
+
     const output = path.join(dir, "navigation.json");
     await writeNavigationManifest(output, manifest);
     assert.match(await readFile(output, "utf8"), /"generatedAt": "2026-07-23T00:00:00.000Z"/);
@@ -127,6 +138,43 @@ test("navigation manifest produces a Starlight adapter and create-only artifact"
   } finally {
     await rm(dir, { force: true, recursive: true });
   }
+});
+
+test("official local hierarchy groups do not require synthetic forum topics", () => {
+  const sidebar = navigationManifestToStarlightSidebar({
+    version: 1,
+    generatedAt: "2026-08-01T00:00:00.000Z",
+    discourseUrl: "https://forum.example.com/",
+    hierarchyTagGroups: [],
+    lenses: [{
+      key: "obbba-text",
+      label: "OBBBA Text",
+      categoryId: 5,
+      indexTopicId: 12,
+      indexSourceUrl: "https://forum.example.com/t/12",
+      nodes: [{
+        id: "official:title:I",
+        label: "TITLE I—AGRICULTURE",
+        kind: "title",
+        url: "/obbba-text/title-i/",
+        children: [{
+          id: "official:section:10101",
+          label: "Sec. 10101. Food plan",
+          kind: "section",
+          url: "/obbba-text/title-i/sec-10101/",
+          children: [],
+        }],
+      }],
+    }],
+  });
+  assert.deepEqual(sidebar[0].items[0], {
+    label: "TITLE I—AGRICULTURE",
+    collapsed: true,
+    items: [
+      { label: "Overview", link: "/obbba-text/title-i/" },
+      { label: "Sec. 10101. Food plan", link: "/obbba-text/title-i/sec-10101/" },
+    ],
+  });
 });
 
 test("navigation config and content bindings preserve routes and source tags without using tags for order", async () => {
@@ -235,6 +283,8 @@ test("navigation discovery rejects duplicate public destinations across content 
   await Promise.all([
     mkdir(firstDir, { recursive: true }),
     mkdir(secondDir, { recursive: true }),
+  ]);
+  await Promise.all([
     writeFile(
       path.join(firstDir, "same.md"),
       `---

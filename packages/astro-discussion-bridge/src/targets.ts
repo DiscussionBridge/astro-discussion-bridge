@@ -203,15 +203,14 @@ export function discussionTargetLabel(name: string): string {
     .join(" ");
 }
 
-function discourseUrlFromTopicUrl(topicUrl: string | undefined): string | undefined {
+export function discourseUrlFromTopicUrl(topicUrl: string | undefined): string | undefined {
   if (!topicUrl) return undefined;
   try {
     const url = new URL(topicUrl);
-    const topicPath = url.pathname.indexOf("/t/");
-    url.pathname = topicPath >= 0 ? url.pathname.slice(0, topicPath) : "";
-    url.search = "";
-    url.hash = "";
-    return url.href.replace(/\/+$/, "");
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return undefined;
+    const match = url.pathname.match(/^(.*)\/t\/(?:[^/]+\/)?[1-9]\d*(?:\/.*)?$/);
+    if (!match) return undefined;
+    return `${url.origin}${match[1]}`.replace(/\/+$/, "");
   } catch {
     return undefined;
   }

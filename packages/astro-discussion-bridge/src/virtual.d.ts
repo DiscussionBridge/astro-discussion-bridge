@@ -12,6 +12,10 @@ declare module "virtual:discussion-bridge/config" {
       enabled: boolean;
       display: "simple" | "full" | "fullInteractive";
       embedHeight: string;
+      dynamicHeight: boolean;
+      embedMinHeight: string;
+      embedMaxHeight: string;
+      embedViewportMaxHeight: string;
       className?: string;
     };
     replies: {
@@ -41,6 +45,10 @@ interface Window {
     className?: string;
     discourseUrl: string;
     embedHeight?: string;
+    dynamicHeight?: boolean;
+    embedMinHeight?: string;
+    embedMaxHeight?: string;
+    embedViewportMaxHeight?: string;
     fullApp?: boolean;
   } & (
     | { discourseEmbedUrl: string; topicId?: never }

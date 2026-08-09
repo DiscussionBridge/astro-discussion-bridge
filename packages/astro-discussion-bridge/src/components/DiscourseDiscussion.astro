@@ -17,6 +17,10 @@ const embedClassName = Astro.props.embedClassName ?? config.comments.className;
 const embedUrl = Astro.props.embedUrl ?? Astro.url.href;
 const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteractive";
 const embedHeight = config.comments.embedHeight;
+const dynamicHeight = config.comments.dynamicHeight;
+const embedMinHeight = config.comments.embedMinHeight;
+const embedMaxHeight = config.comments.embedMaxHeight;
+const embedViewportMaxHeight = config.comments.embedViewportMaxHeight;
 const heading = Astro.props.heading ?? "Comments";
 const topicId = Astro.props.topicId;
 const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
@@ -33,13 +37,32 @@ const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopic
 )}
 
 {config.comments.enabled && (
-  <script define:vars={{ discourseUrl, embedClassName, embedUrl, fullApp, embedHeight, topicId }}>
+  <script define:vars={{ discourseUrl, embedClassName, embedUrl, fullApp, embedHeight, dynamicHeight, embedMinHeight, embedMaxHeight, embedViewportMaxHeight, topicId }}>
     window.DiscourseEmbed = {
       discourseUrl,
       ...(topicId ? { topicId } : { discourseEmbedUrl: embedUrl }),
       ...(embedClassName ? { className: embedClassName } : {}),
-      ...(fullApp ? { fullApp: true, embedHeight } : {}),
+      ...(fullApp ? { fullApp: true, embedHeight, dynamicHeight, embedMinHeight, embedMaxHeight } : {}),
     };
+
+    // Discourse reports the full embedded-app document height. Keep that
+    // content-aware resize behavior, but prevent a long first post from making
+    // the comments boundary consume most of a reader's viewport.
+    if (fullApp && dynamicHeight && embedViewportMaxHeight) {
+      const comments = document.getElementById("discourse-comments");
+      const applyViewportCeiling = () => {
+        const iframe = comments?.querySelector("#discourse-embed-frame");
+        if (!(iframe instanceof HTMLIFrameElement)) return false;
+        iframe.style.maxHeight = embedViewportMaxHeight;
+        return true;
+      };
+      if (!applyViewportCeiling() && comments) {
+        const observer = new MutationObserver(() => {
+          if (applyViewportCeiling()) observer.disconnect();
+        });
+        observer.observe(comments, { childList: true });
+      }
+    }
 
     const script = document.createElement("script");
     script.async = true;
