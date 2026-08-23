@@ -1767,7 +1767,7 @@ test("sync-existing preserves a multiline discussionSummary as the managed first
         "discourseTopicId: 21",
         'discourseTopicUrl: "https://forum.example.com/t/toc-summary/21"',
         "discussionSummary: |",
-        '  <div data-theme-toc="true">',
+        '  <div data-theme-toc="true"></div>',
         "",
         "  ## First section",
         "",
@@ -1777,7 +1777,6 @@ test("sync-existing preserves a multiline discussionSummary as the managed first
         "",
         "  More reader-facing summary content.",
         "",
-        "  </div>",
         "---",
         "",
         "# Astro-only source body",
@@ -1811,7 +1810,7 @@ test("sync-existing preserves a multiline discussionSummary as the managed first
     assert.equal(results[0].status, "updated");
     const updateCall = calls.find((call) => call.pathname === "/posts/101.json" && call.method === "PUT");
     assert.ok(updateCall);
-    assert.match(updateCall.body.post.raw, /^<div data-theme-toc="true">/);
+    assert.match(updateCall.body.post.raw, /^<div data-theme-toc="true"><\/div>\n\n## First section/);
     assert.match(updateCall.body.post.raw, /## First section/);
     assert.match(updateCall.body.post.raw, /## Second section/);
     assert.doesNotMatch(updateCall.body.post.raw, /Astro-only source body/);
