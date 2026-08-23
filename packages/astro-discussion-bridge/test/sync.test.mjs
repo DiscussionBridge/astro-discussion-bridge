@@ -1751,6 +1751,77 @@ test("sync-existing force updates the managed first post even when source hash i
   }
 });
 
+test("sync-existing preserves a multiline discussionSummary as the managed first-post body", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-summary-sync-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "index.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "DiscussionBridge for Astro: TOC Summary"',
+        "discourseTopicId: 21",
+        'discourseTopicUrl: "https://forum.example.com/t/toc-summary/21"',
+        "discussionSummary: |",
+        '  <div data-theme-toc="true">',
+        "",
+        "  ## First section",
+        "",
+        "  Reader-facing summary content.",
+        "",
+        "  ## Second section",
+        "",
+        "  More reader-facing summary content.",
+        "",
+        "  </div>",
+        "---",
+        "",
+        "# Astro-only source body",
+        "",
+        "This rich Astro body is intentionally replaced by the curated summary.",
+      ].join("\n"),
+    );
+
+    const calls = [];
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 21,
+        title: "DiscussionBridge for Astro: TOC Summary",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 101, post_number: 1 }] },
+      },
+    });
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+      forceSync: true,
+    });
+
+    assert.equal(results[0].status, "updated");
+    const updateCall = calls.find((call) => call.pathname === "/posts/101.json" && call.method === "PUT");
+    assert.ok(updateCall);
+    assert.match(updateCall.body.post.raw, /^<div data-theme-toc="true">/);
+    assert.match(updateCall.body.post.raw, /## First section/);
+    assert.match(updateCall.body.post.raw, /## Second section/);
+    assert.doesNotMatch(updateCall.body.post.raw, /Astro-only source body/);
+    assert.match(updateCall.body.post.raw, /\[Read the source article\]\(https:\/\/docs\.example\.com\/index\/\)/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("sync-existing treats an Astro title change as source-of-truth drift", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-astro-title-drift-"));
   const docsDir = path.join(dir, "docs");

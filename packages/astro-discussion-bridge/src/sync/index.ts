@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { parse as parseYaml } from "yaml";
 import { createDiscourseClient } from "../discourse/client.js";
 import {
   parseDiscussionTargetBindings,
@@ -1268,13 +1269,20 @@ function findFrontmatterBlock(source: string): FrontmatterBlock | undefined {
 }
 
 function parseSimpleYaml(source: string): Record<string, string> {
+  const parsed = parseYaml(source);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+
   const values: Record<string, string> = {};
-
-  for (const line of source.split(/\r?\n/)) {
-    const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
-    if (!match) continue;
-
-    values[match[1]] = unquoteYamlValue(match[2].trim());
+  for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+    if (value === null || value === undefined) {
+      values[key] = "";
+    } else if (typeof value === "string") {
+      values[key] = value;
+    } else if (["boolean", "number", "bigint"].includes(typeof value)) {
+      values[key] = String(value);
+    } else {
+      values[key] = JSON.stringify(value);
+    }
   }
 
   return values;
@@ -1324,23 +1332,6 @@ function serializeYaml(values: Record<string, string>): string {
 function quoteYamlValue(value: string): string {
   if (/^[0-9]+$/.test(value)) return value;
   return JSON.stringify(value);
-}
-
-function unquoteYamlValue(value: string): string {
-  if (value.startsWith('"') && value.endsWith('"')) {
-    try {
-      const parsed = JSON.parse(value) as unknown;
-      if (typeof parsed === "string") return parsed;
-    } catch {
-      return value.slice(1, -1);
-    }
-  }
-
-  if (value.startsWith("'") && value.endsWith("'")) {
-    return value.slice(1, -1);
-  }
-
-  return value;
 }
 
 function findFirstHeading(body: string): string | undefined {
