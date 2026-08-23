@@ -71,7 +71,7 @@ quality review before Product Boss approval.
 - Product docs URL decided: use `docs.discussionbridge.dev` with Starlight. Keep `discussionbridge.dev/docs` only as a redirect or fallback if needed.
 - The deployed Starlight documentation source is the independent
   `DiscussionBridge/docs` repository at
-  `C:\CodeProjects\CodeWorksLabs\DiscussionBridge\sites\docs-discussionbridge-dev`;
+  `C:\CodeProjects\Sites\DiscussionBridge\discussionbridge.dev\docs.discussionbridge.dev\site`;
   the old adapter
   repository `sites/docs` copy is superseded and is not a deployment source.
 - Resolve the remaining Cloudflare account/ownership and operator-role decisions
@@ -155,7 +155,7 @@ quality review before Product Boss approval.
 ## Alpha Demo Matrix
 
 - Verify the independent Starlight demo builds from
-  `C:\CodeProjects\CodeWorksLabs\DiscussionBridge\demos\astrostarlight-demo-discussionbridge-dev`.
+  `C:\CodeProjects\Sites\DiscussionBridge\discussionbridge.dev\demo.discussionbridge.dev\astrostarlight.demo.discussionbridge.dev\site`.
 - Verify the live Starlight demo deploys from the deployed repo/content tree, not the package repo demo tree.
 - Before Alpha and before each release candidate, run the repeatable live smoke pass. It covers docs, releases, blog, news, and comments demo routes; `simple`, `full`, and `fullInteractive` comments modes; forum category/tag/permission settings; and these full-app embed Discourse settings:
   - `Embed full app`: yes
@@ -337,8 +337,14 @@ quality review before Product Boss approval.
 
 ## Dependency Audit
 
-- Review the dependency advisories reported by `npm install --package-lock-only`.
-- Run `npm audit` and identify which packages introduce the advisories.
-- Prefer targeted dependency upgrades where possible.
-- Avoid `npm audit fix --force` unless the breaking-change impact has been reviewed.
-- Re-run `npm run check` and `npm run build` after any dependency changes.
+- [x] Replayed the dependency audit on 2026-08-22 and identified direct versus
+  transitive advisories.
+- [x] Applied targeted compatible updates only: Mermaid `11.17.0`, Astro
+  `7.2.4`, Starlight `0.41.7`, DOMPurify `3.4.14`, JS-YAML `4.3.1`, Nano ID
+  `3.3.18`, PostCSS `8.5.26`, Sharp `0.35.3`, and SVGO `4.0.2`.
+- [x] Re-ran `npm audit`: zero known vulnerabilities.
+- [x] Re-ran the complete build/test contract: 118/118 pass.
+- [x] Replayed `npm pack --dry-run`: 53 files, 95,458-byte tarball,
+  415,141 bytes unpacked; no publication occurred.
+- Continue to avoid `npm audit fix --force`; future advisories require the same
+  targeted review and complete regression replay.
