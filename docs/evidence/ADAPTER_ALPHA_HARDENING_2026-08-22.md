@@ -5,22 +5,40 @@ hardening checklist. This record contains no credential values.
 
 ## Exact package compatibility matrix
 
-The package was built and packed from adapter commit
-`48cb78c6a083699a516972c3b69c9b31ab5817cf`. The resulting
-`astro-discussion-bridge@0.1.0` tarball contained 53 files and was 95.5 kB
-packed / 415.1 kB unpacked.
+The exact release-package candidate is adapter commit
+`dc460b04fa507b94349edcc3ec8d0973259ad3ec`. It was packed directly from that
+clean commit as `astro-discussion-bridge-0.1.0.tgz`.
 
-Two fresh isolated projects installed that exact tarball and completed static
-Starlight builds:
+- byte size: `96,458`
+- SHA-256: `58d76d17b8680e3f6be691e6cd22e62bdba92b9c2bf5d037034ac0702da050ba`
+- npm SHA-1: `a1e57d2fbf3863929e12a5fa0525ebc6ff188003`
+- npm integrity: `sha512-zgzZYl/hsjJba8apSsvafMEVNTMVi7NgxfqNZgO3KMwAQseVNlVAw2YRsW7klSQW6J0ov2MmTI2WofFBlBgSRw==`
+- inventory: 53 files, `418,461` unpacked bytes
+
+The complete npm-pack inventory was inspected. It contains `LICENSE`, the
+candidate `README.md` and `TODO.md`, the package manifest, compiled `dist`
+surface, the published Astro components, and `src/virtual.d.ts`. No credential,
+fixture, local-path, acceptance-evidence, scratch, or unintended file was
+included.
+
+Two newly created isolated consumers installed that same immutable tarball by
+its local file identity and completed 2-page static Starlight builds:
 
 | Astro | Starlight | Result |
 | --- | --- | --- |
-| `6.4.8` | `0.40.0` | install and 2-page static build passed |
-| `7.2.4` | `0.41.7` | install and 2-page static build passed |
+| `6.4.8` | `0.40.0` | exact-tarball install and 2-page static build passed |
+| `7.2.4` | `0.41.7` | exact-tarball install and 2-page static build passed |
 
 The Starlight versions are deliberately different because `0.40.0` supports
 Astro 6 while `0.41.7` requires Astro 7. The adapter's optional peer range
 continues to cover both.
+
+The prior matrix packed parent commit
+`48cb78c6a083699a516972c3b69c9b31ab5817cf`. That evidence did not qualify the
+later candidate because `README.md` and `TODO.md` are published package files.
+This exact-candidate replay supersedes that artifact-identity claim. The commit
+that records this evidence is record-only and is not a replacement package
+candidate.
 
 ## Regression and source-safety evidence
 
