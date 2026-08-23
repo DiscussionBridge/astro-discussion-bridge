@@ -40,7 +40,9 @@ quality review before Product Boss approval.
 - Tightened CLI/help text and friendly validation messages.
 - Built the paired Human Manual and Machine Manual and included them in the generated Starlight docs site.
 - Route the paired manuals through Manual Boss review and resolve Alpha-blocking consistency, presentation, secret-safety, usability, accessibility, placeholder, and public/private-boundary findings before public release.
-- Add or confirm `check-discourse` examples for global diagnostics key, granular publishing key, and explicit configured limits.
+- [x] Added and live-confirmed `check-discourse` examples for a global
+  diagnostics key, granular publishing key, and explicit configured limits on
+  `dev-forum.discussionbridge.dev` without retaining either acceptance key.
 - Finish docs link wiring once Phil/Ops prerequisites produce final URLs.
 - Prepare the repeatable live smoke-pass script/checklist so it is ready when Cloudflare/support wiring is done.
 - Keep polishing sync/recovery documentation without adding major feature scope.
@@ -62,7 +64,9 @@ quality review before Product Boss approval.
   implementation and disposable-sandbox acceptance are complete, while stable
   preproduction and production promotion remain separate gates.
 - Confirmed final CLI command names and help output are clear: `publish-new`, `sync-existing`, `publish-and-sync`, `discover-imports`, `import-existing`, and `check-discourse`.
-- Decide whether to add a configurable topic title template or prefix, such as `Discussion: {title}`, for sites with short page titles.
+- Alpha decision: do not add a configurable title template. Exact title
+  preflight and an explicit page title are sufficient for Alpha; optional title
+  templating is Beta scope.
 - Keep local preflight validation available for dry runs and unauthenticated checks.
 - Confirmed title/body/tag preflight messages are friendly enough for non-package authors.
 - Confirm generated first-post body is reader-facing and does not expose implementation labels.
@@ -83,13 +87,17 @@ quality review before Product Boss approval.
 
 ### Sync
 
-- Expand tests around `sync-existing` and `publish-and-sync` edge cases before widening usage beyond the demo.
-- Covered: Astro title changes, Discourse topic title drift, active discussion target mismatch handling, linked Discourse topic missing/unreadable, linked topic with no first post, Discourse client network failures, and publish-new offline failures.
-- Add stronger MDX summary extraction for component-heavy pages.
+- [x] Closed the `sync-existing` and `publish-and-sync` edge-test gate for
+  Alpha, including title/category/tag/listing drift, target mismatch, collision,
+  network failures, missing topics/posts, and isolated multi-target retry.
+- Alpha decision: curated `discussionSummary` is the supported path for
+  component-heavy MDX. Automatic JSX/component summarization is Beta scope.
 - Keep `discussionSummary` as the supported curated summary override and document when to use it.
 - Document and test the distinction between Astro/template content tags and Discourse `discussionTags`.
 - Verify tag/category/title/listing sync behavior with current live bot keys one more time before Alpha.
-- Define source modes for Discourse-to-Astro and Astro-to-Discourse workflows: `astro-managed`, `discourse-managed`, and `discourse-imported`. Do not let an imported or Discourse-managed page write back to Discourse unless the user explicitly promotes or changes the mode.
+- [x] Enforced and documented `astro-managed`, `discourse-managed`, and
+  `discourse-imported` source modes. Imported/managed sources cannot write back;
+  promotion requires a reviewed frontmatter change and dry run.
 
 ### Import
 
@@ -121,7 +129,8 @@ quality review before Product Boss approval.
 - When Discourse granular diagnostics/read scopes are available or confirmed, document and test the two-key model: granular publishing key for normal sync plus diagnostics key for setup checks.
 - Until then, keep the fallback explicit: global/admin-capable diagnostics key for setup checks; granular publishing key where it can perform create/update/tag/read actions.
 - Consider reading Discourse title/body/tag constraints from the target instance in `check-discourse`, while keeping explicit CLI/env limits for dry runs and restricted keys.
-- Add `check-discourse` examples for global diagnostics key, granular publishing key, and explicit configured limits.
+- [x] Added the global diagnostics, granular publishing, and explicit-limit
+  examples and replayed both key modes against stable preproduction.
 - Investigate whether a Discourse admin/bot API key can post or send messages as another Discourse user, what endpoint/scope enables it if supported, and whether that behavior is appropriate for DiscussionBridge. Potential future use case: one trusted configuration/control-plane bot publishing notices or dashboard/admin messages across multiple users, sites, channels, or client forums in a multisite/agency setup. Possible future config shape: `postAs: "username"` in site/lane config or `discussionPostAs: "username"` in frontmatter. If supported, CLI/check output should make the operating key user and effective posting user explicit.
 
 ### Maintain
@@ -134,9 +143,10 @@ quality review before Product Boss approval.
 
 ### Recover
 
-- Define the explicit repair path for a deleted Discourse topic linked from Astro.
-- Define the explicit repair path for a deleted first post.
-- Decide whether recovery belongs in a command such as `repair-link`, `relink-topic`, or an `import-existing --overwrite` workflow.
+- [x] Documented explicit operator-controlled repair for a deleted topic,
+  deleted first post, stale link, and failed sync. Alpha uses Discourse restore or
+  a reviewed relink/recreate procedure; no automatic repair command guesses
+  ownership.
 - Keep automatic recreate disabled unless the user explicitly chooses it; do not guess when ownership cannot be proven.
 - Document when to clear Cloudflare cache versus when to treat a sync/deploy as failed.
 

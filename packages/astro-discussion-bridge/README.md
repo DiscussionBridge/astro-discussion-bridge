@@ -162,6 +162,8 @@ For `discourse-imported`, the default notice says the page originated in Discour
 
 Imports also record `discussionSourceCategoryId`. When an overwrite observes a category change, CLI output reports the old and new category IDs while leaving the Astro file, public route, and navigation lane unchanged. Route/navigation movement requires an explicit reviewed category-to-output mapping; the import never moves a page merely because a Discourse user reorganized the source topic. `astro-managed` pages render no source notice.
 
+Promotion to Astro ownership is deliberately manual. Review and commit the imported source first, then change `discussionSourceMode` to `astro-managed`, set `discussionSync: true`, and, for a named or multi-target page, explicitly select the intended writable target with `discussionPublishTargets` and `--target`. Preview with `sync-existing --dry-run --details` before the first write. DiscussionBridge never promotes an import, changes its source mode, or writes back to its protected source target merely because a sync command ran.
+
 Use the `message`, `linkLabel`, and `sourceLabel` props to match the public site's voice without obscuring provenance. This notice belongs with the article content; the comments boundary remains responsible for discussion controls and DiscussionBridge credit.
 
 ## Content Lanes
@@ -380,6 +382,34 @@ npx astro-discussion-bridge check-discourse \
   --page-url https://docs.example.com/blog/content-lanes/
 ```
 
+Use the broader diagnostics key for the complete setup pass:
+
+```sh
+DISCOURSE_DIAGNOSTICS_API_KEY=diagnostics-key \
+npx astro-discussion-bridge check-discourse \
+  --discourse-url https://forum.example.com \
+  --api-username discussionbridge-editor \
+  --category-id 5 \
+  --tags discussionbridge,blog \
+  --page-url https://docs.example.com/blog/content-lanes/
+```
+
+To inspect the normal granular publishing key, omit the diagnostics key and pass the publishing key. If that key cannot read site-wide settings, provide the forum's reviewed limits explicitly; `check-discourse` will retain warnings for capabilities it could not prove.
+
+```sh
+DISCOURSE_API_KEY=granular-publishing-key \
+npx astro-discussion-bridge check-discourse \
+  --discourse-url https://forum.example.com \
+  --api-username discussionbridge-editor \
+  --category-id 5 \
+  --tags discussionbridge,blog \
+  --min-topic-title-length 15 \
+  --max-topic-title-length 255 \
+  --max-post-length 32000 \
+  --max-tags-per-topic 6 \
+  --max-tag-length 30
+```
+
 The command reads `/site/settings.json` for client-visible authoring limits, `/site.json` for user-specific tag capabilities, `/categories.json` to verify the configured lane category, and `/tags.json` to check whether requested tags already exist. Add `--page-url` to test whether the current key can resolve an existing embedded topic through `/embed/info?embed_url=...` or exact URL search. It uses `DISCOURSE_DIAGNOSTICS_API_KEY` or `--diagnostics-api-key` when present; otherwise it uses the normal publishing key. A global key can usually read these endpoints. Some granular keys may receive `403` for site-level endpoints; in that case, pass explicit limits with CLI flags or environment variables and reserve a broader diagnostics key for setup checks until granular diagnostics/read scopes are available or confirmed.
 
 `check-discourse` is read-only. It reports setup issues when known configuration cannot work, such as a missing category, tags requested while tagging is disabled, an API user that cannot tag topics, or missing tags when the API user cannot create tags. When a granular key cannot inspect enough forum metadata, the command reports setup warnings instead of pretending it knows.
@@ -407,6 +437,19 @@ npx astro-discussion-bridge sync-existing src/content/docs --force
 ```
 
 `sync-existing` does not create missing topics. Pages without `discourseTopicId` are skipped.
+
+#### Explicit recovery for broken links
+
+DiscussionBridge stops instead of guessing when a linked topic is missing, its first post cannot be found, or a stored link is stale.
+
+1. Commit or otherwise preserve the Astro source before changing linkage fields.
+2. Run `check-discourse` with the diagnostics key and the page URL, then run `sync-existing --dry-run --details`. Record the old topic ID and URL from frontmatter.
+3. If the topic or first post was deleted accidentally, restore it with Discourse's own staff/recovery controls and rerun the dry run. Do not create a second topic.
+4. If an operator intentionally replaces the topic, verify the replacement's ownership, category, permissions, and canonical URL. Update `discourseTopicId` and `discourseTopicUrl` together in one reviewed source change; update the selected entry in `discussionTargetBindings` for a multi-target page. Never infer a replacement from title or search similarity.
+5. If no replacement exists and creating one is the explicit decision, remove the stale linkage fields in a reviewed commit, keep the prior values in Git history, then run `publish-new --dry-run --details` followed by the live command. A plugin-managed lane may also require a forum administrator to disposition its stale mapping before creation can proceed.
+6. After recovery, run `sync-existing --dry-run --details`, perform the bounded live sync, and verify the Astro route, canonical topic, first post, comments embed, category, tags, and listing state.
+
+A failed sync that made no accepted write is retried only after correcting the reported cause. Multi-target pages retain successful bindings, so retry only the failed `--target`; do not recreate or rewrite already-successful targets.
 
 Use `--unlist` for demo/test companion topics that should keep direct links and embeds working without appearing in category discovery. The configured Discourse API user must be allowed to change topic visibility; on typical Discourse installs that means a staff or moderator-level user. Retitling replied topics can require the same level of authority.
 

@@ -2822,6 +2822,63 @@ test("multi-target publishing protects the imported source and creates an indepe
   }
 });
 
+test("explicit astro-managed promotion enables only the reviewed target", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-explicit-promotion-"));
+  const docsDir = path.join(dir, "docs");
+  const filePath = path.join(docsDir, "promoted.md");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(
+      filePath,
+      [
+        "---",
+        'title: "Explicitly Promoted Astro Source"',
+        'discussionSourceMode: "astro-managed"',
+        "discussionSync: true",
+        'discussionTarget: "community"',
+        'discussionPublishTargets: "community"',
+        "discourseTopicId: 912",
+        'discourseTopicUrl: "https://forum.example.com/t/explicitly-promoted-astro-source/912"',
+        "---",
+        "",
+        "This reviewed source is now intentionally managed by Astro.",
+      ].join("\n"),
+    );
+
+    globalThis.fetch = mockDiscourseFetch(calls, {
+      topic: {
+        id: 912,
+        title: "Explicitly Promoted Astro Source",
+        slug: "explicitly-promoted-astro-source",
+        category_id: 5,
+        visible: true,
+        post_stream: { posts: [{ id: 1912, post_number: 1 }] },
+      },
+    });
+
+    const results = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      targetName: "community",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      categoryId: 5,
+      mode: "sync-existing",
+    });
+
+    assert.equal(results[0].status, "updated");
+    assert.ok(calls.some((call) => call.pathname === "/posts/1912.json" && call.method === "PUT"));
+    assert.match(await readFile(filePath, "utf8"), /discussionSourceMode: "astro-managed"/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("multi-target publishing protects legacy imported source frontmatter", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-multi-target-legacy-source-"));
   const docsDir = path.join(dir, "docs");
