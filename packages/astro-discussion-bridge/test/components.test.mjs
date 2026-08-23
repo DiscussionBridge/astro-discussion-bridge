@@ -38,9 +38,9 @@ test("native embeds pass an existing topic ID to Discourse", async () => {
     discourseDiscussion,
     /\{ fullApp: true, embedHeight, dynamicHeight, embedMinHeight, embedMaxHeight \}/,
   );
-  assert.match(discourseDiscussion, /embedViewportMaxHeight/);
-  assert.match(discourseDiscussion, /iframe\.style\.maxHeight = embedViewportMaxHeight/);
-  assert.match(discourseDiscussion, /new MutationObserver/);
+  assert.doesNotMatch(discourseDiscussion, /embedViewportMaxHeight/);
+  assert.doesNotMatch(discourseDiscussion, /iframe\.style\.maxHeight/);
+  assert.doesNotMatch(discourseDiscussion, /new MutationObserver/);
 });
 
 test("full replies preserve Mermaid rendering and readable tables", async () => {

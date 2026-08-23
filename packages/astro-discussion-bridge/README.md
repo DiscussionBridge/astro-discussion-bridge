@@ -222,17 +222,15 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 
 Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, then refreshes from Discourse again on page load by default so new replies and like counts can appear without an Astro rebuild. It also renders Discourse Mermaid code blocks in the browser and applies readable, horizontally scrollable table styling. Mermaid support is lazy-loaded only when a reply contains a Mermaid block and can be disabled with `replies.renderMermaid: false`. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
 
-Use `comments.display: "fullInteractive"` when you want Discourse's native full app embed inside the page. This keeps logged-in reply, like, quote, and other interaction inside Discourse's iframe instead of reimplementing user actions in Astro. The target Discourse site must support and enable full app embeds in its embedding settings. DiscussionBridge enables Discourse's dynamic iframe height by default, clamped between 360 and 900 pixels and additionally capped at 70 percent of the viewport. Short content still shrinks naturally, while a long companion first post cannot make the nested comments viewport dominate the host page.
+Use `comments.display: "fullInteractive"` when you want Discourse's native full app embed inside the page. This keeps logged-in reply, like, quote, and other interaction inside Discourse's iframe instead of reimplementing user actions in Astro. The target Discourse site must support and enable full app embeds in its embedding settings. DiscussionBridge enables Discourse's dynamic iframe height by default and lets Discourse's supported resize protocol own the rendered iframe height. The adapter does not apply a competing CSS maximum-height ceiling, because doing so can clip topic-progress and composer content at the host boundary.
 
 For Alpha, core-only `fullInteractive` is a compatibility/development preview,
-not the recommended public-production mode. The responsive ceiling limits the
-outer viewport but does not remove a long companion first post from Discourse's
-embedded document, so an internal scrollbar can remain extremely long.
+not the recommended public-production mode.
 Production-quality comments-only `fullInteractive` requires the separately
 installed DiscussionBridge for Discourse plugin after that capability passes.
 Use plugin-free `simple` or `full` for current public production.
 
-These controls are `fullInteractive`-only: operators may tune `embedHeight`, `embedMinHeight`, `embedMaxHeight`, and `embedViewportMaxHeight`; use `embedViewportMaxHeight: "none"` to remove only the responsive ceiling, or set `dynamicHeight: false` to retain `embedHeight` as a fixed iframe height.
+These controls are `fullInteractive`-only: operators may tune `embedHeight`, `embedMinHeight`, and `embedMaxHeight`, or set `dynamicHeight: false` to retain `embedHeight` as a fixed iframe height. The legacy `embedViewportMaxHeight` option accepts only `"none"` and is deprecated; any CSS ceiling now fails configuration so it cannot silently compete with Discourse's dynamic resize protocol.
 
 `fullInteractive` content is rendered inside Discourse's cross-origin iframe, so Astro styles and scripts cannot repair its tables or transform Mermaid blocks. Put embed-specific presentation in the Discourse theme's Embedded CSS or `common/embedded.scss`. Discourse theme-component JavaScript that works on normal topic pages may not run in the full-app embed application; verify Mermaid and other client-rendered extensions in the embed itself. Set `comments.className` (or the component's `embedClassName` prop) to add a stable class to the iframe document for targeted embedded CSS.
 
@@ -278,7 +276,6 @@ discussionBridge({
     dynamicHeight: true,
     embedMinHeight: "360",
     embedMaxHeight: "900",
-    embedViewportMaxHeight: "70vh",
     className: "discussion-bridge-embed",
   },
   replies: {

@@ -59,6 +59,7 @@ export interface DiscussionBridgeOptions {
     dynamicHeight?: boolean;
     embedMinHeight?: string;
     embedMaxHeight?: string;
+    /** @deprecated Dynamic full-app embeds must let Discourse own iframe sizing. Use "none" or omit. */
     embedViewportMaxHeight?: string;
     className?: string;
     credit?: DiscussionBridgeCreditOptions;
@@ -372,6 +373,13 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
   }
 
   const preset = options.preset ?? "astro";
+  const embedViewportMaxHeight = options.comments?.embedViewportMaxHeight ?? "none";
+
+  if (embedViewportMaxHeight !== "none") {
+    throw new Error(
+      'comments.embedViewportMaxHeight no longer accepts a CSS ceiling; omit it or use "none" so Discourse can resize the full-app iframe without clipping.',
+    );
+  }
 
   return {
     provider,
@@ -390,7 +398,7 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
       dynamicHeight: options.comments?.dynamicHeight ?? true,
       embedMinHeight: options.comments?.embedMinHeight ?? "360",
       embedMaxHeight: options.comments?.embedMaxHeight ?? "900",
-      embedViewportMaxHeight: options.comments?.embedViewportMaxHeight ?? "70vh",
+      embedViewportMaxHeight,
       className: options.comments?.className,
       credit: resolveCreditOptions(options.comments?.credit),
     },

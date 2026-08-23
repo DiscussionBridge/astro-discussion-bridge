@@ -32,7 +32,7 @@ test("credit defaults are public and unsafe link protocols fail closed", async (
   assert.equal(config.comments.dynamicHeight, true);
   assert.equal(config.comments.embedMinHeight, "360");
   assert.equal(config.comments.embedMaxHeight, "900");
-  assert.equal(config.comments.embedViewportMaxHeight, "70vh");
+  assert.equal(config.comments.embedViewportMaxHeight, "none");
   assert.throws(
     () => discussionBridge({
       discourseUrl: "https://community.example.com",
@@ -42,7 +42,7 @@ test("credit defaults are public and unsafe link protocols fail closed", async (
   );
 });
 
-test("fullInteractive dynamic height is operator-configurable", async () => {
+test("fullInteractive dynamic height is Core-owned and rejects a competing CSS ceiling", async () => {
   let plugins = [];
   const integration = discussionBridge({
     discourseUrl: "https://community.example.com",
@@ -52,7 +52,7 @@ test("fullInteractive dynamic height is operator-configurable", async () => {
       dynamicHeight: false,
       embedMinHeight: "300",
       embedMaxHeight: "700",
-      embedViewportMaxHeight: "65vh",
+      embedViewportMaxHeight: "none",
     },
   });
   await integration.hooks["astro:config:setup"]({
@@ -69,7 +69,15 @@ test("fullInteractive dynamic height is operator-configurable", async () => {
   assert.equal(config.comments.dynamicHeight, false);
   assert.equal(config.comments.embedMinHeight, "300");
   assert.equal(config.comments.embedMaxHeight, "700");
-  assert.equal(config.comments.embedViewportMaxHeight, "65vh");
+  assert.equal(config.comments.embedViewportMaxHeight, "none");
+
+  assert.throws(
+    () => discussionBridge({
+      discourseUrl: "https://community.example.com",
+      comments: { display: "fullInteractive", embedViewportMaxHeight: "65vh" },
+    }),
+    /embedViewportMaxHeight no longer accepts a CSS ceiling/,
+  );
 });
 
 test("invalid site-level connection jobs fail during integration setup", () => {
