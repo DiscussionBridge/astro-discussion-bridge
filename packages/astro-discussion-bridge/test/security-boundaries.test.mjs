@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -219,6 +219,33 @@ test("post-commit backup cleanup failure never rolls back committed targets", as
     );
   } finally {
     console.warn = originalWarn;
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("failed backup creation preserves the untouched original destination", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-backup-rename-"));
+  const target = path.join(dir, "existing.md");
+  try {
+    await writeFile(target, "original bytes");
+    await assert.rejects(
+      publishFilesAtomically(
+        [{ targetPath: target, contents: "replacement bytes" }],
+        true,
+        {
+          rename: async (oldPath, newPath) => {
+            if (oldPath === target && newPath.includes("discussionbridge-backup")) {
+              throw new Error("injected backup rename failure");
+            }
+            await rename(oldPath, newPath);
+          },
+        },
+      ),
+      /injected backup rename failure/,
+    );
+    assert.equal(await readFile(target, "utf8"), "original bytes");
+    assert.deepEqual(await readdir(dir), ["existing.md"]);
+  } finally {
     await rm(dir, { recursive: true, force: true });
   }
 });

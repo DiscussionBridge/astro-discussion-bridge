@@ -1,6 +1,6 @@
 {
   "name": "astro-discussion-bridge",
-  "version": "0.1.0-alpha.20260824.1",
+  "version": "0.1.0-alpha.20260824.2",
   "description": "Astro integration toolkit for bridging pages to hosted discussions, starting with Discourse.",
   "type": "module",
   "license": "MIT",

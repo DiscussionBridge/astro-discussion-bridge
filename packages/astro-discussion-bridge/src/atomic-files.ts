@@ -22,11 +22,13 @@ export async function publishFilesAtomically(
   overwrite: boolean,
   options: {
     remove?: (filePath: string, options: { force: boolean }) => Promise<void>;
+    rename?: (oldPath: string, newPath: string) => Promise<void>;
   } = {},
 ): Promise<void> {
   const staged: StagedFile[] = [];
   const committed: CommitRecord[] = [];
   const remove = options.remove ?? ((filePath, removeOptions) => fs.rm(filePath, removeOptions));
+  const rename = options.rename ?? ((oldPath, newPath) => fs.rename(oldPath, newPath));
 
   try {
     for (const file of files) {
@@ -60,12 +62,16 @@ export async function publishFilesAtomically(
       if (target && !target.isFile()) {
         throw new Error(`Destination is not a regular file: ${file.targetPath}`);
       }
-      committed.push(record);
       if (target) {
-        record.backupPath = siblingPath(file.targetPath, "backup");
-        await fs.rename(file.targetPath, record.backupPath);
+        const backupPath = siblingPath(file.targetPath, "backup");
+        await rename(file.targetPath, backupPath);
+        record.backupPath = backupPath;
+        committed.push(record);
+        await rename(file.tempPath, file.targetPath);
+      } else {
+        await rename(file.tempPath, file.targetPath);
+        committed.push(record);
       }
-      await fs.rename(file.tempPath, file.targetPath);
     }
 
   } catch (error) {
@@ -74,7 +80,7 @@ export async function publishFilesAtomically(
       try {
         await remove(record.targetPath, { force: true });
         if (record.backupPath && await exists(record.backupPath)) {
-          await fs.rename(record.backupPath, record.targetPath);
+          await rename(record.backupPath, record.targetPath);
         }
       } catch (rollbackError) {
         rollbackErrors.push(`${record.targetPath}: ${message(rollbackError)}`);
