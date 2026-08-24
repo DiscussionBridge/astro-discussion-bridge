@@ -36,7 +36,7 @@ test("browser refresh remains on the exact Discourse subfolder boundary", async 
       pageOrigin: "https://astro.example.com",
       fetchImpl: async (url, init) => {
         request = { url: String(url), init };
-        return jsonResponse({ post_stream: { posts: [validPost] } });
+        return jsonResponse({ id: 42, post_stream: { posts: [validPost] } });
       },
     },
   );
@@ -53,7 +53,7 @@ test("browser refresh rejects a foreign final response before cooked HTML is ret
       {
         pageOrigin: "https://astro.example.com",
         fetchImpl: async () => jsonResponse(
-          { post_stream: { posts: [{ ...validPost, cooked: '<img src=x onerror="alert(1)">' }] } },
+          { id: 42, post_stream: { posts: [{ ...validPost, cooked: '<img src=x onerror="alert(1)">' }] } },
           "https://attacker.invalid/topic.json",
         ),
       },
@@ -69,7 +69,7 @@ test("browser refresh rejects posts from a different topic", async () => {
       {
         pageOrigin: "https://astro.example.com",
         fetchImpl: async () => jsonResponse(
-          { post_stream: { posts: [{ ...validPost, topic_id: 99 }] } },
+          { id: 42, post_stream: { posts: [{ ...validPost, topic_id: 99 }] } },
         ),
       },
     ),
@@ -107,7 +107,7 @@ test("browser refresh permits only a same-origin absolute-path proxy", async () 
       fetchImpl: async (url) => {
         calls.push(String(url));
         return jsonResponse(
-          { post_stream: { posts: [validPost] } },
+          { id: 42, post_stream: { posts: [validPost] } },
           "https://astro.example.com/api/discussion/42",
         );
       },
@@ -125,6 +125,46 @@ test("browser refresh permits only a same-origin absolute-path proxy", async () 
     ),
     /same-origin absolute-path/,
   );
+});
+
+test("browser refresh requires an exact top-level topic identity for direct and proxy responses", async () => {
+  const invalidIds = [undefined, null, "42", Number.MAX_SAFE_INTEGER + 1, 99];
+  for (const refreshEndpoint of [undefined, "/api/discussion/{topicId}"]) {
+    for (const id of invalidIds) {
+      const payload = { post_stream: { posts: [] } };
+      if (id !== undefined) payload.id = id;
+      await assert.rejects(
+        fetchRefreshPosts(
+          { discourseUrl: "https://forum.example.com", refreshEndpoint, topicId: "42" },
+          {
+            pageOrigin: "https://astro.example.com",
+            fetchImpl: async () => jsonResponse(
+              payload,
+              refreshEndpoint
+                ? "https://astro.example.com/api/discussion/42"
+                : "https://forum.example.com/t/42.json",
+            ),
+          },
+        ),
+        /different topic/,
+      );
+    }
+    assert.deepEqual(
+      await fetchRefreshPosts(
+        { discourseUrl: "https://forum.example.com", refreshEndpoint, topicId: "42" },
+        {
+          pageOrigin: "https://astro.example.com",
+          fetchImpl: async () => jsonResponse(
+            { id: 42, post_stream: { posts: [] } },
+            refreshEndpoint
+              ? "https://astro.example.com/api/discussion/42"
+              : "https://forum.example.com/t/42.json",
+          ),
+        },
+      ),
+      [],
+    );
+  }
 });
 
 test("CommonMark parsing rejects unsafe escaped, nested, reference, and image destinations", () => {

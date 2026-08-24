@@ -32,6 +32,93 @@ export function normalizeServiceBaseUrl(value: string, label = "Discourse URL"):
   return parseServiceBaseUrl(value, label).href.replace(/\/$/, "");
 }
 
+const MAX_PUBLIC_URL_BYTES = 2_048;
+
+export function normalizePublicHttpUrl(
+  value: string,
+  label = "Public URL",
+  options: { allowQuery?: boolean; allowFragment?: boolean } = {},
+): string {
+  if (
+    typeof value !== "string"
+    || !value
+    || value !== value.trim()
+    || new TextEncoder().encode(value).byteLength > MAX_PUBLIC_URL_BYTES
+    || /[\u0000-\u001f\u007f]/.test(value)
+    || value.includes("\\")
+    || value.startsWith("//")
+  ) {
+    throw new Error(`${label} must be a bounded absolute HTTP(S) URL.`);
+  }
+
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`${label} must be a bounded absolute HTTP(S) URL.`);
+  }
+  if (!(["http:", "https:"] as string[]).includes(url.protocol)) {
+    throw new Error(`${label} must use http or https.`);
+  }
+  if (url.username || url.password) throw new Error(`${label} must not contain credentials.`);
+  if (!options.allowQuery && url.search) throw new Error(`${label} must not contain a query.`);
+  if (!options.allowFragment && url.hash) throw new Error(`${label} must not contain a fragment.`);
+  return url.href;
+}
+
+export interface PublicDiscourseTopicUrl {
+  href: string;
+  serviceBase: string;
+  topicId: number;
+  slug?: string;
+  postNumber?: number;
+}
+
+export function parsePublicDiscourseTopicUrl(
+  value: string,
+  serviceBaseValue?: string,
+  label = "Discourse topic URL",
+): PublicDiscourseTopicUrl {
+  if (typeof value !== "string") throw new Error(`${label} must be a string.`);
+  if (!/^https?:\/\/[^/?#]+(?:[/?#]|$)/i.test(value)) {
+    throw new Error(`${label} must use canonical HTTP(S) authority syntax.`);
+  }
+  const schemeIndex = value.indexOf("://");
+  const pathStart = schemeIndex >= 0 ? value.indexOf("/", schemeIndex + 3) : -1;
+  const rawPath = pathStart >= 0 ? value.slice(pathStart).split(/[?#]/, 1)[0] : "";
+  if (
+    /\/{2,}/.test(rawPath)
+    || /(?:^|\/)\.{1,2}(?:\/|$)/.test(rawPath)
+    || /%(?:25)*(?:2e|2f|5c)/i.test(rawPath)
+  ) {
+    throw new Error(`${label} contains an ambiguous or escaping path segment.`);
+  }
+  const href = normalizePublicHttpUrl(value, label);
+  const url = new URL(href);
+  if (
+    /(?:^|\/)\.{1,2}(?:\/|$)/.test(url.pathname)
+    || /%(?:25)*(?:2e|2f|5c)/i.test(url.pathname)
+  ) {
+    throw new Error(`${label} contains an ambiguous or escaping path segment.`);
+  }
+
+  let serviceBase: URL;
+  if (serviceBaseValue !== undefined) {
+    serviceBase = parseServiceBaseUrl(serviceBaseValue, "Discourse URL");
+  } else {
+    const match = url.pathname.match(/^(.*)\/t\/(?:[^/]+\/)?[1-9]\d*(?:\/[1-9]\d*)?\/?$/);
+    if (!match) throw new Error(`${label} must use a supported Discourse /t/ route.`);
+    serviceBase = parseServiceBaseUrl(`${url.origin}${match[1]}`, "Derived Discourse URL");
+  }
+
+  const topic = parseDiscourseTopicReference(url.href, serviceBase);
+  return {
+    href: url.href,
+    serviceBase: serviceBase.href.replace(/\/$/, ""),
+    ...topic,
+  };
+}
+
 export function resolveServiceRequestUrl(pathname: string, serviceBase: URL): URL {
   if (typeof pathname !== "string" || !pathname.trim()) {
     throw new Error("Discourse request target must be a non-empty relative path.");
@@ -95,7 +182,11 @@ export function parseDiscourseTopicReference(
   serviceBase: URL,
 ): { topicId: number; slug?: string; postNumber?: number } {
   const relative = serviceRelativeRequestTarget(value, serviceBase);
-  const parts = relative.split("?", 1)[0].split("/").filter(Boolean);
+  const rawParts = relative.split("?", 1)[0].split("/");
+  if (rawParts.some((part, index) => !part && index > 0 && index < rawParts.length - 1)) {
+    throw new Error("Discourse topic reference must not contain duplicate path separators.");
+  }
+  const parts = rawParts.filter(Boolean);
   if (parts[0] !== "t") throw new Error("Discourse topic reference must use the /t/ route.");
 
   const route = parts.slice(1);

@@ -162,6 +162,15 @@ test("US public-law profiles reject non-Congress authorities and redirected fina
     }),
     /must be an absolute HTTPS congress\.gov URL/,
   );
+  for (const xmlUrl of [
+    "https://user:secret@www.congress.gov/public-law.xml",
+    "https://www.congress.gov:444/public-law.xml",
+  ]) {
+    assert.throws(
+      () => validateOfficialSourceProfile({ ...profile, xmlUrl }),
+      /must be an absolute HTTPS congress\.gov URL/,
+    );
+  }
   assert.throws(
     () => validateOfficialSourceProfile({
       ...profile,
@@ -183,6 +192,128 @@ test("US public-law profiles reject non-Congress authorities and redirected fina
     }),
     /final response URL must be an absolute HTTPS congress\.gov URL/,
   );
+
+  const credentialedFinal = new Response(officialXml, { status: 200 });
+  Object.defineProperty(credentialedFinal, "url", {
+    value: "https://user:secret@www.congress.gov/redirected.xml",
+  });
+  await assert.rejects(
+    compareOfficialSource({
+      source: { ...profile, textUrl: undefined },
+      sectionId: "10101",
+      communityText,
+      fetch: async () => credentialedFinal,
+    }),
+    /final response URL must be an absolute HTTPS congress\.gov URL/,
+  );
+});
+
+test("official source transport validates redirects and bounds response work", async () => {
+  await assert.rejects(
+    compareOfficialSource({
+      source: { ...profile, textUrl: undefined },
+      sectionId: "10101",
+      communityText,
+      fetch: async () => new Response(null, {
+        status: 302,
+        headers: { Location: "https://attacker.example/source.xml" },
+      }),
+    }),
+    /redirect URL must be an absolute HTTPS congress\.gov URL/,
+  );
+  await assert.rejects(
+    compareOfficialSource({
+      source: { ...profile, textUrl: undefined },
+      sectionId: "10101",
+      communityText,
+      fetch: async () => new Response(null, {
+        status: 302,
+        headers: { Location: "https://user:secret@www.congress.gov/source.xml" },
+      }),
+    }),
+    /redirect URL must be an absolute HTTPS congress\.gov URL/,
+  );
+
+  let loopCalls = 0;
+  await assert.rejects(
+    compareOfficialSource({
+      source: { ...profile, textUrl: undefined },
+      sectionId: "10101",
+      communityText,
+      fetch: async () => {
+        loopCalls += 1;
+        return new Response(null, { status: 302, headers: { Location: profile.xmlUrl } });
+      },
+    }),
+    /redirect limit/,
+  );
+  assert.equal(loopCalls, 4);
+
+  await assert.rejects(
+    compareOfficialSource({
+      source: { ...profile, textUrl: undefined },
+      sectionId: "10101",
+      communityText,
+      fetch: async () => new Response("small", {
+        headers: { "Content-Length": String(8 * 1024 * 1024 + 1) },
+      }),
+    }),
+    /exceeds the size limit/,
+  );
+
+  await assert.rejects(
+    compareOfficialSource({
+      source: { ...profile, textUrl: undefined },
+      sectionId: "10101",
+      communityText,
+      fetch: async () => new Response("   "),
+    }),
+    /empty document/,
+  );
+
+  await assert.rejects(
+    compareOfficialSource({
+      source: { ...profile, textUrl: undefined },
+      sectionId: "10101",
+      communityText,
+      fetch: async (_url, init) => {
+        assert.ok(init.signal instanceof AbortSignal);
+        assert.equal(init.redirect, "manual");
+        throw new DOMException("aborted", "AbortError");
+      },
+    }),
+    /timed out/,
+  );
+});
+
+test("official source transport cancels early rejections and streamed overflow", async () => {
+  for (const mode of ["redirect", "declared", "streamed"]) {
+    let cancellations = 0;
+    const body = new ReadableStream({
+      start(controller) {
+        if (mode === "streamed") controller.enqueue(new Uint8Array(8 * 1024 * 1024 + 1));
+      },
+      cancel() {
+        cancellations += 1;
+      },
+    });
+    const response = new Response(body, {
+      status: mode === "redirect" ? 302 : 200,
+      headers: {
+        ...(mode === "redirect" ? { Location: "https://attacker.example/source.xml" } : {}),
+        ...(mode === "declared" ? { "Content-Length": String(8 * 1024 * 1024 + 1) } : {}),
+      },
+    });
+    await assert.rejects(
+      compareOfficialSource({
+        source: { ...profile, textUrl: undefined },
+        sectionId: "10101",
+        communityText,
+        fetch: async () => response,
+      }),
+    );
+    assert.equal(cancellations, 1, `${mode} rejection cancels exactly once`);
+  }
 });
 
 test("manifest v2 performs a no-write comparison and writes enriched provenance atomically", async () => {

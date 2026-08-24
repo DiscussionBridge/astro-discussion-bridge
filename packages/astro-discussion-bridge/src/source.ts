@@ -2,6 +2,7 @@ import {
   parseDiscussionTargetBindings,
   type DiscussionTargetBindings,
 } from "./targets.js";
+import { normalizePublicHttpUrl } from "./web-url.js";
 
 export type DiscussionSourceMode =
   | "astro-managed"
@@ -70,10 +71,10 @@ function firstSafeWebUrl(...values: Array<string | undefined>): string | undefin
   for (const value of values) {
     if (!value?.trim()) continue;
     try {
-      const url = new URL(value.trim());
-      if (url.protocol === "https:" || url.protocol === "http:") {
-        return url.href;
-      }
+      return normalizePublicHttpUrl(value, "Discussion source URL", {
+        allowQuery: true,
+        allowFragment: true,
+      });
     } catch {
       // Continue to the next source candidate.
     }

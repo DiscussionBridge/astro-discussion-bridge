@@ -1,11 +1,82 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  normalizePublicHttpUrl,
+  parsePublicDiscourseTopicUrl,
   parseDiscourseTopicReference,
   parseServiceBaseUrl,
   resolveServiceRequestUrl,
   serviceRelativeRequestTarget,
 } from "../dist/web-url.js";
+
+test("public links reject active schemes, credentials, ambiguity, and unsupported topic routes", () => {
+  assert.equal(
+    normalizePublicHttpUrl("https://example.com/about?from=bridge#credit", "Credit URL", {
+      allowQuery: true,
+      allowFragment: true,
+    }),
+    "https://example.com/about?from=bridge#credit",
+  );
+  for (const value of [
+    "javascript:alert(1)",
+    "data:text/html,boom",
+    "//attacker.invalid/path",
+    "https://user:secret@example.com/path",
+    " https://example.com/path",
+    `https://example.com/${"a".repeat(2_100)}`,
+  ]) {
+    assert.throws(() => normalizePublicHttpUrl(value, "Credit URL"));
+  }
+
+  assert.deepEqual(
+    parsePublicDiscourseTopicUrl("https://forum.example.com/community/t/topic-slug/21/4"),
+    {
+      href: "https://forum.example.com/community/t/topic-slug/21/4",
+      serviceBase: "https://forum.example.com/community",
+      topicId: 21,
+      slug: "topic-slug",
+      postNumber: 4,
+    },
+  );
+  assert.equal(
+    parsePublicDiscourseTopicUrl(
+      "https://forum.example.com/community/t/21",
+      "https://forum.example.com/community",
+    ).topicId,
+    21,
+  );
+  for (const value of [
+    "javascript:alert(1)",
+    "data:text/html,/t/topic/21",
+    "//forum.example.com/t/21",
+    "https://user:secret@forum.example.com/t/21",
+    "https://forum.example.com/categories",
+    "https://forum.example.com/t/topic/not-a-number",
+    "https://forum.example.com/t/9007199254740993",
+    "https://forum.example.com/t/topic/21?redirect=1",
+    "https://forum.example.com/t/topic/21#post",
+    "https://forum.example.com/t/topic%2fescape/21",
+    "https://forum.example.com//t/21",
+    "https://forum.example.com/community//t/21",
+    "https://forum.example.com/community/t//21",
+    "https://forum.example.com/community/t/topic//21",
+    "https://forum.example.com/community/../t/21",
+    "https://forum.example.com/community/%2e%2e/t/21",
+    "https://forum.example.com/community/%252e%252e/t/21",
+    "https:/forum.example.com/../t/21",
+    "https:forum.example.com/../t/21",
+    "https:///forum.example.com/../t/21",
+  ]) {
+    assert.throws(() => parsePublicDiscourseTopicUrl(value));
+  }
+  assert.throws(
+    () => parsePublicDiscourseTopicUrl(
+      "https://forum.example.com/outside/t/21",
+      "https://forum.example.com/community",
+    ),
+    /left the configured Discourse origin or path boundary/,
+  );
+});
 
 test("service URL resolution preserves root and Discourse subfolder boundaries", () => {
   const root = parseServiceBaseUrl("https://forum.example.com");

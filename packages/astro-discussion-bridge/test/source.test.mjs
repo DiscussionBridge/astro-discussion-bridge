@@ -95,9 +95,9 @@ test("source-author profiles preserve a Discourse subfolder base path", () => {
   );
 });
 
-test("source notices reject active URL schemes and use the next safe candidate", () => {
-  assert.deepEqual(
-    resolveDiscussionSourceNotice({
+test("source notices fail closed on an invalid target binding", () => {
+  assert.throws(
+    () => resolveDiscussionSourceNotice({
       mode: "discourse-imported",
       sourceUrl: "javascript:alert(document.domain)",
       importedFrom: "data:text/html,unsafe",
@@ -107,12 +107,42 @@ test("source notices reject active URL schemes and use the next safe candidate",
       },
       legacyTopicUrl: "https://forum.example.com/t/safe-source/42",
     }),
+    /Invalid discussionTargetBindings/,
+  );
+});
+
+test("source notices reject active URL schemes and use the next safe unbound candidate", () => {
+  assert.deepEqual(
+    resolveDiscussionSourceNotice({
+      mode: "discourse-imported",
+      sourceUrl: "javascript:alert(document.domain)",
+      importedFrom: "data:text/html,unsafe",
+      legacyTopicUrl: "https://forum.example.com/t/safe-source/42",
+    }),
     {
       mode: "discourse-imported",
       message: "This page originated in Discourse and was imported here for publication.",
       sourceUrl: "https://forum.example.com/t/safe-source/42",
     },
   );
+});
+
+test("source notices reject credentials and bounded malformed values before a safe candidate", () => {
+  for (const unsafe of [
+    "https://user:secret@forum.example.com/source",
+    "https:\\forum.example.com\\source",
+    "https://forum.example.com/source\n",
+    `https://forum.example.com/${"x".repeat(2_100)}`,
+  ]) {
+    assert.equal(
+      resolveDiscussionSourceNotice({
+        mode: "discourse-managed",
+        sourceUrl: unsafe,
+        legacyTopicUrl: "https://forum.example.com/t/safe-source/42?view=source#first",
+      })?.sourceUrl,
+      "https://forum.example.com/t/safe-source/42?view=source#first",
+    );
+  }
 });
 
 test("source notices remain visible without a link when every URL is unsafe", () => {

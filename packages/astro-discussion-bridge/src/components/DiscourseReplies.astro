@@ -2,6 +2,10 @@
 import config from "virtual:discussion-bridge/config";
 import { createDiscourseClient, type DiscoursePost } from "astro-discussion-bridge/client";
 import {
+  normalizeServiceBaseUrl,
+  parsePublicDiscourseTopicUrl,
+} from "astro-discussion-bridge/web-url";
+import {
   iconMarkup,
   postActions,
   type RenderedAction,
@@ -20,15 +24,32 @@ interface Props {
   topicUrl?: string;
 }
 
-const topicId = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
+const topicId = positiveTopicId(
+  Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId,
+  "DiscourseReplies topicId",
+);
 const minScore = Astro.props.minScore ?? config.replies.minScore;
 const maxReplies = Astro.props.maxReplies ?? config.replies.maxReplies;
-const discourseUrl = Astro.props.discourseUrl ?? config.discourseUrl;
+const discourseUrl = normalizeServiceBaseUrl(
+  Astro.props.discourseUrl ?? config.discourseUrl,
+  "DiscourseReplies discourseUrl",
+);
 const heading = Astro.props.heading ?? "Discussion";
 const refreshOnPageLoad = Astro.props.refreshOnPageLoad ?? config.replies.refreshOnPageLoad;
 const renderMermaid = Astro.props.renderMermaid ?? config.replies.renderMermaid;
 const showLikes = Astro.props.showLikes ?? config.replies.showLikes;
-const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
+const topicUrlValue = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
+const topicReference = topicUrlValue === undefined
+  ? undefined
+  : parsePublicDiscourseTopicUrl(
+      topicUrlValue,
+      discourseUrl,
+      "DiscourseReplies topicUrl",
+    );
+if (topicId !== undefined && topicReference && topicReference.topicId !== topicId) {
+  throw new Error("DiscourseReplies topicId and topicUrl must identify the same topic.");
+}
+const topicUrl = topicReference?.href;
 let replies: DiscoursePost[] = [];
 let repliesUnavailable = false;
 
@@ -76,6 +97,15 @@ function absolutizeDiscourseLinks(html: string, baseUrl: string): string {
 
 function actionItems(post: DiscoursePost): RenderedAction[] {
   return postActions(post, showLikes);
+}
+
+function positiveTopicId(value: unknown, label: string): number | undefined {
+  if (value === undefined) return undefined;
+  const text = typeof value === "number" ? String(value) : value;
+  if (typeof text !== "string" || !/^[1-9]\d*$/.test(text) || !Number.isSafeInteger(Number(text))) {
+    throw new Error(`${label} must be a positive safe integer.`);
+  }
+  return Number(text);
 }
 
 const refreshConfig = topicId

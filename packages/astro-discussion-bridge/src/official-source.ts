@@ -456,21 +456,94 @@ async function fetchOfficialSourceDocument(
   const existing = cache?.get(url);
   if (existing) return existing;
   const request = (async () => {
-    const response = await fetcher(url, {
-      headers: { Accept: accept },
-    });
-    if (!response.ok) {
-      throw new Error(`Official source request failed: ${response.status} ${response.statusText}. No file was written.`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+    let currentUrl = requiredCongressUrl(url, "official source request URL");
+    try {
+      for (let redirects = 0; redirects <= 3; redirects += 1) {
+        const response = await fetcher(currentUrl, {
+          headers: { Accept: accept },
+          redirect: "manual",
+          signal: controller.signal,
+        });
+        if ([301, 302, 303, 307, 308].includes(response.status)) {
+          const location = response.headers.get("location");
+          await response.body?.cancel().catch(() => undefined);
+          if (redirects === 3) {
+            throw new Error("Official source exceeded the redirect limit. No file was written.");
+          }
+          if (!location) throw new Error("Official source redirect omitted Location. No file was written.");
+          currentUrl = requiredCongressUrl(
+            new URL(location, currentUrl).href,
+            "official source redirect URL",
+          );
+          continue;
+        }
+        if (!response.ok) {
+          await response.body?.cancel().catch(() => undefined);
+          throw new Error(`Official source request failed: ${response.status} ${response.statusText}. No file was written.`);
+        }
+        if (response.url) {
+          try {
+            requiredCongressUrl(response.url, "official source final response URL");
+          } catch (error) {
+            await response.body?.cancel().catch(() => undefined);
+            throw error;
+          }
+        }
+        const body = await readBoundedOfficialSource(response);
+        if (!body.trim()) throw new Error("Official source returned an empty document. No file was written.");
+        return body;
+      }
+      throw new Error("Official source exceeded the redirect limit. No file was written.");
+    } catch (error) {
+      if (controller.signal.aborted || (error instanceof Error && error.name === "AbortError")) {
+        throw new Error("Official source request timed out. No file was written.");
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
     }
-    if (response.url) {
-      requiredCongressUrl(response.url, "official source final response URL");
-    }
-    const body = await response.text();
-    if (!body.trim()) throw new Error("Official source returned an empty XML document. No file was written.");
-    return body;
   })();
   cache?.set(url, request);
   return request;
+}
+
+async function readBoundedOfficialSource(response: Response): Promise<string> {
+  const maxBytes = 8 * 1024 * 1024;
+  const declared = response.headers.get("content-length");
+  if (declared) {
+    const bytes = Number(declared);
+    if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > maxBytes) {
+      await response.body?.cancel().catch(() => undefined);
+      throw new Error("Official source response exceeds the size limit. No file was written.");
+    }
+  }
+  if (!response.body) throw new Error("Official source response body is unavailable. No file was written.");
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let bytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > maxBytes) {
+        throw new Error("Official source response exceeds the size limit. No file was written.");
+      }
+      chunks.push(value);
+    }
+  } catch (error) {
+    await reader.cancel().catch(() => undefined);
+    throw error;
+  }
+  const joined = new Uint8Array(bytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    joined.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder("utf-8", { fatal: true }).decode(joined);
 }
 
 function textPayload(value: string): string {
@@ -585,6 +658,9 @@ function requiredCongressUrl(value: unknown, label: string): string {
   if (
     url.protocol !== "https:"
     || (url.hostname !== "congress.gov" && url.hostname !== "www.congress.gov")
+    || url.username
+    || url.password
+    || url.port
   ) {
     throw new Error(`${label} must be an absolute HTTPS congress.gov URL.`);
   }

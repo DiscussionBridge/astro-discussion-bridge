@@ -1,5 +1,9 @@
 ---
 import config from "virtual:discussion-bridge/config";
+import {
+  normalizeServiceBaseUrl,
+  parsePublicDiscourseTopicUrl,
+} from "astro-discussion-bridge/web-url";
 
 interface Props {
   class?: string;
@@ -12,7 +16,10 @@ interface Props {
   topicUrl?: string;
 }
 
-const discourseUrl = `${Astro.props.discourseUrl ?? config.discourseUrl}/`;
+const discourseUrl = `${normalizeServiceBaseUrl(
+  Astro.props.discourseUrl ?? config.discourseUrl,
+  "DiscourseDiscussion discourseUrl",
+)}/`;
 const embedClassName = Astro.props.embedClassName ?? config.comments.className;
 const embedUrl = Astro.props.embedUrl ?? Astro.url.href;
 const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteractive";
@@ -21,8 +28,29 @@ const dynamicHeight = config.comments.dynamicHeight;
 const embedMinHeight = config.comments.embedMinHeight;
 const embedMaxHeight = config.comments.embedMaxHeight;
 const heading = Astro.props.heading ?? "Comments";
-const topicId = Astro.props.topicId;
-const topicUrl = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
+const topicIdValue = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
+const topicId = positiveTopicId(topicIdValue, "DiscourseDiscussion topicId");
+const topicUrlValue = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
+const topicReference = topicUrlValue === undefined
+  ? undefined
+  : parsePublicDiscourseTopicUrl(
+      topicUrlValue,
+      discourseUrl,
+      "DiscourseDiscussion topicUrl",
+    );
+if (topicId !== undefined && topicReference && topicReference.topicId !== topicId) {
+  throw new Error("DiscourseDiscussion topicId and topicUrl must identify the same topic.");
+}
+const topicUrl = topicReference?.href;
+
+function positiveTopicId(value: unknown, label: string): number | undefined {
+  if (value === undefined) return undefined;
+  const text = typeof value === "number" ? String(value) : value;
+  if (typeof text !== "string" || !/^[1-9]\d*$/.test(text) || !Number.isSafeInteger(Number(text))) {
+    throw new Error(`${label} must be a positive safe integer.`);
+  }
+  return Number(text);
+}
 ---
 
 {config.comments.enabled && (

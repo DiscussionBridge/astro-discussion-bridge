@@ -135,7 +135,7 @@ function validateRefreshPayload(value: unknown, expectedTopicId: number): Discou
   if (!isRecord(value) || !isRecord(value.post_stream) || !Array.isArray(value.post_stream.posts)) {
     throw new Error("Refresh payload does not contain a Discourse post stream.");
   }
-  if (value.id !== undefined && value.id !== expectedTopicId) {
+  if (!positiveSafeInteger(value.id) || value.id !== expectedTopicId) {
     throw new Error("Refresh payload belongs to a different topic.");
   }
   if (value.post_stream.posts.length > MAX_REFRESH_POSTS) {

@@ -38,7 +38,14 @@ test("credit defaults are public and unsafe link protocols fail closed", async (
       discourseUrl: "https://community.example.com",
       comments: { credit: { href: "javascript:alert(1)" } },
     }),
-    /comments\.credit\.href must be an absolute HTTP\(S\) URL/,
+    /comments\.credit\.href must use http or https/,
+  );
+  assert.throws(
+    () => discussionBridge({
+      discourseUrl: "https://community.example.com",
+      comments: { credit: { href: "https://user:secret@discussionbridge.dev/" } },
+    }),
+    /comments\.credit\.href must not contain credentials/,
   );
 });
 

@@ -17,7 +17,7 @@ import {
   parseDiscussionConnectionJobs,
   type DiscussionConnectionJobs,
 } from "./targets.js";
-import { normalizeServiceBaseUrl } from "./web-url.js";
+import { normalizePublicHttpUrl, normalizeServiceBaseUrl } from "./web-url.js";
 
 type DiscussionBridgeIntegration = {
   name: string;
@@ -580,21 +580,16 @@ function toPublicOptions(options: ResolvedOptions): PublicOptions {
 
 function resolveCreditOptions(options: DiscussionBridgeCreditOptions | undefined) {
   const href = options?.href?.trim() || "https://discussionbridge.dev/";
-  let parsedHref: URL;
-  try {
-    parsedHref = new URL(href);
-  } catch {
-    throw new Error("comments.credit.href must be an absolute HTTP(S) URL.");
-  }
-  if (!["http:", "https:"].includes(parsedHref.protocol)) {
-    throw new Error("comments.credit.href must be an absolute HTTP(S) URL.");
-  }
+  const publicHref = normalizePublicHttpUrl(href, "comments.credit.href", {
+    allowQuery: true,
+    allowFragment: true,
+  });
 
   return {
     enabled: options?.enabled ?? true,
     prefix: options?.prefix?.trim() || "Connected by",
     label: options?.label?.trim() || "DiscussionBridge",
-    href: parsedHref.href,
+    href: publicHref,
   };
 }
 
