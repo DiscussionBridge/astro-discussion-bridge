@@ -1,6 +1,11 @@
 ---
 import config from "virtual:discussion-bridge/config";
 import { createDiscourseClient, type DiscoursePost } from "astro-discussion-bridge/client";
+import {
+  iconMarkup,
+  postActions,
+  type RenderedAction,
+} from "./reaction-rendering.js";
 
 interface Props {
   topicId?: number | string;
@@ -40,50 +45,6 @@ if (config.replies.enabled && topicId) {
   }
 }
 
-function likeCount(post: DiscoursePost): number {
-  const likeAction = post.actions_summary?.find((action) => action.id === 2);
-  return post.like_count ?? likeAction?.count ?? 0;
-}
-
-function reactionItems(post: DiscoursePost): Array<{ icon: string; label: string; count: number }> {
-  if (post.reactions?.length) {
-    return post.reactions.map((reaction) => ({
-      icon: reactionIconName(reaction.id),
-      label: reactionLabel(reaction.id),
-      count: reaction.count,
-    }));
-  }
-
-  const count = likeCount(post);
-  return count > 0 ? [{ icon: "heart", label: "likes", count }] : [];
-}
-
-function reactionIconName(id: string): string {
-  const icons: Record<string, string> = {
-    "+1": "thumbs-up",
-    clap: "clap",
-    confetti_ball: "confetti",
-    heart: "heart",
-    hugs: "hugs",
-    laughing: "laughing",
-    open_mouth: "surprise",
-  };
-  return icons[id] ?? id;
-}
-
-function reactionLabel(id: string): string {
-  const labels: Record<string, string> = {
-    "+1": "thumbs up",
-    clap: "claps",
-    confetti_ball: "celebrations",
-    heart: "likes",
-    hugs: "hugs",
-    laughing: "laughs",
-    open_mouth: "surprises",
-  };
-  return labels[id] ?? id;
-}
-
 function replyUrl(post: DiscoursePost): string {
   return `${discourseUrl}/t/${post.topic_slug}/${post.topic_id}/${post.post_number}`;
 }
@@ -113,28 +74,8 @@ function absolutizeDiscourseLinks(html: string, baseUrl: string): string {
   return html.replace(/\s(href|src)="\/(?!\/)([^"]*)"/g, ` $1="${normalizedBase}/$2"`);
 }
 
-function actionItems(post: DiscoursePost): Array<{ icon: string; label: string; count: number }> {
-  if (!showLikes) return [];
-  return [
-    ...reactionItems(post),
-    ...(post.reply_count > 0 ? [{ icon: "reply", label: "replies", count: post.reply_count }] : []),
-    ...(post.quote_count > 0 ? [{ icon: "quote", label: "quotes", count: post.quote_count }] : []),
-  ];
-}
-
-function iconMarkup(name: string): string {
-  const icons: Record<string, string> = {
-    heart: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>`,
-    "thumbs-up": `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3m0 11V10l5-8a3 3 0 0 1 3 3v4h4.2a2 2 0 0 1 2 2.3l-1.4 8a2 2 0 0 1-2 1.7H7Z"/></svg>`,
-    reply: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 17-5-5 5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
-    quote: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11H4a6 6 0 0 1 6-6v2a4 4 0 0 0-4 4h2v6H4v-6Zm12 0h-4a6 6 0 0 1 6-6v2a4 4 0 0 0-4 4h2v6h-4v-6Z"/></svg>`,
-    clap: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 13 4-9a2 2 0 0 1 3.7 1.5L13 12"/><path d="m11 14 5-8a2 2 0 0 1 3.5 1.9L15 16"/><path d="M5 12.5V5a2 2 0 0 1 4 0v7"/><path d="M5 12.5 3.6 9.8A2 2 0 1 0 .1 11.7L4.5 20A4 4 0 0 0 8 22h6a5 5 0 0 0 5-5v-1"/></svg>`,
-    confetti: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 5-14 9 9-14 5Z"/><path d="M14 4h.01"/><path d="M20 9h.01"/><path d="M16 2l1 2"/><path d="M21 5l-2 1"/></svg>`,
-    hugs: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11a4 4 0 1 1 8 0"/><path d="M4 21v-2a6 6 0 0 1 12 0v2"/><path d="M16 14c2.2.5 4 2.4 4 5v2"/></svg>`,
-    laughing: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 9h.01"/><path d="M16 9h.01"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>`,
-    surprise: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 9h.01"/><path d="M16 9h.01"/><circle cx="12" cy="15" r="2"/></svg>`,
-  };
-  return icons[name] ?? `<span class="discussion-bridge-reply__action-text">${name}</span>`;
+function actionItems(post: DiscoursePost): RenderedAction[] {
+  return postActions(post, showLikes);
 }
 
 const refreshConfig = topicId
@@ -195,7 +136,9 @@ const refreshConfig = topicId
                   <ul class="discussion-bridge-reply__actions" aria-label="Post actions">
                     {actionItems(reply).map((action) => (
                       <li aria-label={`${action.count} ${action.label}`}>
-                        <span class="discussion-bridge-reply__action-icon" set:html={iconMarkup(action.icon)} />
+                        <span class="discussion-bridge-reply__action-icon">
+                          {action.icon ? <span set:html={iconMarkup(action.icon)} /> : <span class="discussion-bridge-reply__action-text">{action.text}</span>}
+                        </span>
                         <span>{action.count}</span>
                       </li>
                     ))}
@@ -219,6 +162,9 @@ const refreshConfig = topicId
 
 {config.replies.enabled && topicId && (
   <script>
+    import { fetchRefreshPosts } from "./browser-refresh.js";
+    import { iconMarkup, postActions } from "./reaction-rendering.js";
+
     let mermaidReady;
     const containers = document.querySelectorAll("[data-discussion-bridge-replies]");
 
@@ -234,19 +180,12 @@ const refreshConfig = topicId
 
       if (container.getAttribute("data-refresh") === "true") {
         try {
-          const topicUrl = refreshConfig.refreshEndpoint
-            ? refreshConfig.refreshEndpoint.replace("{topicId}", encodeURIComponent(refreshConfig.topicId))
-            : `${refreshConfig.discourseUrl}/t/${refreshConfig.topicId}.json`;
-          const response = await fetch(topicUrl, { headers: { Accept: "application/json" } });
-          if (response.ok) {
-            const topic = await response.json();
-            const replies = topic.post_stream.posts
-              .filter((post) => post.post_number > 1)
-              .filter((post) => post.score >= refreshConfig.minScore)
-              .slice(0, refreshConfig.maxReplies);
+          const replies = (await fetchRefreshPosts(refreshConfig))
+            .filter((post) => post.post_number > 1)
+            .filter((post) => post.score >= refreshConfig.minScore)
+            .slice(0, refreshConfig.maxReplies);
 
-            list.replaceChildren(...replies.map((reply) => renderReply(reply, refreshConfig)));
-          }
+          list.replaceChildren(...replies.map((reply) => renderReply(reply, refreshConfig)));
         } catch {
           // Keep the server-rendered fallback if the live refresh is unavailable.
         }
@@ -356,7 +295,7 @@ const refreshConfig = topicId
       header.append(identity, link);
       content.append(header, body);
 
-      const actions = actionItems(reply, refreshConfig);
+      const actions = postActions(reply, refreshConfig.showLikes);
       if (actions.length > 0) {
         const list = document.createElement("ul");
         list.className = "discussion-bridge-reply__actions";
@@ -368,7 +307,14 @@ const refreshConfig = topicId
           item.setAttribute("aria-label", `${action.count} ${action.label}`);
           icon.setAttribute("aria-hidden", "true");
           icon.className = "discussion-bridge-reply__action-icon";
-          icon.innerHTML = iconMarkup(action.icon);
+          if (action.icon) {
+            icon.innerHTML = iconMarkup(action.icon);
+          } else {
+            const text = document.createElement("span");
+            text.className = "discussion-bridge-reply__action-text";
+            text.textContent = action.text;
+            icon.append(text);
+          }
           value.textContent = String(action.count);
           item.append(icon, value);
           list.append(item);
@@ -381,75 +327,11 @@ const refreshConfig = topicId
       return item;
     }
 
-    function likeCount(post) {
-      const likeAction = post.actions_summary?.find((action) => action.id === 2);
-      return post.like_count ?? likeAction?.count ?? 0;
-    }
-
-    function actionItems(post, refreshConfig) {
-      const reactions = post.reactions?.length
-        ? post.reactions.map((reaction) => ({
-            icon: reactionIconName(reaction.id),
-            label: reactionLabel(reaction.id),
-            count: reaction.count,
-          }))
-        : [];
-      const likes = reactions.length || !refreshConfig.showLikes || likeCount(post) <= 0
-        ? []
-        : [{ icon: "heart", label: "likes", count: likeCount(post) }];
-      return [
-        ...reactions,
-        ...likes,
-        ...(post.reply_count > 0 ? [{ icon: "reply", label: "replies", count: post.reply_count }] : []),
-        ...(post.quote_count > 0 ? [{ icon: "quote", label: "quotes", count: post.quote_count }] : []),
-      ];
-    }
-
-    function reactionIconName(id) {
-      const icons = {
-        "+1": "thumbs-up",
-        clap: "clap",
-        confetti_ball: "confetti",
-        heart: "heart",
-        hugs: "hugs",
-        laughing: "laughing",
-        open_mouth: "surprise",
-      };
-      return icons[id] ?? id;
-    }
-
-    function reactionLabel(id) {
-      const labels = {
-        "+1": "thumbs up",
-        clap: "claps",
-        confetti_ball: "celebrations",
-        heart: "likes",
-        hugs: "hugs",
-        laughing: "laughs",
-        open_mouth: "surprises",
-      };
-      return labels[id] ?? id;
-    }
-
     function absolutizeDiscourseLinks(html, baseUrl) {
       const normalizedBase = baseUrl.replace(/\/+$/, "");
       return html.replace(/\s(href|src)="\/(?!\/)([^"]*)"/g, ` $1="${normalizedBase}/$2"`);
     }
 
-    function iconMarkup(name) {
-      const icons = {
-        heart: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>`,
-        "thumbs-up": `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3m0 11V10l5-8a3 3 0 0 1 3 3v4h4.2a2 2 0 0 1 2 2.3l-1.4 8a2 2 0 0 1-2 1.7H7Z"/></svg>`,
-        reply: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 17-5-5 5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>`,
-        quote: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11H4a6 6 0 0 1 6-6v2a4 4 0 0 0-4 4h2v6H4v-6Zm12 0h-4a6 6 0 0 1 6-6v2a4 4 0 0 0-4 4h2v6h-4v-6Z"/></svg>`,
-        clap: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 13 4-9a2 2 0 0 1 3.7 1.5L13 12"/><path d="m11 14 5-8a2 2 0 0 1 3.5 1.9L15 16"/><path d="M5 12.5V5a2 2 0 0 1 4 0v7"/><path d="M5 12.5 3.6 9.8A2 2 0 1 0 .1 11.7L4.5 20A4 4 0 0 0 8 22h6a5 5 0 0 0 5-5v-1"/></svg>`,
-        confetti: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 5-14 9 9-14 5Z"/><path d="M14 4h.01"/><path d="M20 9h.01"/><path d="M16 2l1 2"/><path d="M21 5l-2 1"/></svg>`,
-        hugs: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11a4 4 0 1 1 8 0"/><path d="M4 21v-2a6 6 0 0 1 12 0v2"/><path d="M16 14c2.2.5 4 2.4 4 5v2"/></svg>`,
-        laughing: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 9h.01"/><path d="M16 9h.01"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>`,
-        surprise: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 9h.01"/><path d="M16 9h.01"/><circle cx="12" cy="15" r="2"/></svg>`,
-      };
-      return icons[name] ?? `<span class="discussion-bridge-reply__action-text">${name}</span>`;
-    }
   </script>
 )}
 

@@ -222,6 +222,8 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 
 Use `comments.display: "full"` when the Astro page should render Discourse replies itself and show reply metadata such as like counts. This mode fetches the linked topic during rendering, then refreshes from Discourse again on page load by default so new replies and like counts can appear without an Astro rebuild. It also renders Discourse Mermaid code blocks in the browser and applies readable, horizontally scrollable table styling. Mermaid support is lazy-loaded only when a reply contains a Mermaid block and can be disabled with `replies.renderMermaid: false`. The full Discourse topic remains the source of truth for replying, exact user action attribution, moderation, and logged-in interaction.
 
+`full` mode treats each post's `cooked` field as HTML already sanitized by the trusted Discourse server; a custom topic proxy must preserve that contract and must not substitute arbitrary HTML. Reaction identifiers are a separate untrusted field: only built-in allowlisted reactions produce fixed SVG markup, while unknown bounded identifiers render as inert text in both the initial server render and browser refresh.
+
 Use `comments.display: "fullInteractive"` when you want Discourse's native full app embed inside the page. This keeps logged-in reply, like, quote, and other interaction inside Discourse's iframe instead of reimplementing user actions in Astro. The target Discourse site must support and enable full app embeds in its embedding settings. DiscussionBridge enables Discourse's dynamic iframe height by default and lets Discourse's supported resize protocol own the rendered iframe height. The adapter does not apply a competing CSS maximum-height ceiling, because doing so can clip topic-progress and composer content at the host boundary.
 
 For Alpha, core-only `fullInteractive` is a compatibility/development preview,
@@ -592,6 +594,12 @@ npx astro-discussion-bridge import-existing src/content/blog \
 ```
 
 You can also pass comma-separated ids with `--topic-id 123,124`. Existing files are skipped by default; add `--overwrite` only when you mean to replace the local Markdown file.
+
+Automatic imports always create `.md` files, including manifest entries with an explicit `output`. They never create executable `.mdx`. Human-authored `.mdx` remains supported elsewhere for pages that intentionally use Astro components, but converting imported forum content into MDX is a separate human review step.
+
+The imported first post must be Markdown-only source. The command preserves ordinary Markdown, fenced Mermaid/code, math syntax, headings, links, and inline code, but stops before writing when the source contains raw HTML outside code or an unsafe link/image scheme. Dry runs apply the same source checks without creating output. Convert or review rejected forum source manually; `import-existing` does not silently sanitize it or fall back to cooked HTML.
+
+`discourseUrl` may include a supported Discourse subfolder such as `https://forum.example.com/community`. Topic URLs, pagination, and API requests must remain inside that exact origin and subfolder. API-key or DiscussionBridge connection-secret requests require HTTPS and fail closed on redirects.
 
 Imported files include the Discourse linkage fields, `discussionImportedAt`, and `discussionSourceHash`, so a later `sync-existing` run can tell whether the Astro source has changed before updating the Discourse first post.
 

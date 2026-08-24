@@ -1,6 +1,7 @@
-import { constants as fsConstants, promises as fs } from "node:fs";
+import { promises as fs } from "node:fs";
 import path from "node:path";
 import {
+  assertNoSymlinkDestination,
   importExistingDiscourseTopics,
   type ImportedDiscourseTopic,
   type ImportExistingDiscourseTopicsOptions,
@@ -11,6 +12,7 @@ import {
   validateOfficialSourceProfile,
   type OfficialSourceProfile,
 } from "./official-source.js";
+import { publishFilesAtomically } from "./atomic-files.js";
 
 export interface ImportManifestEntry {
   topic: string;
@@ -306,7 +308,7 @@ export async function importExistingDiscourseManifest(
       });
     }
 
-    await commitStagedFiles(staged, options.overwrite === true);
+    await commitStagedFiles(staged, options.overwrite === true, docsDir);
     const importedByTopic = new Map(staged.map(({ result }) => [result.topicId, result]));
     const skippedByTopic = new Map(skipped.map((result) => [result.topicId, result]));
     return manifest.imports.map((entry) => {
@@ -335,46 +337,28 @@ function validateManifestResultPaths(results: ImportedDiscourseTopic[], docsDir:
 }
 
 async function commitStagedFiles(
-  staged: Array<{ stagePath: string; targetPath: string }>,
+  staged: Array<{ result: ImportedDiscourseTopic; stagePath: string; targetPath: string }>,
   overwrite: boolean,
+  docsDir: string,
 ): Promise<void> {
-  const backups: Array<{ targetPath: string; previous?: Buffer }> = [];
-
+  for (const file of staged) {
+    await assertNoSymlinkDestination(docsDir, file.targetPath, file.result.topicId);
+  }
   try {
-    for (const file of staged) {
-      await fs.mkdir(path.dirname(file.targetPath), { recursive: true });
-
-      if (!overwrite) {
-        try {
-          await fs.copyFile(file.stagePath, file.targetPath, fsConstants.COPYFILE_EXCL);
-        } catch (error) {
-          if (isAlreadyExistsError(error)) {
-            throw new Error(`Destination appeared after manifest preview and overwrite is disabled: ${file.targetPath}`);
-          }
-          throw error;
-        }
-        backups.push({ targetPath: file.targetPath });
-        continue;
-      }
-
-      let previous: Buffer | undefined;
-      try {
-        previous = await fs.readFile(file.targetPath);
-      } catch (error) {
-        if (!isMissingFileError(error)) throw error;
-      }
-      backups.push({ targetPath: file.targetPath, previous });
-      await fs.copyFile(file.stagePath, file.targetPath);
-    }
+    await publishFilesAtomically(
+      staged.map((file) => ({ targetPath: file.targetPath, sourcePath: file.stagePath })),
+      overwrite,
+    );
   } catch (error) {
-    for (const backup of backups.reverse()) {
-      if (backup.previous !== undefined) {
-        await fs.writeFile(backup.targetPath, backup.previous);
-      } else {
-        await fs.rm(backup.targetPath, { force: true });
-      }
+    if (!overwrite && /EEXIST/.test(errorMessage(error))) {
+      const target = staged.find((file) => errorMessage(error).includes(file.targetPath))?.targetPath;
+      throw new Error(
+        `Destination appeared after manifest preview and overwrite is disabled: ${target ?? "unknown destination"}`,
+      );
     }
-    throw new Error(`Could not commit import manifest files; destination changes were rolled back. ${errorMessage(error)}`);
+    throw new Error(
+      `Could not commit import manifest files; destination changes were rolled back. ${errorMessage(error)}`,
+    );
   }
 }
 
@@ -412,8 +396,8 @@ function validateManifestOutput(value: string, label: string): void {
   if (path.isAbsolute(value) || normalized === ".." || normalized.startsWith(`..${path.sep}`)) {
     throw new Error(`${label} must stay inside the docs directory.`);
   }
-  if (!/\.(?:md|mdx)$/i.test(normalized)) {
-    throw new Error(`${label} must name a .md or .mdx file.`);
+  if (!/\.md$/i.test(normalized)) {
+    throw new Error(`${label} must name a .md file; automatic import does not write executable MDX.`);
   }
 }
 
@@ -445,10 +429,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isMissingFileError(error: unknown): boolean {
   return isRecord(error) && error.code === "ENOENT";
-}
-
-function isAlreadyExistsError(error: unknown): boolean {
-  return isRecord(error) && error.code === "EEXIST";
 }
 
 function errorMessage(error: unknown): string {

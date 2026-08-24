@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { createMarkdownProcessor } from "@astrojs/markdown-remark";
 import { checkDiscourse } from "../dist/check-discourse.js";
 import { createDiscourseClient } from "../dist/discourse/client.js";
 import {
@@ -273,6 +274,36 @@ test("import discovery rejects invalid runtime manifest options before network a
   assert.equal(calls, 0);
 });
 
+test("import discovery rejects pagination outside the configured Discourse service path", async () => {
+  for (const moreTopicsUrl of [
+    "https://attacker.invalid/c/impact/18?page=2",
+    "https://forum.example.com/outside/c/impact/18?page=2",
+    "//attacker.invalid/c/impact/18?page=2",
+    "../outside.json",
+  ]) {
+    const fetcher = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/community/categories.json") {
+        return jsonResponse({ category_list: { categories: [{ id: 18, name: "Impact", slug: "impact" }] } });
+      }
+      if (pathname === "/community/c/impact/18.json") {
+        return jsonResponse({ topic_list: { topics: [], more_topics_url: moreTopicsUrl } });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      discoverDiscourseImports({
+        docsDir: path.join(tmpdir(), "discussion-bridge-pagination-boundary"),
+        discourseUrl: "https://forum.example.com/community",
+        category: "Impact",
+        fetch: fetcher,
+      }),
+      /left the configured Discourse origin or path boundary|must not be protocol-relative|ambiguous or escaping path segment/,
+    );
+  }
+});
+
 test("validates titles before publishing to Discourse", () => {
   assert.deepEqual(validateDiscourseTopicTitle("DiscussionBridge for Astro"), []);
   assert.match(validateDiscourseTopicTitle("Beta")[0].reason, /too short/);
@@ -293,7 +324,7 @@ test("import manifest preserves curated order and per-topic policies", () => {
         commentsDisplay: "fullInteractive",
         heroImage: "../../../assets/hero.png",
         heroAlt: "Descriptive hero",
-        output: "title-i/10103-impact.mdx",
+        output: "title-i/10103-impact.md",
         requiredTags: ["TITLE-I"],
       },
       {
@@ -310,7 +341,7 @@ test("import manifest preserves curated order and per-topic policies", () => {
   ]);
   assert.equal(manifest.imports[0].sourceMode, "discourse-managed");
   assert.equal(manifest.imports[1].heroAlt, "Descriptive hero");
-  assert.equal(manifest.imports[1].output, "title-i/10103-impact.mdx");
+  assert.equal(manifest.imports[1].output, "title-i/10103-impact.md");
   assert.deepEqual(manifest.imports[1].requiredTags, ["TITLE-I"]);
   assert.deepEqual(manifest.imports[2].pruneProfiles, ["community-call-to-action"]);
 });
@@ -344,11 +375,11 @@ test("import manifest writes an explicit output only when required tags match", 
       apiUsername: "test-user",
       manifest: {
         version: 1,
-        imports: [{ topic: "21", output: "title-i/10101-impact.mdx", requiredTags: ["TITLE-I"] }],
+        imports: [{ topic: "21", output: "title-i/10101-impact.md", requiredTags: ["TITLE-I"] }],
       },
     });
 
-    const expectedPath = path.join(dir, "title-i", "10101-impact.mdx");
+    const expectedPath = path.join(dir, "title-i", "10101-impact.md");
     assert.equal(result.filePath, expectedPath);
     assert.match(await readFile(expectedPath, "utf8"), /Imported body/);
 
@@ -609,6 +640,18 @@ test("import manifest runner revalidates runtime input and dry-run output collis
           post_stream: {
             posts: [{ id: 100 + topicId, post_number: 1, topic_id: topicId, topic_slug: "same-slug", cooked: "" }],
           },
+        });
+      }
+      const postTopicId = pathname === "/posts/121.json" ? 21 : pathname === "/posts/122.json" ? 22 : undefined;
+      if (postTopicId) {
+        return jsonResponse({
+          id: 100 + postTopicId,
+          username: "forum-editor",
+          post_number: 1,
+          topic_id: postTopicId,
+          topic_slug: "same-slug",
+          raw: `Topic ${postTopicId}`,
+          cooked: "",
         });
       }
       return new Response("Not found", { status: 404, statusText: "Not Found" });
@@ -1819,6 +1862,152 @@ test("sync-existing preserves a multiline discussionSummary as the managed first
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });
   }
+});
+
+test("Discourse client confines credentials to its configured service boundary", async () => {
+  const calls = [];
+  const discourse = createDiscourseClient({
+    discourseUrl: "https://forum.example.com/community",
+    apiKey: "server-secret",
+    apiUsername: "bridge-bot",
+    fetch: async (url, init) => {
+      calls.push({ url: String(url), init });
+      return new Response(JSON.stringify({ id: 21 }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+
+  await discourse.topic(21);
+  assert.equal(calls[0].url, "https://forum.example.com/community/t/21.json");
+  assert.equal(calls[0].init.redirect, "error");
+  assert.equal(calls[0].init.headers.get("Api-Key"), "server-secret");
+  assert.equal(calls[0].init.headers.get("Api-Username"), "bridge-bot");
+
+  await assert.rejects(
+    discourse.request("https://attacker.invalid/capture"),
+    /must not be absolute or protocol-relative/,
+  );
+  await assert.rejects(
+    discourse.request("//attacker.invalid/capture"),
+    /must not be absolute or protocol-relative/,
+  );
+  await assert.rejects(
+    discourse.request("../outside.json"),
+    /ambiguous or escaping path segment/,
+  );
+  assert.equal(calls.length, 1);
+});
+
+test("Discourse client rejects unsafe bases, redirect overrides, and foreign final responses", async () => {
+  for (const discourseUrl of [
+    "ftp://forum.example.com",
+    "https://user:secret@forum.example.com",
+    "https://forum.example.com/?tenant=one",
+    "https://forum.example.com/#settings",
+  ]) {
+    assert.throws(() => createDiscourseClient({ discourseUrl }), /must use http or https|must not contain/);
+  }
+
+  let observedRedirect;
+  const redirectSafe = createDiscourseClient({
+    discourseUrl: "https://forum.example.com",
+    fetch: async (_url, init) => {
+      observedRedirect = init.redirect;
+      return new Response("{}", { status: 200, headers: { "Content-Type": "application/json" } });
+    },
+  });
+  await redirectSafe.request("/site.json", { redirect: "follow" });
+  assert.equal(observedRedirect, "error");
+
+  const foreignResponse = createDiscourseClient({
+    discourseUrl: "https://forum.example.com",
+    fetch: async () => ({
+      ok: true,
+      url: "https://attacker.invalid/result",
+      json: async () => ({}),
+    }),
+  });
+  await assert.rejects(
+    foreignResponse.siteInfo(),
+    /left the configured Discourse origin or path boundary/,
+  );
+});
+
+test("Discourse client owns protected headers and validates credential and response contracts", async () => {
+  const oneCredential = createDiscourseClient({
+    discourseUrl: "https://forum.example.com",
+    apiKey: "secret-only",
+    fetch: async () => jsonResponse({}),
+  });
+  await assert.rejects(
+    oneCredential.siteInfo(),
+    /authentication requires both apiKey and apiUsername/,
+  );
+
+  const insecure = createDiscourseClient({
+    discourseUrl: "http://forum.example.com",
+    apiKey: "secret",
+    apiUsername: "bridge-bot",
+    fetch: async () => jsonResponse({}),
+  });
+  await assert.rejects(insecure.siteInfo(), /Credentialed Discourse requests require HTTPS/);
+
+  let protectedHeaders;
+  const ownedHeaders = createDiscourseClient({
+    discourseUrl: "https://forum.example.com",
+    apiKey: "real-secret",
+    apiUsername: "bridge-bot",
+    fetch: async (_url, init) => {
+      protectedHeaders = init.headers;
+      return jsonResponse({ ok: true });
+    },
+  });
+  await ownedHeaders.request("site.json", {
+    headers: {
+      "api-key": "attacker-value",
+      "API-USERNAME": "other-user",
+    },
+    credentials: "include",
+  });
+  assert.equal(protectedHeaders.get("Api-Key"), "real-secret");
+  assert.equal(protectedHeaders.get("Api-Username"), "bridge-bot");
+
+  const wrongContentType = createDiscourseClient({
+    discourseUrl: "https://forum.example.com",
+    fetch: async () => new Response("{}", { status: 200, headers: { "Content-Type": "text/html" } }),
+  });
+  await assert.rejects(wrongContentType.siteInfo(), /response was not JSON/);
+
+  const oversized = createDiscourseClient({
+    discourseUrl: "https://forum.example.com",
+    maxResponseBytes: 8,
+    fetch: async () => new Response(JSON.stringify({ value: "too large" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  });
+  await assert.rejects(oversized.siteInfo(), /exceeds the configured size limit/);
+
+  const redacted = createDiscourseClient({
+    discourseUrl: "https://forum.example.com",
+    apiKey: "do-not-echo",
+    apiUsername: "bridge-bot",
+    fetch: async () => new Response("failure do-not-echo for bridge-bot", {
+      status: 500,
+      statusText: "Failure",
+      headers: { "Content-Type": "text/plain" },
+    }),
+  });
+  await assert.rejects(
+    redacted.siteInfo(),
+    (error) => {
+      assert.doesNotMatch(error.message, /do-not-echo|bridge-bot/);
+      assert.match(error.message, /\[REDACTED\]/);
+      return true;
+    },
+  );
 });
 
 test("sync-existing treats an Astro title change as source-of-truth drift", async () => {
@@ -3317,6 +3506,445 @@ test("import-existing writes linked Astro Markdown from a Discourse topic URL", 
   }
 });
 
+test("import-existing writes Markdown only and stops before raw HTML becomes Astro source", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-trust-"));
+  const docsDir = path.join(dir, "docs");
+  const originalFetch = globalThis.fetch;
+  const topic = {
+    id: 31,
+    title: "Trust Boundary",
+    visible: true,
+    post_stream: {
+      posts: [{
+        id: 301,
+        post_number: 1,
+        topic_id: 31,
+        topic_slug: "trust-boundary",
+        cooked: "<p>Rendered by Discourse.</p>",
+      }],
+    },
+  };
+  const basePost = {
+    id: 301,
+    username: "forum-editor",
+    display_username: "Forum Editor",
+    post_number: 1,
+    topic_id: 31,
+    topic_slug: "trust-boundary",
+    cooked: "<p>Rendered by Discourse.</p>",
+  };
+  const options = {
+    docsDir,
+    siteUrl: "https://docs.example.com",
+    discourseUrl: "https://forum.example.com",
+    apiKey: "test-key",
+    apiUsername: "test-user",
+    topics: ["https://forum.example.com/t/trust-boundary/31"],
+  };
+
+  try {
+    for (const raw of [
+      "# Unsafe\n\n<script>globalThis.compromised = true</script>",
+      "# Unsafe\n\n<img src=x onerror=alert(1)>",
+      "# Unsupported\n\n<div class=\"note\">raw HTML</div>",
+      "# Split tag\n\n<div\nclass=\"note\">raw HTML</div>",
+      "# Even escape\n\n\\\\<script>still raw HTML</script>",
+    ]) {
+      globalThis.fetch = mockDiscourseFetch([], { topic, post: { ...basePost, raw } });
+      await assert.rejects(
+        importExistingDiscourseTopics(options),
+        /contains raw HTML outside a code block.*No Astro file was written/,
+      );
+      await assert.rejects(readFile(path.join(docsDir, "trust-boundary.md"), "utf8"), /ENOENT/);
+    }
+
+    for (const raw of [
+      "[click](javascript:alert(1))",
+      "![image](data:text/html,boom)",
+      "[encoded](&#x6a;avascript&#58;alert(1))",
+      "[percent](%6a%61vascript:alert(1))",
+      "<vbscript:msgbox(1)>",
+    ]) {
+      globalThis.fetch = mockDiscourseFetch([], { topic, post: { ...basePost, raw } });
+      await assert.rejects(
+        importExistingDiscourseTopics(options),
+        /contains an unsafe Markdown link or image destination.*No Astro file was written/,
+      );
+      await assert.rejects(readFile(path.join(docsDir, "trust-boundary.md"), "utf8"), /ENOENT/);
+    }
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic,
+      post: {
+        ...basePost,
+        raw: [
+          "# Safe Markdown",
+          "",
+          "The value {dangerous()} remains Markdown text, and `\<script>` is inline code.",
+          "Escaped raw text is inert: \\<script>.",
+          "",
+          "```mermaid",
+          "graph TD",
+          "  A[\"<script>code only</script>\"] --> B",
+          "```",
+          "",
+          "$$x^2$$",
+        ].join("\n"),
+      },
+    });
+    const [result] = await importExistingDiscourseTopics(options);
+    assert.equal(result.status, "imported");
+    const source = await readFile(path.join(docsDir, "trust-boundary.md"), "utf8");
+    assert.match(source, /The value \{dangerous\(\)\} remains Markdown text/);
+    assert.match(source, /```mermaid[\s\S]*<script>code only<\/script>[\s\S]*```/);
+    assert.match(source, /\$\$x\^2\$\$/);
+    const markdown = await createMarkdownProcessor();
+    const rendered = await markdown.render(source);
+    assert.match(rendered.code, /\{dangerous\(\)\}/);
+    assert.doesNotMatch(rendered.code, /globalThis\.compromised/);
+
+    globalThis.fetch = mockDiscourseFetch([], { topic, post: { ...basePost, raw: "Safe." } });
+    await assert.rejects(
+      importExistingDiscourseTopics({ ...options, outputFile: "trust-boundary.mdx", overwrite: true }),
+      /must be a relative \.md file; automatic import does not write executable MDX/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing dry-run validates source without creating its docs directory", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-dry-run-"));
+  const docsDir = path.join(dir, "not-created", "docs");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 41,
+        title: "Dry Run Source Gate",
+        visible: true,
+        post_stream: {
+          posts: [{ id: 401, post_number: 1, topic_id: 41, topic_slug: "dry-run-source-gate", cooked: "" }],
+        },
+      },
+      post: {
+        id: 401,
+        post_number: 1,
+        topic_id: 41,
+        topic_slug: "dry-run-source-gate",
+        raw: "Safe Markdown.",
+        cooked: "",
+      },
+    });
+
+    const [result] = await importExistingDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["41"],
+      dryRun: true,
+    });
+
+    assert.equal(result.status, "dry-run-import");
+    await assert.rejects(readFile(path.join(docsDir, "dry-run-source-gate.md"), "utf8"), /ENOENT/);
+    await assert.rejects(stat(docsDir), /ENOENT/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing accepts exact root and subfolder topic routes and rejects near-boundary references", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-topic-ref-"));
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+
+  try {
+    globalThis.fetch = async (url) => {
+      const parsed = new URL(url);
+      requests.push(parsed.href);
+      if (parsed.pathname.endsWith("/t/41.json")) {
+        return jsonResponse({
+          id: 41,
+          title: "Exact Topic Route",
+          visible: true,
+          post_stream: {
+            posts: [{ id: 401, post_number: 1, topic_id: 41, topic_slug: "exact-topic-route", cooked: "" }],
+          },
+        });
+      }
+      if (parsed.pathname.endsWith("/posts/401.json")) {
+        return jsonResponse({ id: 401, post_number: 1, topic_id: 41, topic_slug: "exact-topic-route", raw: "Safe.", cooked: "" });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    for (const [discourseUrl, topic] of [
+      ["https://forum.example.com", "https://forum.example.com/t/41"],
+      ["https://forum.example.com", "https://forum.example.com/t/41/4"],
+      ["https://forum.example.com", "https://forum.example.com/t/exact-topic-route/41/4"],
+      ["https://forum.example.com/community", "https://forum.example.com/community/t/exact-topic-route/41"],
+    ]) {
+      const [result] = await importExistingDiscourseTopics({
+        docsDir: path.join(dir, requests.length.toString()),
+        siteUrl: "https://docs.example.com",
+        discourseUrl,
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        topics: [topic],
+        dryRun: true,
+      });
+      assert.equal(result.topicId, 41);
+    }
+
+    const requestCount = requests.length;
+    for (const topic of [
+      "1e3",
+      "9007199254740993",
+      "https://forum.example.com/outside/t/41",
+      "http://forum.example.com/community/t/41",
+      "https://user:secret@forum.example.com/community/t/41",
+      "https://attacker.invalid/community/t/41",
+    ]) {
+      await assert.rejects(
+        importExistingDiscourseTopics({
+          docsDir: dir,
+          siteUrl: "https://docs.example.com",
+          discourseUrl: "https://forum.example.com/community",
+          apiKey: "test-key",
+          apiUsername: "test-user",
+          topics: [topic],
+          dryRun: true,
+        }),
+        /Topic must be a numeric id or Discourse topic URL/,
+      );
+    }
+    assert.equal(requests.length, requestCount);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing validates every requested topic before its first write", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-batch-stage-"));
+  const docsDir = path.join(dir, "docs");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      const records = {
+        "/t/41.json": { id: 41, title: "First Safe Topic", postId: 401, slug: "first-safe-topic" },
+        "/t/42.json": { id: 42, title: "Second Unsafe Topic", postId: 402, slug: "second-unsafe-topic" },
+      };
+      const topic = records[pathname];
+      if (topic) {
+        return jsonResponse({
+          id: topic.id,
+          title: topic.title,
+          visible: true,
+          post_stream: {
+            posts: [{ id: topic.postId, post_number: 1, topic_id: topic.id, topic_slug: topic.slug, cooked: "" }],
+          },
+        });
+      }
+      if (pathname === "/posts/401.json") {
+        return jsonResponse({ id: 401, post_number: 1, topic_id: 41, topic_slug: "first-safe-topic", raw: "Safe.", cooked: "" });
+      }
+      if (pathname === "/posts/402.json") {
+        return jsonResponse({ id: 402, post_number: 1, topic_id: 42, topic_slug: "second-unsafe-topic", raw: "<script>unsafe()</script>", cooked: "" });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        topics: ["41", "42"],
+      }),
+      /contains raw HTML outside a code block.*No Astro file was written/,
+    );
+
+    await assert.rejects(readFile(path.join(docsDir, "first-safe-topic.md"), "utf8"), /ENOENT/);
+    await assert.rejects(readFile(path.join(docsDir, "second-unsafe-topic.md"), "utf8"), /ENOENT/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing rolls back an earlier destination when a later commit fails", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-batch-rollback-"));
+  const firstPath = path.join(dir, "first-topic.md");
+  const secondPath = path.join(dir, "second-topic.md");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await writeFile(firstPath, "original first topic\n");
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      if (pathname === "/t/41.json") {
+        return jsonResponse({
+          id: 41,
+          title: "First Topic",
+          visible: true,
+          post_stream: { posts: [{ id: 401, post_number: 1, topic_id: 41, topic_slug: "first-topic", cooked: "" }] },
+        });
+      }
+      if (pathname === "/t/42.json") {
+        return jsonResponse({
+          id: 42,
+          title: "Second Topic",
+          visible: true,
+          post_stream: { posts: [{ id: 402, post_number: 1, topic_id: 42, topic_slug: "second-topic", cooked: "" }] },
+        });
+      }
+      if (pathname === "/posts/401.json") {
+        return jsonResponse({ id: 401, post_number: 1, topic_id: 41, topic_slug: "first-topic", raw: "First.", cooked: "" });
+      }
+      if (pathname === "/posts/402.json") {
+        await mkdir(secondPath, { recursive: true });
+        return jsonResponse({ id: 402, post_number: 1, topic_id: 42, topic_slug: "second-topic", raw: "Second.", cooked: "" });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseTopics({
+        docsDir: dir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        topics: ["41", "42"],
+        overwrite: true,
+      }),
+      /Could not commit imported Discourse topics.*Destination file changes were rolled back/,
+    );
+    assert.equal(await readFile(firstPath, "utf8"), "original first topic\n");
+    assert.equal((await stat(secondPath)).isDirectory(), true);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing rejects colliding direct output paths before writing", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-collision-"));
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async (url) => {
+      const pathname = new URL(url).pathname;
+      const topicId = pathname === "/t/41.json" ? 41 : pathname === "/t/42.json" ? 42 : undefined;
+      if (topicId) {
+        return jsonResponse({
+          id: topicId,
+          title: `Topic ${topicId}`,
+          visible: true,
+          post_stream: {
+            posts: [{ id: 400 + topicId, post_number: 1, topic_id: topicId, topic_slug: "same-output", cooked: "" }],
+          },
+        });
+      }
+      const postTopicId = pathname === "/posts/441.json" ? 41 : pathname === "/posts/442.json" ? 42 : undefined;
+      if (postTopicId) {
+        return jsonResponse({
+          id: 400 + postTopicId,
+          post_number: 1,
+          topic_id: postTopicId,
+          topic_slug: "same-output",
+          raw: `Topic ${postTopicId}`,
+          cooked: "",
+        });
+      }
+      return new Response("Not found", { status: 404, statusText: "Not Found" });
+    };
+
+    await assert.rejects(
+      importExistingDiscourseTopics({
+        docsDir: dir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        topics: ["41", "42"],
+      }),
+      /Multiple Discourse topics resolve to the same Astro file.*No file was written/,
+    );
+    await assert.rejects(readFile(path.join(dir, "same-output.md"), "utf8"), /ENOENT/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("import-existing refuses a symlink or reparse-point destination boundary", async (context) => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-link-boundary-"));
+  const docsDir = path.join(dir, "docs");
+  const outsideDir = path.join(dir, "outside");
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await mkdir(outsideDir, { recursive: true });
+    try {
+      await symlink(outsideDir, path.join(docsDir, "escape"), process.platform === "win32" ? "junction" : "dir");
+    } catch (error) {
+      if (["EPERM", "EACCES", "ENOTSUP"].includes(error?.code)) {
+        context.skip(`This host does not permit a disposable symlink/junction: ${error.code}`);
+        return;
+      }
+      throw error;
+    }
+
+    globalThis.fetch = mockDiscourseFetch([], {
+      topic: {
+        id: 41,
+        title: "Link Boundary",
+        visible: true,
+        post_stream: {
+          posts: [{ id: 401, post_number: 1, topic_id: 41, topic_slug: "link-boundary", cooked: "" }],
+        },
+      },
+      post: {
+        id: 401,
+        post_number: 1,
+        topic_id: 41,
+        topic_slug: "link-boundary",
+        raw: "Safe.",
+        cooked: "",
+      },
+    });
+
+    await assert.rejects(
+      importExistingDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com",
+        apiKey: "test-key",
+        apiUsername: "test-user",
+        topics: ["41"],
+        outputFile: "escape/link-boundary.md",
+      }),
+      /crosses a symbolic link or reparse-point boundary.*No file was written/,
+    );
+    await assert.rejects(readFile(path.join(outsideDir, "link-boundary.md"), "utf8"), /ENOENT/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
 test("import-existing can label imported frontmatter with a discussion target", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-import-target-"));
   const docsDir = path.join(dir, "blog");
@@ -3525,6 +4153,34 @@ test("import-existing requires alt text for a configured hero image", async () =
       heroAlt: "Descriptive alt text",
     }),
     /heroImage is required when heroAlt is configured/,
+  );
+
+  await assert.rejects(
+    importExistingDiscourseTopics({
+      docsDir: "unused",
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+      heroImage: "javascript:alert(1)",
+      heroAlt: "Unsafe image",
+    }),
+    /heroImage must use a safe/,
+  );
+
+  await assert.rejects(
+    importExistingDiscourseTopics({
+      docsDir: "unused",
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com",
+      apiKey: "test-key",
+      apiUsername: "test-user",
+      topics: ["21"],
+      heroImage: "hero.png",
+      heroAlt: "line one\nline two",
+    }),
+    /heroAlt must be a single line/,
   );
 });
 
@@ -3955,6 +4611,105 @@ test("frontmatter failure recipients receive page-specific publish errors", asyn
     assert.equal(pmCalls.length, 1);
     assert.equal(pmCalls[0].body.target_recipients, "forum-admin,ops-bot");
     assert.match(pmCalls[0].body.raw, /Release Lane Failure/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(dir, { force: true, recursive: true });
+  }
+});
+
+test("controlled creation confines its secret to the configured HTTPS service path", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-controlled-create-"));
+  const docsDir = path.join(dir, "docs");
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  const pagePath = path.join(docsDir, "controlled.md");
+  const pageSource = [
+    "---",
+    'title: "DiscussionBridge Controlled Creation Boundary"',
+    "---",
+    "",
+    "# DiscussionBridge Controlled Creation Boundary",
+    "",
+    "This body is long enough for the controlled creation request.",
+  ].join("\n");
+
+  try {
+    await mkdir(docsDir, { recursive: true });
+    await writeFile(pagePath, pageSource);
+
+    globalThis.fetch = async (url, init) => {
+      calls.push({ url: String(url), init });
+      return new Response(JSON.stringify({
+        outcome: "created",
+        reason: "mapping_created",
+        topic_id: 81,
+        core_fallback: false,
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    };
+
+    const [result] = await syncDiscourseTopics({
+      docsDir,
+      siteUrl: "https://docs.example.com",
+      discourseUrl: "https://forum.example.com/community",
+      mode: "publish-new",
+      controlledCreation: {
+        connectionId: "site-connection",
+        connectionSecret: "connection-secret",
+      },
+    });
+
+    assert.equal(result.status, "created");
+    assert.equal(calls.length, 1);
+    assert.equal(
+      calls[0].url,
+      "https://forum.example.com/community/discussion-bridge/connections/resolve.json",
+    );
+    assert.equal(calls[0].init.redirect, "error");
+    assert.equal(calls[0].init.headers["X-DiscussionBridge-Connection"], "site-connection");
+    assert.equal(calls[0].init.headers["X-DiscussionBridge-Secret"], "connection-secret");
+
+    await writeFile(pagePath, pageSource);
+    let insecureCalls = 0;
+    globalThis.fetch = async () => {
+      insecureCalls += 1;
+      return jsonResponse({});
+    };
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "http://forum.example.com/community",
+        mode: "publish-new",
+        controlledCreation: {
+          connectionId: "site-connection",
+          connectionSecret: "connection-secret",
+        },
+      }),
+      /controlledCreation requires HTTPS/,
+    );
+    assert.equal(insecureCalls, 0);
+
+    await writeFile(pagePath, pageSource);
+    globalThis.fetch = async () => new Response("not json", {
+      status: 200,
+      headers: { "Content-Type": "text/html" },
+    });
+    await assert.rejects(
+      syncDiscourseTopics({
+        docsDir,
+        siteUrl: "https://docs.example.com",
+        discourseUrl: "https://forum.example.com/community",
+        mode: "publish-new",
+        controlledCreation: {
+          connectionId: "site-connection",
+          connectionSecret: "connection-secret",
+        },
+      }),
+      /controlled creation returned an invalid response: response was not JSON/,
+    );
   } finally {
     globalThis.fetch = originalFetch;
     await rm(dir, { force: true, recursive: true });

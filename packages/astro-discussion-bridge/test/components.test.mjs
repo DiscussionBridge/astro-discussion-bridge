@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import {
+  fixedAction,
+  iconMarkup,
+  postActions,
+  reactionAction,
+  reactionActions,
+} from "../dist/components/reaction-rendering.js";
 
 test("native embeds pass an existing topic ID to Discourse", async () => {
   const discussion = await readFile(
@@ -56,6 +63,55 @@ test("full replies preserve Mermaid rendering and readable tables", async () => 
   assert.match(replies, /Mermaid renderer failed to load/);
   assert.match(replies, /\.discussion-bridge-reply__body table/);
   assert.match(replies, /overflow-x: auto/);
+});
+
+test("reaction rendering keeps unknown identifiers out of executable markup", async () => {
+  const malicious = `<img src=x onerror="globalThis.compromised=true">`;
+  assert.equal(reactionAction({ id: malicious, count: 2 }), undefined);
+  assert.deepEqual(reactionAction({ id: "custom_reaction", count: 2 }), {
+    text: "custom_reaction",
+    label: "custom_reaction",
+    count: 2,
+  });
+  assert.equal(reactionAction({ id: malicious, count: -1 }), undefined);
+  assert.equal(reactionAction({ id: "x".repeat(65), count: 1 }), undefined);
+  assert.equal(reactionAction({ id: "heart", count: Number.MAX_SAFE_INTEGER }), undefined);
+  assert.equal(fixedAction("reply", "replies", "2"), undefined);
+  assert.equal(reactionAction({ id: "__proto__", count: 1 })?.icon, undefined);
+  assert.deepEqual(
+    reactionActions([{ id: "heart", count: 1 }, { id: "heart", count: 2 }]),
+    [{ icon: "heart", label: "likes", count: 1 }],
+  );
+  assert.deepEqual(reactionActions(Array.from({ length: 101 }, () => ({ id: "heart", count: 1 }))), []);
+  assert.match(iconMarkup("heart"), /^<svg /);
+
+  const replies = await readFile(
+    new URL("../src/components/DiscourseReplies.astro", import.meta.url),
+    "utf8",
+  );
+  assert.match(replies, /\{action\.text\}/);
+  assert.match(replies, /text\.textContent = action\.text/);
+  assert.doesNotMatch(replies, /function actionItems\(post, refreshConfig\)/);
+  assert.doesNotMatch(replies, /icons\[id\] \?\? id/);
+  assert.doesNotMatch(replies, /\$\{name\}<\/span>/);
+
+  const post = {
+    reactions: [{ id: malicious, count: 2 }],
+    like_count: 9,
+    reply_count: 3,
+    quote_count: 1,
+  };
+  assert.deepEqual(postActions(post, false), []);
+  assert.deepEqual(postActions(post, true), [
+    { icon: "heart", label: "likes", count: 9 },
+    { icon: "reply", label: "replies", count: 3 },
+    { icon: "quote", label: "quotes", count: 1 },
+  ]);
+  assert.deepEqual(postActions({ ...post, reactions: [{ id: "broken", count: -1 }] }, true), [
+    { icon: "heart", label: "likes", count: 9 },
+    { icon: "reply", label: "replies", count: 3 },
+    { icon: "quote", label: "quotes", count: 1 },
+  ]);
 });
 
 test("discussion credit renders once after the complete discussion composition", async () => {

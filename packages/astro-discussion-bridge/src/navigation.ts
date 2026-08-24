@@ -5,6 +5,11 @@ import type {
   ContentRelationshipEntry,
   ContentRelationshipManifest,
 } from "./relationships.js";
+import {
+  assertServiceResponseUrl,
+  parseDiscourseTopicReference,
+  parseServiceBaseUrl,
+} from "./web-url.js";
 
 export type NavigationNodeKind =
   | "title"
@@ -86,8 +91,14 @@ export async function discoverDiscourseNavigation(input: {
   apiUsername?: string;
   fetch?: typeof globalThis.fetch;
   generatedAt?: string;
+  requestTimeoutMs?: number;
+  maxResponseBytes?: number;
 }): Promise<DiscussionNavigationManifest> {
-  const discourseUrl = normalizedBaseUrl(input.discourseUrl);
+  const serviceBase = parseServiceBaseUrl(input.discourseUrl);
+  if ((input.apiKey || input.apiUsername) && serviceBase.protocol !== "https:") {
+    throw new Error("Credentialed Discourse navigation requests require HTTPS.");
+  }
+  const discourseUrl = serviceBase.href;
   const lenses = normalizeLenses(input.lenses);
   const requestedGroups = normalizeUniqueStrings(input.hierarchyTagGroups, "hierarchy tag group");
   const fetcher = input.fetch ?? globalThis.fetch;
@@ -96,7 +107,14 @@ export async function discoverDiscourseNavigation(input: {
   for (const name of requestedGroups) {
     const url = new URL("tag_groups/filter/search.json", discourseUrl);
     url.searchParams.set("q", name);
-    const groups = parseTagGroups(await requestJson(url.href, fetcher, headers));
+    const groups = parseTagGroups(await requestJson(
+      url.href,
+      fetcher,
+      headers,
+      serviceBase,
+      input.requestTimeoutMs ?? 15_000,
+      input.maxResponseBytes ?? 4 * 1024 * 1024,
+    ));
     const group = groups.find((candidate) =>
       candidate.name.localeCompare(name, "en", { sensitivity: "base" }) === 0
     );
@@ -111,7 +129,14 @@ export async function discoverDiscourseNavigation(input: {
 
   for (const lens of lenses) {
     const topicUrl = new URL(`t/${lens.indexTopicId}.json`, discourseUrl).href;
-    const payload = parseTopicPayload(await requestJson(topicUrl, fetcher, headers));
+    const payload = parseTopicPayload(await requestJson(
+      topicUrl,
+      fetcher,
+      headers,
+      serviceBase,
+      input.requestTimeoutMs ?? 15_000,
+      input.maxResponseBytes ?? 4 * 1024 * 1024,
+    ));
     if (payload.id !== lens.indexTopicId) {
       throw new Error(`Discourse returned topic ${payload.id} for requested index topic ${lens.indexTopicId}.`);
     }
@@ -153,7 +178,10 @@ export function parseNavigationManifest(value: unknown): DiscussionNavigationMan
   const parsed: DiscussionNavigationManifest = {
     version: 1,
     generatedAt: requiredString(value.generatedAt, "navigation generatedAt"),
-    discourseUrl: normalizedBaseUrl(requiredString(value.discourseUrl, "navigation discourseUrl")),
+    discourseUrl: parseServiceBaseUrl(
+      requiredString(value.discourseUrl, "navigation discourseUrl"),
+      "Navigation Discourse URL",
+    ).href,
     hierarchyTagGroups: parseTagGroups({ results: value.hierarchyTagGroups }),
     lenses: value.lenses.map((lens, index) => parseNavigationLens(lens, index)),
   };
@@ -354,24 +382,16 @@ function topicIdentity(
   value: string,
   discourseUrl: string,
 ): { topicId: number; url: string } | undefined {
-  let url: URL;
   try {
-    url = new URL(value, discourseUrl);
+    const serviceBase = parseServiceBaseUrl(discourseUrl);
+    const topic = parseDiscourseTopicReference(value, serviceBase);
+    return {
+      topicId: topic.topicId,
+      url: new URL(`t/${topic.topicId}`, serviceBase).href,
+    };
   } catch {
     return undefined;
   }
-  if (url.origin !== new URL(discourseUrl).origin) return undefined;
-  const basePath = new URL(discourseUrl).pathname;
-  if (!url.pathname.startsWith(basePath)) return undefined;
-  const parts = url.pathname.split("/").filter(Boolean);
-  const topicIndex = parts.indexOf("t");
-  if (topicIndex < 0) return undefined;
-  const id = parts.slice(topicIndex + 1).find((part) => /^\d+$/.test(part));
-  if (!id) return undefined;
-  return {
-    topicId: Number(id),
-    url: new URL(`t/${id}`, discourseUrl).href,
-  };
 }
 
 function contentBindings(entries: ContentRelationshipEntry[]): Map<number, ContentRelationshipEntry> {
@@ -422,7 +442,7 @@ function pageUrlForFile(input: {
     : withoutExtension;
   const routeBase = input.routeBase?.trim().replace(/^\/+|\/+$/g, "");
   const pathname = `/${[routeBase, slug].filter(Boolean).join("/")}/`.replace(/\/+/g, "/");
-  return new URL(pathname, normalizedBaseUrl(input.siteUrl)).href;
+  return new URL(pathname, parseServiceBaseUrl(input.siteUrl, "Site URL")).href;
 }
 
 function normalizeSourceTags(value: unknown): string[] {
@@ -604,11 +624,38 @@ async function requestJson(
   url: string,
   fetcher: typeof globalThis.fetch,
   headers: Record<string, string>,
+  serviceBase: URL,
+  requestTimeoutMs: number,
+  maxResponseBytes: number,
 ): Promise<unknown> {
+  if (!Number.isSafeInteger(requestTimeoutMs) || requestTimeoutMs <= 0 || requestTimeoutMs > 10 * 60 * 1000) {
+    throw new Error("Navigation requestTimeoutMs must be a positive bounded integer.");
+  }
+  if (!Number.isSafeInteger(maxResponseBytes) || maxResponseBytes <= 0 || maxResponseBytes > 64 * 1024 * 1024) {
+    throw new Error("Navigation maxResponseBytes must be a positive bounded integer.");
+  }
   const maxRateLimitRetries = 3;
   for (let attempt = 0; attempt <= maxRateLimitRetries; attempt += 1) {
-    const response = await fetcher(url, { headers });
-    if (response.ok) return response.json();
+    const response = await fetcher(url, {
+      headers,
+      credentials: "omit",
+      redirect: "error",
+      signal: AbortSignal.timeout(requestTimeoutMs),
+    });
+    if (response.url) assertServiceResponseUrl(response.url, serviceBase);
+    if (response.ok) {
+      const contentType = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+      if (!contentType || !(contentType === "application/json" || contentType.endsWith("+json"))) {
+        await releaseResponseBody(response);
+        throw new Error(`Discourse navigation response was not JSON (${contentType || "missing content type"}).`);
+      }
+      const source = await readBoundedResponseText(response, maxResponseBytes);
+      try {
+        return JSON.parse(source) as unknown;
+      } catch {
+        throw new Error("Discourse navigation response contained malformed JSON.");
+      }
+    }
     if (response.status === 429 && attempt < maxRateLimitRetries) {
       await releaseResponseBody(response);
       await delay(rateLimitDelayMs(response.headers.get("retry-after"), attempt));
@@ -620,6 +667,35 @@ async function requestJson(
     );
   }
   throw new Error(`Discourse navigation request failed after retrying ${url}.`);
+}
+
+async function readBoundedResponseText(response: Response, maxBytes: number): Promise<string> {
+  const declaredLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    await releaseResponseBody(response);
+    throw new Error("Discourse navigation response exceeds the configured size limit.");
+  }
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    byteLength += value.byteLength;
+    if (byteLength > maxBytes) {
+      await reader.cancel();
+      throw new Error("Discourse navigation response exceeds the configured size limit.");
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
 }
 
 function rateLimitDelayMs(retryAfter: string | null, attempt: number): number {
@@ -650,14 +726,16 @@ async function releaseResponseBody(response: Response): Promise<void> {
 }
 
 function requestHeaders(apiKey?: string, apiUsername?: string): Record<string, string> {
-  if (!apiKey && !apiUsername) return { Accept: "application/json" };
-  if (!apiKey || !apiUsername) {
+  const key = apiKey?.trim();
+  const username = apiUsername?.trim();
+  if (!key && !username) return { Accept: "application/json" };
+  if (!key || !username) {
     throw new Error("Discourse navigation authentication requires both apiKey and apiUsername.");
   }
   return {
     Accept: "application/json",
-    "Api-Key": apiKey,
-    "Api-Username": apiUsername,
+    "Api-Key": key,
+    "Api-Username": username,
   };
 }
 
@@ -700,17 +778,6 @@ function normalizeUniqueStrings(value: unknown, label: string): string[] {
 function comparableUrl(value: string): string {
   const url = new URL(value, "https://discussion-bridge.invalid");
   return url.pathname.replace(/\/+$/, "") || "/";
-}
-
-function normalizedBaseUrl(value: string): string {
-  const url = new URL(value);
-  if (!["http:", "https:"].includes(url.protocol)) {
-    throw new Error("Discourse URL must use http or https.");
-  }
-  url.hash = "";
-  url.search = "";
-  if (!url.pathname.endsWith("/")) url.pathname += "/";
-  return url.href;
 }
 
 function requiredWebUrl(value: unknown, label: string): string {

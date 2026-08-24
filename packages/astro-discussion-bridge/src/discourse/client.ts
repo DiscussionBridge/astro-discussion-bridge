@@ -1,9 +1,21 @@
+import {
+  assertServiceResponseUrl,
+  normalizeServiceBaseUrl,
+  parseServiceBaseUrl,
+  resolveServiceRequestUrl,
+} from "../web-url.js";
+
 export interface DiscourseClientOptions {
   discourseUrl: string;
   apiKey?: string;
   apiUsername?: string;
   fetch?: typeof fetch;
+  requestTimeoutMs?: number;
+  maxResponseBytes?: number;
 }
+
+const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+const DEFAULT_MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
 
 export interface SiteSettingsResponse {
   min_topic_title_length?: number;
@@ -242,23 +254,52 @@ export interface DiscourseTag {
 }
 
 export function createDiscourseClient(options: DiscourseClientOptions) {
-  const discourseUrl = normalizeBaseUrl(options.discourseUrl);
+  const serviceBase = parseServiceBaseUrl(options.discourseUrl);
+  const discourseUrl = normalizeServiceBaseUrl(options.discourseUrl);
   const fetcher = options.fetch ?? fetch;
+  const apiKey = nonEmptyCredential(options.apiKey);
+  const apiUsername = nonEmptyCredential(options.apiUsername);
+  const requestTimeoutMs = positiveBoundedInteger(
+    options.requestTimeoutMs,
+    DEFAULT_REQUEST_TIMEOUT_MS,
+    "Discourse requestTimeoutMs",
+    10 * 60 * 1000,
+  );
+  const maxResponseBytes = positiveBoundedInteger(
+    options.maxResponseBytes,
+    DEFAULT_MAX_RESPONSE_BYTES,
+    "Discourse maxResponseBytes",
+    64 * 1024 * 1024,
+  );
 
   async function request<T>(pathname: string, init: RequestInit = {}): Promise<T> {
-    const url = new URL(pathname, discourseUrl);
+    if (Boolean(apiKey) !== Boolean(apiUsername)) {
+      throw new Error("Discourse client authentication requires both apiKey and apiUsername.");
+    }
+    if (apiKey && serviceBase.protocol !== "https:") {
+      throw new Error("Credentialed Discourse requests require HTTPS.");
+    }
+    const url = resolveServiceRequestUrl(pathname, serviceBase);
     const method = init.method ?? "GET";
+    const headers = new Headers(init.headers);
+    headers.set("Accept", "application/json");
+    if (init.body) headers.set("Content-Type", "application/json");
+    if (apiKey) headers.set("Api-Key", apiKey);
+    else headers.delete("Api-Key");
+    if (apiUsername) headers.set("Api-Username", apiUsername);
+    else headers.delete("Api-Username");
+    const timeoutSignal = AbortSignal.timeout(requestTimeoutMs);
+    const signal = init.signal
+      ? AbortSignal.any([init.signal, timeoutSignal])
+      : timeoutSignal;
     let response: Response;
     try {
       response = await fetcher(url, {
         ...init,
-        headers: {
-          Accept: "application/json",
-          ...(init.body ? { "Content-Type": "application/json" } : {}),
-          ...(options.apiKey ? { "Api-Key": options.apiKey } : {}),
-          ...(options.apiUsername ? { "Api-Username": options.apiUsername } : {}),
-          ...init.headers,
-        },
+        headers,
+        credentials: "omit",
+        redirect: "error",
+        signal,
       });
     } catch (error) {
       throw new Error(
@@ -266,14 +307,26 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
       );
     }
 
+    if (response.url) assertServiceResponseUrl(response.url, serviceBase);
+
     if (!response.ok) {
-      const body = await response.text().catch(() => "");
+      const body = await readBoundedResponseText(response, Math.min(maxResponseBytes, 4096)).catch(() => "");
       throw new Error(
-        `Discourse request failed: ${response.status} ${response.statusText}${body ? `\n${body}` : ""}`,
+        `Discourse request failed: ${response.status} ${response.statusText}${body ? `\n${safeErrorDetail(body, [apiKey, apiUsername])}` : ""}`,
       );
     }
 
-    return response.json() as Promise<T>;
+    const contentType = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+    if (!contentType || !(contentType === "application/json" || contentType.endsWith("+json"))) {
+      await response.body?.cancel().catch(() => undefined);
+      throw new Error(`Discourse response was not JSON (${contentType || "missing content type"}).`);
+    }
+    const body = await readBoundedResponseText(response, maxResponseBytes);
+    try {
+      return JSON.parse(body) as T;
+    } catch {
+      throw new Error("Discourse response contained malformed JSON.");
+    }
   }
 
   return {
@@ -368,11 +421,62 @@ export function createDiscourseClient(options: DiscourseClientOptions) {
   };
 }
 
+function nonEmptyCredential(value: string | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized || undefined;
+}
+
+function positiveBoundedInteger(
+  value: number | undefined,
+  fallback: number,
+  label: string,
+  maximum: number,
+): number {
+  const candidate = value ?? fallback;
+  if (!Number.isSafeInteger(candidate) || candidate <= 0 || candidate > maximum) {
+    throw new Error(`${label} must be a positive bounded integer.`);
+  }
+  return candidate;
+}
+
+async function readBoundedResponseText(response: Response, maxBytes: number): Promise<string> {
+  const declaredLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error("Discourse response exceeds the configured size limit.");
+  }
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    byteLength += value.byteLength;
+    if (byteLength > maxBytes) {
+      await reader.cancel();
+      throw new Error("Discourse response exceeds the configured size limit.");
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+function safeErrorDetail(value: string, protectedValues: Array<string | undefined>): string {
+  let detail = value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+  for (const protectedValue of protectedValues) {
+    if (protectedValue) detail = detail.replaceAll(protectedValue, "[REDACTED]");
+  }
+  return detail.slice(0, 1024);
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
-}
-
-function normalizeBaseUrl(value: string): string {
-  return new URL(value).href.replace(/\/+$/, "");
 }

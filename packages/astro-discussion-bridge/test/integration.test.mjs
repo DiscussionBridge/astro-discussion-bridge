@@ -404,6 +404,19 @@ test("forum-controlled publication fails closed on transport and response bounda
     );
 
     await assert.rejects(
+      run(async () => {
+        const response = new Response(JSON.stringify({
+          outcome: "created",
+          topic_id: 10,
+          core_fallback: false,
+        }), { headers: { "Content-Type": "application/json" } });
+        Object.defineProperty(response, "url", { value: "https://attacker.invalid/result" });
+        return response;
+      }),
+      /left the configured Discourse origin or path boundary/,
+    );
+
+    await assert.rejects(
       run((_url, init) => new Promise((_resolve, reject) => {
         const holdOpen = setTimeout(() => reject(new Error("test timeout")), 1_000);
         init.signal.addEventListener("abort", () => {
@@ -415,15 +428,18 @@ test("forum-controlled publication fails closed on transport and response bounda
     );
 
     await assert.rejects(
-      run(async () => new Response("x".repeat(65))),
+      run(async () => new Response("x".repeat(65), { headers: { "Content-Type": "application/json" } })),
       /size limit/,
     );
     await assert.rejects(
-      run(async () => new Response("{")),
+      run(async () => new Response("{", { headers: { "Content-Type": "application/json" } })),
       /invalid response/i,
     );
     await assert.rejects(
-      run(async () => new Response(JSON.stringify({ reason: "connection_disabled" }), { status: 403 })),
+      run(async () => new Response(JSON.stringify({ reason: "connection_disabled" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      })),
       /rejected: connection_disabled/,
     );
     await assert.rejects(
@@ -431,7 +447,7 @@ test("forum-controlled publication fails closed on transport and response bounda
         outcome: "pending",
         topic_id: 10,
         core_fallback: false,
-      }))),
+      }), { headers: { "Content-Type": "application/json" } })),
       /unsupported outcome: pending/,
     );
   } finally {

@@ -91,6 +91,58 @@ test("navigation discovery follows authored index order and maps only known Astr
   );
 });
 
+test("credentialed navigation discovery rejects unsafe bases and redirects", async () => {
+  await assert.rejects(
+    discoverDiscourseNavigation({
+      discourseUrl: "https://bot:secret@forum.example.com",
+      hierarchyTagGroups: ["GROUP"],
+      lenses: [{ key: "test", label: "Test", categoryId: 1, indexTopicId: 1 }],
+    }),
+    /must not contain credentials/,
+  );
+
+  const requests = [];
+  await discoverDiscourseNavigation({
+    discourseUrl: "https://forum.example.com/community",
+    hierarchyTagGroups: ["GROUP"],
+    lenses: [{ key: "test", label: "Test", categoryId: 1, indexTopicId: 1 }],
+    apiKey: "server-secret",
+    apiUsername: "bridge-bot",
+    fetch: async (url, init) => {
+      requests.push({ url: String(url), init });
+      return String(url).includes("tag_groups")
+        ? jsonResponse({ results: [{ name: "GROUP", tags: [] }] })
+        : jsonResponse({
+            id: 1,
+            category_id: 1,
+            post_stream: {
+              posts: [{
+                post_number: 1,
+                cooked: '<p><a href="https://forum.example.com/community/t/title-i-index/15">TITLE I—AGRICULTURE (Index)</a></p>',
+              }],
+            },
+          });
+    },
+  });
+  assert.equal(requests[0].url, "https://forum.example.com/community/tag_groups/filter/search.json?q=GROUP");
+  assert.equal(requests[0].init.redirect, "error");
+  assert.equal(requests[0].init.headers["Api-Key"], "server-secret");
+
+  await assert.rejects(
+    discoverDiscourseNavigation({
+      discourseUrl: "https://forum.example.com",
+      hierarchyTagGroups: ["GROUP"],
+      lenses: [{ key: "test", label: "Test", categoryId: 1, indexTopicId: 1 }],
+      fetch: async () => ({
+        ok: true,
+        url: "https://attacker.invalid/result",
+        json: async () => ({ results: [] }),
+      }),
+    }),
+    /left the configured Discourse origin or path boundary/,
+  );
+});
+
 test("navigation manifest produces a Starlight adapter and create-only artifact", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "discussion-bridge-navigation-"));
   try {

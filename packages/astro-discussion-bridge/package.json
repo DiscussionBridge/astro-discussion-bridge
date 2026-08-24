@@ -1,6 +1,6 @@
 {
   "name": "astro-discussion-bridge",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.20260824.1",
   "description": "Astro integration toolkit for bridging pages to hosted discussions, starting with Discourse.",
   "type": "module",
   "license": "MIT",
@@ -118,6 +118,7 @@
   },
   "dependencies": {
     "fast-xml-parser": "^5.10.1",
+    "mdast-util-from-markdown": "^2.0.2",
     "mermaid": "^11.17.0",
     "yaml": "^2.9.0"
   }

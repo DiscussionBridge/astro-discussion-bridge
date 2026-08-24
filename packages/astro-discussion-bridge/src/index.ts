@@ -17,6 +17,7 @@ import {
   parseDiscussionConnectionJobs,
   type DiscussionConnectionJobs,
 } from "./targets.js";
+import { normalizeServiceBaseUrl } from "./web-url.js";
 
 type DiscussionBridgeIntegration = {
   name: string;
@@ -384,8 +385,8 @@ function resolveOptions(options: DiscussionBridgeOptions): ResolvedOptions {
   return {
     provider,
     preset,
-    discourseUrl: normalizeBaseUrl(options.discourseUrl),
-    siteUrl: options.siteUrl ? normalizeBaseUrl(options.siteUrl) : undefined,
+    discourseUrl: normalizeServiceBaseUrl(options.discourseUrl),
+    siteUrl: options.siteUrl ? normalizeServiceBaseUrl(options.siteUrl, "Site URL") : undefined,
     activeTarget: options.activeTarget,
     connections: {
       requireExplicit: options.connections?.requireExplicit ?? false,
@@ -446,9 +447,9 @@ function resolvePublishLanes(input: {
     routeBase: lane.routeBase,
     targetName: lane.targetName ?? defaults?.targetName,
     discourseUrl: lane.discourseUrl
-      ? normalizeBaseUrl(lane.discourseUrl)
+      ? normalizeServiceBaseUrl(lane.discourseUrl)
       : defaults?.discourseUrl
-        ? normalizeBaseUrl(defaults.discourseUrl)
+        ? normalizeServiceBaseUrl(defaults.discourseUrl)
         : undefined,
     apiKey: lane.apiKey ?? defaults?.apiKey,
     postAs: lane.postAs ?? defaults?.postAs,
@@ -575,10 +576,6 @@ function toPublicOptions(options: ResolvedOptions): PublicOptions {
       enabled: options.relationships.enabled,
     },
   };
-}
-
-function normalizeBaseUrl(value: string): string {
-  return new URL(value).href.replace(/\/+$/, "");
 }
 
 function resolveCreditOptions(options: DiscussionBridgeCreditOptions | undefined) {

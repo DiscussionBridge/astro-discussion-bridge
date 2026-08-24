@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { fromMarkdown } from "mdast-util-from-markdown";
 import { createDiscourseClient, type DiscoursePost, type TopicResponse } from "./discourse/client.js";
 import {
   compareOfficialSource,
@@ -9,6 +10,8 @@ import {
   type OfficialSourceProfile,
   type OfficialTextMetadata,
 } from "./official-source.js";
+import { parseDiscourseTopicReference, parseServiceBaseUrl } from "./web-url.js";
+import { publishFilesAtomically } from "./atomic-files.js";
 
 export type ImportPruneProfile = "community-call-to-action";
 export type ImportSourceMode = "discourse-imported" | "discourse-managed";
@@ -77,6 +80,9 @@ export async function importExistingDiscourseTopics(
   if (options.outputFile && options.topics.length !== 1) {
     throw new Error("outputFile can only be used when importing one topic.");
   }
+  if (!Array.isArray(options.topics) || options.topics.length === 0 || options.topics.length > 100) {
+    throw new Error("import-existing requires between 1 and 100 topics per run.");
+  }
   const docsDir = path.resolve(options.docsDir);
   const discourse = createDiscourseClient({
     discourseUrl: options.discourseUrl,
@@ -85,8 +91,8 @@ export async function importExistingDiscourseTopics(
   });
   const topicRefs = options.topics.map((topic) => parseTopicRef(topic, discourse.discourseUrl));
   const results: ImportedDiscourseTopic[] = [];
-
-  await fs.mkdir(docsDir, { recursive: true });
+  const stagedWrites: Array<{ filePath: string; source: string; topicId: number }> = [];
+  const stagedPaths = new Set<string>();
 
   for (const topicRef of topicRefs) {
     const topic = await discourse.topic(topicRef.topicId);
@@ -102,6 +108,7 @@ export async function importExistingDiscourseTopics(
     const filePath = options.outputFile
       ? safeExplicitImportFilePath(docsDir, options.outputFile, topic.id)
       : safeImportFilePath(docsDir, slug, topic.id);
+    await assertNoSymlinkDestination(docsDir, filePath, topic.id);
     const pageUrl = pageUrlForFile({ docsDir, filePath, siteUrl: options.siteUrl, routeBase: options.routeBase });
     const topicUrl = `${discourse.discourseUrl}/t/${slug}/${topic.id}`;
     const fileExists = await pathExists(filePath);
@@ -138,7 +145,7 @@ export async function importExistingDiscourseTopics(
     let officialSourceError: string | undefined;
     if (officialSource && sectionId) {
       firstPost = await fullFirstPost(discourse, firstPostSummary);
-      body = applyImportPruneProfiles(
+      body = finalImportBody(
         postBodyForImport(firstPost, topic.id),
         pruneProfiles,
         topic.id,
@@ -169,6 +176,13 @@ export async function importExistingDiscourseTopics(
       }
     }
 
+    firstPost ??= await fullFirstPost(discourse, firstPostSummary);
+    body ??= finalImportBody(
+      postBodyForImport(firstPost, topic.id),
+      pruneProfiles,
+      topic.id,
+    );
+
     if (options.dryRun) {
       results.push({
         filePath,
@@ -194,19 +208,9 @@ export async function importExistingDiscourseTopics(
       continue;
     }
 
-    firstPost ??= await fullFirstPost(discourse, firstPostSummary);
-    body ??= applyImportPruneProfiles(
-      postBodyForImport(firstPost, topic.id),
-      pruneProfiles,
-      topic.id,
-    );
     const refreshedSourceAuthor = sourceAuthorForPost(firstPost);
     const sourceHash = hashDiscussionSource({ title: topic.title, pageUrl, content: body });
-
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
-    await fs.writeFile(
-      filePath,
-      markdownForImportedTopic({
+    const source = markdownForImportedTopic({
         title: topic.title,
         targetName: options.targetName,
         topicId: topic.id,
@@ -228,8 +232,16 @@ export async function importExistingDiscourseTopics(
           ? `pruned:${pruneProfiles.join(",")}`
           : "unpruned",
         body,
-      }),
-    );
+      });
+    if (new TextEncoder().encode(source).byteLength > 4 * 1024 * 1024) {
+      throw new Error(`Generated Astro Markdown for Discourse topic ${topic.id} exceeds 4 MiB. No file was written.`);
+    }
+    const stagedPathKey = path.resolve(filePath).toLowerCase();
+    if (stagedPaths.has(stagedPathKey)) {
+      throw new Error(`Multiple Discourse topics resolve to the same Astro file: ${filePath}. No file was written.`);
+    }
+    stagedPaths.add(stagedPathKey);
+    stagedWrites.push({ filePath, source, topicId: topic.id });
 
     results.push({
       filePath,
@@ -253,6 +265,8 @@ export async function importExistingDiscourseTopics(
       reason: categoryChange,
     });
   }
+
+  await commitImportedFiles(docsDir, stagedWrites, options.overwrite === true);
 
   return results;
 }
@@ -282,6 +296,15 @@ function validateHeroOptions(options: Pick<ImportExistingDiscourseTopicsOptions,
   if (options.heroAlt && !options.heroImage) {
     throw new Error("heroImage is required when heroAlt is configured.");
   }
+  if (
+    options.heroImage
+    && (/[<>\r\n]/.test(options.heroImage) || !safeMarkdownDestination(options.heroImage))
+  ) {
+    throw new Error("heroImage must use a safe relative, fragment, mailto, HTTP, or HTTPS Markdown destination.");
+  }
+  if (options.heroAlt && (/\r|\n/.test(options.heroAlt) || options.heroAlt.length > 500)) {
+    throw new Error("heroAlt must be a single line no longer than 500 characters.");
+  }
 }
 
 function validateImportPruneProfiles(profiles: ImportPruneProfile[]): ImportPruneProfile[] {
@@ -303,35 +326,41 @@ function validateImportPruneProfiles(profiles: ImportPruneProfile[]): ImportPrun
 
 function parseTopicRef(value: string, discourseUrl: string): { topicId: number; slug?: string } {
   const trimmed = value.trim();
-  const numeric = Number(trimmed);
-  if (Number.isInteger(numeric) && numeric > 0) return { topicId: numeric };
+  if (/^[1-9]\d*$/.test(trimmed)) {
+    const numeric = Number(trimmed);
+    if (Number.isSafeInteger(numeric)) return { topicId: numeric };
+  }
 
-  let url: URL;
   try {
-    url = new URL(trimmed);
+    const reference = parseDiscourseTopicReference(trimmed, parseServiceBaseUrl(discourseUrl));
+    return { topicId: reference.topicId, ...(reference.slug ? { slug: reference.slug } : {}) };
   } catch {
     throw new Error(`Topic must be a numeric id or Discourse topic URL: ${value}`);
   }
+}
 
-  const expectedHost = new URL(discourseUrl).host;
-  if (url.host !== expectedHost) {
-    throw new Error(`Topic URL host ${url.host} does not match Discourse URL host ${expectedHost}.`);
+async function commitImportedFiles(
+  docsDir: string,
+  staged: Array<{ filePath: string; source: string; topicId: number }>,
+  overwrite: boolean,
+): Promise<void> {
+  for (const file of staged) {
+    await assertNoSymlinkDestination(docsDir, file.filePath, file.topicId);
   }
-
-  const parts = url.pathname.split("/").filter(Boolean);
-  const topicIndex = parts.indexOf("t");
-  if (topicIndex === -1) {
-    throw new Error(`Could not parse Discourse topic URL: ${value}`);
+  try {
+    await publishFilesAtomically(
+      staged.map((file) => ({ targetPath: file.filePath, contents: file.source })),
+      overwrite,
+    );
+  } catch (error) {
+    throw new Error(
+      `Could not commit imported Discourse topics. ${errorMessage(error)}`,
+    );
   }
+}
 
-  const afterTopic = parts.slice(topicIndex + 1);
-  const idPart = afterTopic.find((part) => /^\d+$/.test(part));
-  if (!idPart) {
-    throw new Error(`Could not find topic id in Discourse topic URL: ${value}`);
-  }
-
-  const slug = afterTopic.find((part) => part !== idPart && !/^\d+$/.test(part));
-  return { topicId: Number(idPart), slug };
+function isMissingFileError(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException)?.code === "ENOENT";
 }
 
 function firstPostForTopic(topic: TopicResponse): DiscoursePost | undefined {
@@ -373,11 +402,90 @@ function joinReasons(...reasons: Array<string | undefined>): string | undefined 
 }
 
 function postBodyForImport(post: DiscoursePost, topicId: number): string {
-  if (post.raw?.trim()) return post.raw.trim();
+  if (post.raw?.trim()) {
+    const body = post.raw.trim();
+    if (new TextEncoder().encode(body).byteLength > 2 * 1024 * 1024) {
+      throw new Error(`Discourse topic ${topicId} raw Markdown exceeds 2 MiB. No Astro file was written.`);
+    }
+    return body;
+  }
   throw new Error(
     `Discourse did not expose raw Markdown for topic ${topicId}. ` +
       "Rerun import-existing with DISCOURSE_DIAGNOSTICS_API_KEY or --diagnostics-api-key using a read-capable key.",
   );
+}
+
+function finalImportBody(body: string, profiles: ImportPruneProfile[], topicId: number): string {
+  const finalBody = applyImportPruneProfiles(body, profiles, topicId);
+  assertSafeImportedMarkdown(finalBody, topicId);
+  return finalBody;
+}
+
+export function assertSafeImportedMarkdown(body: string, topicId: number): void {
+  const tree = fromMarkdown(body) as MarkdownNode;
+  visitMarkdown(tree, (node) => {
+    if (node.type === "html") {
+      throw new Error(
+        `Discourse topic ${topicId} contains raw HTML outside a code block. `
+        + "No Astro file was written; convert or review the source as Markdown before importing.",
+      );
+    }
+    if (
+      (node.type === "link" || node.type === "image" || node.type === "definition")
+      && (typeof node.url !== "string" || !safeMarkdownDestination(node.url))
+    ) {
+      throw new Error(
+        `Discourse topic ${topicId} contains an unsafe Markdown link or image destination. `
+        + "No Astro file was written; convert or review the source before importing.",
+      );
+    }
+  });
+}
+
+interface MarkdownNode {
+  type: string;
+  url?: unknown;
+  children?: MarkdownNode[];
+}
+
+function visitMarkdown(node: MarkdownNode, visitor: (node: MarkdownNode) => void): void {
+  visitor(node);
+  for (const child of node.children ?? []) visitMarkdown(child, visitor);
+}
+
+function safeMarkdownDestination(value: string): boolean {
+  let normalized = decodeMarkdownUrl(value.trim())
+    .replace(/\\([^A-Za-z0-9\s])/g, "$1");
+  if (!safeDecodedDestinationForm(normalized)) return false;
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      const decoded = decodeURIComponent(normalized);
+      if (decoded === normalized) break;
+      normalized = decoded;
+      if (!safeDecodedDestinationForm(normalized)) return false;
+    } catch {
+      return false;
+    }
+  }
+  const scheme = normalized.match(/^([A-Za-z][A-Za-z\d+.-]*):/)?.[1].toLowerCase();
+  return !scheme || scheme === "http" || scheme === "https" || scheme === "mailto";
+}
+
+function safeDecodedDestinationForm(value: string): boolean {
+  return Boolean(value)
+    && !value.startsWith("//")
+    && !value.includes("\\")
+    && value === value.trim()
+    && !/[\u0000-\u001F\u007F]/.test(value);
+}
+
+function decodeMarkdownUrl(value: string): string {
+  return value
+    .replace(/&#x([0-9a-f]+);?/gi, (_, digits) => String.fromCodePoint(Number.parseInt(digits, 16)))
+    .replace(/&#([0-9]+);?/g, (_, digits) => String.fromCodePoint(Number.parseInt(digits, 10)))
+    .replace(/&colon;/gi, ":")
+    .replace(/&Tab;/gi, "\t")
+    .replace(/&NewLine;/gi, "\n");
 }
 
 function applyImportPruneProfiles(
@@ -413,34 +521,6 @@ function pruneTrailingCommunityCallToAction(body: string, topicId: number): stri
   throw new Error(
     `Prune profile community-call-to-action did not find a verified trailing block in Discourse topic ${topicId}. No file was written.`,
   );
-}
-
-function cookedHtmlToMarkdown(value: string): string {
-  return decodeHtmlEntities(value)
-    .replace(/<pre><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi, (_, code) => `\n\n\`\`\`\n${decodeHtmlEntities(stripTags(code)).trim()}\n\`\`\`\n\n`)
-    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_, text) => `\n# ${stripTags(text).trim()}\n\n`)
-    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_, text) => `\n## ${stripTags(text).trim()}\n\n`)
-    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_, text) => `\n### ${stripTags(text).trim()}\n\n`)
-    .replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (_, text) => `\n\n${stripTags(text).trim()}\n\n`)
-    .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_, text) => `\n- ${stripTags(text).trim()}`)
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function stripTags(value: string): string {
-  return value.replace(/<[^>]+>/g, "");
-}
-
-function decodeHtmlEntities(value: string): string {
-  return value
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
 }
 
 function markdownForImportedTopic(input: {
@@ -562,8 +642,8 @@ function safeImportFilePath(docsDir: string, slug: string, topicId: number): str
 
 function safeExplicitImportFilePath(docsDir: string, outputFile: string, topicId: number): string {
   const trimmed = outputFile.trim();
-  if (!trimmed || !/\.(?:md|mdx)$/i.test(trimmed)) {
-    throw new Error(`Import output for Discourse topic ${topicId} must be a relative .md or .mdx file.`);
+  if (!trimmed || !/\.md$/i.test(trimmed)) {
+    throw new Error(`Import output for Discourse topic ${topicId} must be a relative .md file; automatic import does not write executable MDX.`);
   }
   if (path.isAbsolute(trimmed)) {
     throw new Error(`Import output for Discourse topic ${topicId} must be relative to the docs directory.`);
@@ -574,6 +654,36 @@ function safeExplicitImportFilePath(docsDir: string, outputFile: string, topicId
     throw new Error(`Import output for Discourse topic ${topicId} resolved outside the docs directory.`);
   }
   return filePath;
+}
+
+export async function assertNoSymlinkDestination(
+  docsDir: string,
+  filePath: string,
+  topicId: number,
+): Promise<void> {
+  const resolvedDocsDir = path.resolve(docsDir);
+  const resolvedFilePath = path.resolve(filePath);
+  const relative = path.relative(resolvedDocsDir, resolvedFilePath);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error(`Import output for Discourse topic ${topicId} resolved outside the docs directory.`);
+  }
+  const root = path.parse(resolvedFilePath).root;
+  const parts = path.relative(root, resolvedFilePath).split(path.sep).filter(Boolean);
+  let current = root;
+  for (const part of parts) {
+    current = path.join(current, part);
+    try {
+      const status = await fs.lstat(current);
+      if (status.isSymbolicLink()) {
+        throw new Error(
+          `Import output for Discourse topic ${topicId} crosses a symbolic link or reparse-point boundary. No file was written.`,
+        );
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") continue;
+      throw error;
+    }
+  }
 }
 
 function normalizeRequiredTags(tags: string[]): string[] {

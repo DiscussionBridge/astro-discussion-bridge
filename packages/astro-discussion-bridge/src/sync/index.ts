@@ -8,6 +8,11 @@ import {
   type DiscussionTargetBinding,
   type DiscussionTargetBindings,
 } from "../targets.js";
+import {
+  assertServiceResponseUrl,
+  parseServiceBaseUrl,
+  resolveServiceRequestUrl,
+} from "../web-url.js";
 
 export type SyncMode = "publish-new" | "sync-existing" | "publish-and-sync";
 
@@ -627,10 +632,11 @@ async function resolveControlledCreation(input: {
   };
 }): Promise<{ outcome: "created" | "resolved"; reason: string; topicId: number }> {
   const endpointPath = input.options.endpointPath ?? "/discussion-bridge/connections/resolve.json";
-  const endpoint = new URL(endpointPath, `${input.discourseUrl.replace(/\/+$/, "")}/`);
-  if (endpoint.origin !== new URL(input.discourseUrl).origin) {
-    throw new Error("controlledCreation endpointPath must remain on the configured Discourse origin.");
+  const serviceBase = parseServiceBaseUrl(input.discourseUrl);
+  if (serviceBase.protocol !== "https:") {
+    throw new Error("controlledCreation requires HTTPS for its connection secret.");
   }
+  const endpoint = resolveServiceRequestUrl(endpointPath, serviceBase);
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -640,6 +646,7 @@ async function resolveControlledCreation(input: {
         input.options.requestTimeoutMs,
         DEFAULT_CONTROLLED_CREATION_TIMEOUT_MS,
         "controlledCreation requestTimeoutMs",
+        10 * 60 * 1000,
       ),
     ),
     headers: {
@@ -661,6 +668,7 @@ async function resolveControlledCreation(input: {
       },
     }),
   });
+  if (response.url) assertServiceResponseUrl(response.url, serviceBase, "controlledCreation response URL");
 
   const payload = await safeControlledCreationResponse(
     response,
@@ -668,11 +676,15 @@ async function resolveControlledCreation(input: {
       input.options.maxResponseBytes,
       DEFAULT_CONTROLLED_CREATION_MAX_RESPONSE_BYTES,
       "controlledCreation maxResponseBytes",
+      64 * 1024 * 1024,
     ),
   );
+  const responseReason = safeControlledCreationReason(
+    payload.reason,
+    [input.options.connectionSecret, input.options.connectionId],
+  );
   if (!response.ok) {
-    const reason = typeof payload.reason === "string" ? payload.reason : `HTTP ${response.status}`;
-    throw new Error(`DiscussionBridge controlled creation was rejected: ${reason}.`);
+    throw new Error(`DiscussionBridge controlled creation was rejected: ${responseReason ?? `HTTP ${response.status}`}.`);
   }
   if (payload.core_fallback !== false) {
     throw new Error("DiscussionBridge controlled creation did not explicitly deny Core fallback.");
@@ -686,7 +698,7 @@ async function resolveControlledCreation(input: {
 
   return {
     outcome: payload.outcome,
-    reason: typeof payload.reason === "string" ? payload.reason : payload.outcome,
+    reason: responseReason ?? payload.outcome,
     topicId: payload.topic_id,
   };
 }
@@ -696,8 +708,14 @@ async function safeControlledCreationResponse(
   maxResponseBytes: number,
 ): Promise<ControlledCreationResponse> {
   try {
+    const contentType = response.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+    if (!contentType || !(contentType === "application/json" || contentType.endsWith("+json"))) {
+      await response.body?.cancel().catch(() => undefined);
+      throw new Error(`response was not JSON (${contentType || "missing content type"})`);
+    }
     const declaredLength = Number(response.headers.get("content-length"));
     if (Number.isFinite(declaredLength) && declaredLength > maxResponseBytes) {
+      await response.body?.cancel().catch(() => undefined);
       throw new Error("response exceeds the configured size limit");
     }
     const reader = response.body?.getReader();
@@ -730,10 +748,15 @@ async function safeControlledCreationResponse(
   }
 }
 
-function positiveBoundedInteger(value: number | undefined, fallback: number, label: string): number {
+function positiveBoundedInteger(
+  value: number | undefined,
+  fallback: number,
+  label: string,
+  maximum = Number.MAX_SAFE_INTEGER,
+): number {
   const resolved = value ?? fallback;
-  if (!Number.isInteger(resolved) || resolved <= 0) {
-    throw new Error(`${label} must be a positive integer.`);
+  if (!Number.isSafeInteger(resolved) || resolved <= 0 || resolved > maximum) {
+    throw new Error(`${label} must be a positive bounded integer.`);
   }
   return resolved;
 }
@@ -1286,6 +1309,18 @@ function parseSimpleYaml(source: string): Record<string, string> {
   }
 
   return values;
+}
+
+function safeControlledCreationReason(
+  value: unknown,
+  protectedValues: string[],
+): string | undefined {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  let reason = value.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
+  for (const protectedValue of protectedValues) {
+    if (protectedValue) reason = reason.replaceAll(protectedValue, "[REDACTED]");
+  }
+  return reason.slice(0, 500);
 }
 
 function updateFrontmatter(source: string, values: Record<string, string>): string {

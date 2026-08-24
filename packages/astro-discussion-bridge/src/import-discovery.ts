@@ -10,6 +10,7 @@ import {
   type ImportManifest,
   type ImportManifestEntry,
 } from "./import-manifest.js";
+import { parseServiceBaseUrl, serviceRelativeRequestTarget } from "./web-url.js";
 import type { ImportSourceMode } from "./import-existing.js";
 import { parseDiscussionTargetBindings } from "./targets.js";
 
@@ -259,16 +260,15 @@ async function fetchCategoryTopics(
     visited.add(pathname);
     const response = await client.categoryTopics(pathname);
     topics.push(...(response.topic_list?.topics ?? []));
-    pathname = normalizePaginationPath(response.topic_list?.more_topics_url);
+    pathname = normalizePaginationPath(response.topic_list?.more_topics_url, client.discourseUrl);
   }
 
   return topics;
 }
 
-function normalizePaginationPath(value: string | null | undefined): string {
+function normalizePaginationPath(value: string | null | undefined, discourseUrl: string): string {
   if (!value) return "";
-  const parsed = new URL(value, "https://discussionbridge.invalid");
-  return `${parsed.pathname}${parsed.search}`;
+  return serviceRelativeRequestTarget(value, parseServiceBaseUrl(discourseUrl));
 }
 
 function parseDateBoundary(value: string, boundary: "start" | "end"): number {
