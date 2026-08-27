@@ -1,57 +1,37 @@
 declare module "virtual:discussion-bridge/config" {
   const config: {
-    provider: "discourse";
-    preset: "astro" | "starlight";
     discourseUrl: string;
-    siteUrl?: string;
-    connections: {
-      requireExplicit: boolean;
-      jobs: import("./targets.js").DiscussionConnectionJobs;
-    };
     comments: {
       enabled: boolean;
-      display: "simple" | "full" | "fullInteractive";
+      display: "fullInteractive";
       embedHeight: string;
       dynamicHeight: boolean;
       embedMinHeight: string;
-      embedMaxHeight: string;
-      embedViewportMaxHeight: string;
       className?: string;
-    };
-    replies: {
-      enabled: boolean;
-      minScore: number;
-      maxReplies: number;
-      refreshEndpoint?: string;
-      renderMermaid: boolean;
-      showLikes: boolean;
-      refreshOnPageLoad: boolean;
-    };
-    relationships: {
-      enabled: boolean;
+      credit: {
+        enabled: boolean;
+        prefix: string;
+        label: string;
+        href: string;
+      };
     };
   };
-
   export default config;
 }
 
-declare module "virtual:discussion-bridge/relationships" {
-  const manifest: import("./relationships.js").ContentRelationshipManifest;
-  export default manifest;
+declare global {
+  interface Window {
+    DiscourseEmbed?: {
+      discourseUrl: string;
+      discourseEmbedUrl?: string;
+      topicId?: number;
+      className?: string;
+      fullApp: true;
+      embedHeight: string;
+      dynamicHeight: boolean;
+      embedMinHeight: string;
+    };
+  }
 }
 
-interface Window {
-  DiscourseEmbed?: {
-    className?: string;
-    discourseUrl: string;
-    embedHeight?: string;
-    dynamicHeight?: boolean;
-    embedMinHeight?: string;
-    embedMaxHeight?: string;
-    embedViewportMaxHeight?: string;
-    fullApp?: boolean;
-  } & (
-    | { discourseEmbedUrl: string; topicId?: never }
-    | { discourseEmbedUrl?: never; topicId: number | string }
-  );
-}
+export {};

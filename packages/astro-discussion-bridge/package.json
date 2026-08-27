@@ -1,7 +1,7 @@
 {
   "name": "astro-discussion-bridge",
   "version": "0.1.0-alpha.20260824.3",
-  "description": "Astro integration toolkit for bridging pages to hosted discussions, starting with Discourse.",
+  "description": "Controlled Astro-to-DiscussionBridge companion creation with mapped comments-only fullInteractive presentation.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -15,72 +15,27 @@
   "homepage": "https://github.com/DiscussionBridge/astro-discussion-bridge#readme",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "astro-discussion-bridge": "./dist/cli.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./client": {
-      "types": "./dist/discourse/client.d.ts",
-      "import": "./dist/discourse/client.js"
-    },
-    "./import-existing": {
-      "types": "./dist/import-existing.d.ts",
-      "import": "./dist/import-existing.js"
-    },
-    "./import-manifest": {
-      "types": "./dist/import-manifest.d.ts",
-      "import": "./dist/import-manifest.js"
-    },
-    "./import-discovery": {
-      "types": "./dist/import-discovery.d.ts",
-      "import": "./dist/import-discovery.js"
-    },
-    "./sync": {
-      "types": "./dist/sync/index.d.ts",
-      "import": "./dist/sync/index.js"
-    },
-    "./targets": {
-      "types": "./dist/targets.d.ts",
-      "import": "./dist/targets.js"
+    "./controlled-creation": {
+      "types": "./dist/controlled-creation.d.ts",
+      "import": "./dist/controlled-creation.js"
     },
     "./web-url": {
       "types": "./dist/web-url.d.ts",
       "import": "./dist/web-url.js"
     },
-    "./source": {
-      "types": "./dist/source.d.ts",
-      "import": "./dist/source.js"
-    },
-    "./official-source": {
-      "types": "./dist/official-source.d.ts",
-      "import": "./dist/official-source.js"
-    },
-    "./relationships": {
-      "types": "./dist/relationships.d.ts",
-      "import": "./dist/relationships.js"
-    },
-    "./navigation": {
-      "types": "./dist/navigation.d.ts",
-      "import": "./dist/navigation.js"
-    },
-    "./DiscourseComments.astro": "./src/components/DiscourseComments.astro",
-    "./DiscourseReplies.astro": "./src/components/DiscourseReplies.astro",
     "./DiscourseDiscussion.astro": "./src/components/DiscourseDiscussion.astro",
     "./Discussion.astro": "./src/components/Discussion.astro",
-    "./DiscussionCredit.astro": "./src/components/DiscussionCredit.astro",
-    "./DiscussionSource.astro": "./src/components/DiscussionSource.astro",
-    "./DiscussionRelations.astro": "./src/components/DiscussionRelations.astro",
-    "./DiscussionNavigation.astro": "./src/components/DiscussionNavigation.astro"
+    "./DiscussionCredit.astro": "./src/components/DiscussionCredit.astro"
   },
   "files": [
     "dist",
     "src/components",
     "README.md",
-    "TODO.md",
     "src/virtual.d.ts"
   ],
   "scripts": {
@@ -88,13 +43,7 @@
     "check": "tsc -p tsconfig.json --noEmit",
     "check:attribution": "node ../../scripts/check-package-attribution.mjs",
     "test": "npm run build && node --test test/*.test.mjs",
-    "sync": "astro-discussion-bridge sync",
-    "publish-new": "astro-discussion-bridge publish-new",
-    "sync-existing": "astro-discussion-bridge sync-existing",
-    "publish-and-sync": "astro-discussion-bridge publish-and-sync",
-    "import-existing": "astro-discussion-bridge import-existing",
-    "discover-imports": "astro-discussion-bridge discover-imports",
-    "discover-navigation": "astro-discussion-bridge discover-navigation"
+    "pack:inspect": "npm pack --dry-run"
   },
   "keywords": [
     "astro",
@@ -121,9 +70,6 @@
     }
   },
   "dependencies": {
-    "fast-xml-parser": "^5.10.1",
-    "mdast-util-from-markdown": "^2.0.2",
-    "mermaid": "^11.17.0",
     "yaml": "^2.9.0"
   }
 }

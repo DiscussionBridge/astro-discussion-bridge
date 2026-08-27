@@ -1,217 +1,37 @@
 ---
-import config from "virtual:discussion-bridge/config";
-import {
-  discussionTargetLabel,
-  discourseUrlFromTopicUrl,
-  parseDiscussionConnectionJobs,
-  resolveDiscussionPresentation,
-  type DiscussionConnectionJobs,
-  type DiscussionTargetBindings,
-} from "astro-discussion-bridge/targets";
 import DiscourseDiscussion from "./DiscourseDiscussion.astro";
-import DiscourseReplies from "./DiscourseReplies.astro";
 import DiscussionCredit from "./DiscussionCredit.astro";
+import config from "virtual:discussion-bridge/config";
 
 interface Props {
   class?: string;
   discourseUrl?: string;
-  display?: "simple" | "full" | "fullInteractive";
   embedClassName?: string;
-  embedUrl?: string;
   heading?: string;
-  refreshOnPageLoad?: boolean;
-  renderMermaid?: boolean;
-  connectionJobs?: DiscussionConnectionJobs | string;
-  primaryTarget?: string;
-  requireConnectionJobs?: boolean;
-  sourceTarget?: string;
-  targetBindings?: DiscussionTargetBindings | string;
-  targetLabels?: Record<string, string>;
-  topicId?: number | string;
-  topicUrl?: string;
+  topicId?: unknown;
+  topicUrl?: unknown;
   frontmatter?: Record<string, unknown>;
 }
 
-const display = Astro.props.display ?? config.comments.display;
-const frontmatter = Astro.props.frontmatter;
-const sourceMode = stringValue(frontmatter?.discussionSourceMode)?.toLowerCase();
-const legacySourceTarget = ["discourse-imported", "discourse-managed"].includes(sourceMode ?? "")
-  ? stringValue(frontmatter?.discussionTarget)
-  : undefined;
-const sourceTarget = Astro.props.sourceTarget
-  ?? stringValue(frontmatter?.discussionSourceTarget)
-  ?? legacySourceTarget;
-const connectionJobs = {
-  ...config.connections.jobs,
-  ...parseDiscussionConnectionJobs(
-    Astro.props.connectionJobs ?? connectionJobsValue(frontmatter?.discussionConnectionJobs),
-  ),
-};
-const presentation = resolveDiscussionPresentation({
-  bindings: Astro.props.targetBindings ?? bindingValue(frontmatter?.discussionTargetBindings),
-  connectionJobs,
-  primaryTarget: Astro.props.primaryTarget ?? stringValue(frontmatter?.discussionPrimaryTarget),
-  requireConnectionJobs: Astro.props.requireConnectionJobs
-    ?? booleanValue(frontmatter?.discussionRequireConnectionJobs)
-    ?? config.connections.requireExplicit,
-  sourceTarget,
-  sourceBinding: sourceTarget
-    ? {
-        topicId: numberValue(Astro.props.topicId ?? frontmatter?.discourseTopicId),
-        topicUrl: Astro.props.topicUrl ?? stringValue(frontmatter?.discourseTopicUrl),
-      }
-    : undefined,
-});
-const topicId = presentation.primary?.topicId ?? Astro.props.topicId;
-const topicUrl = presentation.primary?.topicUrl ?? Astro.props.topicUrl;
-const discourseUrl = presentation.primary?.discourseUrl
-  ?? Astro.props.discourseUrl
-  ?? discourseUrlFromTopicUrl(topicUrl);
-const targetLabels = Astro.props.targetLabels ?? {};
-const primaryJob = presentation.primary?.connectionJob;
-const heading = Astro.props.heading ?? primaryJob?.callToAction;
-const discussionRendered = display === "full"
-  ? config.replies.enabled && Boolean(topicId)
-  : config.comments.enabled;
+const frontmatter = Astro.props.frontmatter ?? Astro.props;
+const topicId = Astro.props.topicId ?? frontmatter.discourseTopicId;
+const topicUrl = stringValue(Astro.props.topicUrl ?? frontmatter.discourseTopicUrl);
 
 function stringValue(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim() ? value : undefined;
-}
-
-function numberValue(value: unknown): number | undefined {
-  const parsed = typeof value === "number" ? value : Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
-}
-
-function bindingValue(value: unknown): DiscussionTargetBindings | string | undefined {
-  if (typeof value === "string") return value;
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value as DiscussionTargetBindings;
-  }
-  return undefined;
-}
-
-function connectionJobsValue(value: unknown): DiscussionConnectionJobs | string | undefined {
-  if (typeof value === "string") return value;
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value as DiscussionConnectionJobs;
-  }
-  return undefined;
-}
-
-function booleanValue(value: unknown): boolean | undefined {
-  if (typeof value === "boolean") return value;
-  if (typeof value !== "string") return undefined;
-  if (value.trim().toLowerCase() === "true") return true;
-  if (value.trim().toLowerCase() === "false") return false;
-  return undefined;
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 ---
 
-{primaryJob && (
-  <header class="discussion-bridge-connection">
-    <p class="discussion-bridge-connection__audience">{primaryJob.audience}</p>
-    <p>{primaryJob.description}</p>
-  </header>
+{config.comments.enabled && (
+  <>
+    <DiscourseDiscussion
+      class={Astro.props.class}
+      discourseUrl={Astro.props.discourseUrl}
+      embedClassName={Astro.props.embedClassName}
+      heading={Astro.props.heading}
+      topicId={topicId}
+      topicUrl={topicUrl}
+    />
+    <DiscussionCredit />
+  </>
 )}
-
-{display === "full" ? (
-  <DiscourseReplies
-    class={Astro.props.class}
-    discourseUrl={discourseUrl}
-    heading={heading}
-    refreshOnPageLoad={Astro.props.refreshOnPageLoad}
-    renderMermaid={Astro.props.renderMermaid}
-    topicId={topicId}
-    topicUrl={topicUrl}
-  />
-) : (
-  <DiscourseDiscussion
-    class={Astro.props.class}
-    discourseUrl={discourseUrl}
-    embedClassName={Astro.props.embedClassName}
-    embedUrl={Astro.props.embedUrl}
-    fullApp={display === "fullInteractive"}
-    heading={heading}
-    topicId={topicId}
-    topicUrl={topicUrl}
-  />
-)}
-
-{presentation.additional.length > 0 && (
-  <nav class="discussion-bridge-additional" aria-label="Additional discussions">
-    <span>Additional discussion options</span>
-    <ul>
-      {presentation.additional.map((target) => {
-        const job = target.connectionJob;
-        const label = job?.callToAction
-          ?? targetLabels[target.name]
-          ?? discussionTargetLabel(target.name);
-        return (
-          <li>
-            {target.topicUrl ? (
-              <a href={target.topicUrl}>{label}</a>
-            ) : (
-              <span>{label}</span>
-            )}
-            {job && (
-              <>
-                <span class="discussion-bridge-additional__audience">{job.audience}</span>
-                <span class="discussion-bridge-additional__description">{job.description}</span>
-              </>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  </nav>
-)}
-
-{discussionRendered && <DiscussionCredit />}
-
-<style>
-  .discussion-bridge-connection {
-    margin-block: 1rem;
-  }
-
-  .discussion-bridge-connection p {
-    margin: 0;
-  }
-
-  .discussion-bridge-connection__audience {
-    font-weight: 600;
-  }
-
-  .discussion-bridge-additional {
-    margin-block-start: 1rem;
-    padding-block-start: 1rem;
-    border-block-start: 1px solid var(--sl-color-gray-5, #d7d7d7);
-    font-size: 0.9375rem;
-  }
-
-  .discussion-bridge-additional span {
-    font-weight: 600;
-  }
-
-  .discussion-bridge-additional ul {
-    display: grid;
-    gap: 0.75rem;
-    margin: 0.5rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .discussion-bridge-additional li {
-    display: grid;
-    gap: 0.125rem;
-  }
-
-  .discussion-bridge-additional__audience {
-    font-size: 0.875rem;
-  }
-
-  .discussion-bridge-additional__description {
-    color: var(--sl-color-gray-2, #454545);
-    font-weight: 400;
-  }
-</style>

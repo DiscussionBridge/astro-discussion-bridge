@@ -50,9 +50,28 @@ if (pack.status !== 0) {
 } else {
   const report = JSON.parse(pack.stdout.slice(pack.stdout.indexOf("["), pack.stdout.lastIndexOf("]") + 1))[0];
   const files = new Set(report.files.map((entry) => entry.path.replaceAll("\\", "/")));
-  for (const required of ["LICENSE", "README.md", "package.json", "dist/index.js", "dist/index.d.ts"]) {
+  for (const required of [
+    "LICENSE",
+    "README.md",
+    "package.json",
+    "dist/index.js",
+    "dist/index.d.ts",
+    "dist/controlled-creation.js",
+    "dist/controlled-creation.d.ts",
+    "dist/web-url.js",
+    "src/components/Discussion.astro",
+    "src/components/DiscourseDiscussion.astro",
+    "src/components/DiscussionCredit.astro",
+  ]) {
     if (!files.has(required)) fail(`Package tarball is missing ${required}.`);
   }
+  const forbidden = [...files].filter((file) =>
+    /(?:^|\/)(?:cli|check-discourse|atomic-files|import-|navigation|official-source|relationships|source|targets)(?:\.|\/)/i.test(file)
+    || /(?:^|\/)discourse\/client\./i.test(file)
+    || /(?:^|\/)sync\//i.test(file)
+    || /(?:browser-refresh|reaction-rendering|DiscourseComments|DiscourseReplies|DiscussionNavigation|DiscussionRelations|DiscussionSource)/i.test(file)
+  );
+  if (forbidden.length) fail(`Package tarball contains removed surfaces: ${forbidden.join(", ")}`);
 }
 
 if (failures.length) {

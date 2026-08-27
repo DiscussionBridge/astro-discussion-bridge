@@ -9,11 +9,10 @@ interface Props {
   class?: string;
   discourseUrl?: string;
   embedClassName?: string;
-  embedUrl?: string;
-  fullApp?: boolean;
+  frontmatter?: Record<string, unknown>;
   heading?: string;
-  topicId?: number | string;
-  topicUrl?: string;
+  topicId?: unknown;
+  topicUrl?: unknown;
 }
 
 const discourseUrl = `${normalizeServiceBaseUrl(
@@ -21,12 +20,9 @@ const discourseUrl = `${normalizeServiceBaseUrl(
   "DiscourseDiscussion discourseUrl",
 )}/`;
 const embedClassName = Astro.props.embedClassName ?? config.comments.className;
-const embedUrl = Astro.props.embedUrl ?? Astro.url.href;
-const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteractive";
 const embedHeight = config.comments.embedHeight;
 const dynamicHeight = config.comments.dynamicHeight;
 const embedMinHeight = config.comments.embedMinHeight;
-const embedMaxHeight = config.comments.embedMaxHeight;
 const heading = Astro.props.heading ?? "Comments";
 const topicIdValue = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
 const topicId = positiveTopicId(topicIdValue, "DiscourseDiscussion topicId");
@@ -34,14 +30,18 @@ const topicUrlValue = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourse
 const topicReference = topicUrlValue === undefined
   ? undefined
   : parsePublicDiscourseTopicUrl(
-      topicUrlValue,
+      requiredString(topicUrlValue, "DiscourseDiscussion topicUrl"),
       discourseUrl,
       "DiscourseDiscussion topicUrl",
     );
 if (topicId !== undefined && topicReference && topicReference.topicId !== topicId) {
   throw new Error("DiscourseDiscussion topicId and topicUrl must identify the same topic.");
 }
+const resolvedTopicId = topicId ?? topicReference?.topicId;
 const topicUrl = topicReference?.href;
+if (config.comments.enabled && resolvedTopicId === undefined) {
+  throw new Error("DiscourseDiscussion requires one completed topic mapping.");
+}
 
 function positiveTopicId(value: unknown, label: string): number | undefined {
   if (value === undefined) return undefined;
@@ -50,6 +50,11 @@ function positiveTopicId(value: unknown, label: string): number | undefined {
     throw new Error(`${label} must be a positive safe integer.`);
   }
   return Number(text);
+}
+
+function requiredString(value: unknown, label: string): string {
+  if (typeof value !== "string" || !value.trim()) throw new Error(`${label} must be a non-empty string.`);
+  return value;
 }
 ---
 
@@ -64,12 +69,15 @@ function positiveTopicId(value: unknown, label: string): number | undefined {
 )}
 
 {config.comments.enabled && (
-  <script define:vars={{ discourseUrl, embedClassName, embedUrl, fullApp, embedHeight, dynamicHeight, embedMinHeight, embedMaxHeight, topicId }}>
+  <script define:vars={{ discourseUrl, embedClassName, embedHeight, dynamicHeight, embedMinHeight, resolvedTopicId }}>
     window.DiscourseEmbed = {
       discourseUrl,
-      ...(topicId ? { topicId } : { discourseEmbedUrl: embedUrl }),
+      topicId: resolvedTopicId,
       ...(embedClassName ? { className: embedClassName } : {}),
-      ...(fullApp ? { fullApp: true, embedHeight, dynamicHeight, embedMinHeight, embedMaxHeight } : {}),
+      fullApp: true,
+      embedHeight,
+      dynamicHeight,
+      embedMinHeight,
     };
 
     const script = document.createElement("script");
