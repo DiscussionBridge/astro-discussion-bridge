@@ -4,6 +4,7 @@ import path from "node:path";
 import { parse as parseYaml } from "yaml";
 import {
   assertServiceResponseUrl,
+  normalizePublicHttpUrl,
   parsePublicDiscourseTopicUrl,
   parseServiceBaseUrl,
   resolveServiceRequestUrl,
@@ -231,6 +232,10 @@ export async function resolveControlledCreation(input: {
   tags?: string[];
 }): Promise<{ outcome: "created" | "resolved"; reason: string; topicId: number }> {
   validateConnectionSettings(input.options);
+  const sourceUrl = validatedSourceUrl(input.sourceUrl);
+  const title = validatedTitle(input.title, "controlledCreation request");
+  const categoryId = optionalPositiveInteger(input.categoryId, "controlledCreation categoryId");
+  const tags = optionalTags(input.tags);
   const serviceBase = parseServiceBaseUrl(input.discourseUrl);
   if (serviceBase.protocol !== "https:") throw new Error("controlledCreation requires HTTPS for its connection secret.");
   const endpoint = resolveServiceRequestUrl(
@@ -255,12 +260,12 @@ export async function resolveControlledCreation(input: {
       connection: {
         connection_id: input.options.connectionId,
         adapter_id: "astro",
-        source_url: input.sourceUrl,
-        title: input.title,
+        source_url: sourceUrl,
+        title,
         visibility: input.options.visibility ?? "unlisted",
         ...(input.options.lane ? { lane: input.options.lane } : {}),
-        ...(input.categoryId === undefined ? {} : { category_id: input.categoryId }),
-        ...(input.tags === undefined ? {} : { tags: input.tags }),
+        ...(categoryId === undefined ? {} : { category_id: categoryId }),
+        ...(tags === undefined ? {} : { tags }),
         correlation_id: randomUUID(),
       },
     }),
@@ -507,6 +512,19 @@ function validatedTitle(value: string, filePath: string): string {
     throw new Error(`DiscussionBridge title is invalid or exceeds 1,024 bytes for ${filePath}.`);
   }
   return value;
+}
+
+function validatedSourceUrl(value: string): string {
+  const normalized = normalizePublicHttpUrl(value, "controlledCreation sourceUrl");
+  const rawPath = value.slice(value.indexOf("/", value.indexOf("://") + 3)).split(/[?#]/, 1)[0];
+  if (
+    /\/{2,}/.test(rawPath)
+    || /(?:^|\/)\.{1,2}(?:\/|$)/.test(rawPath)
+    || /%(?:25)*(?:2e|2f|5c)/i.test(rawPath)
+  ) {
+    throw new Error("controlledCreation sourceUrl contains an ambiguous or escaping path segment.");
+  }
+  return normalized;
 }
 
 function optionalPositiveInteger(value: unknown, label: string): number | undefined {

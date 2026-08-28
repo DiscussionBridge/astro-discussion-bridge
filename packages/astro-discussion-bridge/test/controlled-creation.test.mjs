@@ -401,3 +401,27 @@ test("connection identity, lane, and visibility are runtime validated before fet
   }
   assert.equal(requests, 0);
 });
+
+test("direct controlled creation enforces source, title, category, and tag bounds before fetch", async (t) => {
+  const previousFetch = globalThis.fetch;
+  let requests = 0;
+  globalThis.fetch = async () => { requests += 1; throw new Error("must not request"); };
+  t.after(() => { globalThis.fetch = previousFetch; });
+  const base = {
+    discourseUrl: "https://forum.example/",
+    options: { connectionId: "valid", connectionSecret: "secret" },
+    sourceUrl: "https://site.example/page/",
+    title: "Page",
+  };
+  for (const input of [
+    { ...base, sourceUrl: "https://site.example/%2e%2e/private" },
+    { ...base, sourceUrl: `https://site.example/${"x".repeat(2_048)}` },
+    { ...base, title: "x".repeat(1_025) },
+    { ...base, categoryId: 0 },
+    { ...base, tags: ["x".repeat(101)] },
+    { ...base, tags: ["Tag", "tag"] },
+  ]) {
+    await assert.rejects(() => resolveControlledCreation(input));
+  }
+  assert.equal(requests, 0);
+});
