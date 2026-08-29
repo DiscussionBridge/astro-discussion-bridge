@@ -4,7 +4,8 @@ Alpha publishing-side adapter for the plain DiscussionBridge Discourse plugin.
 It has three bounded functions:
 
 - authenticated, server-side Bridge Record creation or resolution during an
-  Astro build;
+  Astro build, including a rendered and sanitized bounded source-content
+  snapshot so the receiving topic contains the article and attribution;
 - authenticated From Discourse retrieval and sanitized static presentation;
   and
 - mapped comments-only `fullInteractive` presentation through Discourse Core.
@@ -59,6 +60,11 @@ a request:
 discussionCommentsDisplay: fullInteractive
 discussionSync: true
 ```
+
+The eligible page body must render to nonempty HTML within the 48 KiB
+published-content bound. The complete local corpus is rendered and validated
+before the first remote request; unsupported MDX constructs, empty output, and
+oversized output fail the build rather than creating a link-only topic.
 
 `draft: true` or `published: false` prevents publication. The forum retains
 category, tag, lane, actor, and visibility authority. A stored

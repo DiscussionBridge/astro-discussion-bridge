@@ -50,7 +50,7 @@ function options(root) {
 
 test("only explicitly authorized published fullInteractive pages make a controlled request", async (t) => {
   const root = await fixture({
-    "authorized.md": "---\ntitle: Authorized\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n# Authorized\n",
+    "authorized.md": "---\ntitle: Authorized\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n# Authorized\n\nMeaningful **Astro** content.\n\n<script>unsafe()</script>\n",
     "omitted.md": "---\ndiscussionCommentsDisplay: fullInteractive\n---\n",
     "false.md": "---\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: false\n---\n",
     "string-false.md": "---\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: \"true\"\n---\n",
@@ -80,10 +80,13 @@ test("only explicitly authorized published fullInteractive pages make a controll
   const body = JSON.parse(requests[0].init.body);
   assert.deepEqual(
     Object.keys(body.bridge_record).sort(),
-    ["adapter_id", "adapter_version", "canonical_url", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
+    ["adapter_id", "adapter_version", "canonical_url", "content_html", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
   );
   assert.equal(body.bridge_record.canonical_url, "https://site.example/authorized/");
   assert.equal(body.bridge_record.direction, "to_discourse");
+  assert.match(body.bridge_record.content_html, /<h1[^>]*>Authorized<\/h1>/);
+  assert.match(body.bridge_record.content_html, /Meaningful <strong>Astro<\/strong> content/);
+  assert.doesNotMatch(body.bridge_record.content_html, /script|unsafe/);
   assert.equal(body.bridge_record.published, true);
   assert.match(body.bridge_record.external_id, /^astro-page:[0-9a-f]{64}$/);
   assert.equal(results.filter((result) => result.status !== "skipped").length, 1);
@@ -95,7 +98,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
 
 test("an existing local binding is authenticated again and mismatch never overwrites", async (t) => {
   const root = await fixture({
-    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\n`,
+    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const original = await fs.readFile(path.join(root, "page.md"), "utf8");
@@ -112,7 +115,7 @@ test("an existing local binding is authenticated again and mismatch never overwr
 
 test("a matching stored mapping is reauthenticated and a wrong-origin or internally inconsistent URL fails before request", async (t) => {
   const root = await fixture({
-    "matching.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\n`,
+    "matching.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
@@ -130,11 +133,11 @@ test("a matching stored mapping is reauthenticated and a wrong-origin or interna
   assert.equal(result.status, "resolved");
   assert.equal(result.topicId, 40);
 
-  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://attacker.invalid/t/bound/40\n---\n`);
+  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://attacker.invalid/t/bound/40\n---\nBound page content.\n`);
   await assert.rejects(() => publishControlledDiscussions(options(root)), /left the configured Discourse origin/);
   assert.equal(requests, 1);
 
-  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/41\n---\n`);
+  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/41\n---\nBound page content.\n`);
   await assert.rejects(() => publishControlledDiscussions(options(root)), /topic ID and URL disagree/);
   assert.equal(requests, 1);
 });
@@ -169,7 +172,7 @@ test("stored binding pairs must be wholly absent or wholly valid before any requ
 });
 
 test("the complete authorized corpus rejects canonical source collisions before request or write", async (t) => {
-  const source = "---\ntitle: Collision\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n";
+  const source = "---\ntitle: Collision\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nCollision content.\n";
   const root = await fixture({ "foo.md": source, "foo/index.md": source });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
@@ -187,7 +190,7 @@ test("the complete authorized corpus rejects canonical source collisions before 
 });
 
 test("routeBase is a contained relative prefix and preserves a site subpath", async (t) => {
-  const source = "---\ntitle: Route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n";
+  const source = "---\ntitle: Route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nRoute content.\n";
   const root = await fixture({ "page.md": source });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const previousFetch = globalThis.fetch;
@@ -213,7 +216,7 @@ test("routeBase is a contained relative prefix and preserves a site subpath", as
 });
 
 test("file routes and custom Astro slugs are safe canonical identities", async (t) => {
-  const source = (extra = "") => `---\ntitle: Route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n${extra}---\n`;
+  const source = (extra = "") => `---\ntitle: Route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n${extra}---\nRoute content.\n`;
   const previousFetch = globalThis.fetch;
   let requests = 0;
   globalThis.fetch = async (_url, init) => {
@@ -260,8 +263,8 @@ test("file routes and custom Astro slugs are safe canonical identities", async (
 
 test("file-derived and slug-derived canonical identities collide before mutation", async (t) => {
   const root = await fixture({
-    "foo.md": "---\ntitle: File route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n",
-    "other.md": "---\ntitle: Slug route\nslug: foo\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n",
+    "foo.md": "---\ntitle: File route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nFile route content.\n",
+    "other.md": "---\ntitle: Slug route\nslug: foo\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nSlug route content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
@@ -277,8 +280,8 @@ test("file-derived and slug-derived canonical identities collide before mutation
 
 test("all local page validation completes before the first remote mutation", async (t) => {
   const root = await fixture({
-    "a-valid.md": "---\ntitle: Valid\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n",
-    "z-invalid.md": "---\ntitle: Invalid\nslug: ../escape\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n",
+    "a-valid.md": "---\ntitle: Valid\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nValid content.\n",
+    "z-invalid.md": "---\ntitle: Invalid\nslug: ../escape\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nInvalid route content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
@@ -291,7 +294,7 @@ test("all local page validation completes before the first remote mutation", asy
 
 test("controlled response validation fails closed and redacts credentials", async (t) => {
   const root = await fixture({
-    "page.md": "---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n",
+    "page.md": "---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nBound content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const previousFetch = globalThis.fetch;
@@ -333,7 +336,7 @@ test("atomic replacement preserves the original when rename fails", async (t) =>
 
 test("a failed atomic binding write can retry the same plugin mapping as resolved", async (t) => {
   const root = await fixture({
-    "page.md": "---\ntitle: Retry\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n",
+    "page.md": "---\ntitle: Retry\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nRetry content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const target = path.join(root, "page.md");
@@ -374,6 +377,7 @@ test("response origin and both declared and streamed size limits are enforced", 
     },
     sourceUrl: "https://site.example/page/",
     title: "Page",
+    contentHtml: "<p>Page content.</p>",
   };
 
   globalThis.fetch = async () => {
@@ -410,6 +414,7 @@ test("connection identity, lane, and visibility are runtime validated before fet
     discourseUrl: "https://forum.example/",
     sourceUrl: "https://site.example/page/",
     title: "Page",
+    contentHtml: "<p>Page content.</p>",
   };
   for (const options of [
     { connectionId: " bad", connectionSecret: CONNECTION_SECRET },
@@ -432,12 +437,16 @@ test("direct controlled creation enforces source and title bounds before fetch",
     options: { connectionId: CONNECTION_ID, connectionSecret: CONNECTION_SECRET },
     sourceUrl: "https://site.example/page/",
     title: "Page",
+    contentHtml: "<p>Page content.</p>",
   };
   for (const input of [
     { ...base, sourceUrl: "https://site.example/%2e%2e/private" },
     { ...base, sourceUrl: `https://site.example/${"x".repeat(2_048)}` },
     { ...base, title: "x".repeat(1_025) },
     { ...base, externalId: "not-an-astro-page-identity" },
+    { ...base, contentHtml: "" },
+    { ...base, contentHtml: "x".repeat((48 * 1024) + 1) },
+    ...[{ nested: "not-a-string" }, ["not-a-string"], 42, true, null].map((contentHtml) => ({ ...base, contentHtml })),
     ...[{ nested: "not-a-string" }, ["not-a-string"], 42, true, null].map((title) => ({ ...base, title })),
   ]) {
     await assert.rejects(() => resolveControlledCreation(input));

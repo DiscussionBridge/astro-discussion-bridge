@@ -1,6 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { createMarkdownProcessor, type MarkdownRenderer } from "@astrojs/markdown-remark";
+import sanitizeHtml from "sanitize-html";
 import { parse as parseYaml } from "yaml";
 import {
   assertServiceResponseUrl,
@@ -12,6 +14,7 @@ import {
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 65_536;
+const MAX_CONTENT_HTML_BYTES = 48 * 1024;
 const markdownExtensions = new Set([".md", ".mdx"]);
 
 export interface ControlledCreationOptions {
@@ -57,6 +60,7 @@ interface PreparedPage {
   source: string;
   pageUrl: string;
   title: string;
+  contentHtml: string;
   externalId: string;
   existingResourceId?: string;
   existingTopicId?: number;
@@ -77,6 +81,7 @@ export async function publishControlledDiscussions(
   const files = await findMarkdownFiles(docsDir);
   const census: CensusEntry[] = [];
   const canonicalSources = new Map<string, string>();
+  const markdownRenderer = await createMarkdownProcessor({ syntaxHighlight: false });
 
   for (const filePath of files) {
     const source = await fs.readFile(filePath, "utf8");
@@ -141,6 +146,7 @@ export async function publishControlledDiscussions(
       stringValue(parsed.frontmatter.title) ?? firstHeading(parsed.body) ?? titleFromFile(filePath),
       filePath,
     );
+    const contentHtml = await renderedPublishedContent(parsed.body, filePath, markdownRenderer);
     const externalId = stableExternalId(validated.siteBase, docsDir, filePath);
     const priorPath = canonicalSources.get(pageUrl);
     if (priorPath) {
@@ -149,7 +155,7 @@ export async function publishControlledDiscussions(
     canonicalSources.set(pageUrl, filePath);
     census.push({
       kind: "publish",
-      page: { filePath, source, pageUrl, title, externalId, existingResourceId, existingTopicId },
+      page: { filePath, source, pageUrl, title, contentHtml, externalId, existingResourceId, existingTopicId },
     });
   }
 
@@ -165,6 +171,7 @@ export async function publishControlledDiscussions(
       options: options.controlledCreation,
       sourceUrl: page.pageUrl,
       title: page.title,
+      contentHtml: page.contentHtml,
       externalId: page.externalId,
     });
     if (
@@ -240,11 +247,13 @@ export async function resolveControlledCreation(input: {
   options: ControlledCreationOptions;
   sourceUrl: string;
   title: string;
+  contentHtml: unknown;
   externalId?: string;
 }): Promise<{ outcome: "created" | "resolved"; reason: string; resourceId: string; topicId: number; topicUrl: string }> {
   validateConnectionSettings(input.options);
   const sourceUrl = validatedSourceUrl(input.sourceUrl);
   const title = validatedTitle(input.title, "controlledCreation request");
+  const contentHtml = validatedContentHtml(input.contentHtml, "controlledCreation request");
   const externalId = input.externalId ?? `astro-page:${createHash("sha256").update(sourceUrl).digest("hex")}`;
   if (!/^astro-page:[0-9a-f]{64}$/.test(externalId)) {
     throw new Error("controlledCreation externalId must be an Astro page identity.");
@@ -275,6 +284,7 @@ export async function resolveControlledCreation(input: {
         external_id: externalId,
         canonical_url: sourceUrl,
         title,
+        content_html: contentHtml,
         published: true,
         adapter_id: "astro-discussion-bridge",
         adapter_version: input.options.adapterVersion ?? "0.1.0-alpha.20260829.2",
@@ -541,6 +551,44 @@ function requiredResourceId(value: unknown, label: string): string {
 function requiredString(value: unknown, label: string): string {
   if (typeof value !== "string" || value !== value.trim() || !value) {
     throw new Error(`${label} must be a non-empty trimmed string.`);
+  }
+  return value;
+}
+
+async function renderedPublishedContent(
+  body: string,
+  filePath: string,
+  renderer: MarkdownRenderer,
+): Promise<string> {
+  let rendered: string;
+  try {
+    rendered = (await renderer.render(body, { fileURL: new URL(`file:///${filePath.replaceAll("\\", "/")}`) })).code;
+  } catch {
+    throw new Error(`DiscussionBridge could not render published Markdown content for ${filePath}.`);
+  }
+  const sanitized = sanitizeHtml(rendered, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2"]),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      a: ["href", "name", "target", "rel"],
+      img: ["src", "alt", "title", "width", "height", "loading"],
+      code: ["class"],
+      pre: ["class"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+    allowedSchemesByTag: { img: ["http", "https"] },
+  });
+  return validatedContentHtml(sanitized, filePath);
+}
+
+function validatedContentHtml(value: unknown, label: string): string {
+  if (
+    typeof value !== "string"
+    || value.trim() === ""
+    || new TextEncoder().encode(value).byteLength > MAX_CONTENT_HTML_BYTES
+    || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)
+  ) {
+    throw new Error(`DiscussionBridge published content is invalid or exceeds 48 KiB for ${label}.`);
   }
   return value;
 }
