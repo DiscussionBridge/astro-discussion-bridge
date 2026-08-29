@@ -420,6 +420,7 @@ test("direct controlled creation enforces source, title, category, and tag bound
     { ...base, categoryId: 0 },
     { ...base, tags: ["x".repeat(101)] },
     { ...base, tags: ["Tag", "tag"] },
+    ...[{ nested: "not-a-string" }, ["not-a-string"], 42, true, null].map((title) => ({ ...base, title })),
   ]) {
     await assert.rejects(() => resolveControlledCreation(input));
   }

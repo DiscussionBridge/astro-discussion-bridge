@@ -507,8 +507,8 @@ function requiredString(value: unknown, label: string): string {
   return value;
 }
 
-function validatedTitle(value: string, filePath: string): string {
-  if (!value || new TextEncoder().encode(value).byteLength > 1_024 || /[\u0000-\u001f\u007f]/.test(value)) {
+function validatedTitle(value: unknown, filePath: string): string {
+  if (typeof value !== "string" || !value || new TextEncoder().encode(value).byteLength > 1_024 || /[\u0000-\u001f\u007f]/.test(value)) {
     throw new Error(`DiscussionBridge title is invalid or exceeds 1,024 bytes for ${filePath}.`);
   }
   return value;

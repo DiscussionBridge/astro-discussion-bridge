@@ -1,6 +1,6 @@
 {
   "name": "astro-discussion-bridge",
-  "version": "0.1.0-alpha.20260828.1",
+  "version": "0.1.0-alpha.20260828.2",
   "description": "Controlled Astro-to-DiscussionBridge companion creation with mapped comments-only fullInteractive presentation.",
   "type": "module",
   "license": "MIT",
