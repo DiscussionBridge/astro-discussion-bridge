@@ -23,6 +23,7 @@ test("presentation has one mapped fullInteractive surface followed by one credit
 test("From Discourse component renders only server-retrieved sanitized record content", async () => {
   const component = await fs.readFile(path.join(packageDir, "src/components/FromDiscourse.astro"), "utf8");
   assert.match(component, /fetchFromDiscourseRecord/);
+  assert.match(component, /astro-discussion-bridge\/bridge-record/);
   assert.match(component, /process\.env\.DISCUSSIONBRIDGE_CONNECTION_SECRET/);
   assert.match(component, /set:html=\{record\.contentHtml\}/);
   assert.match(component, /record\.topicUrl/);

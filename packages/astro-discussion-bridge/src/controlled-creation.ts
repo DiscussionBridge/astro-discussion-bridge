@@ -277,7 +277,7 @@ export async function resolveControlledCreation(input: {
         title,
         published: true,
         adapter_id: "astro-discussion-bridge",
-        adapter_version: input.options.adapterVersion ?? "0.1.0-alpha.20260829.1",
+        adapter_version: input.options.adapterVersion ?? "0.1.0-alpha.20260829.2",
         visibility: input.options.visibility ?? "unlisted",
         ...(input.options.lane ? { lane: input.options.lane } : {}),
         correlation_id: randomUUID(),
