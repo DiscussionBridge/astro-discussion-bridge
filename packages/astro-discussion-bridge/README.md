@@ -1,10 +1,12 @@
 # DiscussionBridge for Astro
 
-Alpha publishing-side consumer for the plain DiscussionBridge Discourse plugin.
-It has two functions only:
+Alpha publishing-side adapter for the plain DiscussionBridge Discourse plugin.
+It has three bounded functions:
 
-- authenticated, server-side companion-topic creation or resolution during an
-  Astro build; and
+- authenticated, server-side Bridge Record creation or resolution during an
+  Astro build;
+- authenticated From Discourse retrieval and sanitized static presentation;
+  and
 - mapped comments-only `fullInteractive` presentation through Discourse Core.
 
 It is not an API-key publisher, import tool, multi-forum framework, generic
@@ -41,13 +43,13 @@ export default defineConfig({
 Set these build-server values; never expose them through public Astro config:
 
 ```dotenv
-DISCUSSIONBRIDGE_CONNECTION_ID=astro-alpha
+DISCUSSIONBRIDGE_CONNECTION_ID=dbc_000000000000000000000000
 DISCUSSIONBRIDGE_CONNECTION_SECRET=replace-with-the-plugin-connection-secret
 ```
 
 `publishOnBuild` defaults to disabled. When enabled, missing credentials or
 `siteUrl` fail the build. The endpoint is fixed at
-`/discussion-bridge/connections/resolve.json`; there is no direct Discourse
+`/discussion-bridge/v1/bridge-records/resolve.json`; there is no direct Discourse
 Core fallback.
 
 Only a published Markdown or MDX page with both of these exact values may issue
@@ -58,12 +60,12 @@ discussionCommentsDisplay: fullInteractive
 discussionSync: true
 ```
 
-`draft: true` or `published: false` prevents publication. Optional
-`discussionCategoryId` and `discussionTags` are bounded requests; the forum
-retains final category, tag, lane, actor, and visibility authority. A stored
-`discourseTopicId` or `discourseTopicUrl` is never trusted by itself: the
-adapter authenticates with the plugin again and requires the returned durable
-mapping to match before preserving the binding.
+`draft: true` or `published: false` prevents publication. The forum retains
+category, tag, lane, actor, and visibility authority. A stored
+`discussionbridgeResourceId`, `discourseTopicId`, or `discourseTopicUrl` is
+never trusted by itself: all three must be present and internally consistent,
+and the adapter authenticates with the plugin again and requires the returned
+durable Bridge Record tuple to match before preserving the binding.
 
 ## Presentation
 
@@ -82,22 +84,42 @@ DiscussionBridge credit. Discourse Core owns authentication, accounts,
 sessions, composer/actions, moderation, persistence, and dynamic iframe height.
 There is no simple/full/replies fallback.
 
+For a From Discourse page, render the record during the server-side/static
+build. The component reads credentials only from the build environment:
+
+```astro
+---
+import FromDiscourse from "astro-discussion-bridge/FromDiscourse.astro";
+---
+
+<FromDiscourse
+  discourseUrl="https://forum.example.com"
+  resourceId="00000000-0000-4000-8000-000000000000"
+/>
+```
+
+The component performs an authenticated bounded GET, verifies the resource,
+direction and topic tuple, sanitizes cooked HTML through an allowlist, and
+emits only safe content plus the Discourse topic link. It never ships the
+connection secret to browser JavaScript.
+
 ## Public exports
 
 - default Astro integration
 - `astro-discussion-bridge/controlled-creation`
 - `astro-discussion-bridge/web-url`
+- `astro-discussion-bridge/bridge-record`
 - `astro-discussion-bridge/Discussion.astro`
 - `astro-discussion-bridge/DiscourseDiscussion.astro`
 - `astro-discussion-bridge/DiscussionCredit.astro`
+- `astro-discussion-bridge/FromDiscourse.astro`
 
 ## Assurance boundary
 
-The preservation baseline is commit
-`f92e0dad18091353133288dcc05074fbd6e21675`. This deletion-oriented reduction
-must pass its new focused build, tests, package-inventory check, independent
-code review, installation, rollback, and combined Astro/forum acceptance before
-release. This README grants none of those acceptances.
+This package is the Astro profile of the six-profile DiscussionBridge Alpha.
+It must pass build, tests, package-inventory checks, live two-direction
+exercise, rollback capture, and the final paired code review before release.
+This README grants none of those acceptances.
 
 The contract record is
 `../../docs/evidence/DISCUSSIONBRIDGE_PLUGIN_V0_1_CONTRACT_2026-08-02.md`.

@@ -57,10 +57,12 @@ test("package and source inventory expose only the narrow consumer", async () =>
     "./Discussion.astro",
     "./DiscussionCredit.astro",
     "./DiscourseDiscussion.astro",
+    "./FromDiscourse.astro",
+    "./bridge-record",
     "./controlled-creation",
     "./web-url",
   ].sort());
-  assert.deepEqual(packageJson.dependencies, { yaml: "^2.9.0" });
+  assert.deepEqual(packageJson.dependencies, { "sanitize-html": "2.17.7", yaml: "^2.9.0" });
   assert.equal(packageJson.files.includes("TODO.md"), false);
 
   const forbidden = /api[-_ ]?key|sync[-_ ]?existing|official[-_ ]?source|relationships?|navigation|multi[-_ ]?target|OBBBA|WordPress|Ghost|Statamic|control plane/i;

@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
@@ -18,7 +18,8 @@ export interface ControlledCreationOptions {
   connectionId: string;
   connectionSecret: string;
   lane?: string;
-  visibility?: "listed" | "unlisted";
+  visibility?: "unlisted";
+  adapterVersion?: string;
   requestTimeoutMs?: number;
   maxResponseBytes?: number;
 }
@@ -34,6 +35,7 @@ export interface PublishControlledDiscussionsOptions {
 export interface ControlledDiscussionResult {
   filePath: string;
   pageUrl: string;
+  resourceId?: string;
   topicId?: number;
   topicUrl?: string;
   status: "created" | "resolved" | "skipped";
@@ -43,7 +45,10 @@ export interface ControlledDiscussionResult {
 interface ControlledCreationResponse {
   outcome?: unknown;
   reason?: unknown;
+  resource_id?: unknown;
   topic_id?: unknown;
+  topic_url?: unknown;
+  direction?: unknown;
   core_fallback?: unknown;
 }
 
@@ -52,8 +57,8 @@ interface PreparedPage {
   source: string;
   pageUrl: string;
   title: string;
-  categoryId?: number;
-  tags?: string[];
+  externalId: string;
+  existingResourceId?: string;
   existingTopicId?: number;
 }
 
@@ -110,13 +115,16 @@ export async function publishControlledDiscussions(
       continue;
     }
 
+    const hasResourceId = Object.hasOwn(parsed.frontmatter, "discussionbridgeResourceId");
     const hasTopicId = Object.hasOwn(parsed.frontmatter, "discourseTopicId");
     const hasTopicUrl = Object.hasOwn(parsed.frontmatter, "discourseTopicUrl");
-    if (hasTopicId !== hasTopicUrl) {
-      throw new Error(`Stored DiscussionBridge topic ID and URL must both be absent or both be present for ${filePath}.`);
+    if (new Set([hasResourceId, hasTopicId, hasTopicUrl]).size !== 1) {
+      throw new Error(`Stored DiscussionBridge resource ID, topic ID, and topic URL must all be absent or all be present for ${filePath}.`);
     }
+    let existingResourceId: string | undefined;
     let existingTopicId: number | undefined;
-    if (hasTopicId) {
+    if (hasResourceId) {
+      existingResourceId = requiredResourceId(parsed.frontmatter.discussionbridgeResourceId, "Stored discussionbridgeResourceId");
       existingTopicId = requiredPositiveTopicId(parsed.frontmatter.discourseTopicId, "Stored discourseTopicId");
       const existingTopicUrl = requiredString(parsed.frontmatter.discourseTopicUrl, "Stored discourseTopicUrl");
       const existingTopicReference = parsePublicDiscourseTopicUrl(
@@ -133,8 +141,7 @@ export async function publishControlledDiscussions(
       stringValue(parsed.frontmatter.title) ?? firstHeading(parsed.body) ?? titleFromFile(filePath),
       filePath,
     );
-    const categoryId = optionalPositiveInteger(parsed.frontmatter.discussionCategoryId, "discussionCategoryId");
-    const tags = optionalTags(parsed.frontmatter.discussionTags);
+    const externalId = stableExternalId(validated.siteBase, docsDir, filePath);
     const priorPath = canonicalSources.get(pageUrl);
     if (priorPath) {
       throw new Error(`Authorized DiscussionBridge pages resolve to the same canonical source URL ${pageUrl}: ${priorPath} and ${filePath}.`);
@@ -142,7 +149,7 @@ export async function publishControlledDiscussions(
     canonicalSources.set(pageUrl, filePath);
     census.push({
       kind: "publish",
-      page: { filePath, source, pageUrl, title, categoryId, tags, existingTopicId },
+      page: { filePath, source, pageUrl, title, externalId, existingResourceId, existingTopicId },
     });
   }
 
@@ -158,23 +165,26 @@ export async function publishControlledDiscussions(
       options: options.controlledCreation,
       sourceUrl: page.pageUrl,
       title: page.title,
-      categoryId: page.categoryId,
-      tags: page.tags,
+      externalId: page.externalId,
     });
-    if (page.existingTopicId && created.topicId !== page.existingTopicId) {
-      throw new Error(`DiscussionBridge resolved a different topic than the stored mapping for ${page.filePath}.`);
+    if (
+      (page.existingResourceId && created.resourceId !== page.existingResourceId)
+      || (page.existingTopicId && created.topicId !== page.existingTopicId)
+    ) {
+      throw new Error(`DiscussionBridge resolved a different resource or topic than the stored mapping for ${page.filePath}.`);
     }
-    const topicUrl = new URL(`t/-/${created.topicId}`, validated.discourseBase).href;
     const updated = updateFrontmatter(page.source, {
+      discussionbridgeResourceId: created.resourceId,
       discourseTopicId: String(created.topicId),
-      discourseTopicUrl: topicUrl,
+      discourseTopicUrl: created.topicUrl,
     });
     if (updated !== page.source) await (dependencies.replaceFile ?? replaceFileAtomically)(page.filePath, updated);
     results.push({
       filePath: page.filePath,
       pageUrl: page.pageUrl,
+      resourceId: created.resourceId,
       topicId: created.topicId,
-      topicUrl,
+      topicUrl: created.topicUrl,
       status: created.outcome,
       reason: created.reason,
     });
@@ -205,12 +215,11 @@ function validateConnectionSettings(options: ControlledCreationOptions): void {
   if (
     typeof connectionId !== "string"
     || connectionId !== connectionId.trim()
-    || new TextEncoder().encode(connectionId).byteLength > 100
-    || !/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(connectionId)
+    || !/^dbc_[a-z0-9]{24}$/.test(connectionId)
   ) {
-    throw new Error("controlledCreation connectionId must be a trimmed identifier of at most 100 bytes.");
+    throw new Error("controlledCreation connectionId must be a DiscussionBridge Content Connection ID.");
   }
-  if (typeof options.connectionSecret !== "string" || !options.connectionSecret) {
+  if (typeof options.connectionSecret !== "string" || !options.connectionSecret || options.connectionSecret.length < 32 || options.connectionSecret.length > 256) {
     throw new Error("controlledCreation requires a connectionSecret.");
   }
   const lane = options.lane;
@@ -218,8 +227,11 @@ function validateConnectionSettings(options: ControlledCreationOptions): void {
     throw new Error("controlledCreation lane must match the forum lane identifier grammar.");
   }
   const visibility = options.visibility;
-  if (visibility !== undefined && visibility !== "listed" && visibility !== "unlisted") {
-    throw new Error("controlledCreation visibility must be listed or unlisted.");
+  if (visibility !== undefined && visibility !== "unlisted") {
+    throw new Error("controlledCreation visibility must be unlisted.");
+  }
+  if (options.adapterVersion !== undefined && !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$/.test(options.adapterVersion)) {
+    throw new Error("controlledCreation adapterVersion must be a bounded identifier.");
   }
 }
 
@@ -228,18 +240,19 @@ export async function resolveControlledCreation(input: {
   options: ControlledCreationOptions;
   sourceUrl: string;
   title: string;
-  categoryId?: number;
-  tags?: string[];
-}): Promise<{ outcome: "created" | "resolved"; reason: string; topicId: number }> {
+  externalId?: string;
+}): Promise<{ outcome: "created" | "resolved"; reason: string; resourceId: string; topicId: number; topicUrl: string }> {
   validateConnectionSettings(input.options);
   const sourceUrl = validatedSourceUrl(input.sourceUrl);
   const title = validatedTitle(input.title, "controlledCreation request");
-  const categoryId = optionalPositiveInteger(input.categoryId, "controlledCreation categoryId");
-  const tags = optionalTags(input.tags);
+  const externalId = input.externalId ?? `astro-page:${createHash("sha256").update(sourceUrl).digest("hex")}`;
+  if (!/^astro-page:[0-9a-f]{64}$/.test(externalId)) {
+    throw new Error("controlledCreation externalId must be an Astro page identity.");
+  }
   const serviceBase = parseServiceBaseUrl(input.discourseUrl);
   if (serviceBase.protocol !== "https:") throw new Error("controlledCreation requires HTTPS for its connection secret.");
   const endpoint = resolveServiceRequestUrl(
-    "/discussion-bridge/connections/resolve.json",
+    "/discussion-bridge/v1/bridge-records/resolve.json",
     serviceBase,
   );
   const response = await fetch(endpoint, {
@@ -257,15 +270,16 @@ export async function resolveControlledCreation(input: {
       "X-DiscussionBridge-Secret": input.options.connectionSecret,
     },
     body: JSON.stringify({
-      connection: {
-        connection_id: input.options.connectionId,
-        adapter_id: "astro",
-        source_url: sourceUrl,
+      bridge_record: {
+        direction: "to_discourse",
+        external_id: externalId,
+        canonical_url: sourceUrl,
         title,
+        published: true,
+        adapter_id: "astro-discussion-bridge",
+        adapter_version: input.options.adapterVersion ?? "0.1.0-alpha.20260829.1",
         visibility: input.options.visibility ?? "unlisted",
         ...(input.options.lane ? { lane: input.options.lane } : {}),
-        ...(categoryId === undefined ? {} : { category_id: categoryId }),
-        ...(tags === undefined ? {} : { tags }),
         correlation_id: randomUUID(),
       },
     }),
@@ -294,7 +308,16 @@ export async function resolveControlledCreation(input: {
   if (typeof payload.topic_id !== "number" || !Number.isSafeInteger(payload.topic_id) || payload.topic_id <= 0) {
     throw new Error("DiscussionBridge controlled creation returned no valid topic ID.");
   }
-  return { outcome: payload.outcome, reason: reason ?? payload.outcome, topicId: payload.topic_id };
+  const resourceId = requiredResourceId(payload.resource_id, "DiscussionBridge response resource_id");
+  if (payload.direction !== "to_discourse") {
+    throw new Error("DiscussionBridge controlled creation returned the wrong direction.");
+  }
+  const topicUrl = requiredString(payload.topic_url, "DiscussionBridge response topic_url");
+  const topicReference = parsePublicDiscourseTopicUrl(topicUrl, input.discourseUrl, "DiscussionBridge response topic_url");
+  if (topicReference.topicId !== payload.topic_id) {
+    throw new Error("DiscussionBridge controlled creation returned a mismatched topic URL.");
+  }
+  return { outcome: payload.outcome, reason: reason ?? payload.outcome, resourceId, topicId: payload.topic_id, topicUrl };
 }
 
 export interface AtomicReplaceOperations {
@@ -447,6 +470,14 @@ function pageUrlForFile(input: {
   return url.href;
 }
 
+function stableExternalId(siteBase: URL, docsDir: string, filePath: string): string {
+  const relative = path.relative(docsDir, filePath).split(path.sep).join("/");
+  if (!relative || relative.startsWith("../") || relative.includes("/../")) {
+    throw new Error(`Markdown path is outside the configured corpus: ${filePath}.`);
+  }
+  return `astro-page:${createHash("sha256").update(`${siteBase.origin}${siteBase.pathname}\n${relative}`).digest("hex")}`;
+}
+
 function validateRouteBase(value: string | undefined): string {
   if (value === undefined || value === "") return "";
   if (
@@ -500,6 +531,13 @@ function requiredPositiveTopicId(value: unknown, label: string): number {
   return numeric;
 }
 
+function requiredResourceId(value: unknown, label: string): string {
+  if (typeof value !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
+    throw new Error(`${label} must be a UUID.`);
+  }
+  return value.toLowerCase();
+}
+
 function requiredString(value: unknown, label: string): string {
   if (typeof value !== "string" || value !== value.trim() || !value) {
     throw new Error(`${label} must be a non-empty trimmed string.`);
@@ -525,30 +563,6 @@ function validatedSourceUrl(value: string): string {
     throw new Error("controlledCreation sourceUrl contains an ambiguous or escaping path segment.");
   }
   return normalized;
-}
-
-function optionalPositiveInteger(value: unknown, label: string): number | undefined {
-  if (value === undefined || value === null) return undefined;
-  const numeric = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
-  if (!Number.isSafeInteger(numeric) || numeric <= 0) throw new Error(`${label} must be a positive safe integer.`);
-  return numeric;
-}
-
-function optionalTags(value: unknown): string[] | undefined {
-  if (value === undefined || value === null) return undefined;
-  if (!Array.isArray(value) || value.length > 20) {
-    throw new Error("discussionTags must be an array of at most 20 tags.");
-  }
-  const tags = value.map((tag) => {
-    if (typeof tag !== "string" || !tag.trim() || tag !== tag.trim() || new TextEncoder().encode(tag).byteLength > 100) {
-      throw new Error("Each discussionTags entry must be a non-empty trimmed string of at most 100 bytes.");
-    }
-    return tag;
-  });
-  if (new Set(tags.map((tag) => tag.toLowerCase())).size !== tags.length) {
-    throw new Error("discussionTags must not contain case-insensitive duplicates.");
-  }
-  return tags;
 }
 
 function stringValue(value: unknown): string | undefined {

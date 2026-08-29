@@ -20,6 +20,15 @@ test("presentation has one mapped fullInteractive surface followed by one credit
   assert.doesNotMatch(discussion, /DiscourseReplies|targets?|relationships?|navigation/i);
 });
 
+test("From Discourse component renders only server-retrieved sanitized record content", async () => {
+  const component = await fs.readFile(path.join(packageDir, "src/components/FromDiscourse.astro"), "utf8");
+  assert.match(component, /fetchFromDiscourseRecord/);
+  assert.match(component, /process\.env\.DISCUSSIONBRIDGE_CONNECTION_SECRET/);
+  assert.match(component, /set:html=\{record\.contentHtml\}/);
+  assert.match(component, /record\.topicUrl/);
+  assert.doesNotMatch(component, /client:|X-DiscussionBridge|connectionSecret\}/);
+});
+
 test("Core owns dynamic height and configured ceilings fail closed", () => {
   assert.throws(() => discussionBridge({
     discourseUrl: "https://forum.example/",

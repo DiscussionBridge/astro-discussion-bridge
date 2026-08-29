@@ -34,7 +34,7 @@ export interface ControlledPublishOptions {
   connectionId?: string;
   connectionSecret?: string;
   lane?: string;
-  visibility?: "listed" | "unlisted";
+  visibility?: "unlisted";
   requestTimeoutMs?: number;
   maxResponseBytes?: number;
 }
@@ -109,11 +109,13 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Disc
 }
 
 export { publishControlledDiscussions } from "./controlled-creation.js";
+export { fetchFromDiscourseRecord } from "./bridge-record.js";
 export type {
   ControlledCreationOptions,
   ControlledDiscussionResult,
   PublishControlledDiscussionsOptions,
 } from "./controlled-creation.js";
+export type { BridgeRecordCredentials, PresentedBridgeRecord } from "./bridge-record.js";
 
 function resolveOptions(options: DiscussionBridgeOptions): {
   public: PublicOptions;

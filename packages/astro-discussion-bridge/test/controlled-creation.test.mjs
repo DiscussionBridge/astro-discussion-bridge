@@ -9,6 +9,22 @@ import {
   resolveControlledCreation,
 } from "../dist/controlled-creation.js";
 
+const CONNECTION_ID = "dbc_aaaaaaaaaaaaaaaaaaaaaaaa";
+const CONNECTION_SECRET = "s".repeat(32);
+const RESOURCE_ID = "11111111-1111-4111-8111-111111111111";
+
+function bridgePayload(topicId, outcome = "created", resourceId = RESOURCE_ID) {
+  return {
+    outcome,
+    reason: outcome === "created" ? "bridge_record_created" : "existing_bridge_record",
+    resource_id: resourceId,
+    topic_id: topicId,
+    topic_url: `https://forum.example/community/t/example/${topicId}`,
+    direction: "to_discourse",
+    core_fallback: false,
+  };
+}
+
 async function fixture(files) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "discussionbridge-controlled-"));
   for (const [name, contents] of Object.entries(files)) {
@@ -25,8 +41,8 @@ function options(root) {
     siteUrl: "https://site.example/",
     discourseUrl: "https://forum.example/community/",
     controlledCreation: {
-      connectionId: "astro-alpha",
-      connectionSecret: "secret-value",
+      connectionId: CONNECTION_ID,
+      connectionSecret: CONNECTION_SECRET,
       lane: "docs",
     },
   };
@@ -48,7 +64,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
     requests.push({ url: String(url), init });
-    return new Response(JSON.stringify({ outcome: "created", reason: "durable_mapping_created", topic_id: 41, core_fallback: false }), {
+    return new Response(JSON.stringify(bridgePayload(41)), {
       status: 201,
       headers: { "content-type": "application/json" },
     });
@@ -57,49 +73,53 @@ test("only explicitly authorized published fullInteractive pages make a controll
 
   const results = await publishControlledDiscussions(options(root));
   assert.equal(requests.length, 1);
-  assert.equal(requests[0].url, "https://forum.example/community/discussion-bridge/connections/resolve.json");
+  assert.equal(requests[0].url, "https://forum.example/community/discussion-bridge/v1/bridge-records/resolve.json");
   assert.equal(requests[0].init.redirect, "error");
-  assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], "astro-alpha");
-  assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], "secret-value");
+  assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], CONNECTION_ID);
+  assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], CONNECTION_SECRET);
   const body = JSON.parse(requests[0].init.body);
   assert.deepEqual(
-    Object.keys(body.connection).sort(),
-    ["adapter_id", "connection_id", "correlation_id", "lane", "source_url", "title", "visibility"].sort(),
+    Object.keys(body.bridge_record).sort(),
+    ["adapter_id", "adapter_version", "canonical_url", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
   );
-  assert.equal(body.connection.source_url, "https://site.example/authorized/");
+  assert.equal(body.bridge_record.canonical_url, "https://site.example/authorized/");
+  assert.equal(body.bridge_record.direction, "to_discourse");
+  assert.equal(body.bridge_record.published, true);
+  assert.match(body.bridge_record.external_id, /^astro-page:[0-9a-f]{64}$/);
   assert.equal(results.filter((result) => result.status !== "skipped").length, 1);
   const updated = await fs.readFile(path.join(root, "authorized.md"), "utf8");
+  assert.match(updated, /discussionbridgeResourceId: "11111111-1111-4111-8111-111111111111"/);
   assert.match(updated, /discourseTopicId: "41"/);
-  assert.match(updated, /discourseTopicUrl: "https:\/\/forum\.example\/community\/t\/-\/41"/);
+  assert.match(updated, /discourseTopicUrl: "https:\/\/forum\.example\/community\/t\/example\/41"/);
 });
 
 test("an existing local binding is authenticated again and mismatch never overwrites", async (t) => {
   const root = await fixture({
-    "page.md": "---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\n",
+    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const original = await fs.readFile(path.join(root, "page.md"), "utf8");
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response(JSON.stringify({ outcome: "resolved", reason: "existing_mapping", topic_id: 41, core_fallback: false }), {
+  globalThis.fetch = async () => new Response(JSON.stringify(bridgePayload(41, "resolved")), {
     status: 200,
     headers: { "content-type": "application/json" },
   });
   t.after(() => { globalThis.fetch = previousFetch; });
 
-  await assert.rejects(() => publishControlledDiscussions(options(root)), /different topic than the stored mapping/);
+  await assert.rejects(() => publishControlledDiscussions(options(root)), /different resource or topic than the stored mapping/);
   assert.equal(await fs.readFile(path.join(root, "page.md"), "utf8"), original);
 });
 
 test("a matching stored mapping is reauthenticated and a wrong-origin or internally inconsistent URL fails before request", async (t) => {
   const root = await fixture({
-    "matching.md": "---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\n",
+    "matching.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async () => {
     requests += 1;
-    return new Response(JSON.stringify({ outcome: "resolved", reason: "existing_mapping", topic_id: 40, core_fallback: false }), {
+    return new Response(JSON.stringify(bridgePayload(40, "resolved")), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
@@ -110,23 +130,25 @@ test("a matching stored mapping is reauthenticated and a wrong-origin or interna
   assert.equal(result.status, "resolved");
   assert.equal(result.topicId, 40);
 
-  await fs.writeFile(path.join(root, "matching.md"), "---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://attacker.invalid/t/bound/40\n---\n");
+  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://attacker.invalid/t/bound/40\n---\n`);
   await assert.rejects(() => publishControlledDiscussions(options(root)), /left the configured Discourse origin/);
   assert.equal(requests, 1);
 
-  await fs.writeFile(path.join(root, "matching.md"), "---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/41\n---\n");
+  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/41\n---\n`);
   await assert.rejects(() => publishControlledDiscussions(options(root)), /topic ID and URL disagree/);
   assert.equal(requests, 1);
 });
 
 test("stored binding pairs must be wholly absent or wholly valid before any request", async (t) => {
   const invalid = {
+    "resource-only.md": `discussionbridgeResourceId: ${RESOURCE_ID}`,
     "id-only.md": "discourseTopicId: 40",
     "url-only.md": "discourseTopicUrl: https://forum.example/community/t/bound/40",
-    "zero-id.md": "discourseTopicId: 0\ndiscourseTopicUrl: https://forum.example/community/t/bound/40",
-    "bogus-id.md": "discourseTopicId: bogus\ndiscourseTopicUrl: https://forum.example/community/t/bound/40",
-    "blank-url.md": "discourseTopicId: 40\ndiscourseTopicUrl: \"\"",
-    "object-url.md": "discourseTopicId: 40\ndiscourseTopicUrl:\n  nested: value",
+    "bad-resource.md": "discussionbridgeResourceId: not-a-uuid\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40",
+    "zero-id.md": `discussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 0\ndiscourseTopicUrl: https://forum.example/community/t/bound/40`,
+    "bogus-id.md": `discussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: bogus\ndiscourseTopicUrl: https://forum.example/community/t/bound/40`,
+    "blank-url.md": `discussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: ""`,
+    "object-url.md": `discussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl:\n  nested: value`,
   };
   const previousFetch = globalThis.fetch;
   let requests = 0;
@@ -173,8 +195,8 @@ test("routeBase is a contained relative prefix and preserves a site subpath", as
   globalThis.fetch = async (_url, init) => {
     requests += 1;
     const body = JSON.parse(init.body);
-    assert.equal(body.connection.source_url, "https://site.example/base/docs/page/");
-    return new Response(JSON.stringify({ outcome: "created", reason: "durable_mapping_created", topic_id: 61, core_fallback: false }), {
+    assert.equal(body.bridge_record.canonical_url, "https://site.example/base/docs/page/");
+    return new Response(JSON.stringify(bridgePayload(61)), {
       status: 201,
       headers: { "content-type": "application/json" },
     });
@@ -197,8 +219,8 @@ test("file routes and custom Astro slugs are safe canonical identities", async (
   globalThis.fetch = async (_url, init) => {
     requests += 1;
     const body = JSON.parse(init.body);
-    assert.equal(body.connection.source_url, "https://site.example/base/guides/custom-page/");
-    return new Response(JSON.stringify({ outcome: "created", reason: "durable_mapping_created", topic_id: 71, core_fallback: false }), {
+    assert.equal(body.bridge_record.canonical_url, "https://site.example/base/guides/custom-page/");
+    return new Response(JSON.stringify(bridgePayload(71)), {
       status: 201,
       headers: { "content-type": "application/json" },
     });
@@ -256,14 +278,14 @@ test("file-derived and slug-derived canonical identities collide before mutation
 test("all local page validation completes before the first remote mutation", async (t) => {
   const root = await fixture({
     "a-valid.md": "---\ntitle: Valid\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n",
-    "z-invalid.md": "---\ntitle: Invalid\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionTags: not-an-array\n---\n",
+    "z-invalid.md": "---\ntitle: Invalid\nslug: ../escape\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async () => { requests += 1; throw new Error("must not request"); };
   t.after(() => { globalThis.fetch = previousFetch; });
-  await assert.rejects(() => publishControlledDiscussions(options(root)), /discussionTags/);
+  await assert.rejects(() => publishControlledDiscussions(options(root)), /slug/);
   assert.equal(requests, 0);
 });
 
@@ -286,13 +308,13 @@ test("controlled response validation fails closed and redacts credentials", asyn
     await assert.rejects(() => publishControlledDiscussions(options(root)));
   }
 
-  globalThis.fetch = async () => new Response(JSON.stringify({ outcome: "rejected", reason: "secret-value astro-alpha", core_fallback: false }), {
+  globalThis.fetch = async () => new Response(JSON.stringify({ outcome: "rejected", reason: `${CONNECTION_SECRET} ${CONNECTION_ID}`, core_fallback: false }), {
     status: 401,
     headers: { "content-type": "application/json" },
   });
   await assert.rejects(
     () => publishControlledDiscussions(options(root)),
-    (error) => !error.message.includes("secret-value") && !error.message.includes("astro-alpha"),
+    (error) => !error.message.includes(CONNECTION_SECRET) && !error.message.includes(CONNECTION_ID),
   );
 });
 
@@ -320,10 +342,8 @@ test("a failed atomic binding write can retry the same plugin mapping as resolve
   let requests = 0;
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(JSON.stringify({
-    outcome: outcomes[requests++],
-    reason: requests === 1 ? "durable_mapping_created" : "existing_mapping",
-    topic_id: 52,
-    core_fallback: false,
+    ...bridgePayload(52, outcomes[requests++]),
+    reason: requests === 1 ? "bridge_record_created" : "existing_bridge_record",
   }), { status: requests === 1 ? 201 : 200, headers: { "content-type": "application/json" } });
   t.after(() => { globalThis.fetch = previousFetch; });
 
@@ -348,8 +368,8 @@ test("response origin and both declared and streamed size limits are enforced", 
   const input = {
     discourseUrl: "https://forum.example/community/",
     options: {
-      connectionId: "astro-alpha",
-      connectionSecret: "secret-value",
+      connectionId: CONNECTION_ID,
+      connectionSecret: CONNECTION_SECRET,
       maxResponseBytes: 64,
     },
     sourceUrl: "https://site.example/page/",
@@ -357,7 +377,7 @@ test("response origin and both declared and streamed size limits are enforced", 
   };
 
   globalThis.fetch = async () => {
-    const response = new Response(JSON.stringify({ outcome: "created", topic_id: 1, core_fallback: false }), {
+    const response = new Response(JSON.stringify(bridgePayload(1)), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
@@ -392,24 +412,24 @@ test("connection identity, lane, and visibility are runtime validated before fet
     title: "Page",
   };
   for (const options of [
-    { connectionId: " bad", connectionSecret: "secret" },
-    { connectionId: "x".repeat(101), connectionSecret: "secret" },
-    { connectionId: "valid", connectionSecret: "secret", lane: "Bad Lane" },
-    { connectionId: "valid", connectionSecret: "secret", visibility: "private" },
+    { connectionId: " bad", connectionSecret: CONNECTION_SECRET },
+    { connectionId: "x".repeat(101), connectionSecret: CONNECTION_SECRET },
+    { connectionId: CONNECTION_ID, connectionSecret: CONNECTION_SECRET, lane: "Bad Lane" },
+    { connectionId: CONNECTION_ID, connectionSecret: CONNECTION_SECRET, visibility: "private" },
   ]) {
     await assert.rejects(() => resolveControlledCreation({ ...base, options }));
   }
   assert.equal(requests, 0);
 });
 
-test("direct controlled creation enforces source, title, category, and tag bounds before fetch", async (t) => {
+test("direct controlled creation enforces source and title bounds before fetch", async (t) => {
   const previousFetch = globalThis.fetch;
   let requests = 0;
   globalThis.fetch = async () => { requests += 1; throw new Error("must not request"); };
   t.after(() => { globalThis.fetch = previousFetch; });
   const base = {
     discourseUrl: "https://forum.example/",
-    options: { connectionId: "valid", connectionSecret: "secret" },
+    options: { connectionId: CONNECTION_ID, connectionSecret: CONNECTION_SECRET },
     sourceUrl: "https://site.example/page/",
     title: "Page",
   };
@@ -417,9 +437,7 @@ test("direct controlled creation enforces source, title, category, and tag bound
     { ...base, sourceUrl: "https://site.example/%2e%2e/private" },
     { ...base, sourceUrl: `https://site.example/${"x".repeat(2_048)}` },
     { ...base, title: "x".repeat(1_025) },
-    { ...base, categoryId: 0 },
-    { ...base, tags: ["x".repeat(101)] },
-    { ...base, tags: ["Tag", "tag"] },
+    { ...base, externalId: "not-an-astro-page-identity" },
     ...[{ nested: "not-a-string" }, ["not-a-string"], 42, true, null].map((title) => ({ ...base, title })),
   ]) {
     await assert.rejects(() => resolveControlledCreation(input));

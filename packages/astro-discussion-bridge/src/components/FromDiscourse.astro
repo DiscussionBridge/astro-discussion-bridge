@@ -1,0 +1,26 @@
+---
+import { fetchFromDiscourseRecord } from "../bridge-record.js";
+
+interface Props {
+  resourceId: string;
+  discourseUrl: string;
+}
+
+const connectionId = process.env.DISCUSSIONBRIDGE_CONNECTION_ID;
+const connectionSecret = process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET;
+if (!connectionId || !connectionSecret) {
+  throw new Error("From Discourse presentation requires server-only DiscussionBridge credentials.");
+}
+const record = await fetchFromDiscourseRecord(Astro.props.resourceId, {
+  discourseUrl: Astro.props.discourseUrl,
+  connectionId,
+  connectionSecret,
+});
+---
+
+<section class="discussionbridge-record" data-discussionbridge-resource={record.resourceId}>
+  <Fragment set:html={record.contentHtml} />
+  <p class="discussionbridge-credit">
+    <a href={record.topicUrl} rel="nofollow noopener noreferrer">Continue the discussion in Discourse</a>
+  </p>
+</section>
