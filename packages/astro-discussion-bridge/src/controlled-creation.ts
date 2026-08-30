@@ -65,6 +65,7 @@ interface PreparedPage {
   externalId: string;
   existingResourceId?: string;
   existingTopicId?: number;
+  adoptExistingTopicId?: number;
   sourceAuthors?: SourceAuthor[];
   primarySourceAuthorId?: string;
 }
@@ -133,13 +134,17 @@ export async function publishControlledDiscussions(
     const hasTopicId = Object.hasOwn(parsed.frontmatter, "discourseTopicId");
     const hasTopicUrl = Object.hasOwn(parsed.frontmatter, "discourseTopicUrl");
     const hasExternalId = Object.hasOwn(parsed.frontmatter, "discussionbridgeExternalId");
-    if (new Set([hasResourceId, hasTopicId, hasTopicUrl, hasExternalId]).size !== 1) {
-      throw new Error(`Stored DiscussionBridge external ID, resource ID, topic ID, and topic URL must all be absent or all be present for ${filePath}.`);
+    const hasCompleteBridgeBinding = hasResourceId && hasTopicId && hasTopicUrl && hasExternalId;
+    const hasStandaloneTopicPair = !hasResourceId && hasTopicId && hasTopicUrl && !hasExternalId;
+    const hasNoBinding = !hasResourceId && !hasTopicId && !hasTopicUrl && !hasExternalId;
+    if (!hasCompleteBridgeBinding && !hasStandaloneTopicPair && !hasNoBinding) {
+      throw new Error(`Stored discussion identity must be absent, a standalone topic ID/URL pair, or a complete DiscussionBridge tuple for ${filePath}.`);
     }
     let existingResourceId: string | undefined;
     let existingTopicId: number | undefined;
+    let adoptExistingTopicId: number | undefined;
     let externalId: string;
-    if (hasResourceId) {
+    if (hasCompleteBridgeBinding) {
       externalId = requiredExternalId(parsed.frontmatter.discussionbridgeExternalId, "Stored discussionbridgeExternalId");
       existingResourceId = requiredResourceId(parsed.frontmatter.discussionbridgeResourceId, "Stored discussionbridgeResourceId");
       existingTopicId = requiredPositiveTopicId(parsed.frontmatter.discourseTopicId, "Stored discourseTopicId");
@@ -154,6 +159,18 @@ export async function publishControlledDiscussions(
       }
     } else {
       externalId = stableExternalId(validated.siteBase, docsDir, filePath);
+      if (hasStandaloneTopicPair) {
+        existingTopicId = requiredPositiveTopicId(parsed.frontmatter.discourseTopicId, "Stored discourseTopicId");
+        const existingTopicReference = parsePublicDiscourseTopicUrl(
+          requiredString(parsed.frontmatter.discourseTopicUrl, "Stored discourseTopicUrl"),
+          options.discourseUrl,
+          "Stored discourseTopicUrl",
+        );
+        if (existingTopicReference.topicId !== existingTopicId) {
+          throw new Error(`Stored standalone topic ID and URL disagree for ${filePath}.`);
+        }
+        adoptExistingTopicId = existingTopicId;
+      }
     }
 
     const title = validatedTitle(
@@ -183,6 +200,7 @@ export async function publishControlledDiscussions(
         externalId,
         existingResourceId,
         existingTopicId,
+        adoptExistingTopicId,
         sourceAuthors: authorship.sourceAuthors,
         primarySourceAuthorId: authorship.primarySourceAuthorId,
       },
@@ -205,6 +223,7 @@ export async function publishControlledDiscussions(
       externalId: page.externalId,
       sourceAuthors: page.sourceAuthors,
       primarySourceAuthorId: page.primarySourceAuthorId,
+      existingTopicId: page.adoptExistingTopicId,
     });
     if (
       (page.existingResourceId && created.resourceId !== page.existingResourceId)
@@ -284,6 +303,7 @@ export async function resolveControlledCreation(input: {
   externalId?: string;
   sourceAuthors?: SourceAuthor[];
   primarySourceAuthorId?: string;
+  existingTopicId?: number;
 }): Promise<{ outcome: "created" | "resolved"; reason: string; resourceId: string; topicId: number; topicUrl: string }> {
   validateConnectionSettings(input.options);
   const sourceUrl = validatedSourceUrl(input.sourceUrl);
@@ -292,6 +312,10 @@ export async function resolveControlledCreation(input: {
   const externalId = input.externalId ?? `astro-page:${createHash("sha256").update(sourceUrl).digest("hex")}`;
   if (!/^astro-page:[0-9a-f]{64}$/.test(externalId)) {
     throw new Error("controlledCreation externalId must be an Astro page identity.");
+  }
+  if (input.existingTopicId !== undefined &&
+      (!Number.isSafeInteger(input.existingTopicId) || input.existingTopicId <= 0)) {
+    throw new Error("controlledCreation existingTopicId must be a positive safe integer.");
   }
   const authorship = validatedSourceAuthorship(
     input.sourceAuthors,
@@ -328,10 +352,11 @@ export async function resolveControlledCreation(input: {
         content_html: contentHtml,
         published: true,
         adapter_id: "astro-discussion-bridge",
-        adapter_version: input.options.adapterVersion ?? "0.1.0-alpha.20260829.3",
+        adapter_version: input.options.adapterVersion ?? "0.1.0-alpha.20260830.4",
         visibility: input.options.visibility ?? "unlisted",
         ...(input.options.lane ? { lane: input.options.lane } : {}),
         correlation_id: randomUUID(),
+        ...(input.existingTopicId ? { existing_topic_id: input.existingTopicId } : {}),
         ...(authorship.sourceAuthors ? {
           source_authors: authorship.sourceAuthors,
           primary_source_author_id: authorship.primarySourceAuthorId,

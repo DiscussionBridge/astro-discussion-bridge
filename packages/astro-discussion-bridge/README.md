@@ -55,6 +55,20 @@ DISCUSSIONBRIDGE_CONNECTION_SECRET=replace-with-the-plugin-connection-secret
 `/discussion-bridge/v1/bridge-records/resolve.json`; there is no direct Discourse
 Core fallback.
 
+The default comments presentation is plugin-free `full`. Choosing
+`fullInteractive` and enabling `publishOnBuild` is an explicit upgrade into the
+Bridge-enhanced path; installing this package does not silently require the
+Discourse plugin or connection credentials.
+
+An existing plugin-free `full` page can be upgraded in place. When its
+frontmatter contains an exact `discourseTopicId` and `discourseTopicUrl` pair,
+but no Bridge Record fields, the adapter asks the plugin to adopt that topic.
+The plugin accepts the request only when Discourse Core already records the
+same canonical source URL as that topic's embed identity; otherwise it fails
+without creating or replacing a topic. A manually selected `simple` topic is
+not automatically adopted because the source credential is not authority to
+claim an arbitrary forum topic.
+
 Only a published Markdown or MDX page with both of these exact values may issue
 a request:
 
@@ -84,11 +98,11 @@ all authors for source credit. It never sends a Discourse username or grants a
 source author forum permissions.
 
 `draft: true` or `published: false` prevents publication. The forum retains
-category, tag, lane, actor, and visibility authority. A stored
-`discussionbridgeResourceId`, `discourseTopicId`, or `discourseTopicUrl` is
-never trusted by itself: all three must be present and internally consistent,
-and the adapter authenticates with the plugin again and requires the returned
-durable Bridge Record tuple to match before preserving the binding.
+category, tag, lane, actor, and visibility authority. A stored complete Bridge
+binding is never trusted by itself: the external ID, resource ID, topic ID,
+and topic URL must all be present and internally consistent. The adapter
+authenticates with the plugin again and requires the returned durable Bridge
+Record tuple to match before preserving the binding.
 
 ## Presentation
 
@@ -106,8 +120,10 @@ The component accepts one explicit presentation mode:
 
 - `simple` renders a bounded, sanitized reply list from the public Discourse
   topic JSON. It requires no DiscussionBridge plugin.
-- `full` uses the standard Discourse comments embed. It requires only normal
-  Discourse embedding configuration, not the DiscussionBridge plugin.
+- `full` uses the standard Discourse comments embed. With no stored topic it
+  gives Core the canonical Astro page URL so Discourse can create or resolve
+  its ordinary embed topic. It requires only normal Discourse embedding
+  configuration, not the DiscussionBridge plugin or a connection credential.
 - `fullInteractive` uses the plugin-authorized full-app comments frame so
   Discourse owns authentication, composer/actions, moderation, persistence,
   and dynamic iframe height while the companion first post remains out of the
@@ -151,7 +167,7 @@ connection secret to browser JavaScript.
 
 ## Assurance boundary
 
-This package is the Astro profile of the six-profile DiscussionBridge Alpha.
+This package is the Astro profile of the seven-profile DiscussionBridge Alpha.
 It must pass build, tests, package-inventory checks, live two-direction
 exercise, rollback capture, and the final paired code review before release.
 This README grants none of those acceptances.

@@ -10,6 +10,7 @@ interface Props {
   display?: "simple" | "full" | "fullInteractive";
   embedClassName?: string;
   heading?: string;
+  sourceUrl?: string;
   topicId?: unknown;
   topicUrl?: unknown;
   frontmatter?: Record<string, unknown>;
@@ -38,6 +39,7 @@ function displayValue(value: unknown): "simple" | "full" | "fullInteractive" | u
         class={Astro.props.class}
         discourseUrl={Astro.props.discourseUrl}
         heading={Astro.props.heading}
+        sourceUrl={Astro.props.sourceUrl}
         topicId={topicId}
         topicUrl={topicUrl}
       />

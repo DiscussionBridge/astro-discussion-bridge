@@ -135,7 +135,7 @@ function resolveOptions(options: DiscussionBridgeOptions): {
       discourseUrl: normalizeServiceBaseUrl(options.discourseUrl),
       comments: {
         enabled: options.comments?.enabled ?? true,
-        display: options.comments?.display ?? "fullInteractive",
+        display: options.comments?.display ?? "full",
         embedHeight: options.comments?.embedHeight ?? "800px",
         dynamicHeight: options.comments?.dynamicHeight ?? true,
         embedMinHeight: options.comments?.embedMinHeight ?? "360",

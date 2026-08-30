@@ -1,6 +1,7 @@
 ---
 import config from "virtual:discussion-bridge/config";
 import {
+  normalizePublicHttpUrl,
   normalizeServiceBaseUrl,
   parsePublicDiscourseTopicUrl,
 } from "astro-discussion-bridge/web-url";
@@ -12,6 +13,7 @@ interface Props {
   frontmatter?: Record<string, unknown>;
   fullApp?: boolean;
   heading?: string;
+  sourceUrl?: unknown;
   topicId?: unknown;
   topicUrl?: unknown;
 }
@@ -41,8 +43,14 @@ if (topicId !== undefined && topicReference && topicReference.topicId !== topicI
 }
 const resolvedTopicId = topicId ?? topicReference?.topicId;
 const topicUrl = topicReference?.href;
-if (config.comments.enabled && resolvedTopicId === undefined) {
-  throw new Error("DiscourseDiscussion requires one completed topic mapping.");
+const sourceUrl = resolvedTopicId === undefined
+  ? normalizePublicHttpUrl(
+      requiredString(Astro.props.sourceUrl ?? Astro.url.href, "DiscourseDiscussion sourceUrl"),
+      "DiscourseDiscussion sourceUrl",
+    )
+  : undefined;
+if (config.comments.enabled && fullApp && resolvedTopicId === undefined) {
+  throw new Error("DiscourseDiscussion fullInteractive requires one completed Bridge topic mapping.");
 }
 
 function positiveTopicId(value: unknown, label: string): number | undefined {
@@ -71,10 +79,10 @@ function requiredString(value: unknown, label: string): string {
 )}
 
 {config.comments.enabled && (
-  <script define:vars={{ discourseUrl, embedClassName, embedHeight, dynamicHeight, embedMinHeight, fullApp, resolvedTopicId }}>
+  <script define:vars={{ discourseUrl, embedClassName, embedHeight, dynamicHeight, embedMinHeight, fullApp, resolvedTopicId, sourceUrl }}>
     window.DiscourseEmbed = {
       discourseUrl,
-      topicId: resolvedTopicId,
+      ...(resolvedTopicId ? { topicId: resolvedTopicId } : { discourseEmbedUrl: sourceUrl }),
       ...(embedClassName ? { className: embedClassName } : {}),
       ...(fullApp ? { fullApp: true, embedHeight, dynamicHeight, embedMinHeight } : {}),
     };

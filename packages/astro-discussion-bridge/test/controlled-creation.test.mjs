@@ -194,6 +194,34 @@ test("an existing local binding is authenticated again and mismatch never overwr
   assert.equal(await fs.readFile(path.join(root, "page.md"), "utf8"), original);
 });
 
+test("a standalone Core embed pair is adopted without changing its topic identity", async (t) => {
+  const root = await fixture({
+    "page.md": `---\ntitle: Existing full embed\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/existing-full-embed/40\n---\nExisting page content.\n`,
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  let requested;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, init) => {
+    requested = JSON.parse(init.body).bridge_record;
+    return new Response(JSON.stringify({
+      ...bridgePayload(40),
+      reason: "core_embed_topic_adopted",
+    }), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  const [result] = await publishControlledDiscussions(options(root));
+  assert.equal(requested.existing_topic_id, 40);
+  assert.equal(result.topicId, 40);
+  const updated = await fs.readFile(path.join(root, "page.md"), "utf8");
+  assert.match(updated, /discussionbridgeExternalId: "astro-page:[0-9a-f]{64}"/);
+  assert.match(updated, /discussionbridgeResourceId: "11111111-1111-4111-8111-111111111111"/);
+  assert.match(updated, /discourseTopicId: "40"/);
+});
+
 test("a matching stored mapping is reauthenticated and a wrong-origin or internally inconsistent URL fails before request", async (t) => {
   const root = await fixture({
     "matching.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
@@ -530,6 +558,8 @@ test("direct controlled creation enforces source and title bounds before fetch",
     { ...base, sourceUrl: `https://site.example/${"x".repeat(2_048)}` },
     { ...base, title: "x".repeat(1_025) },
     { ...base, externalId: "not-an-astro-page-identity" },
+    { ...base, existingTopicId: 0 },
+    { ...base, existingTopicId: Number.MAX_SAFE_INTEGER + 1 },
     { ...base, contentHtml: "" },
     { ...base, contentHtml: "x".repeat((48 * 1024) + 1) },
     ...[{ nested: "not-a-string" }, ["not-a-string"], 42, true, null].map((contentHtml) => ({ ...base, contentHtml })),

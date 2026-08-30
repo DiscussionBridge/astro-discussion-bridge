@@ -21,6 +21,7 @@ test("default integration is inert and its virtual module contains no credential
   const resolved = plugin.resolveId("virtual:discussion-bridge/config");
   const source = plugin.load(resolved);
   assert.doesNotMatch(source, /secret|connectionId|connectionSecret/i);
+  assert.match(source, /\"display\":\"full\"/);
   let logged = false;
   await integration.hooks["astro:build:start"]({ logger: { info() { logged = true; } } });
   assert.equal(logged, false);
@@ -49,7 +50,7 @@ test("enabled controlled publishing fails closed without server credentials", as
   }
 });
 
-test("package and source inventory expose only the six-profile Astro adapter boundary", async () => {
+test("package and source inventory expose only the seven-profile Astro adapter boundary", async () => {
   const packageJson = JSON.parse(await fs.readFile(path.join(packageDir, "package.json"), "utf8"));
   assert.equal(packageJson.bin, undefined);
   assert.deepEqual(Object.keys(packageJson.exports).sort(), [
