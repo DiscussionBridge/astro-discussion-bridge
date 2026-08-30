@@ -16,6 +16,7 @@ test("presentation preserves simple, full, and mapped fullInteractive modes foll
   assert.equal((discussion.match(/<DiscussionCredit\b/g) ?? []).length, 1);
   assert.match(discussion, /display === "simple"/);
   assert.match(discussion, /fullApp=\{display === "fullInteractive"\}/);
+  assert.match(discussion, /<DiscourseDiscussion[\s\S]*sourceUrl=\{Astro\.props\.sourceUrl\}/);
   assert.match(replies, /post\.post_number > 1/);
   assert.match(replies, /sanitizeHtml/);
   assert.match(discourse, /const resolvedTopicId = topicId \?\? topicReference\?\.topicId/);
@@ -28,7 +29,7 @@ test("presentation preserves simple, full, and mapped fullInteractive modes foll
 test("plugin-free full mode can start from the canonical Astro page URL", async () => {
   const discussion = await fs.readFile(path.join(packageDir, "src/components/Discussion.astro"), "utf8");
   const discourse = await fs.readFile(path.join(packageDir, "src/components/DiscourseDiscussion.astro"), "utf8");
-  assert.match(discussion, /sourceUrl=\{Astro\.props\.sourceUrl\}/);
+  assert.match(discussion, /<DiscourseDiscussion[\s\S]*sourceUrl=\{Astro\.props\.sourceUrl\}/);
   assert.match(discourse, /Astro\.props\.sourceUrl \?\? Astro\.url\.href/);
   assert.match(discourse, /normalizePublicHttpUrl/);
   assert.match(discourse, /define:vars=\{\{[^}]*sourceUrl/);
