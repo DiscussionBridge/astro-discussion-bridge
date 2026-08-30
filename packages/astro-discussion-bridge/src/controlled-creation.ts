@@ -123,12 +123,15 @@ export async function publishControlledDiscussions(
     const hasResourceId = Object.hasOwn(parsed.frontmatter, "discussionbridgeResourceId");
     const hasTopicId = Object.hasOwn(parsed.frontmatter, "discourseTopicId");
     const hasTopicUrl = Object.hasOwn(parsed.frontmatter, "discourseTopicUrl");
-    if (new Set([hasResourceId, hasTopicId, hasTopicUrl]).size !== 1) {
-      throw new Error(`Stored DiscussionBridge resource ID, topic ID, and topic URL must all be absent or all be present for ${filePath}.`);
+    const hasExternalId = Object.hasOwn(parsed.frontmatter, "discussionbridgeExternalId");
+    if (new Set([hasResourceId, hasTopicId, hasTopicUrl, hasExternalId]).size !== 1) {
+      throw new Error(`Stored DiscussionBridge external ID, resource ID, topic ID, and topic URL must all be absent or all be present for ${filePath}.`);
     }
     let existingResourceId: string | undefined;
     let existingTopicId: number | undefined;
+    let externalId: string;
     if (hasResourceId) {
+      externalId = requiredExternalId(parsed.frontmatter.discussionbridgeExternalId, "Stored discussionbridgeExternalId");
       existingResourceId = requiredResourceId(parsed.frontmatter.discussionbridgeResourceId, "Stored discussionbridgeResourceId");
       existingTopicId = requiredPositiveTopicId(parsed.frontmatter.discourseTopicId, "Stored discourseTopicId");
       const existingTopicUrl = requiredString(parsed.frontmatter.discourseTopicUrl, "Stored discourseTopicUrl");
@@ -140,6 +143,8 @@ export async function publishControlledDiscussions(
       if (existingTopicReference.topicId !== existingTopicId) {
         throw new Error(`Stored DiscussionBridge topic ID and URL disagree for ${filePath}.`);
       }
+    } else {
+      externalId = stableExternalId(validated.siteBase, docsDir, filePath);
     }
 
     const title = validatedTitle(
@@ -147,7 +152,6 @@ export async function publishControlledDiscussions(
       filePath,
     );
     const contentHtml = await renderedPublishedContent(parsed.body, filePath, markdownRenderer);
-    const externalId = stableExternalId(validated.siteBase, docsDir, filePath);
     const priorPath = canonicalSources.get(pageUrl);
     if (priorPath) {
       throw new Error(`Authorized DiscussionBridge pages resolve to the same canonical source URL ${pageUrl}: ${priorPath} and ${filePath}.`);
@@ -181,6 +185,7 @@ export async function publishControlledDiscussions(
       throw new Error(`DiscussionBridge resolved a different resource or topic than the stored mapping for ${page.filePath}.`);
     }
     const updated = updateFrontmatter(page.source, {
+      discussionbridgeExternalId: page.externalId,
       discussionbridgeResourceId: created.resourceId,
       discourseTopicId: String(created.topicId),
       discourseTopicUrl: created.topicUrl,
@@ -546,6 +551,13 @@ function requiredResourceId(value: unknown, label: string): string {
     throw new Error(`${label} must be a UUID.`);
   }
   return value.toLowerCase();
+}
+
+function requiredExternalId(value: unknown, label: string): string {
+  if (typeof value !== "string" || !/^astro-page:[0-9a-f]{64}$/.test(value)) {
+    throw new Error(`${label} must be an Astro page identity.`);
+  }
+  return value;
 }
 
 function requiredString(value: unknown, label: string): string {

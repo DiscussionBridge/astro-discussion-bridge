@@ -12,6 +12,7 @@ import {
 const CONNECTION_ID = "dbc_aaaaaaaaaaaaaaaaaaaaaaaa";
 const CONNECTION_SECRET = "s".repeat(32);
 const RESOURCE_ID = "11111111-1111-4111-8111-111111111111";
+const EXTERNAL_ID = `astro-page:${"b".repeat(64)}`;
 
 function bridgePayload(topicId, outcome = "created", resourceId = RESOURCE_ID) {
   return {
@@ -91,6 +92,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.match(body.bridge_record.external_id, /^astro-page:[0-9a-f]{64}$/);
   assert.equal(results.filter((result) => result.status !== "skipped").length, 1);
   const updated = await fs.readFile(path.join(root, "authorized.md"), "utf8");
+  assert.match(updated, /discussionbridgeExternalId: "astro-page:[0-9a-f]{64}"/);
   assert.match(updated, /discussionbridgeResourceId: "11111111-1111-4111-8111-111111111111"/);
   assert.match(updated, /discourseTopicId: "41"/);
   assert.match(updated, /discourseTopicUrl: "https:\/\/forum\.example\/community\/t\/example\/41"/);
@@ -98,7 +100,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
 
 test("an existing local binding is authenticated again and mismatch never overwrites", async (t) => {
   const root = await fixture({
-    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
+    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const original = await fs.readFile(path.join(root, "page.md"), "utf8");
@@ -115,13 +117,15 @@ test("an existing local binding is authenticated again and mismatch never overwr
 
 test("a matching stored mapping is reauthenticated and a wrong-origin or internally inconsistent URL fails before request", async (t) => {
   const root = await fixture({
-    "matching.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
+    "matching.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
+  let requestedExternalId;
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => {
+  globalThis.fetch = async (_url, init) => {
     requests += 1;
+    requestedExternalId = JSON.parse(init.body).bridge_record.external_id;
     return new Response(JSON.stringify(bridgePayload(40, "resolved")), {
       status: 200,
       headers: { "content-type": "application/json" },
@@ -132,26 +136,29 @@ test("a matching stored mapping is reauthenticated and a wrong-origin or interna
   assert.equal(requests, 1);
   assert.equal(result.status, "resolved");
   assert.equal(result.topicId, 40);
+  assert.equal(requestedExternalId, EXTERNAL_ID);
 
-  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://attacker.invalid/t/bound/40\n---\nBound page content.\n`);
+  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://attacker.invalid/t/bound/40\n---\nBound page content.\n`);
   await assert.rejects(() => publishControlledDiscussions(options(root)), /left the configured Discourse origin/);
   assert.equal(requests, 1);
 
-  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/41\n---\nBound page content.\n`);
+  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/41\n---\nBound page content.\n`);
   await assert.rejects(() => publishControlledDiscussions(options(root)), /topic ID and URL disagree/);
   assert.equal(requests, 1);
 });
 
 test("stored binding pairs must be wholly absent or wholly valid before any request", async (t) => {
   const invalid = {
+    "external-only.md": `discussionbridgeExternalId: ${EXTERNAL_ID}`,
+    "bad-external.md": `discussionbridgeExternalId: not-an-identity\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40`,
     "resource-only.md": `discussionbridgeResourceId: ${RESOURCE_ID}`,
     "id-only.md": "discourseTopicId: 40",
     "url-only.md": "discourseTopicUrl: https://forum.example/community/t/bound/40",
-    "bad-resource.md": "discussionbridgeResourceId: not-a-uuid\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40",
-    "zero-id.md": `discussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 0\ndiscourseTopicUrl: https://forum.example/community/t/bound/40`,
-    "bogus-id.md": `discussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: bogus\ndiscourseTopicUrl: https://forum.example/community/t/bound/40`,
-    "blank-url.md": `discussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: ""`,
-    "object-url.md": `discussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl:\n  nested: value`,
+    "bad-resource.md": `discussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: not-a-uuid\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40`,
+    "zero-id.md": `discussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 0\ndiscourseTopicUrl: https://forum.example/community/t/bound/40`,
+    "bogus-id.md": `discussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: bogus\ndiscourseTopicUrl: https://forum.example/community/t/bound/40`,
+    "blank-url.md": `discussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: ""`,
+    "object-url.md": `discussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl:\n  nested: value`,
   };
   const previousFetch = globalThis.fetch;
   let requests = 0;
