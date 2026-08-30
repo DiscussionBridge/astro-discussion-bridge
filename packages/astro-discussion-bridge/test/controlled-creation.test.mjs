@@ -98,6 +98,85 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.match(updated, /discourseTopicUrl: "https:\/\/forum\.example\/community\/t\/example\/41"/);
 });
 
+test("Astro author frontmatter sends bounded primary and coauthor identities", async (t) => {
+  const root = await fixture({
+    "authored.md": `---
+title: Authored page
+discussionCommentsDisplay: fullInteractive
+discussionSync: true
+authors:
+  - id: astro:phil
+    name: Phil
+    profileUrl: https://site.example/authors/phil/
+  - id: astro:editorial
+    name: DiscussionBridge Editorial
+primaryAuthor: astro:phil
+---
+Authored page content.
+`,
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  let bridgeRecord;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, init) => {
+    bridgeRecord = JSON.parse(init.body).bridge_record;
+    return new Response(JSON.stringify(bridgePayload(42)), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  await publishControlledDiscussions(options(root));
+  assert.equal(bridgeRecord.primary_source_author_id, "astro:phil");
+  assert.deepEqual(bridgeRecord.source_authors, [
+    {
+      id: "astro:phil",
+      name: "Phil",
+      profile_url: "https://site.example/authors/phil/",
+    },
+    { id: "astro:editorial", name: "DiscussionBridge Editorial" },
+  ]);
+});
+
+test("author identities fail before fetch when malformed, duplicate, or outside the source origin", async (t) => {
+  const cases = [
+    "authors: [{ name: Missing ID }]",
+    "authors: [{ id: astro:one, name: One }, { id: astro:one, name: Duplicate }]",
+    "authors: [{ id: astro:one, name: One, profileUrl: https://attacker.invalid/one/ }]",
+    "authors: [{ id: astro:one, name: One }]\nprimaryAuthor: astro:missing",
+  ];
+  let requests = 0;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    requests += 1;
+    return new Response(JSON.stringify(bridgePayload(43)), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  for (const [index, authors] of cases.entries()) {
+    const root = await fixture({
+      [`invalid-${index}.md`]: `---
+title: Invalid author
+discussionCommentsDisplay: fullInteractive
+discussionSync: true
+${authors}
+---
+Invalid author content.
+`,
+    });
+    try {
+      await assert.rejects(() => publishControlledDiscussions(options(root)), /DiscussionBridge author|primary author/);
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  }
+  assert.equal(requests, 0);
+});
+
 test("an existing local binding is authenticated again and mismatch never overwrites", async (t) => {
   const root = await fixture({
     "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,

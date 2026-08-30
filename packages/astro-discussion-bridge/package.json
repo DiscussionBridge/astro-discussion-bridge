@@ -1,6 +1,6 @@
 {
   "name": "astro-discussion-bridge",
-  "version": "0.1.0-alpha.20260830.2",
+  "version": "0.1.0-alpha.20260830.3",
   "description": "Two-direction Astro adapter with plugin-free simple/full comments and plugin-backed fullInteractive discussion.",
   "type": "module",
   "license": "MIT",

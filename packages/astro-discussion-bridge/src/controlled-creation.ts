@@ -15,6 +15,7 @@ import {
 const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 65_536;
 const MAX_CONTENT_HTML_BYTES = 48 * 1024;
+const MAX_SOURCE_AUTHORS = 20;
 const markdownExtensions = new Set([".md", ".mdx"]);
 
 export interface ControlledCreationOptions {
@@ -64,6 +65,14 @@ interface PreparedPage {
   externalId: string;
   existingResourceId?: string;
   existingTopicId?: number;
+  sourceAuthors?: SourceAuthor[];
+  primarySourceAuthorId?: string;
+}
+
+export interface SourceAuthor {
+  id: string;
+  name: string;
+  profile_url?: string;
 }
 
 type CensusEntry =
@@ -152,6 +161,12 @@ export async function publishControlledDiscussions(
       filePath,
     );
     const contentHtml = await renderedPublishedContent(parsed.body, filePath, markdownRenderer);
+    const authorship = validatedSourceAuthorship(
+      parsed.frontmatter.authors,
+      parsed.frontmatter.primaryAuthor,
+      validated.siteBase,
+      filePath,
+    );
     const priorPath = canonicalSources.get(pageUrl);
     if (priorPath) {
       throw new Error(`Authorized DiscussionBridge pages resolve to the same canonical source URL ${pageUrl}: ${priorPath} and ${filePath}.`);
@@ -159,7 +174,18 @@ export async function publishControlledDiscussions(
     canonicalSources.set(pageUrl, filePath);
     census.push({
       kind: "publish",
-      page: { filePath, source, pageUrl, title, contentHtml, externalId, existingResourceId, existingTopicId },
+      page: {
+        filePath,
+        source,
+        pageUrl,
+        title,
+        contentHtml,
+        externalId,
+        existingResourceId,
+        existingTopicId,
+        sourceAuthors: authorship.sourceAuthors,
+        primarySourceAuthorId: authorship.primarySourceAuthorId,
+      },
     });
   }
 
@@ -177,6 +203,8 @@ export async function publishControlledDiscussions(
       title: page.title,
       contentHtml: page.contentHtml,
       externalId: page.externalId,
+      sourceAuthors: page.sourceAuthors,
+      primarySourceAuthorId: page.primarySourceAuthorId,
     });
     if (
       (page.existingResourceId && created.resourceId !== page.existingResourceId)
@@ -254,6 +282,8 @@ export async function resolveControlledCreation(input: {
   title: string;
   contentHtml: unknown;
   externalId?: string;
+  sourceAuthors?: SourceAuthor[];
+  primarySourceAuthorId?: string;
 }): Promise<{ outcome: "created" | "resolved"; reason: string; resourceId: string; topicId: number; topicUrl: string }> {
   validateConnectionSettings(input.options);
   const sourceUrl = validatedSourceUrl(input.sourceUrl);
@@ -263,6 +293,12 @@ export async function resolveControlledCreation(input: {
   if (!/^astro-page:[0-9a-f]{64}$/.test(externalId)) {
     throw new Error("controlledCreation externalId must be an Astro page identity.");
   }
+  const authorship = validatedSourceAuthorship(
+    input.sourceAuthors,
+    input.primarySourceAuthorId,
+    new URL(sourceUrl),
+    "controlledCreation request",
+  );
   const serviceBase = parseServiceBaseUrl(input.discourseUrl);
   if (serviceBase.protocol !== "https:") throw new Error("controlledCreation requires HTTPS for its connection secret.");
   const endpoint = resolveServiceRequestUrl(
@@ -296,6 +332,10 @@ export async function resolveControlledCreation(input: {
         visibility: input.options.visibility ?? "unlisted",
         ...(input.options.lane ? { lane: input.options.lane } : {}),
         correlation_id: randomUUID(),
+        ...(authorship.sourceAuthors ? {
+          source_authors: authorship.sourceAuthors,
+          primary_source_author_id: authorship.primarySourceAuthorId,
+        } : {}),
       },
     }),
   });
@@ -627,6 +667,80 @@ function validatedSourceUrl(value: string): string {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function validatedSourceAuthorship(
+  value: unknown,
+  primaryValue: unknown,
+  siteBase: URL,
+  label: string,
+): { sourceAuthors?: SourceAuthor[]; primarySourceAuthorId?: string } {
+  if (value === undefined) {
+    if (primaryValue !== undefined) {
+      throw new Error(`DiscussionBridge primary author requires authors for ${label}.`);
+    }
+    return {};
+  }
+
+  const entries = Array.isArray(value) ? value : [value];
+  if (!entries.length || entries.length > MAX_SOURCE_AUTHORS) {
+    throw new Error(`DiscussionBridge authors must contain between 1 and ${MAX_SOURCE_AUTHORS} entries for ${label}.`);
+  }
+
+  const sourceAuthors = entries.map((entry): SourceAuthor => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      throw new Error(`DiscussionBridge author entries must be objects for ${label}.`);
+    }
+    const author = entry as Record<string, unknown>;
+    const allowedKeys = new Set(["id", "name", "profileUrl", "profile_url"]);
+    if (Object.keys(author).some((key) => !allowedKeys.has(key))) {
+      throw new Error(`DiscussionBridge author entry contains unsupported fields for ${label}.`);
+    }
+    if (Object.hasOwn(author, "profileUrl") && Object.hasOwn(author, "profile_url")) {
+      throw new Error(`DiscussionBridge author profile URL is ambiguous for ${label}.`);
+    }
+
+    const id = boundedAuthorString(author.id, "author ID", 255, label);
+    const name = boundedAuthorString(author.name, "author name", 200, label);
+    const rawProfile = author.profileUrl ?? author.profile_url;
+    let profileUrl: string | undefined;
+    if (rawProfile !== undefined) {
+      profileUrl = normalizePublicHttpUrl(
+        boundedAuthorString(rawProfile, "author profile URL", 2_048, label),
+        `DiscussionBridge author profile URL for ${label}`,
+      );
+      if (new URL(profileUrl).origin !== siteBase.origin) {
+        throw new Error(`DiscussionBridge author profile URL must remain on the source site origin for ${label}.`);
+      }
+    }
+    return { id, name, ...(profileUrl ? { profile_url: profileUrl } : {}) };
+  });
+
+  const ids = sourceAuthors.map((author) => author.id);
+  if (new Set(ids).size !== ids.length) {
+    throw new Error(`DiscussionBridge author IDs must be unique for ${label}.`);
+  }
+  const primarySourceAuthorId = primaryValue === undefined
+    ? sourceAuthors[0].id
+    : boundedAuthorString(primaryValue, "primary author ID", 255, label);
+  if (!ids.includes(primarySourceAuthorId)) {
+    throw new Error(`DiscussionBridge primary author must identify one supplied author for ${label}.`);
+  }
+
+  return { sourceAuthors, primarySourceAuthorId };
+}
+
+function boundedAuthorString(value: unknown, field: string, maximumBytes: number, label: string): string {
+  if (
+    typeof value !== "string"
+    || value !== value.trim()
+    || !value
+    || new TextEncoder().encode(value).byteLength > maximumBytes
+    || /[\u0000-\u001f\u007f]/.test(value)
+  ) {
+    throw new Error(`DiscussionBridge ${field} is invalid for ${label}.`);
+  }
+  return value;
 }
 
 function lifecycleBoolean(frontmatter: Record<string, unknown>, key: string): boolean | undefined {

@@ -61,12 +61,27 @@ a request:
 ```yaml
 discussionCommentsDisplay: fullInteractive
 discussionSync: true
+authors:
+  - id: astro:phil
+    name: Phil
+    profileUrl: https://site.example.com/authors/phil/
+  - id: astro:discussionbridge-team
+    name: DiscussionBridge Team
+primaryAuthor: astro:phil
 ```
 
 The eligible page body must render to nonempty HTML within the 48 KiB
 published-content bound. The complete local corpus is rendered and validated
 before the first remote request; unsupported MDX constructs, empty output, and
 oversized output fail the build rather than creating a link-only topic.
+
+`authors` is optional. When present it is one author object or an array of at
+most 20 author objects. Each object requires a stable `id` and display `name`;
+an optional `profileUrl` must remain on the configured site origin.
+`primaryAuthor` selects the one identity that the receiving connection may map
+to the Discourse topic owner and defaults to the first author. The adapter sends
+all authors for source credit. It never sends a Discourse username or grants a
+source author forum permissions.
 
 `draft: true` or `published: false` prevents publication. The forum retains
 category, tag, lane, actor, and visibility authority. A stored
