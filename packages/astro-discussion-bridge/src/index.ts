@@ -44,6 +44,7 @@ export interface DiscussionBridgeOptions {
   siteUrl?: string;
   comments?: {
     enabled?: boolean;
+    display?: "simple" | "full" | "fullInteractive";
     embedHeight?: string;
     dynamicHeight?: boolean;
     embedMinHeight?: string;
@@ -59,7 +60,7 @@ interface PublicOptions {
   discourseUrl: string;
   comments: {
     enabled: boolean;
-    display: "fullInteractive";
+    display: "simple" | "full" | "fullInteractive";
     embedHeight: string;
     dynamicHeight: boolean;
     embedMinHeight: string;
@@ -134,7 +135,7 @@ function resolveOptions(options: DiscussionBridgeOptions): {
       discourseUrl: normalizeServiceBaseUrl(options.discourseUrl),
       comments: {
         enabled: options.comments?.enabled ?? true,
-        display: "fullInteractive",
+        display: options.comments?.display ?? "fullInteractive",
         embedHeight: options.comments?.embedHeight ?? "800px",
         dynamicHeight: options.comments?.dynamicHeight ?? true,
         embedMinHeight: options.comments?.embedMinHeight ?? "360",

@@ -3,7 +3,7 @@ declare module "virtual:discussion-bridge/config" {
     discourseUrl: string;
     comments: {
       enabled: boolean;
-      display: "fullInteractive";
+      display: "simple" | "full" | "fullInteractive";
       embedHeight: string;
       dynamicHeight: boolean;
       embedMinHeight: string;
@@ -26,10 +26,10 @@ declare global {
       discourseEmbedUrl?: string;
       topicId?: number;
       className?: string;
-      fullApp: true;
-      embedHeight: string;
-      dynamicHeight: boolean;
-      embedMinHeight: string;
+      fullApp?: true;
+      embedHeight?: string;
+      dynamicHeight?: boolean;
+      embedMinHeight?: string;
     };
   }
 }

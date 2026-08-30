@@ -8,7 +8,8 @@ It has three bounded functions:
   snapshot so the receiving topic contains the article and attribution;
 - authenticated From Discourse retrieval and sanitized static presentation;
   and
-- mapped comments-only `fullInteractive` presentation through Discourse Core.
+- three deliberate comments presentations: plugin-free `simple`, plugin-free
+  `full`, and plugin-backed comments-only `fullInteractive`.
 
 It is not an API-key publisher, import tool, multi-forum framework, generic
 diagnostic client, or independent forum control plane.
@@ -27,6 +28,7 @@ export default defineConfig({
       siteUrl: "https://site.example.com",
       comments: {
         enabled: true,
+        display: "fullInteractive",
         dynamicHeight: true,
         credit: { enabled: true },
       },
@@ -85,10 +87,21 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 <Discussion frontmatter={Astro.props.frontmatter} />
 ```
 
-The component renders one mapped `fullInteractive` discussion and one optional
-DiscussionBridge credit. Discourse Core owns authentication, accounts,
-sessions, composer/actions, moderation, persistence, and dynamic iframe height.
-There is no simple/full/replies fallback.
+The component accepts one explicit presentation mode:
+
+- `simple` renders a bounded, sanitized reply list from the public Discourse
+  topic JSON. It requires no DiscussionBridge plugin.
+- `full` uses the standard Discourse comments embed. It requires only normal
+  Discourse embedding configuration, not the DiscussionBridge plugin.
+- `fullInteractive` uses the plugin-authorized full-app comments frame so
+  Discourse owns authentication, composer/actions, moderation, persistence,
+  and dynamic iframe height while the companion first post remains out of the
+  comments layout.
+
+All three render the optional DiscussionBridge credit. The plugin-free choices
+remain supported because not every site wants to install the receiving plugin;
+`fullInteractive` exists because the stock embed cannot provide the same
+comments-frame interaction and layout.
 
 For a From Discourse page, render the record during the server-side/static
 build. The component reads credentials only from the build environment:
@@ -117,6 +130,7 @@ connection secret to browser JavaScript.
 - `astro-discussion-bridge/bridge-record`
 - `astro-discussion-bridge/Discussion.astro`
 - `astro-discussion-bridge/DiscourseDiscussion.astro`
+- `astro-discussion-bridge/DiscourseReplies.astro`
 - `astro-discussion-bridge/DiscussionCredit.astro`
 - `astro-discussion-bridge/FromDiscourse.astro`
 

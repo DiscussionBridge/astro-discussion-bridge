@@ -1,0 +1,129 @@
+---
+import sanitizeHtml from "sanitize-html";
+import config from "virtual:discussion-bridge/config";
+import {
+  normalizeServiceBaseUrl,
+  parsePublicDiscourseTopicUrl,
+} from "astro-discussion-bridge/web-url";
+
+interface Props {
+  class?: string;
+  discourseUrl?: string;
+  heading?: string;
+  topicId?: unknown;
+  topicUrl?: unknown;
+}
+
+interface PublicPost {
+  avatar_template?: string;
+  cooked: string;
+  created_at: string;
+  display_username?: string;
+  post_number: number;
+  topic_id: number;
+  topic_slug: string;
+  username: string;
+}
+
+const MAX_RESPONSE_BYTES = 512 * 1024;
+const MAX_REPLIES = 50;
+const discourseUrl = normalizeServiceBaseUrl(
+  Astro.props.discourseUrl ?? config.discourseUrl,
+  "DiscourseReplies discourseUrl",
+);
+const topicReference = Astro.props.topicUrl === undefined
+  ? undefined
+  : parsePublicDiscourseTopicUrl(
+      requiredString(Astro.props.topicUrl, "DiscourseReplies topicUrl"),
+      discourseUrl,
+      "DiscourseReplies topicUrl",
+    );
+const topicId = positiveTopicId(Astro.props.topicId, "DiscourseReplies topicId")
+  ?? topicReference?.topicId;
+if (!topicId) throw new Error("DiscourseReplies requires one public topic ID.");
+if (topicReference && topicReference.topicId !== topicId) {
+  throw new Error("DiscourseReplies topicId and topicUrl must identify the same topic.");
+}
+
+const topicUrl = topicReference?.href ?? `${discourseUrl}/t/${topicId}`;
+const endpoint = new URL(`/t/${topicId}.json`, `${discourseUrl}/`);
+const response = await fetch(endpoint, {
+  headers: { Accept: "application/json" },
+  redirect: "error",
+  signal: AbortSignal.timeout(10_000),
+});
+if (!response.ok) throw new Error(`DiscourseReplies request failed with HTTP ${response.status}.`);
+if (response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "application/json") {
+  throw new Error("DiscourseReplies requires an application/json response.");
+}
+const responseText = await response.text();
+if (new TextEncoder().encode(responseText).byteLength > MAX_RESPONSE_BYTES) {
+  throw new Error("DiscourseReplies response exceeded the 512 KiB limit.");
+}
+const payload = JSON.parse(responseText) as { post_stream?: { posts?: PublicPost[] } };
+const replies = (payload.post_stream?.posts ?? [])
+  .filter((post) => Number.isInteger(post.post_number) && post.post_number > 1)
+  .slice(0, MAX_REPLIES);
+const heading = Astro.props.heading ?? "Comments";
+
+function positiveTopicId(value: unknown, label: string): number | undefined {
+  if (value === undefined) return undefined;
+  const text = typeof value === "number" ? String(value) : value;
+  if (typeof text !== "string" || !/^[1-9]\d*$/.test(text) || !Number.isSafeInteger(Number(text))) {
+    throw new Error(`${label} must be a positive safe integer.`);
+  }
+  return Number(text);
+}
+
+function requiredString(value: unknown, label: string): string {
+  if (typeof value !== "string" || !value.trim()) throw new Error(`${label} must be a non-empty string.`);
+  return value.trim();
+}
+
+function postUrl(post: PublicPost): string {
+  return `${discourseUrl}/t/${encodeURIComponent(post.topic_slug)}/${post.topic_id}/${post.post_number}`;
+}
+
+function avatarUrl(post: PublicPost): string | undefined {
+  const template = post.avatar_template?.replace("{size}", "48");
+  if (!template) return undefined;
+  return new URL(template, `${discourseUrl}/`).href;
+}
+
+function cookedHtml(post: PublicPost): string {
+  const absolute = post.cooked.replace(/\s(href|src)="\/(?!\/)([^"]*)"/g, ` $1="${discourseUrl}/$2"`);
+  return sanitizeHtml(absolute, {
+    allowedTags: [...sanitizeHtml.defaults.allowedTags, "img"],
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      img: ["alt", "height", "loading", "src", "width"],
+    },
+    allowedSchemes: ["http", "https"],
+  });
+}
+---
+
+<section class:list={["discussion-bridge-simple", Astro.props.class]}>
+  <div class="discussion-bridge-simple__header"><h2>{heading}</h2><a href={topicUrl}>Join the discussion</a></div>
+  {replies.length ? (
+    <ol>{replies.map((post) => (
+      <li><article>
+        <div class="discussion-bridge-simple__avatar" aria-hidden="true">{avatarUrl(post) ? <img src={avatarUrl(post)} alt="" loading="lazy" /> : post.username.slice(0, 1).toUpperCase()}</div>
+        <div><header><strong>{post.display_username ?? post.username}</strong><a href={postUrl(post)}><time datetime={post.created_at}>{new Date(post.created_at).toLocaleDateString()}</time></a></header><div class="discussion-bridge-simple__body" set:html={cookedHtml(post)} /></div>
+      </article></li>
+    ))}</ol>
+  ) : <p>No replies yet. <a href={topicUrl}>Start the conversation on Discourse.</a></p>}
+</section>
+
+<style>
+  .discussion-bridge-simple { margin-block-start: 3rem; border-block-start: 1px solid var(--sl-color-gray-5); padding-block-start: 2rem; }
+  .discussion-bridge-simple__header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+  .discussion-bridge-simple__header h2 { margin: 0; font-size: var(--sl-text-h3); }
+  .discussion-bridge-simple ol { display: grid; gap: 1rem; padding: 0; list-style: none; }
+  .discussion-bridge-simple article { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); gap: 1rem; padding-block: 1rem; border-block-start: 1px solid var(--sl-color-gray-5); }
+  .discussion-bridge-simple__avatar { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; overflow: hidden; border-radius: 50%; background: var(--sl-color-gray-6); font-weight: 700; }
+  .discussion-bridge-simple__avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .discussion-bridge-simple header { display: flex; justify-content: space-between; gap: 1rem; }
+  .discussion-bridge-simple__body { overflow-wrap: anywhere; }
+  .discussion-bridge-simple__body :global(img) { max-width: 100%; height: auto; }
+</style>

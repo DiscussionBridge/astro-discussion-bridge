@@ -1,11 +1,13 @@
 ---
 import DiscourseDiscussion from "./DiscourseDiscussion.astro";
+import DiscourseReplies from "./DiscourseReplies.astro";
 import DiscussionCredit from "./DiscussionCredit.astro";
 import config from "virtual:discussion-bridge/config";
 
 interface Props {
   class?: string;
   discourseUrl?: string;
+  display?: "simple" | "full" | "fullInteractive";
   embedClassName?: string;
   heading?: string;
   topicId?: unknown;
@@ -16,22 +18,40 @@ interface Props {
 const frontmatter = Astro.props.frontmatter ?? Astro.props;
 const topicId = Astro.props.topicId ?? frontmatter.discourseTopicId;
 const topicUrl = stringValue(Astro.props.topicUrl ?? frontmatter.discourseTopicUrl);
+const display = Astro.props.display
+  ?? displayValue(frontmatter.discussionCommentsDisplay)
+  ?? config.comments.display;
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function displayValue(value: unknown): "simple" | "full" | "fullInteractive" | undefined {
+  return value === "simple" || value === "full" || value === "fullInteractive" ? value : undefined;
 }
 ---
 
 {config.comments.enabled && (
   <>
-    <DiscourseDiscussion
-      class={Astro.props.class}
-      discourseUrl={Astro.props.discourseUrl}
-      embedClassName={Astro.props.embedClassName}
-      heading={Astro.props.heading}
-      topicId={topicId}
-      topicUrl={topicUrl}
-    />
+    {display === "simple" ? (
+      <DiscourseReplies
+        class={Astro.props.class}
+        discourseUrl={Astro.props.discourseUrl}
+        heading={Astro.props.heading}
+        topicId={topicId}
+        topicUrl={topicUrl}
+      />
+    ) : (
+      <DiscourseDiscussion
+        class={Astro.props.class}
+        discourseUrl={Astro.props.discourseUrl}
+        embedClassName={Astro.props.embedClassName}
+        fullApp={display === "fullInteractive"}
+        heading={Astro.props.heading}
+        topicId={topicId}
+        topicUrl={topicUrl}
+      />
+    )}
     <DiscussionCredit />
   </>
 )}

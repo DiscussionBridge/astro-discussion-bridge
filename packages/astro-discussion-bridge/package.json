@@ -1,7 +1,7 @@
 {
   "name": "astro-discussion-bridge",
-  "version": "0.1.0-alpha.20260829.3",
-  "description": "Two-direction Astro adapter for DiscussionBridge Bridge Records and mapped fullInteractive discussion.",
+  "version": "0.1.0-alpha.20260830.1",
+  "description": "Two-direction Astro adapter with plugin-free simple/full comments and plugin-backed fullInteractive discussion.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -33,6 +33,7 @@
       "import": "./dist/bridge-record.js"
     },
     "./DiscourseDiscussion.astro": "./src/components/DiscourseDiscussion.astro",
+    "./DiscourseReplies.astro": "./src/components/DiscourseReplies.astro",
     "./Discussion.astro": "./src/components/Discussion.astro",
     "./DiscussionCredit.astro": "./src/components/DiscussionCredit.astro",
     "./FromDiscourse.astro": "./src/components/FromDiscourse.astro"

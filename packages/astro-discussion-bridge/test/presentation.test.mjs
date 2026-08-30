@@ -7,17 +7,21 @@ import discussionBridge from "../dist/index.js";
 
 const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("presentation has one mapped fullInteractive surface followed by one credit", async () => {
+test("presentation preserves simple, full, and mapped fullInteractive modes followed by one credit", async () => {
   const discussion = await fs.readFile(path.join(packageDir, "src/components/Discussion.astro"), "utf8");
   const discourse = await fs.readFile(path.join(packageDir, "src/components/DiscourseDiscussion.astro"), "utf8");
+  const replies = await fs.readFile(path.join(packageDir, "src/components/DiscourseReplies.astro"), "utf8");
   assert.equal((discussion.match(/<DiscourseDiscussion\b/g) ?? []).length, 1);
+  assert.equal((discussion.match(/<DiscourseReplies\b/g) ?? []).length, 1);
   assert.equal((discussion.match(/<DiscussionCredit\b/g) ?? []).length, 1);
-  assert.ok(discussion.indexOf("<DiscussionCredit") > discussion.indexOf("<DiscourseDiscussion"));
-  assert.match(discussion, /config\.comments\.enabled\s*&&[\s\S]*<DiscourseDiscussion[\s\S]*<DiscussionCredit/);
+  assert.match(discussion, /display === "simple"/);
+  assert.match(discussion, /fullApp=\{display === "fullInteractive"\}/);
+  assert.match(replies, /post\.post_number > 1/);
+  assert.match(replies, /sanitizeHtml/);
   assert.match(discourse, /const resolvedTopicId = topicId \?\? topicReference\?\.topicId/);
   assert.match(discourse, /topicId: resolvedTopicId/);
-  assert.doesNotMatch(discourse, /discourseEmbedUrl|fullApp:\s*false|simple/);
-  assert.doesNotMatch(discussion, /DiscourseReplies|targets?|relationships?|navigation/i);
+  assert.match(discourse, /fullApp \? \{ fullApp: true/);
+  assert.doesNotMatch(discussion, /targets?|relationships?|navigation/i);
 });
 
 test("From Discourse component renders only server-retrieved sanitized record content", async () => {

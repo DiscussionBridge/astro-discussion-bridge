@@ -10,6 +10,7 @@ interface Props {
   discourseUrl?: string;
   embedClassName?: string;
   frontmatter?: Record<string, unknown>;
+  fullApp?: boolean;
   heading?: string;
   topicId?: unknown;
   topicUrl?: unknown;
@@ -23,6 +24,7 @@ const embedClassName = Astro.props.embedClassName ?? config.comments.className;
 const embedHeight = config.comments.embedHeight;
 const dynamicHeight = config.comments.dynamicHeight;
 const embedMinHeight = config.comments.embedMinHeight;
+const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteractive";
 const heading = Astro.props.heading ?? "Comments";
 const topicIdValue = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
 const topicId = positiveTopicId(topicIdValue, "DiscourseDiscussion topicId");
@@ -69,15 +71,12 @@ function requiredString(value: unknown, label: string): string {
 )}
 
 {config.comments.enabled && (
-  <script define:vars={{ discourseUrl, embedClassName, embedHeight, dynamicHeight, embedMinHeight, resolvedTopicId }}>
+  <script define:vars={{ discourseUrl, embedClassName, embedHeight, dynamicHeight, embedMinHeight, fullApp, resolvedTopicId }}>
     window.DiscourseEmbed = {
       discourseUrl,
       topicId: resolvedTopicId,
       ...(embedClassName ? { className: embedClassName } : {}),
-      fullApp: true,
-      embedHeight,
-      dynamicHeight,
-      embedMinHeight,
+      ...(fullApp ? { fullApp: true, embedHeight, dynamicHeight, embedMinHeight } : {}),
     };
 
     const script = document.createElement("script");

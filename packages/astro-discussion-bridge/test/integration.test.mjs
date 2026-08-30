@@ -49,7 +49,7 @@ test("enabled controlled publishing fails closed without server credentials", as
   }
 });
 
-test("package and source inventory expose only the narrow consumer", async () => {
+test("package and source inventory expose only the six-profile Astro adapter boundary", async () => {
   const packageJson = JSON.parse(await fs.readFile(path.join(packageDir, "package.json"), "utf8"));
   assert.equal(packageJson.bin, undefined);
   assert.deepEqual(Object.keys(packageJson.exports).sort(), [
@@ -57,6 +57,7 @@ test("package and source inventory expose only the narrow consumer", async () =>
     "./Discussion.astro",
     "./DiscussionCredit.astro",
     "./DiscourseDiscussion.astro",
+    "./DiscourseReplies.astro",
     "./FromDiscourse.astro",
     "./bridge-record",
     "./controlled-creation",
