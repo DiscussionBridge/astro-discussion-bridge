@@ -15,6 +15,7 @@ interface Props {
 }
 
 interface PublicPost {
+  id: number;
   avatar_template?: string;
   cooked: string;
   created_at: string;
@@ -27,6 +28,8 @@ interface PublicPost {
 
 const MAX_RESPONSE_BYTES = 512 * 1024;
 const MAX_REPLIES = 50;
+const INITIAL_REPLIES = 5;
+const FETCH_BATCH_SIZE = 20;
 const discourseUrl = normalizeServiceBaseUrl(
   Astro.props.discourseUrl ?? config.discourseUrl,
   "DiscourseReplies discourseUrl",
@@ -47,24 +50,69 @@ if (topicReference && topicReference.topicId !== topicId) {
 
 const topicUrl = topicReference?.href ?? `${discourseUrl}/t/${topicId}`;
 const endpoint = new URL(`/t/${topicId}.json`, `${discourseUrl}/`);
-const response = await fetch(endpoint, {
-  headers: { Accept: "application/json" },
-  redirect: "error",
-  signal: AbortSignal.timeout(10_000),
+const payload = await publicTopicJson(endpoint);
+const stream = payload.post_stream?.stream;
+if (!Array.isArray(stream)) throw new Error("DiscourseReplies requires a topic post stream.");
+const replyIds = stream.slice(1, MAX_REPLIES + 1).map((value) => positiveTopicId(value, "DiscourseReplies post stream ID")!);
+const postsById = new Map<number, PublicPost>();
+for (const post of payload.post_stream?.posts ?? []) {
+  if (validPublicPost(post, topicId)) postsById.set(post.id, post);
+}
+const missingIds = replyIds.filter((id) => !postsById.has(id));
+for (let offset = 0; offset < missingIds.length; offset += FETCH_BATCH_SIZE) {
+  const batch = missingIds.slice(offset, offset + FETCH_BATCH_SIZE);
+  const postsEndpoint = new URL(`/t/${topicId}/posts.json`, `${discourseUrl}/`);
+  for (const id of batch) postsEndpoint.searchParams.append("post_ids[]", String(id));
+  const additional = await publicTopicJson(postsEndpoint);
+  for (const post of additional.post_stream?.posts ?? []) {
+    if (!validPublicPost(post, topicId)) throw new Error("DiscourseReplies received an invalid public post.");
+    postsById.set(post.id, post);
+  }
+}
+const replies = replyIds.map((id) => {
+  const post = postsById.get(id);
+  if (!post) throw new Error("DiscourseReplies could not resolve the complete bounded reply set.");
+  return post;
 });
-if (!response.ok) throw new Error(`DiscourseReplies request failed with HTTP ${response.status}.`);
-if (response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "application/json") {
-  throw new Error("DiscourseReplies requires an application/json response.");
-}
-const responseText = await response.text();
-if (new TextEncoder().encode(responseText).byteLength > MAX_RESPONSE_BYTES) {
-  throw new Error("DiscourseReplies response exceeded the 512 KiB limit.");
-}
-const payload = JSON.parse(responseText) as { post_stream?: { posts?: PublicPost[] } };
-const replies = (payload.post_stream?.posts ?? [])
-  .filter((post) => Number.isInteger(post.post_number) && post.post_number > 1)
-  .slice(0, MAX_REPLIES);
+const initialReplies = replies.slice(0, INITIAL_REPLIES);
+const remainingReplies = replies.slice(INITIAL_REPLIES);
+const exceedsBound = stream.length - 1 > MAX_REPLIES;
 const heading = Astro.props.heading ?? "Comments";
+
+interface TopicPayload {
+  post_stream?: { posts?: unknown[]; stream?: unknown[] };
+}
+
+async function publicTopicJson(url: URL): Promise<TopicPayload> {
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    redirect: "error",
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) throw new Error(`DiscourseReplies request failed with HTTP ${response.status}.`);
+  if (response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "application/json") {
+    throw new Error("DiscourseReplies requires an application/json response.");
+  }
+  const responseText = await response.text();
+  if (new TextEncoder().encode(responseText).byteLength > MAX_RESPONSE_BYTES) {
+    throw new Error("DiscourseReplies response exceeded the 512 KiB limit.");
+  }
+  const decoded: unknown = JSON.parse(responseText);
+  if (!decoded || typeof decoded !== "object") throw new Error("DiscourseReplies response JSON is invalid.");
+  return decoded as TopicPayload;
+}
+
+function validPublicPost(value: unknown, expectedTopicId: number): value is PublicPost {
+  if (!value || typeof value !== "object") return false;
+  const post = value as Partial<PublicPost>;
+  return Number.isSafeInteger(post.id) && Number(post.id) > 0
+    && Number.isSafeInteger(post.post_number) && Number(post.post_number) > 1
+    && post.topic_id === expectedTopicId
+    && typeof post.topic_slug === "string" && /^[a-z0-9-]+$/.test(post.topic_slug)
+    && typeof post.username === "string" && post.username.trim().length > 0 && post.username.length <= 100
+    && typeof post.created_at === "string" && Number.isFinite(Date.parse(post.created_at))
+    && typeof post.cooked === "string";
+}
 
 function positiveTopicId(value: unknown, label: string): number | undefined {
   if (value === undefined) return undefined;
@@ -106,12 +154,26 @@ function cookedHtml(post: PublicPost): string {
 <section class:list={["discussion-bridge-simple", Astro.props.class]}>
   <div class="discussion-bridge-simple__header"><h2>{heading}</h2><a href={topicUrl}>Join the discussion</a></div>
   {replies.length ? (
-    <ol>{replies.map((post) => (
+    <>
+    <ol>{initialReplies.map((post) => (
       <li><article>
         <div class="discussion-bridge-simple__avatar" aria-hidden="true">{avatarUrl(post) ? <img src={avatarUrl(post)} alt="" loading="lazy" /> : post.username.slice(0, 1).toUpperCase()}</div>
         <div><header><strong>{post.display_username ?? post.username}</strong><a href={postUrl(post)}><time datetime={post.created_at}>{new Date(post.created_at).toLocaleDateString()}</time></a></header><div class="discussion-bridge-simple__body" set:html={cookedHtml(post)} /></div>
       </article></li>
     ))}</ol>
+    {remainingReplies.length ? (
+      <details class="discussion-bridge-simple__more">
+        <summary><span class="discussion-bridge-simple__more-closed">Show {remainingReplies.length} more {remainingReplies.length === 1 ? "comment" : "comments"}</span><span class="discussion-bridge-simple__more-open">Show fewer comments</span></summary>
+        <ol>{remainingReplies.map((post) => (
+          <li><article>
+            <div class="discussion-bridge-simple__avatar" aria-hidden="true">{avatarUrl(post) ? <img src={avatarUrl(post)} alt="" loading="lazy" /> : post.username.slice(0, 1).toUpperCase()}</div>
+            <div><header><strong>{post.display_username ?? post.username}</strong><a href={postUrl(post)}><time datetime={post.created_at}>{new Date(post.created_at).toLocaleDateString()}</time></a></header><div class="discussion-bridge-simple__body" set:html={cookedHtml(post)} /></div>
+          </article></li>
+        ))}</ol>
+      </details>
+    ) : null}
+    {exceedsBound ? <p class="discussion-bridge-simple__limit">Showing the first {MAX_REPLIES} replies. <a href={topicUrl}>View the complete discussion on The Bridge</a>.</p> : null}
+    </>
   ) : <p>No replies yet. <a href={topicUrl}>Start the conversation on Discourse.</a></p>}
 </section>
 
@@ -126,4 +188,10 @@ function cookedHtml(post: PublicPost): string {
   .discussion-bridge-simple header { display: flex; justify-content: space-between; gap: 1rem; }
   .discussion-bridge-simple__body { overflow-wrap: anywhere; }
   .discussion-bridge-simple__body :global(img) { max-width: 100%; height: auto; }
+  .discussion-bridge-simple__more { border: 0; }
+  .discussion-bridge-simple__more summary { width: max-content; max-width: 100%; margin: 1rem auto; border: 1px solid var(--sl-color-gray-5); border-radius: 999px; padding: .55rem .9rem; cursor: pointer; font-weight: 700; }
+  .discussion-bridge-simple__more-open { display: none; }
+  .discussion-bridge-simple__more[open] .discussion-bridge-simple__more-closed { display: none; }
+  .discussion-bridge-simple__more[open] .discussion-bridge-simple__more-open { display: inline; }
+  .discussion-bridge-simple__limit { text-align: center; font-size: var(--sl-text-sm); }
 </style>

@@ -120,7 +120,10 @@ import Discussion from "astro-discussion-bridge/Discussion.astro";
 The component accepts one explicit presentation mode:
 
 - `simple` renders a bounded, sanitized reply list from the public Discourse
-  topic JSON. It requires no DiscussionBridge plugin.
+  topic JSON. It fetches missing public posts in batches of at most 20, renders
+  at most 50 replies, shows the first five immediately, and places the rest
+  behind a native **Show more comments** disclosure. It requires no
+  DiscussionBridge plugin.
 - `full` uses the standard Discourse comments embed. With no stored topic it
   gives Core the canonical Astro page URL so Discourse can create or resolve
   its ordinary embed topic. It requires only normal Discourse embedding

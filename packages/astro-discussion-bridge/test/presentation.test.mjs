@@ -17,8 +17,14 @@ test("presentation preserves simple, full, and mapped fullInteractive modes foll
   assert.match(discussion, /display === "simple"/);
   assert.match(discussion, /fullApp=\{display === "fullInteractive"\}/);
   assert.match(discussion, /<DiscourseDiscussion[\s\S]*sourceUrl=\{Astro\.props\.sourceUrl\}/);
-  assert.match(replies, /post\.post_number > 1/);
+  assert.match(replies, /Number\(post\.post_number\) > 1/);
   assert.match(replies, /sanitizeHtml/);
+  assert.match(replies, /FETCH_BATCH_SIZE = 20/);
+  assert.match(replies, /MAX_REPLIES = 50/);
+  assert.match(replies, /INITIAL_REPLIES = 5/);
+  assert.match(replies, /post_ids\[\]/);
+  assert.match(replies, /Show \{remainingReplies\.length\} more/);
+  assert.match(replies, /<details class="discussion-bridge-simple__more">/);
   assert.match(discourse, /const resolvedTopicId = topicId \?\? topicReference\?\.topicId/);
   assert.match(discourse, /resolvedTopicId \? \{ topicId: resolvedTopicId \} : \{ discourseEmbedUrl: sourceUrl \}/);
   assert.match(discourse, /fullInteractive requires one completed Bridge topic mapping/);
