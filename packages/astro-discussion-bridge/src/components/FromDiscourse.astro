@@ -1,5 +1,6 @@
 ---
 import { fetchFromDiscourseRecord } from "astro-discussion-bridge/bridge-record";
+import sanitizeHtml from "sanitize-html";
 
 interface Props {
   resourceId: string;
@@ -18,13 +19,68 @@ const record = await fetchFromDiscourseRecord(Astro.props.resourceId, {
   connectionSecret,
 });
 const showTopicLink = Astro.props.showTopicLink ?? true;
+const usedSlugs = new Set<string>();
+const headings: Array<{ depth: number; slug: string; text: string }> = [];
+const contentHtml = record.contentHtml.replace(
+  /<h([23])([^>]*)>([\s\S]*?)<\/h\1>/gi,
+  (_match, rawDepth: string, attributes: string, inner: string) => {
+    const text = sanitizeHtml(inner, { allowedTags: [], allowedAttributes: {} }).trim();
+    if (!text) return _match;
+    const base = text
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || `section-${headings.length + 1}`;
+    let slug = base;
+    let suffix = 2;
+    while (usedSlugs.has(slug)) slug = `${base}-${suffix++}`;
+    usedSlugs.add(slug);
+    const depth = Number(rawDepth);
+    headings.push({ depth, slug, text });
+    return `<h${depth}${attributes} id="${slug}">${inner}</h${depth}>`;
+  },
+);
 ---
 
 <section class="discussionbridge-record" data-discussionbridge-resource={record.resourceId}>
-  <Fragment set:html={record.contentHtml} />
+  {headings.length >= 2 && (
+    <nav class="discussionbridge-contents" aria-label="On this page">
+      <strong>On this page</strong>
+      <ol>
+        {headings.map((heading) => (
+          <li class:list={{ nested: heading.depth === 3 }}><a href={`#${heading.slug}`}>{heading.text}</a></li>
+        ))}
+      </ol>
+    </nav>
+  )}
+  <Fragment set:html={contentHtml} />
   {showTopicLink && (
     <p class="discussionbridge-credit">
       <a href={record.topicUrl} rel="nofollow noopener noreferrer">Continue the discussion in Discourse</a>
     </p>
   )}
 </section>
+
+<style>
+  .discussionbridge-contents {
+    margin-block-end: 2rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    background: var(--sl-color-gray-6);
+  }
+
+  .discussionbridge-contents strong {
+    display: block;
+    margin-block-end: 0.5rem;
+  }
+
+  .discussionbridge-contents ol {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+  }
+
+  .discussionbridge-contents li.nested {
+    margin-inline-start: 1rem;
+  }
+</style>

@@ -43,8 +43,11 @@ test("From Discourse component renders only server-retrieved sanitized record co
   assert.match(component, /showTopicLink &&/);
   assert.match(component, /astro-discussion-bridge\/bridge-record/);
   assert.match(component, /process\.env\.DISCUSSIONBRIDGE_CONNECTION_SECRET/);
-  assert.match(component, /set:html=\{record\.contentHtml\}/);
+  assert.match(component, /set:html=\{contentHtml\}/);
   assert.match(component, /record\.topicUrl/);
+  assert.match(component, /aria-label="On this page"/);
+  assert.match(component, /<h\(\[23\]\)/);
+  assert.match(component, /headings\.length >= 2/);
   assert.doesNotMatch(component, /client:|X-DiscussionBridge|connectionSecret\}/);
 });
 
