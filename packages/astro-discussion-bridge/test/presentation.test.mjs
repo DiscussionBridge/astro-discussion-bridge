@@ -39,6 +39,8 @@ test("plugin-free full mode can start from the canonical Astro page URL", async 
 test("From Discourse component renders only server-retrieved sanitized record content", async () => {
   const component = await fs.readFile(path.join(packageDir, "src/components/FromDiscourse.astro"), "utf8");
   assert.match(component, /fetchFromDiscourseRecord/);
+  assert.match(component, /showTopicLink/);
+  assert.match(component, /showTopicLink &&/);
   assert.match(component, /astro-discussion-bridge\/bridge-record/);
   assert.match(component, /process\.env\.DISCUSSIONBRIDGE_CONNECTION_SECRET/);
   assert.match(component, /set:html=\{record\.contentHtml\}/);

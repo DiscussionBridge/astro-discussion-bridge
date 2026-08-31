@@ -4,6 +4,7 @@ import { fetchFromDiscourseRecord } from "astro-discussion-bridge/bridge-record"
 interface Props {
   resourceId: string;
   discourseUrl: string;
+  showTopicLink?: boolean;
 }
 
 const connectionId = process.env.DISCUSSIONBRIDGE_CONNECTION_ID;
@@ -16,11 +17,14 @@ const record = await fetchFromDiscourseRecord(Astro.props.resourceId, {
   connectionId,
   connectionSecret,
 });
+const showTopicLink = Astro.props.showTopicLink ?? true;
 ---
 
 <section class="discussionbridge-record" data-discussionbridge-resource={record.resourceId}>
   <Fragment set:html={record.contentHtml} />
-  <p class="discussionbridge-credit">
-    <a href={record.topicUrl} rel="nofollow noopener noreferrer">Continue the discussion in Discourse</a>
-  </p>
+  {showTopicLink && (
+    <p class="discussionbridge-credit">
+      <a href={record.topicUrl} rel="nofollow noopener noreferrer">Continue the discussion in Discourse</a>
+    </p>
+  )}
 </section>
