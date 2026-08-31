@@ -137,7 +137,7 @@ function resolveOptions(options: DiscussionBridgeOptions): {
         enabled: options.comments?.enabled ?? true,
         display: options.comments?.display ?? "full",
         embedHeight: options.comments?.embedHeight ?? "800px",
-        dynamicHeight: options.comments?.dynamicHeight ?? true,
+        dynamicHeight: options.comments?.dynamicHeight ?? false,
         embedMinHeight: options.comments?.embedMinHeight ?? "360",
         className: options.comments?.className,
         credit: resolveCredit(options.comments?.credit),

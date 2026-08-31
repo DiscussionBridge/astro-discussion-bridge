@@ -48,7 +48,9 @@ test("From Discourse component renders only server-retrieved sanitized record co
   assert.doesNotMatch(component, /client:|X-DiscussionBridge|connectionSecret\}/);
 });
 
-test("Core owns dynamic height and configured ceilings fail closed", () => {
+test("fullInteractive defaults to a bounded viewport and configured ceilings fail closed", async () => {
+  const integration = await fs.readFile(path.join(packageDir, "src/index.ts"), "utf8");
+  assert.match(integration, /dynamicHeight: options\.comments\?\.dynamicHeight \?\? false/);
   assert.throws(() => discussionBridge({
     discourseUrl: "https://forum.example/",
     comments: { embedMaxHeight: "900px" },

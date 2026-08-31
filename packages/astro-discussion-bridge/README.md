@@ -29,7 +29,8 @@ export default defineConfig({
       comments: {
         enabled: true,
         display: "fullInteractive",
-        dynamicHeight: true,
+        // Keep fullInteractive bounded; long discussions scroll in the frame.
+        dynamicHeight: false,
         credit: { enabled: true },
       },
       publishOnBuild: {
