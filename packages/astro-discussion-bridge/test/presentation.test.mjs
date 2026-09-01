@@ -28,6 +28,7 @@ test("presentation preserves simple, full, and mapped fullInteractive modes foll
   assert.match(replies, /<details class="discussion-bridge-simple__more">/);
   assert.match(replies, /data-discussionbridge-simple-live/);
   assert.match(replies, /startSimpleComments/);
+  assert.match(replies, /<style is:global>/);
   assert.match(live, /credentials: "omit"/);
   assert.match(live, /redirect: "error"/);
   assert.match(live, /DOMPurify\.sanitize/);
