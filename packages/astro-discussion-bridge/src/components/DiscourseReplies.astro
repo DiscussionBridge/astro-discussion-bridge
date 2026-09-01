@@ -201,7 +201,7 @@ function cookedHtml(post: PublicPost): string {
         ))}</ol>
       </details>
     ) : null}
-    {exceedsBound ? <p class="discussion-bridge-simple__limit">Showing the first {MAX_REPLIES} replies. <a href={topicUrl}>View the complete discussion on The Bridge</a>.</p> : null}
+    {exceedsBound ? <p class="discussion-bridge-simple__limit">Showing the first {MAX_REPLIES} comments. <a href={topicUrl}>View the complete discussion on The Bridge</a>.</p> : null}
     </>
   ) : <p>No comments yet. <a href={topicUrl}>Start the conversation on Discourse.</a></p>}
   <div data-discussionbridge-attributions>
