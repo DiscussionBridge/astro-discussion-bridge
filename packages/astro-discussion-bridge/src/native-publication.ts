@@ -33,6 +33,13 @@ function exactUrl(value: unknown, origin: string, label: string): URL {
   return parsed;
 }
 
+function isoDate(value: unknown, label: string): string {
+  const input = text(value, 64, label);
+  const parsed = new Date(input);
+  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString() !== input) throw new Error(`Invalid ${label}`);
+  return input;
+}
+
 function publication(record: Record<string, unknown>, siteOrigin: string, serverOrigin: string, routeBase: string) {
   const bindings = Array.isArray(record.bindings) ? record.bindings.filter((item): item is Record<string, unknown> => !!item && typeof item === "object" && item.role === "presentation" && item.state === "active") : [];
   if (!bindings.some((item) => item.native_materialization === true)) return null;
@@ -55,7 +62,7 @@ function publication(record: Record<string, unknown>, siteOrigin: string, server
     allowProtocolRelative: false,
   });
   if (!content.trim()) throw new Error("Astro publication content sanitized to empty");
-  return { resourceId: String(record.resource_id).toLowerCase(), slug, title: text(record.title, 1024, "Astro publication title"), content, revision: String(source.revision), authorName, topicId: Number(record.topic_id), topicUrl };
+  return { resourceId: String(record.resource_id).toLowerCase(), slug, title: text(record.title, 1024, "Astro publication title"), content, revision: String(source.revision), updatedAt: isoDate(source.updated_at, "Astro source update time"), authorName, topicId: Number(record.topic_id), topicUrl };
 }
 
 async function requestJson(url: string, connectionId: string, secret: string, fetchImplementation: typeof fetch) {
@@ -102,7 +109,7 @@ export async function materializeNativePublications(options: NativePublicationOp
         const item = publication(raw as Record<string, unknown>, siteOrigin, serverOrigin, routeBase);
         if (!item) { summary.skipped++; continue; }
         const file = path.join(options.docsDir, routeBase, `${item.slug}.md`);
-        const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, discussionCommentsDisplay: "fullInteractive", discussionSync: false, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
+        const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, date: item.updatedAt, discussionCommentsDisplay: "fullInteractive", discussionSync: false, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
         const output = `---\n${stringifyYaml(frontmatter).trim()}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**  \nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro 0.1.0-alpha.20260901.1\n`;
         let prior: string | null = null;
         try { prior = await readFile(file, "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }

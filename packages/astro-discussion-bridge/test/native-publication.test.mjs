@@ -8,7 +8,7 @@ import { materializeNativePublications } from "../dist/native-publication.js";
 const record = {
   resource_id: "11111111-1111-4111-8111-111111111111", direction: "from_discourse", state: "healthy", title: "The Bridge publishes everywhere", topic_id: 53,
   content_html: "<h2>One source</h2><script>bad()</script><p>Native Astro content.</p>",
-  source: { platform: "discourse", origin: "https://bridge.example", topic_id: 53, topic_url: "https://bridge.example/t/publisher/53", post_id: 149, post_number: 1, post_version: 1, revision: "post:149:version:1", author: { name: "DiscussionBridge", profile_url: "https://bridge.example/u/discussionbridge" } },
+  source: { platform: "discourse", origin: "https://bridge.example", topic_id: 53, topic_url: "https://bridge.example/t/publisher/53", post_id: 149, post_number: 1, post_version: 1, revision: "post:149:version:1", updated_at: "2026-09-01T08:00:00.000Z", author: { name: "DiscussionBridge", profile_url: "https://bridge.example/u/discussionbridge" } },
   bindings: [{ role: "presentation", state: "active", canonical_url: "https://astro.example/comments/bridge-publisher/", native_materialization: true }],
 };
 
@@ -24,6 +24,7 @@ test("materializes one authorized Astro source atomically and exact retry is unc
   assert.match(source, /discussionbridgeNativePublication: true/);
   assert.match(source, /discussionbridgeResourceId: 11111111-1111-4111-8111-111111111111/);
   assert.match(source, /discourseTopicId: 53/);
+  assert.match(source, /date: 2026-09-01T08:00:00\.000Z/);
   assert.match(source, /Native Astro content/);
   assert.doesNotMatch(source, /<script|bad\(\)/);
 });
