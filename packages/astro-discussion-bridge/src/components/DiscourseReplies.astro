@@ -151,7 +151,13 @@ function cookedHtml(post: PublicPost): string {
 }
 ---
 
-<section class:list={["discussion-bridge-simple", Astro.props.class]}>
+<section
+  class:list={["discussion-bridge-simple", Astro.props.class]}
+  data-discussionbridge-simple-live
+  data-discourse-origin={discourseUrl}
+  data-topic-id={topicId}
+  data-topic-url={topicUrl}
+>
   <div class="discussion-bridge-simple__header"><h2>{heading}</h2><a href={topicUrl}>Join the discussion</a></div>
   {replies.length ? (
     <>
@@ -175,7 +181,13 @@ function cookedHtml(post: PublicPost): string {
     {exceedsBound ? <p class="discussion-bridge-simple__limit">Showing the first {MAX_REPLIES} replies. <a href={topicUrl}>View the complete discussion on The Bridge</a>.</p> : null}
     </>
   ) : <p>No replies yet. <a href={topicUrl}>Start the conversation on Discourse.</a></p>}
+  <p data-discussionbridge-simple-status hidden>Live comments are temporarily unavailable; showing the most recently published snapshot.</p>
 </section>
+
+<script>
+  import { startSimpleComments } from "../simple-live";
+  startSimpleComments();
+</script>
 
 <style>
   .discussion-bridge-simple { margin-block-start: 3rem; border-block-start: 1px solid var(--sl-color-gray-5); padding-block-start: 2rem; }

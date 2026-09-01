@@ -11,6 +11,7 @@ test("presentation preserves simple, full, and mapped fullInteractive modes foll
   const discussion = await fs.readFile(path.join(packageDir, "src/components/Discussion.astro"), "utf8");
   const discourse = await fs.readFile(path.join(packageDir, "src/components/DiscourseDiscussion.astro"), "utf8");
   const replies = await fs.readFile(path.join(packageDir, "src/components/DiscourseReplies.astro"), "utf8");
+  const live = await fs.readFile(path.join(packageDir, "src/simple-live.ts"), "utf8");
   assert.equal((discussion.match(/<DiscourseDiscussion\b/g) ?? []).length, 1);
   assert.equal((discussion.match(/<DiscourseReplies\b/g) ?? []).length, 1);
   assert.equal((discussion.match(/<DiscussionCredit\b/g) ?? []).length, 1);
@@ -25,6 +26,14 @@ test("presentation preserves simple, full, and mapped fullInteractive modes foll
   assert.match(replies, /post_ids\[\]/);
   assert.match(replies, /Show \{remainingReplies\.length\} more/);
   assert.match(replies, /<details class="discussion-bridge-simple__more">/);
+  assert.match(replies, /data-discussionbridge-simple-live/);
+  assert.match(replies, /startSimpleComments/);
+  assert.match(live, /credentials: "omit"/);
+  assert.match(live, /redirect: "error"/);
+  assert.match(live, /DOMPurify\.sanitize/);
+  assert.match(live, /MAX_REPLIES = 50/);
+  assert.match(live, /INITIAL_REPLIES = 5/);
+  assert.match(live, /data-discussionbridge-simple-status/);
   assert.match(discourse, /const resolvedTopicId = topicId \?\? topicReference\?\.topicId/);
   assert.match(discourse, /resolvedTopicId \? \{ topicId: resolvedTopicId \} : \{ discourseEmbedUrl: sourceUrl \}/);
   assert.match(discourse, /fullInteractive requires one completed Bridge topic mapping/);
