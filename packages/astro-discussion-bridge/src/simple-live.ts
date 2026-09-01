@@ -89,7 +89,7 @@ function render(root: HTMLElement, replies: PublicPost[], topicUrl: string, disc
   fragment.append(header);
 
   if (!replies.length) {
-    const empty = element("p", "", "No replies yet. ");
+    const empty = element("p", "", "No comments yet. ");
     empty.append(link(topicUrl, "Start the conversation on Discourse."));
     fragment.append(empty);
   } else {
