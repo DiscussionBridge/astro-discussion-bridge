@@ -161,12 +161,33 @@ direction and topic tuple, sanitizes cooked HTML through an allowlist, and
 emits only safe content plus the Discourse topic link. It never ships the
 connection secret to browser JavaScript.
 
+An operator may also authorize The Bridge to materialize a forum-owned
+publication as a genuine Astro content page. The binding must explicitly carry
+native-materialization authority; ordinary From Discourse presentation records
+are skipped. With the same protected build credentials configured, run:
+
+```sh
+discussionbridge-astro sync-publications \
+  --docs-dir src/content/docs \
+  --site-url https://site.example.com
+```
+
+The command validates the source topic, exact destination origin and route,
+stable Bridge resource, author, revision, and bounded sanitized content before
+atomically writing `comments/<slug>.md`. Exact retries are unchanged; a
+different resource attempting to claim the same file fails closed. The written
+page retains the source revision and topic identity and uses the ordinary
+`fullInteractive` discussion component. The connection secret never enters the
+generated page.
+
 ## Public exports
 
 - default Astro integration
 - `astro-discussion-bridge/controlled-creation`
 - `astro-discussion-bridge/web-url`
 - `astro-discussion-bridge/bridge-record`
+- `astro-discussion-bridge/native-publication`
+- `discussionbridge-astro sync-publications` CLI
 - `astro-discussion-bridge/Discussion.astro`
 - `astro-discussion-bridge/DiscourseDiscussion.astro`
 - `astro-discussion-bridge/DiscourseReplies.astro`

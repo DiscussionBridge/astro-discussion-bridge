@@ -59,6 +59,9 @@ if (pack.status !== 0) {
     "dist/controlled-creation.js",
     "dist/controlled-creation.d.ts",
     "dist/web-url.js",
+    "dist/native-publication.js",
+    "dist/native-publication.d.ts",
+    "dist/cli.js",
     "src/components/Discussion.astro",
     "src/components/DiscourseDiscussion.astro",
     "src/components/DiscourseReplies.astro",
@@ -67,7 +70,7 @@ if (pack.status !== 0) {
     if (!files.has(required)) fail(`Package tarball is missing ${required}.`);
   }
   const forbidden = [...files].filter((file) =>
-    /(?:^|\/)(?:cli|check-discourse|atomic-files|import-|navigation|official-source|relationships|source|targets)(?:\.|\/)/i.test(file)
+    /(?:^|\/)(?:check-discourse|atomic-files|import-|navigation|official-source|relationships|source|targets)(?:\.|\/)/i.test(file)
     || /(?:^|\/)discourse\/client\./i.test(file)
     || /(?:^|\/)sync\//i.test(file)
     || /(?:browser-refresh|reaction-rendering|DiscourseComments|DiscussionNavigation|DiscussionRelations|DiscussionSource)/i.test(file)

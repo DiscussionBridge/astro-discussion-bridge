@@ -111,6 +111,7 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Disc
 
 export { publishControlledDiscussions } from "./controlled-creation.js";
 export { fetchFromDiscourseRecord } from "./bridge-record.js";
+export { materializeNativePublications } from "./native-publication.js";
 export type {
   ControlledCreationOptions,
   ControlledDiscussionResult,

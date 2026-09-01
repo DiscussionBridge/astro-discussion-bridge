@@ -52,7 +52,7 @@ test("enabled controlled publishing fails closed without server credentials", as
 
 test("package and source inventory expose only the seven-profile Astro adapter boundary", async () => {
   const packageJson = JSON.parse(await fs.readFile(path.join(packageDir, "package.json"), "utf8"));
-  assert.equal(packageJson.bin, undefined);
+  assert.deepEqual(packageJson.bin, { "discussionbridge-astro": "./dist/cli.js" });
   assert.deepEqual(Object.keys(packageJson.exports).sort(), [
     ".",
     "./Discussion.astro",
@@ -62,6 +62,7 @@ test("package and source inventory expose only the seven-profile Astro adapter b
     "./FromDiscourse.astro",
     "./bridge-record",
     "./controlled-creation",
+    "./native-publication",
     "./web-url",
   ].sort());
   assert.deepEqual(packageJson.dependencies, { "@astrojs/markdown-remark": "7.2.4", dompurify: "3.2.7", "sanitize-html": "2.17.7", yaml: "^2.9.0" });
