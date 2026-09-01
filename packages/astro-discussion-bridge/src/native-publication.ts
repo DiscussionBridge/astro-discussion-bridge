@@ -36,7 +36,7 @@ function exactUrl(value: unknown, origin: string, label: string): URL {
 function isoDate(value: unknown, label: string): string {
   const input = text(value, 64, label);
   const parsed = new Date(input);
-  if (!Number.isFinite(parsed.getTime()) || parsed.toISOString() !== input) throw new Error(`Invalid ${label}`);
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/u.test(input) || !Number.isFinite(parsed.getTime())) throw new Error(`Invalid ${label}`);
   return input;
 }
 
@@ -110,7 +110,8 @@ export async function materializeNativePublications(options: NativePublicationOp
         if (!item) { summary.skipped++; continue; }
         const file = path.join(options.docsDir, routeBase, `${item.slug}.md`);
         const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, date: item.updatedAt, discussionCommentsDisplay: "fullInteractive", discussionSync: false, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
-        const output = `---\n${stringifyYaml(frontmatter).trim()}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**  \nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro 0.1.0-alpha.20260901.1\n`;
+        const yaml = stringifyYaml(frontmatter).trim().replace(/^date: ([^\r\n]+)$/mu, 'date: "$1"');
+        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**  \nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro 0.1.0-alpha.20260901.1\n`;
         let prior: string | null = null;
         try { prior = await readFile(file, "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
         if (prior === output) { summary.unchanged++; continue; }
