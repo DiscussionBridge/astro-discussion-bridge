@@ -1,5 +1,6 @@
 ---
 import sanitizeHtml from "sanitize-html";
+import discourseWordmark from "../assets/discourse-wordmark.svg?raw";
 import config from "virtual:discussion-bridge/config";
 import {
   normalizeServiceBaseUrl,
@@ -78,6 +79,8 @@ const initialReplies = replies.slice(0, INITIAL_REPLIES);
 const remainingReplies = replies.slice(INITIAL_REPLIES);
 const exceedsBound = stream.length - 1 > MAX_REPLIES;
 const heading = Astro.props.heading ?? "Comments";
+let poweredBy = false;
+try { poweredBy = await poweredByDiscourse(); } catch { poweredBy = false; }
 
 interface TopicPayload {
   post_stream?: { posts?: unknown[]; stream?: unknown[] };
@@ -100,6 +103,26 @@ async function publicTopicJson(url: URL): Promise<TopicPayload> {
   const decoded: unknown = JSON.parse(responseText);
   if (!decoded || typeof decoded !== "object") throw new Error("DiscourseReplies response JSON is invalid.");
   return decoded as TopicPayload;
+}
+
+async function poweredByDiscourse(): Promise<boolean> {
+  const response = await fetch(`${discourseUrl}/`, {
+    headers: {
+      Accept: "text/html",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    },
+    redirect: "error",
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok || response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "text/html") throw new Error("DiscourseReplies requires the public Discourse bootstrap.");
+  const html = await response.text();
+  if (new TextEncoder().encode(html).byteLength > MAX_RESPONSE_BYTES) throw new Error("DiscourseReplies bootstrap exceeded the 512 KiB limit.");
+  const match = /<script[^>]+id=["']data-preloaded["'][^>]*>([\s\S]*?)<\/script>/iu.exec(html);
+  if (!match) throw new Error("DiscourseReplies bootstrap settings are unavailable.");
+  const outer = JSON.parse(match[1]);
+  const settings = typeof outer?.siteSettings === "string" ? JSON.parse(outer.siteSettings) : null;
+  if (typeof settings?.enable_powered_by_discourse !== "boolean") throw new Error("DiscourseReplies branding setting is invalid.");
+  return settings.enable_powered_by_discourse;
 }
 
 function validPublicPost(value: unknown, expectedTopicId: number): value is PublicPost {
@@ -181,6 +204,11 @@ function cookedHtml(post: PublicPost): string {
     {exceedsBound ? <p class="discussion-bridge-simple__limit">Showing the first {MAX_REPLIES} replies. <a href={topicUrl}>View the complete discussion on The Bridge</a>.</p> : null}
     </>
   ) : <p>No comments yet. <a href={topicUrl}>Start the conversation on Discourse.</a></p>}
+  <div data-discussionbridge-attributions>
+    <a class="discussion-bridge-powered-by" data-discussionbridge-powered-by href="https://www.discourse.org/powered-by" aria-label="Powered by Discourse" hidden={!poweredBy}>
+      <span>Powered by</span><span class="discussion-bridge-powered-by__wordmark" set:html={discourseWordmark} />
+    </a>
+  </div>
   <p data-discussionbridge-simple-status hidden>Live comments are temporarily unavailable; showing the most recently published snapshot.</p>
 </section>
 
@@ -206,4 +234,8 @@ function cookedHtml(post: PublicPost): string {
   .discussion-bridge-simple__more[open] .discussion-bridge-simple__more-closed { display: none; }
   .discussion-bridge-simple__more[open] .discussion-bridge-simple__more-open { display: inline; }
   .discussion-bridge-simple__limit { text-align: center; font-size: var(--sl-text-sm); }
+  .discussion-bridge-powered-by { display: flex; align-items: center; justify-content: center; gap: .45rem; margin: .8rem auto 0; color: inherit; font-size: .8rem; text-decoration: none; opacity: .72; }
+  .discussion-bridge-powered-by[hidden] { display: none; }
+  .discussion-bridge-powered-by__wordmark { display: inline-flex; width: 6.4rem; padding: .12rem .28rem; border-radius: .2rem; background: #fff; }
+  .discussion-bridge-powered-by__wordmark svg { display: block; width: 100%; height: auto; }
 </style>
