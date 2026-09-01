@@ -111,7 +111,7 @@ export async function materializeNativePublications(options: NativePublicationOp
         const file = path.join(options.docsDir, routeBase, `${item.slug}.md`);
         const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, date: item.updatedAt, discussionCommentsDisplay: "fullInteractive", discussionSync: false, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
         const yaml = stringifyYaml(frontmatter).trim().replace(/^date: ([^\r\n]+)$/mu, 'date: "$1"');
-        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**  \nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro 0.1.0-alpha.20260901.1\n`;
+        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro 0.1.0-alpha.20260901.1\n`;
         let prior: string | null = null;
         try { prior = await readFile(file, "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
         if (prior === output) { summary.unchanged++; continue; }
