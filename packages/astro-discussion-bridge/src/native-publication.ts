@@ -2,6 +2,7 @@ import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import sanitizeHtml from "sanitize-html";
 import { stringify as stringifyYaml } from "yaml";
+import { PRODUCT_VERSION } from "./version.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const CONNECTION = /^dbc_[a-f0-9]{24}$/u;
@@ -111,7 +112,7 @@ export async function materializeNativePublications(options: NativePublicationOp
         const file = path.join(options.docsDir, routeBase, `${item.slug}.md`);
         const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, date: item.updatedAt, discussionCommentsDisplay: "fullInteractive", discussionSync: false, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
         const yaml = stringifyYaml(frontmatter).trim().replace(/^date: ([^\r\n]+)$/mu, 'date: "$1"');
-        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro 0.1.0-alpha.20260901.1\n`;
+        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
         let prior: string | null = null;
         try { prior = await readFile(file, "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
         if (prior === output) { summary.unchanged++; continue; }

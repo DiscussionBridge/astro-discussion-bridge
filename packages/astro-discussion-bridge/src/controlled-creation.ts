@@ -4,6 +4,7 @@ import path from "node:path";
 import { createMarkdownProcessor, type MarkdownRenderer } from "@astrojs/markdown-remark";
 import sanitizeHtml from "sanitize-html";
 import { parse as parseYaml } from "yaml";
+import { PRODUCT_VERSION } from "./version.js";
 import {
   assertServiceResponseUrl,
   normalizePublicHttpUrl,
@@ -352,7 +353,7 @@ export async function resolveControlledCreation(input: {
         content_html: contentHtml,
         published: true,
         adapter_id: "astro-discussion-bridge",
-        adapter_version: input.options.adapterVersion ?? "0.1.0-alpha.20260830.7",
+        adapter_version: input.options.adapterVersion ?? PRODUCT_VERSION,
         visibility: input.options.visibility ?? "unlisted",
         ...(input.options.lane ? { lane: input.options.lane } : {}),
         correlation_id: randomUUID(),
