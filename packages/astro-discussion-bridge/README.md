@@ -196,7 +196,7 @@ generated page.
 
 ## Assurance boundary
 
-This package is the Astro profile of the seven-profile DiscussionBridge Alpha.
+This package is the Astro profile of the eight-profile DiscussionBridge Alpha.
 It must pass build, tests, package-inventory checks, live two-direction
 exercise, rollback capture, and the final paired code review before release.
 This README grants none of those acceptances.
