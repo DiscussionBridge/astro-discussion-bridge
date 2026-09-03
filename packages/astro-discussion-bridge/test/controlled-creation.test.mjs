@@ -80,7 +80,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], CONNECTION_ID);
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], CONNECTION_SECRET);
   const body = JSON.parse(requests[0].init.body);
-  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260902.4");
+  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260903.5");
   assert.deepEqual(
     Object.keys(body.bridge_record).sort(),
     ["adapter_id", "adapter_version", "canonical_url", "content_html", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
@@ -495,6 +495,52 @@ test("a failed atomic binding write can retry the same plugin mapping as resolve
   assert.equal(operation.topicId, 52);
   assert.equal(operation.reconciliationRequired, false);
   assert.doesNotMatch(JSON.stringify(recoveredState), new RegExp(CONNECTION_SECRET));
+});
+
+test("an interruption after remote success leaves pending state until the binding commits", async (t) => {
+  const root = await fixture({
+    "page.md": "---\ntitle: Interrupted\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nInterrupted content.\n",
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const target = path.join(root, "page.md");
+  const correlations = [];
+  let requests = 0;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, init) => {
+    correlations.push(JSON.parse(init.body).bridge_record.correlation_id);
+    requests++;
+    return new Response(JSON.stringify({
+      ...bridgePayload(53, requests === 1 ? "created" : "resolved"),
+      reason: requests === 1 ? "bridge_record_created" : "existing_bridge_record",
+    }), { status: requests === 1 ? 201 : 200, headers: { "content-type": "application/json" } });
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  await assert.rejects(
+    () => publishControlledDiscussions(options(root), {
+      afterResultStaged: async () => { throw new Error("simulated process interruption"); },
+    }),
+    /simulated process interruption/,
+  );
+  assert.doesNotMatch(await fs.readFile(target, "utf8"), /discussionbridgeResourceId/);
+  const interruptedState = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  const interrupted = interruptedState.operations[Object.keys(interruptedState.operations)[0]];
+  assert.equal(interrupted.outcome, "pending");
+  assert.equal(interrupted.retryable, true);
+  assert.equal(interrupted.reconciliationRequired, true);
+  assert.equal(interrupted.resourceId, RESOURCE_ID);
+  assert.equal(interrupted.topicId, 53);
+
+  const [result] = await publishControlledDiscussions(options(root));
+  assert.equal(requests, 2);
+  assert.equal(correlations[0], correlations[1]);
+  assert.equal(result.status, "resolved");
+  assert.match(await fs.readFile(target, "utf8"), /discourseTopicId: "53"/);
+  const recoveredState = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  const recovered = recoveredState.operations[Object.keys(recoveredState.operations)[0]];
+  assert.equal(recovered.outcome, "resolved");
+  assert.equal(recovered.attempts, 2);
+  assert.equal(recovered.reconciliationRequired, false);
 });
 
 test("response origin and both declared and streamed size limits are enforced", async (t) => {

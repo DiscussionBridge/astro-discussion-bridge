@@ -89,6 +89,17 @@ export function completePublicationAttempt(operation: PublicationOperation, resu
   delete operation.lastError;
 }
 
+export function stagePublicationResult(operation: PublicationOperation, result: { outcome: "created" | "resolved"; resourceId: string; topicId: number; topicUrl: string }): void {
+  operation.outcome = "pending";
+  operation.retryable = true;
+  operation.reconciliationRequired = true;
+  operation.resourceId = result.resourceId;
+  operation.topicId = result.topicId;
+  operation.topicUrl = result.topicUrl;
+  operation.lastError = "Receiver accepted the publication; platform binding commit is pending.";
+  delete operation.lastSuccessAt;
+}
+
 export function failPublicationAttempt(operation: PublicationOperation, error: unknown, classification: { retryable: boolean; reconciliationRequired: boolean }): void {
   operation.outcome = classification.reconciliationRequired ? "reconciliation_required" : classification.retryable ? "retryable_failure" : "rejected";
   operation.retryable = classification.retryable;

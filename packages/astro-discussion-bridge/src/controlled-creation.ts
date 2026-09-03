@@ -17,6 +17,7 @@ import {
   completePublicationAttempt,
   failPublicationAttempt,
   readPublicationOperationalState,
+  stagePublicationResult,
   writePublicationOperationalState,
 } from "./operational-state.js";
 
@@ -93,6 +94,7 @@ export async function publishControlledDiscussions(
   options: PublishControlledDiscussionsOptions,
   dependencies: {
     replaceFile?: typeof replaceFileAtomically;
+    afterResultStaged?: (filePath: string) => Promise<void>;
   } = {},
 ): Promise<ControlledDiscussionResult[]> {
   const validated = validateOptions(options);
@@ -250,13 +252,14 @@ export async function publishControlledDiscussions(
       ) {
         throw new Error(`DiscussionBridge resolved a different resource or topic than the stored mapping for ${page.filePath}.`);
       }
-      completePublicationAttempt(operation, created);
-      await writePublicationOperationalState(stateFile, operationalState);
     } catch (error) {
       failPublicationAttempt(operation, error, classifyPublicationFailure(error));
       await writePublicationOperationalState(stateFile, operationalState);
       throw error;
     }
+    stagePublicationResult(operation, created);
+    await writePublicationOperationalState(stateFile, operationalState);
+    await dependencies.afterResultStaged?.(page.filePath);
     const updated = updateFrontmatter(page.source, {
       discussionbridgeExternalId: page.externalId,
       discussionbridgeResourceId: created.resourceId,
@@ -272,6 +275,8 @@ export async function publishControlledDiscussions(
         throw error;
       }
     }
+    completePublicationAttempt(operation, created);
+    await writePublicationOperationalState(stateFile, operationalState);
     results.push({
       filePath: page.filePath,
       pageUrl: page.pageUrl,
