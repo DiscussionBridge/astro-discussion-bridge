@@ -279,7 +279,12 @@ function validateConnectionSettings(options: ControlledCreationOptions): void {
   ) {
     throw new Error("controlledCreation connectionId must be a DiscussionBridge Content Connection ID.");
   }
-  if (typeof options.connectionSecret !== "string" || !options.connectionSecret || options.connectionSecret.length < 32 || options.connectionSecret.length > 256) {
+  if (
+    typeof options.connectionSecret !== "string"
+    || new TextEncoder().encode(options.connectionSecret).byteLength < 32
+    || new TextEncoder().encode(options.connectionSecret).byteLength > 256
+    || /[\u0000-\u001f\u007f]/u.test(options.connectionSecret)
+  ) {
     throw new Error("controlledCreation requires a connectionSecret.");
   }
   const lane = options.lane;

@@ -79,7 +79,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], CONNECTION_ID);
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], CONNECTION_SECRET);
   const body = JSON.parse(requests[0].init.body);
-  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260902.2");
+  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260902.3");
   assert.deepEqual(
     Object.keys(body.bridge_record).sort(),
     ["adapter_id", "adapter_version", "canonical_url", "content_html", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
@@ -534,6 +534,9 @@ test("connection identity, lane, and visibility are runtime validated before fet
   for (const options of [
     { connectionId: " bad", connectionSecret: CONNECTION_SECRET },
     { connectionId: "x".repeat(101), connectionSecret: CONNECTION_SECRET },
+    { connectionId: CONNECTION_ID, connectionSecret: "s".repeat(31) },
+    { connectionId: CONNECTION_ID, connectionSecret: "é".repeat(129) },
+    { connectionId: CONNECTION_ID, connectionSecret: `${"s".repeat(32)}\n` },
     { connectionId: CONNECTION_ID, connectionSecret: CONNECTION_SECRET, lane: "Bad Lane" },
     { connectionId: CONNECTION_ID, connectionSecret: CONNECTION_SECRET, visibility: "private" },
   ]) {

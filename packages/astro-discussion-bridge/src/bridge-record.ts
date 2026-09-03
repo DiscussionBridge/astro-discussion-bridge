@@ -105,8 +105,9 @@ function validateCredentials(credentials: BridgeRecordCredentials): void {
   }
   if (
     typeof credentials.connectionSecret !== "string"
-    || credentials.connectionSecret.length < 32
-    || credentials.connectionSecret.length > 256
+    || new TextEncoder().encode(credentials.connectionSecret).byteLength < 32
+    || new TextEncoder().encode(credentials.connectionSecret).byteLength > 256
+    || /[\u0000-\u001f\u007f]/u.test(credentials.connectionSecret)
   ) {
     throw new Error("DiscussionBridge connection secret is invalid.");
   }

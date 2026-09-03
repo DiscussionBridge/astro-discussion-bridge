@@ -93,7 +93,8 @@ async function atomicWrite(file: string, contents: string) {
 export async function materializeNativePublications(options: NativePublicationOptions) {
   const siteOrigin = exactOrigin(options.siteUrl, "Astro site URL");
   const serverOrigin = exactOrigin(options.serverUrl, "DiscussionBridge server URL");
-  if (!CONNECTION.test(options.connectionId) || options.connectionSecret.length < 24 || options.connectionSecret.length > 512 || /[\r\n\0]/u.test(options.connectionSecret)) throw new Error("Invalid DiscussionBridge credentials");
+  const secretBytes = new TextEncoder().encode(options.connectionSecret).byteLength;
+  if (!CONNECTION.test(options.connectionId) || secretBytes < 32 || secretBytes > 256 || /[\x00-\x1f\x7f]/u.test(options.connectionSecret)) throw new Error("Invalid DiscussionBridge credentials");
   const routeBase = options.routeBase ?? "comments";
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(routeBase)) throw new Error("Invalid Astro publication route base");
   const fetchImplementation = options.fetchImplementation ?? fetch;
