@@ -1,6 +1,6 @@
 {
   "name": "astro-discussion-bridge",
-  "version": "0.1.0-alpha.20260903.6",
+  "version": "0.1.0-alpha.20260903.7",
   "description": "Two-direction Astro adapter with plugin-free simple/full comments and plugin-backed fullInteractive discussion.",
   "type": "module",
   "license": "MIT",
@@ -79,6 +79,7 @@
   "devDependencies": {
     "@astrojs/starlight": "^0.41.7",
     "@types/node": "^22.0.0",
+    "@types/proper-lockfile": "^4.1.4",
     "@types/sanitize-html": "^2.16.0",
     "astro": "^7.2.4",
     "typescript": "^5.5.0",
@@ -92,6 +93,7 @@
   "dependencies": {
     "@astrojs/markdown-remark": "7.2.4",
     "dompurify": "3.4.14",
+    "proper-lockfile": "^4.1.2",
     "sanitize-html": "2.17.7",
     "yaml": "^2.9.0"
   }

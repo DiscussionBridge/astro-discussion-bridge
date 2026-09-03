@@ -62,7 +62,10 @@ operation containing the stable external identity, canonical URL, correlation
 ID and attempt count. It then records the outcome, retry and reconciliation
 state, plus the resolved resource/topic identity. An interrupted request stays
 visible as retryable state and the next exact build reuses its correlation and
-stable identity. Inspect the bounded operator summary with:
+stable identity. A renewable filesystem lease excludes overlapping live builds;
+if its owning process is terminated, a later build reclaims the abandoned lease
+after the bounded stale interval and retries that same recorded operation.
+Inspect the bounded operator summary with:
 
 ```text
 discussionbridge-astro publication-status \

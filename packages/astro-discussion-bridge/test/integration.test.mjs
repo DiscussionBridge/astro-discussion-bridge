@@ -66,7 +66,7 @@ test("package and source inventory expose only the eight-profile Astro adapter b
     "./operational-state",
     "./web-url",
   ].sort());
-  assert.deepEqual(packageJson.dependencies, { "@astrojs/markdown-remark": "7.2.4", dompurify: "3.4.14", "sanitize-html": "2.17.7", yaml: "^2.9.0" });
+  assert.deepEqual(packageJson.dependencies, { "@astrojs/markdown-remark": "7.2.4", dompurify: "3.4.14", "proper-lockfile": "^4.1.2", "sanitize-html": "2.17.7", yaml: "^2.9.0" });
   assert.equal(packageJson.files.includes("src/simple-live.ts"), true);
   assert.equal(packageJson.files.includes("TODO.md"), false);
 

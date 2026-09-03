@@ -94,6 +94,7 @@ type CensusEntry =
 interface PublishControlledDiscussionsDependencies {
   replaceFile?: typeof replaceFileAtomically;
   afterResultStaged?: (filePath: string) => Promise<void>;
+  lockOptions?: { staleMs?: number; updateMs?: number };
 }
 
 export async function publishControlledDiscussions(
@@ -102,7 +103,7 @@ export async function publishControlledDiscussions(
 ): Promise<ControlledDiscussionResult[]> {
   const stateFile = path.resolve(options.stateFile);
   return withPublicationOperationalStateLock(stateFile, () =>
-    publishControlledDiscussionsUnlocked(options, dependencies));
+    publishControlledDiscussionsUnlocked(options, dependencies), dependencies.lockOptions);
 }
 
 async function publishControlledDiscussionsUnlocked(

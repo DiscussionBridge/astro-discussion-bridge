@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   publishControlledDiscussions,
   replaceFileAtomically,
@@ -80,7 +83,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], CONNECTION_ID);
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], CONNECTION_SECRET);
   const body = JSON.parse(requests[0].init.body);
-  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260903.6");
+  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260903.7");
   assert.deepEqual(
     Object.keys(body.bridge_record).sort(),
     ["adapter_id", "adapter_version", "canonical_url", "content_html", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
@@ -579,6 +582,80 @@ test("overlapping publication builds fail closed on the shared state file", asyn
   assert.equal(Object.values(state.operations)[0].outcome, "created");
   await assert.rejects(() => fs.access(`${options(root).stateFile}.lock`), /ENOENT/);
 });
+
+test("a hard-killed owner is reclaimed once and retries the staged identity", async (t) => {
+  const root = await fixture({
+    "page.md": "---\ntitle: Hard kill\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nHard-kill content.\n",
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const child = spawn(process.execPath, [fileURLToPath(new URL("./hard-kill-publication-child.mjs", import.meta.url)), root], {
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  const childIdentity = await firstJsonLine(child);
+  const exited = once(child, "exit");
+  assert.equal(child.kill("SIGKILL"), true);
+  await exited;
+  const interruptedState = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  assert.equal(Object.values(interruptedState.operations)[0].outcome, "pending");
+  await new Promise((resolve) => setTimeout(resolve, 3_500));
+
+  const correlations = [];
+  let requests = 0;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, init) => {
+    requests++;
+    correlations.push(JSON.parse(init.body).bridge_record.correlation_id);
+    return new Response(JSON.stringify(bridgePayload(55, "resolved")), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+  let releaseWinner;
+  const release = new Promise((resolve) => { releaseWinner = resolve; });
+  let winnerEntered;
+  const entered = new Promise((resolve) => { winnerEntered = resolve; });
+  const winner = publishControlledDiscussions(options(root), {
+    lockOptions: { staleMs: 2_000, updateMs: 1_000 },
+    afterResultStaged: async () => { winnerEntered(); await release; },
+  });
+  await entered;
+  await assert.rejects(
+    () => publishControlledDiscussions(options(root), undefined),
+    /publication state is already in use/,
+  );
+  releaseWinner();
+  const [result] = await winner;
+  assert.equal(requests, 1);
+  assert.equal(correlations[0], childIdentity.correlationId);
+  assert.equal(result.status, "resolved");
+  const recoveredState = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  const recovered = Object.values(recoveredState.operations)[0];
+  assert.equal(recovered.externalId, childIdentity.externalId);
+  assert.equal(recovered.outcome, "resolved");
+  assert.equal(recovered.attempts, 2);
+  assert.match(await fs.readFile(path.join(root, "page.md"), "utf8"), /discourseTopicId: "55"/);
+});
+
+async function firstJsonLine(child) {
+  let stderr = "";
+  child.stderr.setEncoding("utf8");
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+  return new Promise((resolve, reject) => {
+    let buffer = "";
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      buffer += chunk;
+      const newline = buffer.indexOf("\n");
+      if (newline >= 0) {
+        try { resolve(JSON.parse(buffer.slice(0, newline))); }
+        catch (error) { reject(error); }
+      }
+    });
+    child.once("exit", (code) => reject(new Error(`Lock child exited ${code}: ${stderr}`)));
+    child.once("error", reject);
+  });
+}
 
 test("response origin and both declared and streamed size limits are enforced", async (t) => {
   const previousFetch = globalThis.fetch;

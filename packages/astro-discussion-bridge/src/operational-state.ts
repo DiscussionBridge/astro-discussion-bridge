@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { lock } from "proper-lockfile";
 
 const STATE_VERSION = 1;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -62,14 +63,19 @@ export async function writePublicationOperationalState(filePath: string, state: 
 export async function withPublicationOperationalStateLock<T>(
   filePath: string,
   action: () => Promise<T>,
+  options: { staleMs?: number; updateMs?: number } = {},
 ): Promise<T> {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
-  const lockFile = `${filePath}.lock`;
-  let handle: Awaited<ReturnType<typeof fs.open>> | undefined;
+  let release: (() => Promise<void>) | undefined;
   try {
-    handle = await fs.open(lockFile, "wx", 0o600);
+    release = await lock(filePath, {
+      realpath: false,
+      retries: 0,
+      stale: options.staleMs ?? 30_000,
+      update: options.updateMs ?? 10_000,
+    });
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "EEXIST") {
+    if ((error as NodeJS.ErrnoException).code === "ELOCKED") {
       throw new Error(`DiscussionBridge publication state is already in use: ${filePath}`);
     }
     throw error;
@@ -77,8 +83,7 @@ export async function withPublicationOperationalStateLock<T>(
   try {
     return await action();
   } finally {
-    await handle.close();
-    await fs.rm(lockFile, { force: true });
+    await release();
   }
 }
 
