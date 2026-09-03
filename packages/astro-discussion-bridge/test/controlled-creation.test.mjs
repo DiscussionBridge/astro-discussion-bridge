@@ -80,7 +80,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], CONNECTION_ID);
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], CONNECTION_SECRET);
   const body = JSON.parse(requests[0].init.body);
-  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260903.5");
+  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260903.6");
   assert.deepEqual(
     Object.keys(body.bridge_record).sort(),
     ["adapter_id", "adapter_version", "canonical_url", "content_html", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
@@ -541,6 +541,43 @@ test("an interruption after remote success leaves pending state until the bindin
   assert.equal(recovered.outcome, "resolved");
   assert.equal(recovered.attempts, 2);
   assert.equal(recovered.reconciliationRequired, false);
+});
+
+test("overlapping publication builds fail closed on the shared state file", async (t) => {
+  const root = await fixture({
+    "page.md": "---\ntitle: Concurrent\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nConcurrent content.\n",
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  let releaseFirst;
+  const firstStaged = new Promise((resolve) => { releaseFirst = resolve; });
+  let staged;
+  const stagedReached = new Promise((resolve) => { staged = resolve; });
+  let requests = 0;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    requests++;
+    return new Response(JSON.stringify(bridgePayload(54, "created")), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  const first = publishControlledDiscussions(options(root), {
+    afterResultStaged: async () => { staged(); await firstStaged; },
+  });
+  await stagedReached;
+  await assert.rejects(
+    () => publishControlledDiscussions(options(root)),
+    /publication state is already in use/,
+  );
+  releaseFirst();
+  const [result] = await first;
+  assert.equal(requests, 1);
+  assert.equal(result.status, "created");
+  const state = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  assert.equal(Object.values(state.operations)[0].outcome, "created");
+  await assert.rejects(() => fs.access(`${options(root).stateFile}.lock`), /ENOENT/);
 });
 
 test("response origin and both declared and streamed size limits are enforced", async (t) => {

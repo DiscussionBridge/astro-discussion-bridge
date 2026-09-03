@@ -18,6 +18,7 @@ import {
   failPublicationAttempt,
   readPublicationOperationalState,
   stagePublicationResult,
+  withPublicationOperationalStateLock,
   writePublicationOperationalState,
 } from "./operational-state.js";
 
@@ -90,12 +91,23 @@ type CensusEntry =
   | { kind: "skipped"; result: ControlledDiscussionResult }
   | { kind: "publish"; page: PreparedPage };
 
+interface PublishControlledDiscussionsDependencies {
+  replaceFile?: typeof replaceFileAtomically;
+  afterResultStaged?: (filePath: string) => Promise<void>;
+}
+
 export async function publishControlledDiscussions(
   options: PublishControlledDiscussionsOptions,
-  dependencies: {
-    replaceFile?: typeof replaceFileAtomically;
-    afterResultStaged?: (filePath: string) => Promise<void>;
-  } = {},
+  dependencies: PublishControlledDiscussionsDependencies = {},
+): Promise<ControlledDiscussionResult[]> {
+  const stateFile = path.resolve(options.stateFile);
+  return withPublicationOperationalStateLock(stateFile, () =>
+    publishControlledDiscussionsUnlocked(options, dependencies));
+}
+
+async function publishControlledDiscussionsUnlocked(
+  options: PublishControlledDiscussionsOptions,
+  dependencies: PublishControlledDiscussionsDependencies,
 ): Promise<ControlledDiscussionResult[]> {
   const validated = validateOptions(options);
   const docsDir = path.resolve(options.docsDir);

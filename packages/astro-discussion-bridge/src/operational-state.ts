@@ -59,6 +59,29 @@ export async function writePublicationOperationalState(filePath: string, state: 
   }
 }
 
+export async function withPublicationOperationalStateLock<T>(
+  filePath: string,
+  action: () => Promise<T>,
+): Promise<T> {
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const lockFile = `${filePath}.lock`;
+  let handle: Awaited<ReturnType<typeof fs.open>> | undefined;
+  try {
+    handle = await fs.open(lockFile, "wx", 0o600);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") {
+      throw new Error(`DiscussionBridge publication state is already in use: ${filePath}`);
+    }
+    throw error;
+  }
+  try {
+    return await action();
+  } finally {
+    await handle.close();
+    await fs.rm(lockFile, { force: true });
+  }
+}
+
 export function beginPublicationAttempt(state: PublicationOperationalState, identity: { externalId: string; canonicalUrl: string }, now = new Date()): PublicationOperation {
   const prior = state.operations[identity.externalId];
   if (prior && prior.canonicalUrl !== identity.canonicalUrl) throw new Error("DiscussionBridge operational state contains a canonical identity collision.");
