@@ -37,6 +37,7 @@ export interface ControlledPublishOptions {
   visibility?: "unlisted";
   requestTimeoutMs?: number;
   maxResponseBytes?: number;
+  stateFile?: string;
 }
 
 export interface DiscussionBridgeOptions {
@@ -95,6 +96,7 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Disc
         const controlledCreation = resolveControlledCreation(resolved.publish);
         const results = await publishControlledDiscussions({
           docsDir: path.resolve(projectRoot, resolved.publish.docsDir),
+          stateFile: path.resolve(projectRoot, resolved.publish.stateFile ?? ".discussionbridge/astro-publication-state.json"),
           routeBase: resolved.publish.routeBase,
           siteUrl,
           discourseUrl: resolved.public.discourseUrl,
@@ -112,6 +114,7 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Disc
 export { publishControlledDiscussions } from "./controlled-creation.js";
 export { fetchFromDiscourseRecord } from "./bridge-record.js";
 export { materializeNativePublications } from "./native-publication.js";
+export { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
 export type {
   ControlledCreationOptions,
   ControlledDiscussionResult,

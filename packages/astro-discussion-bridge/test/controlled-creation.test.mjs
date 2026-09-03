@@ -39,6 +39,7 @@ async function fixture(files) {
 function options(root) {
   return {
     docsDir: root,
+    stateFile: path.join(root, ".discussionbridge-state.json"),
     siteUrl: "https://site.example/",
     discourseUrl: "https://forum.example/community/",
     controlledCreation: {
@@ -79,7 +80,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], CONNECTION_ID);
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], CONNECTION_SECRET);
   const body = JSON.parse(requests[0].init.body);
-  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260902.3");
+  assert.equal(body.bridge_record.adapter_version, "0.1.0-alpha.20260902.4");
   assert.deepEqual(
     Object.keys(body.bridge_record).sort(),
     ["adapter_id", "adapter_version", "canonical_url", "content_html", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
@@ -457,12 +458,16 @@ test("a failed atomic binding write can retry the same plugin mapping as resolve
   const target = path.join(root, "page.md");
   const original = await fs.readFile(target, "utf8");
   const outcomes = ["created", "resolved"];
+  const correlations = [];
   let requests = 0;
   const previousFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response(JSON.stringify({
-    ...bridgePayload(52, outcomes[requests++]),
-    reason: requests === 1 ? "bridge_record_created" : "existing_bridge_record",
-  }), { status: requests === 1 ? 201 : 200, headers: { "content-type": "application/json" } });
+  globalThis.fetch = async (_url, init) => {
+    correlations.push(JSON.parse(init.body).bridge_record.correlation_id);
+    return new Response(JSON.stringify({
+      ...bridgePayload(52, outcomes[requests++]),
+      reason: requests === 1 ? "bridge_record_created" : "existing_bridge_record",
+    }), { status: requests === 1 ? 201 : 200, headers: { "content-type": "application/json" } });
+  };
   t.after(() => { globalThis.fetch = previousFetch; });
 
   await assert.rejects(
@@ -472,12 +477,24 @@ test("a failed atomic binding write can retry the same plugin mapping as resolve
     /injected atomic rename failure/,
   );
   assert.equal(await fs.readFile(target, "utf8"), original);
+  const failedState = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  assert.equal(failedState.operations[Object.keys(failedState.operations)[0]].outcome, "reconciliation_required");
+  assert.equal(failedState.operations[Object.keys(failedState.operations)[0]].attempts, 1);
 
   const [result] = await publishControlledDiscussions(options(root));
   assert.equal(requests, 2);
+  assert.equal(correlations[0], correlations[1]);
   assert.equal(result.status, "resolved");
   assert.equal(result.topicId, 52);
   assert.match(await fs.readFile(target, "utf8"), /discourseTopicId: "52"/);
+  const recoveredState = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  const operation = recoveredState.operations[Object.keys(recoveredState.operations)[0]];
+  assert.equal(operation.outcome, "resolved");
+  assert.equal(operation.attempts, 2);
+  assert.equal(operation.resourceId, RESOURCE_ID);
+  assert.equal(operation.topicId, 52);
+  assert.equal(operation.reconciliationRequired, false);
+  assert.doesNotMatch(JSON.stringify(recoveredState), new RegExp(CONNECTION_SECRET));
 });
 
 test("response origin and both declared and streamed size limits are enforced", async (t) => {

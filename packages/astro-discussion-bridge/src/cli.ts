@@ -1,15 +1,23 @@
 #!/usr/bin/env node
 import path from "node:path";
 import { materializeNativePublications } from "./native-publication.js";
+import { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
 
 const args = process.argv.slice(2);
-if (args.shift() !== "sync-publications") throw new Error("Usage: discussionbridge-astro sync-publications --docs-dir DIR --site-url URL [--route-base comments]");
+const command = args.shift();
+if (command !== "sync-publications" && command !== "publication-status") throw new Error("Usage: discussionbridge-astro sync-publications|publication-status [options]");
 const values = new Map<string, string>();
 while (args.length) {
   const key = args.shift();
   const value = args.shift();
   if (!key?.startsWith("--") || value === undefined) throw new Error("Invalid DiscussionBridge Astro arguments");
   values.set(key.slice(2), value);
+}
+if (command === "publication-status") {
+  const stateFile = values.get("state-file");
+  if (!stateFile) throw new Error("Astro publication state file is required.");
+  process.stdout.write(`${JSON.stringify(summarizePublicationOperationalState(await readPublicationOperationalState(path.resolve(stateFile))))}\n`);
+  process.exit(0);
 }
 const docsDir = values.get("docs-dir");
 const siteUrl = values.get("site-url");

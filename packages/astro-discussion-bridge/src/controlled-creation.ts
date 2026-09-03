@@ -12,6 +12,13 @@ import {
   parseServiceBaseUrl,
   resolveServiceRequestUrl,
 } from "./web-url.js";
+import {
+  beginPublicationAttempt,
+  completePublicationAttempt,
+  failPublicationAttempt,
+  readPublicationOperationalState,
+  writePublicationOperationalState,
+} from "./operational-state.js";
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 65_536;
@@ -31,6 +38,7 @@ export interface ControlledCreationOptions {
 
 export interface PublishControlledDiscussionsOptions {
   docsDir: string;
+  stateFile: string;
   siteUrl: string;
   discourseUrl: string;
   routeBase?: string;
@@ -89,6 +97,8 @@ export async function publishControlledDiscussions(
 ): Promise<ControlledDiscussionResult[]> {
   const validated = validateOptions(options);
   const docsDir = path.resolve(options.docsDir);
+  const stateFile = path.resolve(options.stateFile);
+  const operationalState = await readPublicationOperationalState(stateFile);
   const files = await findMarkdownFiles(docsDir);
   const census: CensusEntry[] = [];
   const canonicalSources = new Map<string, string>();
@@ -215,22 +225,37 @@ export async function publishControlledDiscussions(
       continue;
     }
     const { page } = entry;
-    const created = await resolveControlledCreation({
-      discourseUrl: options.discourseUrl,
-      options: options.controlledCreation,
-      sourceUrl: page.pageUrl,
-      title: page.title,
-      contentHtml: page.contentHtml,
+    const operation = beginPublicationAttempt(operationalState, {
       externalId: page.externalId,
-      sourceAuthors: page.sourceAuthors,
-      primarySourceAuthorId: page.primarySourceAuthorId,
-      existingTopicId: page.adoptExistingTopicId,
+      canonicalUrl: page.pageUrl,
     });
-    if (
-      (page.existingResourceId && created.resourceId !== page.existingResourceId)
-      || (page.existingTopicId && created.topicId !== page.existingTopicId)
-    ) {
-      throw new Error(`DiscussionBridge resolved a different resource or topic than the stored mapping for ${page.filePath}.`);
+    await writePublicationOperationalState(stateFile, operationalState);
+    let created: Awaited<ReturnType<typeof resolveControlledCreation>>;
+    try {
+      created = await resolveControlledCreation({
+        discourseUrl: options.discourseUrl,
+        options: options.controlledCreation,
+        sourceUrl: page.pageUrl,
+        title: page.title,
+        contentHtml: page.contentHtml,
+        externalId: page.externalId,
+        sourceAuthors: page.sourceAuthors,
+        primarySourceAuthorId: page.primarySourceAuthorId,
+        existingTopicId: page.adoptExistingTopicId,
+        correlationId: operation.correlationId,
+      });
+      if (
+        (page.existingResourceId && created.resourceId !== page.existingResourceId)
+        || (page.existingTopicId && created.topicId !== page.existingTopicId)
+      ) {
+        throw new Error(`DiscussionBridge resolved a different resource or topic than the stored mapping for ${page.filePath}.`);
+      }
+      completePublicationAttempt(operation, created);
+      await writePublicationOperationalState(stateFile, operationalState);
+    } catch (error) {
+      failPublicationAttempt(operation, error, classifyPublicationFailure(error));
+      await writePublicationOperationalState(stateFile, operationalState);
+      throw error;
     }
     const updated = updateFrontmatter(page.source, {
       discussionbridgeExternalId: page.externalId,
@@ -238,7 +263,15 @@ export async function publishControlledDiscussions(
       discourseTopicId: String(created.topicId),
       discourseTopicUrl: created.topicUrl,
     });
-    if (updated !== page.source) await (dependencies.replaceFile ?? replaceFileAtomically)(page.filePath, updated);
+    if (updated !== page.source) {
+      try {
+        await (dependencies.replaceFile ?? replaceFileAtomically)(page.filePath, updated);
+      } catch (error) {
+        failPublicationAttempt(operation, error, { retryable: true, reconciliationRequired: true });
+        await writePublicationOperationalState(stateFile, operationalState);
+        throw error;
+      }
+    }
     results.push({
       filePath: page.filePath,
       pageUrl: page.pageUrl,
@@ -310,6 +343,7 @@ export async function resolveControlledCreation(input: {
   sourceAuthors?: SourceAuthor[];
   primarySourceAuthorId?: string;
   existingTopicId?: number;
+  correlationId?: string;
 }): Promise<{ outcome: "created" | "resolved"; reason: string; resourceId: string; topicId: number; topicUrl: string }> {
   validateConnectionSettings(input.options);
   const sourceUrl = validatedSourceUrl(input.sourceUrl);
@@ -335,6 +369,10 @@ export async function resolveControlledCreation(input: {
     "/discussion-bridge/v1/bridge-records/resolve.json",
     serviceBase,
   );
+  const correlationId = input.correlationId ?? randomUUID();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(correlationId)) {
+    throw new Error("controlledCreation correlationId must be a UUID.");
+  }
   const response = await fetch(endpoint, {
     method: "POST",
     redirect: "error",
@@ -361,7 +399,7 @@ export async function resolveControlledCreation(input: {
         adapter_version: input.options.adapterVersion ?? PRODUCT_VERSION,
         visibility: input.options.visibility ?? "unlisted",
         ...(input.options.lane ? { lane: input.options.lane } : {}),
-        correlation_id: randomUUID(),
+        correlation_id: correlationId,
         ...(input.existingTopicId ? { existing_topic_id: input.existingTopicId } : {}),
         ...(authorship.sourceAuthors ? {
           source_authors: authorship.sourceAuthors,
@@ -383,7 +421,11 @@ export async function resolveControlledCreation(input: {
   );
   const reason = safeReason(payload.reason, [input.options.connectionId, input.options.connectionSecret]);
   if (!response.ok) {
-    throw new Error(`DiscussionBridge controlled creation was rejected: ${reason ?? `HTTP ${response.status}`}.`);
+    throw new ControlledCreationRequestError(
+      `DiscussionBridge controlled creation was rejected: ${reason ?? `HTTP ${response.status}`}.`,
+      response.status === 408 || response.status === 425 || response.status === 429 || response.status >= 500,
+      response.status === 409 || reason?.toLowerCase().includes("reconciliation") === true,
+    );
   }
   if (payload.core_fallback !== false) {
     throw new Error("DiscussionBridge controlled creation did not explicitly deny Core fallback.");
@@ -404,6 +446,22 @@ export async function resolveControlledCreation(input: {
     throw new Error("DiscussionBridge controlled creation returned a mismatched topic URL.");
   }
   return { outcome: payload.outcome, reason: reason ?? payload.outcome, resourceId, topicId: payload.topic_id, topicUrl };
+}
+
+function classifyPublicationFailure(error: unknown): { retryable: boolean; reconciliationRequired: boolean } {
+  if (error instanceof ControlledCreationRequestError) {
+    return { retryable: error.retryable, reconciliationRequired: error.reconciliationRequired };
+  }
+  const message = error instanceof Error ? error.message.toLowerCase() : "";
+  const reconciliationRequired = message.includes("reconciliation") || message.includes("different resource or topic");
+  const explicitlyRejected = message.includes("was rejected") && !/http (408|429|5\d\d)/u.test(message);
+  return { retryable: !explicitlyRejected && !reconciliationRequired, reconciliationRequired };
+}
+
+class ControlledCreationRequestError extends Error {
+  constructor(message: string, readonly retryable: boolean, readonly reconciliationRequired: boolean) {
+    super(message);
+  }
 }
 
 export interface AtomicReplaceOperations {

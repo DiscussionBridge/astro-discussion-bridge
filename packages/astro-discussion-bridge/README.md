@@ -36,6 +36,7 @@ export default defineConfig({
       publishOnBuild: {
         enabled: true,
         docsDir: "src/content",
+        stateFile: ".discussionbridge/astro-publication-state.json",
         lane: "docs",
         visibility: "unlisted",
       },
@@ -55,6 +56,18 @@ DISCUSSIONBRIDGE_CONNECTION_SECRET=replace-with-the-plugin-connection-secret
 `siteUrl` fail the build. The endpoint is fixed at
 `/discussion-bridge/v1/bridge-records/resolve.json`; there is no direct Discourse
 Core fallback.
+
+Before each publishing request, the adapter atomically records a secret-free
+operation containing the stable external identity, canonical URL, correlation
+ID and attempt count. It then records the outcome, retry and reconciliation
+state, plus the resolved resource/topic identity. An interrupted request stays
+visible as retryable state and the next exact build reuses its correlation and
+stable identity. Inspect the bounded operator summary with:
+
+```text
+discussionbridge-astro publication-status \
+  --state-file .discussionbridge/astro-publication-state.json
+```
 
 The default comments presentation is plugin-free `full`. Choosing
 `fullInteractive` and enabling `publishOnBuild` is an explicit upgrade into the
