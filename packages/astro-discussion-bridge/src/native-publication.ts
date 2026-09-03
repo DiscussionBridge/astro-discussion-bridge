@@ -100,14 +100,31 @@ export async function materializeNativePublications(options: NativePublicationOp
   const fetchImplementation = options.fetchImplementation ?? fetch;
   const summary = { created: 0, updated: 0, unchanged: 0, skipped: 0, failed: 0 };
   let page = 1;
+  let snapshot: string | undefined;
+  let expectedPages: number | undefined;
+  let expectedTotal: number | undefined;
+  const seenResources = new Set<string>();
   for (;;) {
-    const response = await requestJson(`${serverOrigin}/discussion-bridge/v1/bridge-records.json?page=${page}`, options.connectionId, options.connectionSecret, fetchImplementation);
+    const feedUrl = new URL("/discussion-bridge/v1/bridge-records.json", serverOrigin);
+    feedUrl.searchParams.set("page", String(page));
+    if (snapshot) feedUrl.searchParams.set("snapshot", snapshot);
+    const response = await requestJson(feedUrl.href, options.connectionId, options.connectionSecret, fetchImplementation);
     if (!Array.isArray(response.bridge_records) || !response.pagination || typeof response.pagination !== "object") throw new Error("Invalid DiscussionBridge publication feed");
     const pagination = response.pagination as Record<string, unknown>;
-    if (pagination.page !== page || !Number.isSafeInteger(pagination.pages) || Number(pagination.pages) < 1 || Number(pagination.pages) > 10_000) throw new Error("Invalid DiscussionBridge publication pagination");
+    if (pagination.page !== page || !Number.isSafeInteger(pagination.pages) || Number(pagination.pages) < 1 || Number(pagination.pages) > 10_000 || !Number.isSafeInteger(pagination.total) || Number(pagination.total) < 0 || typeof pagination.snapshot !== "string" || pagination.snapshot.length < 1 || pagination.snapshot.length > 8_192) throw new Error("Invalid DiscussionBridge publication pagination");
+    if (page === 1) {
+      snapshot = pagination.snapshot;
+      expectedPages = Number(pagination.pages);
+      expectedTotal = Number(pagination.total);
+    } else if (pagination.snapshot !== snapshot || Number(pagination.pages) !== expectedPages || Number(pagination.total) !== expectedTotal) {
+      throw new Error("DiscussionBridge publication feed changed during synchronization");
+    }
     for (const raw of response.bridge_records) {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Invalid Astro publication record");
+      const feedResourceId = String((raw as Record<string, unknown>).resource_id ?? "").toLowerCase();
+      if (!UUID.test(feedResourceId) || seenResources.has(feedResourceId)) throw new Error("DiscussionBridge publication feed contains a duplicate or invalid resource identity");
+      seenResources.add(feedResourceId);
       try {
-        if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Invalid Astro publication record");
         const item = publication(raw as Record<string, unknown>, siteOrigin, serverOrigin, routeBase);
         if (!item) { summary.skipped++; continue; }
         const file = path.join(options.docsDir, routeBase, `${item.slug}.md`);
@@ -125,5 +142,6 @@ export async function materializeNativePublications(options: NativePublicationOp
     if (page >= Number(pagination.pages)) break;
     page++;
   }
+  if (seenResources.size !== expectedTotal) throw new Error("DiscussionBridge publication feed did not produce its complete unique census");
   return summary;
 }
