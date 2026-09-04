@@ -1,0 +1,13 @@
+{
+  "family": {
+    "name": "DiscussionBridge",
+    "version": "0.2.0-alpha.18"
+  },
+  "component": {
+    "name": "DiscussionBridge for Astro",
+    "version": "0.1.0-alpha.20260903.7"
+  },
+  "bridgeCompatibility": "0.2",
+  "repository": "https://github.com/DiscussionBridge/astro-discussion-bridge",
+  "packageDirectory": "packages/astro-discussion-bridge"
+}
