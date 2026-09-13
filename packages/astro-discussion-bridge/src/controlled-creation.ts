@@ -4,6 +4,7 @@ import path from "node:path";
 import { createMarkdownProcessor, type MarkdownRenderer } from "@astrojs/markdown-remark";
 import sanitizeHtml from "sanitize-html";
 import { parse as parseYaml } from "yaml";
+import { isInteractiveCommentsMode } from "./comments-mode.js";
 import { PRODUCT_VERSION } from "./version.js";
 import {
   assertServiceResponseUrl,
@@ -135,8 +136,8 @@ async function publishControlledDiscussionsUnlocked(
     const draft = lifecycleBoolean(parsed.frontmatter, "draft");
     const published = lifecycleBoolean(parsed.frontmatter, "published");
 
-    if (display !== "fullInteractive") {
-      census.push({ kind: "skipped", result: { filePath, pageUrl, status: "skipped", reason: "fullInteractive not requested" } });
+    if (!isInteractiveCommentsMode(display)) {
+      census.push({ kind: "skipped", result: { filePath, pageUrl, status: "skipped", reason: "Interactive not requested" } });
       continue;
     }
     if (!syncEnabled) {

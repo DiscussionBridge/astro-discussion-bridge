@@ -5,6 +5,11 @@ import {
   publishControlledDiscussions,
   type ControlledCreationOptions,
 } from "./controlled-creation.js";
+import {
+  normalizeCommentsMode,
+  type CommentsModeInput,
+  type PublicCommentsMode,
+} from "./comments-mode.js";
 import { normalizePublicHttpUrl, normalizeServiceBaseUrl } from "./web-url.js";
 
 type DiscussionBridgeIntegration = {
@@ -45,7 +50,7 @@ export interface DiscussionBridgeOptions {
   siteUrl?: string;
   comments?: {
     enabled?: boolean;
-    display?: "simple" | "full" | "fullInteractive";
+    display?: CommentsModeInput;
     embedHeight?: string;
     dynamicHeight?: boolean;
     embedMinHeight?: string;
@@ -61,7 +66,7 @@ interface PublicOptions {
   discourseUrl: string;
   comments: {
     enabled: boolean;
-    display: "simple" | "full" | "fullInteractive";
+    display: PublicCommentsMode;
     embedHeight: string;
     dynamicHeight: boolean;
     embedMinHeight: string;
@@ -112,6 +117,7 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Disc
 }
 
 export { publishControlledDiscussions } from "./controlled-creation.js";
+export { isInteractiveCommentsMode, normalizeCommentsMode } from "./comments-mode.js";
 export { fetchFromDiscourseRecord } from "./bridge-record.js";
 export { materializeNativePublications } from "./native-publication.js";
 export { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
@@ -121,6 +127,7 @@ export type {
   PublishControlledDiscussionsOptions,
 } from "./controlled-creation.js";
 export type { BridgeRecordCredentials, PresentedBridgeRecord } from "./bridge-record.js";
+export type { CommentsModeInput, PublicCommentsMode } from "./comments-mode.js";
 
 function resolveOptions(options: DiscussionBridgeOptions): {
   public: PublicOptions;
@@ -134,12 +141,16 @@ function resolveOptions(options: DiscussionBridgeOptions): {
   ) {
     throw new Error('Comments height ceilings must be omitted or "none" so Discourse Core owns full-app iframe sizing.');
   }
+  const commentsDisplay = normalizeCommentsMode(options.comments?.display ?? "full");
+  if (!commentsDisplay) {
+    throw new Error("Comments display must be simple, full, interactive, or the deprecated fullInteractive value.");
+  }
   return {
     public: {
       discourseUrl: normalizeServiceBaseUrl(options.discourseUrl),
       comments: {
         enabled: options.comments?.enabled ?? true,
-        display: options.comments?.display ?? "full",
+        display: commentsDisplay,
         embedHeight: options.comments?.embedHeight ?? "800px",
         dynamicHeight: options.comments?.dynamicHeight ?? false,
         embedMinHeight: options.comments?.embedMinHeight ?? "360",

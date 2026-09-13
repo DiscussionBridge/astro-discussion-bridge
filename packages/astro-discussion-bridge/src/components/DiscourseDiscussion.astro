@@ -5,6 +5,7 @@ import {
   normalizeServiceBaseUrl,
   parsePublicDiscourseTopicUrl,
 } from "astro-discussion-bridge/web-url";
+import { isInteractiveCommentsMode } from "../comments-mode";
 
 interface Props {
   class?: string;
@@ -26,7 +27,7 @@ const embedClassName = Astro.props.embedClassName ?? config.comments.className;
 const embedHeight = config.comments.embedHeight;
 const dynamicHeight = config.comments.dynamicHeight;
 const embedMinHeight = config.comments.embedMinHeight;
-const fullApp = Astro.props.fullApp ?? config.comments.display === "fullInteractive";
+const fullApp = Astro.props.fullApp ?? isInteractiveCommentsMode(config.comments.display);
 const heading = Astro.props.heading ?? "Comments";
 const topicIdValue = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
 const topicId = positiveTopicId(topicIdValue, "DiscourseDiscussion topicId");
@@ -50,7 +51,7 @@ const sourceUrl = resolvedTopicId === undefined
     )
   : undefined;
 if (config.comments.enabled && fullApp && resolvedTopicId === undefined) {
-  throw new Error("DiscourseDiscussion fullInteractive requires one completed Bridge topic mapping.");
+  throw new Error("DiscourseDiscussion Interactive requires one completed Bridge topic mapping.");
 }
 
 function positiveTopicId(value: unknown, label: string): number | undefined {

@@ -1,7 +1,7 @@
 {
   "name": "astro-discussion-bridge",
   "version": "0.2.0-alpha.19",
-  "description": "Two-direction Astro adapter with plugin-free simple/full comments and plugin-backed fullInteractive discussion.",
+  "description": "Two-direction Astro adapter with plugin-free Simple/Full comments and plugin-backed Interactive discussion.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -53,6 +53,7 @@
     "dist",
     "src/components",
     "src/assets",
+    "src/comments-mode.ts",
     "README.md",
     "src/simple-live.ts",
     "src/virtual.d.ts"

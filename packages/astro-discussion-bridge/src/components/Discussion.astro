@@ -3,11 +3,16 @@ import DiscourseDiscussion from "./DiscourseDiscussion.astro";
 import DiscourseReplies from "./DiscourseReplies.astro";
 import DiscussionCredit from "./DiscussionCredit.astro";
 import config from "virtual:discussion-bridge/config";
+import {
+  isInteractiveCommentsMode,
+  normalizeCommentsMode,
+  type CommentsModeInput,
+} from "../comments-mode";
 
 interface Props {
   class?: string;
   discourseUrl?: string;
-  display?: "simple" | "full" | "fullInteractive";
+  display?: CommentsModeInput;
   embedClassName?: string;
   heading?: string;
   sourceUrl?: string;
@@ -19,17 +24,14 @@ interface Props {
 const frontmatter = Astro.props.frontmatter ?? Astro.props;
 const topicId = Astro.props.topicId ?? frontmatter.discourseTopicId;
 const topicUrl = stringValue(Astro.props.topicUrl ?? frontmatter.discourseTopicUrl);
-const display = Astro.props.display
-  ?? displayValue(frontmatter.discussionCommentsDisplay)
-  ?? config.comments.display;
+const display = normalizeCommentsMode(
+  Astro.props.display ?? frontmatter.discussionCommentsDisplay ?? config.comments.display,
+) ?? config.comments.display;
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-function displayValue(value: unknown): "simple" | "full" | "fullInteractive" | undefined {
-  return value === "simple" || value === "full" || value === "fullInteractive" ? value : undefined;
-}
 ---
 
 {config.comments.enabled && (
@@ -48,7 +50,7 @@ function displayValue(value: unknown): "simple" | "full" | "fullInteractive" | u
         class={Astro.props.class}
         discourseUrl={Astro.props.discourseUrl}
         embedClassName={Astro.props.embedClassName}
-        fullApp={display === "fullInteractive"}
+        fullApp={isInteractiveCommentsMode(display)}
         heading={Astro.props.heading}
         sourceUrl={Astro.props.sourceUrl}
         topicId={topicId}

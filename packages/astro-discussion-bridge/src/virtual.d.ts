@@ -3,7 +3,7 @@ declare module "virtual:discussion-bridge/config" {
     discourseUrl: string;
     comments: {
       enabled: boolean;
-      display: "simple" | "full" | "fullInteractive";
+      display: "simple" | "full" | "interactive";
       embedHeight: string;
       dynamicHeight: boolean;
       embedMinHeight: string;

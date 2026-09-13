@@ -3,11 +3,14 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import discussionBridge from "../dist/index.js";
+import discussionBridge, {
+  isInteractiveCommentsMode,
+  normalizeCommentsMode,
+} from "../dist/index.js";
 
 const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("presentation preserves simple, full, and mapped fullInteractive modes followed by one credit", async () => {
+test("presentation preserves Simple, Full, and mapped Interactive modes followed by one credit", async () => {
   const discussion = await fs.readFile(path.join(packageDir, "src/components/Discussion.astro"), "utf8");
   const discourse = await fs.readFile(path.join(packageDir, "src/components/DiscourseDiscussion.astro"), "utf8");
   const replies = await fs.readFile(path.join(packageDir, "src/components/DiscourseReplies.astro"), "utf8");
@@ -16,7 +19,7 @@ test("presentation preserves simple, full, and mapped fullInteractive modes foll
   assert.equal((discussion.match(/<DiscourseReplies\b/g) ?? []).length, 1);
   assert.equal((discussion.match(/<DiscussionCredit\b/g) ?? []).length, 1);
   assert.match(discussion, /display === "simple"/);
-  assert.match(discussion, /fullApp=\{display === "fullInteractive"\}/);
+  assert.match(discussion, /fullApp=\{isInteractiveCommentsMode\(display\)\}/);
   assert.match(discussion, /<DiscourseDiscussion[\s\S]*sourceUrl=\{Astro\.props\.sourceUrl\}/);
   assert.match(replies, /Number\(post\.post_number\) > 1/);
   assert.match(replies, /sanitizeHtml/);
@@ -38,7 +41,7 @@ test("presentation preserves simple, full, and mapped fullInteractive modes foll
   assert.match(live, /data-discussionbridge-simple-status/);
   assert.match(discourse, /const resolvedTopicId = topicId \?\? topicReference\?\.topicId/);
   assert.match(discourse, /resolvedTopicId \? \{ topicId: resolvedTopicId \} : \{ discourseEmbedUrl: sourceUrl \}/);
-  assert.match(discourse, /fullInteractive requires one completed Bridge topic mapping/);
+  assert.match(discourse, /Interactive requires one completed Bridge topic mapping/);
   assert.match(discourse, /fullApp \? \{ fullApp: true/);
   assert.doesNotMatch(discussion, /targets?|relationships?|navigation/i);
 });
@@ -68,7 +71,19 @@ test("From Discourse component renders only server-retrieved sanitized record co
   assert.doesNotMatch(component, /client:|X-DiscussionBridge|connectionSecret\}/);
 });
 
-test("fullInteractive defaults to a bounded viewport and configured ceilings fail closed", async () => {
+test("Interactive accepts the canonical and deprecated mode values", () => {
+  assert.equal(normalizeCommentsMode("interactive"), "interactive");
+  assert.equal(normalizeCommentsMode("fullInteractive"), "interactive");
+  assert.equal(isInteractiveCommentsMode("interactive"), true);
+  assert.equal(isInteractiveCommentsMode("fullInteractive"), true);
+  assert.equal(normalizeCommentsMode("bridge"), undefined);
+  assert.throws(() => discussionBridge({
+    discourseUrl: "https://forum.example/",
+    comments: { display: "bridge" },
+  }), /Comments display must be/);
+});
+
+test("Interactive defaults to a bounded viewport and configured ceilings fail closed", async () => {
   const integration = await fs.readFile(path.join(packageDir, "src/index.ts"), "utf8");
   assert.match(integration, /dynamicHeight: options\.comments\?\.dynamicHeight \?\? false/);
   assert.throws(() => discussionBridge({

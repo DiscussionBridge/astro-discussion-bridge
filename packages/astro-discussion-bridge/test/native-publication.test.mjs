@@ -22,6 +22,8 @@ test("materializes one authorized Astro source atomically and exact retry is unc
   assert.deepEqual(await materializeNativePublications(options(root)), { created: 0, updated: 0, unchanged: 1, skipped: 0, failed: 0 });
   const source = await readFile(path.join(root, "comments", "bridge-publisher.md"), "utf8");
   assert.match(source, /discussionbridgeNativePublication: true/);
+  assert.match(source, /discussionCommentsDisplay: interactive/);
+  assert.doesNotMatch(source, /discussionCommentsDisplay: fullInteractive/);
   assert.match(source, /discussionbridgeResourceId: 11111111-1111-4111-8111-111111111111/);
   assert.match(source, /discourseTopicId: 53/);
   assert.match(source, /date: "2026-09-01T08:00:00\.000Z"/);

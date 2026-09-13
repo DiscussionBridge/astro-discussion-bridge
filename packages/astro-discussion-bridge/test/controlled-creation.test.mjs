@@ -103,6 +103,30 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.match(updated, /discourseTopicUrl: "https:\/\/forum\.example\/community\/t\/example\/41"/);
 });
 
+test("canonical interactive pages use the same controlled-creation path", async (t) => {
+  const root = await fixture({
+    "interactive.md": "---\ntitle: Interactive\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nCanonical Interactive content.\n",
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  let requestCount = 0;
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    requestCount += 1;
+    return new Response(JSON.stringify(bridgePayload(45)), {
+      status: 201,
+      headers: { "content-type": "application/json" },
+    });
+  };
+  t.after(() => { globalThis.fetch = previousFetch; });
+
+  const results = await publishControlledDiscussions(options(root));
+  assert.equal(requestCount, 1);
+  assert.equal(results.filter((result) => result.status !== "skipped").length, 1);
+  const updated = await fs.readFile(path.join(root, "interactive.md"), "utf8");
+  assert.match(updated, /discussionCommentsDisplay: interactive/);
+  assert.match(updated, /discourseTopicId: "45"/);
+});
+
 test("Astro author frontmatter sends bounded primary and coauthor identities", async (t) => {
   const root = await fixture({
     "authored.md": `---
