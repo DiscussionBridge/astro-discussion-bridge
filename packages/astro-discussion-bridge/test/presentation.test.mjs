@@ -20,6 +20,10 @@ test("presentation preserves Simple, Full, and mapped Interactive modes followed
   assert.equal((discussion.match(/<DiscussionCredit\b/g) ?? []).length, 1);
   assert.match(discussion, /display === "simple"/);
   assert.match(discussion, /fullApp=\{isInteractiveCommentsMode\(display\)\}/);
+  assert.match(discussion, /frontmatter\.discussionFromDiscourse === true/);
+  assert.match(discussion, /frontmatter\.discussionbridgeNativePublication === true/);
+  assert.match(discussion, /discussion-bridge-source-presentation/);
+  assert.match(discussion, /embedClassName=\{embedClassName\}/);
   assert.match(discussion, /<DiscourseDiscussion[\s\S]*sourceUrl=\{Astro\.props\.sourceUrl\}/);
   assert.match(replies, /Number\(post\.post_number\) > 1/);
   assert.match(replies, /sanitizeHtml/);

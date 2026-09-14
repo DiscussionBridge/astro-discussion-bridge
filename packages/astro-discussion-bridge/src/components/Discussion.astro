@@ -27,6 +27,19 @@ const topicUrl = stringValue(Astro.props.topicUrl ?? frontmatter.discourseTopicU
 const display = normalizeCommentsMode(
   Astro.props.display ?? frontmatter.discussionCommentsDisplay ?? config.comments.display,
 ) ?? config.comments.display;
+const sourcePresentation =
+  frontmatter.discussionFromDiscourse === true ||
+  frontmatter.discussionbridgeNativePublication === true;
+const embedClasses = stringValue(Astro.props.embedClassName)?.split(/\s+/) ?? [];
+
+if (
+  sourcePresentation &&
+  !embedClasses.includes("discussion-bridge-source-presentation")
+) {
+  embedClasses.push("discussion-bridge-source-presentation");
+}
+
+const embedClassName = embedClasses.join(" ") || undefined;
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -49,7 +62,7 @@ function stringValue(value: unknown): string | undefined {
       <DiscourseDiscussion
         class={Astro.props.class}
         discourseUrl={Astro.props.discourseUrl}
-        embedClassName={Astro.props.embedClassName}
+        embedClassName={embedClassName}
         fullApp={isInteractiveCommentsMode(display)}
         heading={Astro.props.heading}
         sourceUrl={Astro.props.sourceUrl}
