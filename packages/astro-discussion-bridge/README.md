@@ -190,10 +190,12 @@ discussionbridge-astro sync-publications \
 
 The command validates the source topic, exact destination origin and route,
 stable Bridge resource, author, revision, and bounded sanitized content before
-atomically writing `comments/<slug>.md`. Exact retries are unchanged; a
-different resource attempting to claim the same file fails closed. The written
-page retains the source revision and topic identity and uses the ordinary
-`fullInteractive` discussion component. The connection secret never enters the
+atomically writing the content file that corresponds to the authorized URL.
+Root URLs write `<slug>.md`; an explicitly configured source path writes
+`<source-path>/<slug>.md`. Exact retries are unchanged; a different resource
+attempting to claim the same file fails closed. The written page retains the
+source revision and topic identity and uses the ordinary Interactive discussion
+component. The connection secret never enters the
 generated page.
 
 ## Public exports

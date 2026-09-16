@@ -9,7 +9,7 @@ const record = {
   resource_id: "11111111-1111-4111-8111-111111111111", direction: "from_discourse", state: "healthy", title: "The Bridge publishes everywhere", topic_id: 53,
   content_html: "<h2>One source</h2><script>bad()</script><p>Native Astro content.</p>",
   source: { platform: "discourse", origin: "https://bridge.example", topic_id: 53, topic_url: "https://bridge.example/t/publisher/53", post_id: 149, post_number: 1, post_version: 1, revision: "post:149:version:1", updated_at: "2026-09-01T08:00:00.000Z", author: { name: "DiscussionBridge", profile_url: "https://bridge.example/u/discussionbridge" } },
-  bindings: [{ role: "presentation", state: "active", canonical_url: "https://astro.example/comments/bridge-publisher/", native_materialization: true }],
+  bindings: [{ role: "presentation", state: "active", canonical_url: "https://astro.example/bridge-publisher/", native_materialization: true }],
 };
 
 function options(docsDir, records = [record]) {
@@ -20,7 +20,7 @@ test("materializes one authorized Astro source atomically and exact retry is unc
   const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-native-"));
   assert.deepEqual(await materializeNativePublications(options(root)), { created: 1, updated: 0, unchanged: 0, skipped: 0, failed: 0 });
   assert.deepEqual(await materializeNativePublications(options(root)), { created: 0, updated: 0, unchanged: 1, skipped: 0, failed: 0 });
-  const source = await readFile(path.join(root, "comments", "bridge-publisher.md"), "utf8");
+  const source = await readFile(path.join(root, "bridge-publisher.md"), "utf8");
   assert.match(source, /discussionFromDiscourse: true/);
   assert.match(source, /discussionbridgeNativePublication: true/);
   assert.match(source, /discussionCommentsDisplay: interactive/);
@@ -32,11 +32,13 @@ test("materializes one authorized Astro source atomically and exact retry is unc
   assert.doesNotMatch(source, /<script|bad\(\)/);
 });
 
-test("skips presentation-only records and fails an authorized destination escape", async () => {
+test("supports an optional source path and fails an invalid authorized destination", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-native-"));
   const presentation = { ...record, bindings: [{ ...record.bindings[0], native_materialization: false }] };
-  const escaped = { ...record, resource_id: "22222222-2222-4222-8222-222222222222", bindings: [{ ...record.bindings[0], canonical_url: "https://astro.example/outside/bridge-publisher/" }] };
-  assert.deepEqual(await materializeNativePublications(options(root, [presentation, escaped])), { created: 0, updated: 0, unchanged: 0, skipped: 1, failed: 1 });
+  const nested = { ...record, resource_id: "22222222-2222-4222-8222-222222222222", bindings: [{ ...record.bindings[0], canonical_url: "https://astro.example/from-the-bridge/nested-page/" }] };
+  const invalid = { ...record, resource_id: "33333333-3333-4333-8333-333333333333", bindings: [{ ...record.bindings[0], canonical_url: "https://astro.example/from-the-bridge/invalid_path/" }] };
+  assert.deepEqual(await materializeNativePublications(options(root, [presentation, nested, invalid])), { created: 1, updated: 0, unchanged: 0, skipped: 1, failed: 1 });
+  assert.match(await readFile(path.join(root, "from-the-bridge", "nested-page.md"), "utf8"), /discussionbridgeNativePublication: true/);
 });
 
 test("fails closed when a paginated publication feed drifts or repeats an identity", async () => {

@@ -41,15 +41,14 @@ function isoDate(value: unknown, label: string): string {
   return input;
 }
 
-function publication(record: Record<string, unknown>, siteOrigin: string, serverOrigin: string, routeBase: string) {
+function publication(record: Record<string, unknown>, siteOrigin: string, serverOrigin: string) {
   const bindings = Array.isArray(record.bindings) ? record.bindings.filter((item): item is Record<string, unknown> => !!item && typeof item === "object" && item.role === "presentation" && item.state === "active") : [];
   if (!bindings.some((item) => item.native_materialization === true)) return null;
   if (bindings.length !== 1 || bindings[0].native_materialization !== true) throw new Error("Ambiguous Astro publication authority");
   if (record.direction !== "from_discourse" || record.state !== "healthy" || !UUID.test(String(record.resource_id ?? "")) || !Number.isSafeInteger(record.topic_id) || Number(record.topic_id) < 1) throw new Error("Invalid Astro publication record");
   const destination = exactUrl(bindings[0].canonical_url, siteOrigin, "Astro publication destination");
-  const prefix = `/${routeBase}/`;
-  const slug = destination.pathname.startsWith(prefix) && destination.pathname.endsWith("/") ? destination.pathname.slice(prefix.length, -1) : "";
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(slug)) throw new Error("Invalid Astro publication path");
+  const route = destination.pathname.endsWith("/") ? destination.pathname.slice(1, -1) : "";
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/u.test(route)) throw new Error("Invalid Astro publication path");
   const source = record.source as Record<string, unknown> | undefined;
   if (!source || source.platform !== "discourse" || source.origin !== serverOrigin || source.topic_id !== record.topic_id || source.post_number !== 1 || !Number.isSafeInteger(source.post_id) || Number(source.post_id) < 1 || !Number.isSafeInteger(source.post_version) || Number(source.post_version) < 1 || source.revision !== `post:${source.post_id}:version:${source.post_version}`) throw new Error("Invalid Astro publication source");
   const topicUrl = exactUrl(source.topic_url, serverOrigin, "Astro source topic URL").href;
@@ -63,7 +62,7 @@ function publication(record: Record<string, unknown>, siteOrigin: string, server
     allowProtocolRelative: false,
   });
   if (!content.trim()) throw new Error("Astro publication content sanitized to empty");
-  return { resourceId: String(record.resource_id).toLowerCase(), slug, title: text(record.title, 1024, "Astro publication title"), content, revision: String(source.revision), updatedAt: isoDate(source.updated_at, "Astro source update time"), authorName, topicId: Number(record.topic_id), topicUrl };
+  return { resourceId: String(record.resource_id).toLowerCase(), route, title: text(record.title, 1024, "Astro publication title"), content, revision: String(source.revision), updatedAt: isoDate(source.updated_at, "Astro source update time"), authorName, topicId: Number(record.topic_id), topicUrl };
 }
 
 async function requestJson(url: string, connectionId: string, secret: string, fetchImplementation: typeof fetch) {
@@ -95,8 +94,6 @@ export async function materializeNativePublications(options: NativePublicationOp
   const serverOrigin = exactOrigin(options.serverUrl, "DiscussionBridge server URL");
   const secretBytes = new TextEncoder().encode(options.connectionSecret).byteLength;
   if (!CONNECTION.test(options.connectionId) || secretBytes < 32 || secretBytes > 256 || /[\x00-\x1f\x7f]/u.test(options.connectionSecret)) throw new Error("Invalid DiscussionBridge credentials");
-  const routeBase = options.routeBase ?? "comments";
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(routeBase)) throw new Error("Invalid Astro publication route base");
   const fetchImplementation = options.fetchImplementation ?? fetch;
   const summary = { created: 0, updated: 0, unchanged: 0, skipped: 0, failed: 0 };
   let page = 1;
@@ -125,9 +122,9 @@ export async function materializeNativePublications(options: NativePublicationOp
       if (!UUID.test(feedResourceId) || seenResources.has(feedResourceId)) throw new Error("DiscussionBridge publication feed contains a duplicate or invalid resource identity");
       seenResources.add(feedResourceId);
       try {
-        const item = publication(raw as Record<string, unknown>, siteOrigin, serverOrigin, routeBase);
+        const item = publication(raw as Record<string, unknown>, siteOrigin, serverOrigin);
         if (!item) { summary.skipped++; continue; }
-        const file = path.join(options.docsDir, routeBase, `${item.slug}.md`);
+        const file = path.join(options.docsDir, `${item.route}.md`);
         const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, date: item.updatedAt, discussionCommentsDisplay: "interactive", discussionSync: false, discussionFromDiscourse: true, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
         const yaml = stringifyYaml(frontmatter).trim().replace(/^date: ([^\r\n]+)$/mu, 'date: "$1"');
         const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
