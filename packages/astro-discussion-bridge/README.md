@@ -224,7 +224,7 @@ npm run verify:large-site
 ```
 
 The verifier alternates a plain Astro build and the same build with
-DiscussionBridge publishing enabled, confirms the complete generated HTML
+DiscussionBridge publishing enabled in separate Node processes, confirms the complete generated HTML
 census, measures the adapter's no-op corpus scan independently, and removes its
 temporary fixture. `DISCUSSIONBRIDGE_ASTRO_BENCHMARK_PAGES` and
 `DISCUSSIONBRIDGE_ASTRO_BENCHMARK_ROUNDS` may override the bounded defaults.

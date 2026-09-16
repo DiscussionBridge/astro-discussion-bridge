@@ -1,10 +1,11 @@
+import { execFile } from "node:child_process";
 import { performance } from "node:perf_hooks";
 import { mkdtemp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
-import { build } from "astro";
-import discussionBridge, { publishControlledDiscussions } from "../dist/index.js";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import { publishControlledDiscussions } from "../dist/index.js";
 
 const pageCount = positiveInteger(process.env.DISCUSSIONBRIDGE_ASTRO_BENCHMARK_PAGES, 1_000);
 const rounds = positiveInteger(process.env.DISCUSSIONBRIDGE_ASTRO_BENCHMARK_ROUNDS, 3);
@@ -13,6 +14,8 @@ const pagesDir = path.join(fixtureRoot, "src", "pages");
 const baselineDurations = [];
 const bridgeDurations = [];
 const adapterScanDurations = [];
+const execFileAsync = promisify(execFile);
+const buildRunner = fileURLToPath(new URL("./run-large-site-build.mjs", import.meta.url));
 
 try {
   await mkdir(pagesDir, { recursive: true });
@@ -27,20 +30,9 @@ try {
       const outDir = path.join(fixtureRoot, `dist-${variant}`);
       await rm(outDir, { recursive: true, force: true });
       const started = performance.now();
-      await build({
-        root: pathToFileURL(`${fixtureRoot}${path.sep}`),
-        outDir,
-        logLevel: "error",
-        integrations: variant === "bridge" ? [discussionBridge({
-          discourseUrl: "https://forum.example/",
-          siteUrl: "https://site.example/",
-          publishOnBuild: {
-            enabled: true,
-            docsDir: "src/pages",
-            connectionId: "dbc_000000000000000000000000",
-            connectionSecret: "benchmark-only-secret-that-never-leaves-the-process",
-          },
-        })] : [],
+      await execFileAsync(process.execPath, [buildRunner, fixtureRoot, outDir, variant], {
+        windowsHide: true,
+        maxBuffer: 1024 * 1024,
       });
       const elapsed = Math.round(performance.now() - started);
       (variant === "bridge" ? bridgeDurations : baselineDurations).push(elapsed);
