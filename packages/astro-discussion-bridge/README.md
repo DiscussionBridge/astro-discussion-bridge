@@ -197,6 +197,11 @@ attempting to claim the same file fails closed. The written page retains the
 source revision and topic identity and uses the ordinary Interactive discussion
 component. The connection secret never enters the
 generated page.
+Before writing, the command checks existing native-publication files for the
+same resource ID. If its authorized URL now points to another file, it stops
+without creating a second page. Changing an existing publication URL requires
+an explicit migration and an old-URL redirect; this command does not create
+that redirect automatically.
 
 ## Public exports
 

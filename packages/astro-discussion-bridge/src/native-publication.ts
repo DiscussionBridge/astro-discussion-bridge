@@ -1,4 +1,4 @@
-import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import sanitizeHtml from "sanitize-html";
 import { stringify as stringifyYaml } from "yaml";
@@ -6,6 +6,7 @@ import { PRODUCT_VERSION } from "./version.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const CONNECTION = /^dbc_[a-f0-9]{24}$/u;
+class PublicationMigrationRequired extends Error {}
 
 export interface NativePublicationOptions {
   docsDir: string;
@@ -89,11 +90,51 @@ async function atomicWrite(file: string, contents: string) {
   }
 }
 
+async function indexNativePublications(docsDir: string): Promise<Map<string, string>> {
+  const root = path.resolve(docsDir);
+  const files = new Map<string, string>();
+  const pending = [root];
+  let inspected = 0;
+  while (pending.length) {
+    const directory = pending.pop()!;
+    let entries;
+    try { entries = await readdir(directory, { withFileTypes: true }); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT" && directory === root) return files; throw error; }
+    for (const entry of entries) {
+      const file = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) throw new Error("Astro publication content contains a symlink; identity cannot be checked safely");
+      if (entry.isDirectory()) { pending.push(file); continue; }
+      if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+      if (++inspected > 100_000) throw new Error("Astro publication content exceeds the bounded identity census");
+      const handle = await open(file, "r");
+      const header = Buffer.alloc(2048);
+      let bytesRead;
+      try { ({ bytesRead } = await handle.read(header, 0, header.length, 0)); }
+      finally { await handle.close(); }
+      const text = header.toString("utf8", 0, bytesRead);
+      const opening = text.match(/^---\r?\n/u);
+      if (!opening) continue;
+      const remainder = text.slice(opening[0].length);
+      const closing = remainder.search(/\r?\n---\r?\n/u);
+      if (closing < 0) continue;
+      const frontmatter = remainder.slice(0, closing);
+      if (!/^discussionbridgeNativePublication: true\r?$/mu.test(frontmatter)) continue;
+      const match = frontmatter.match(/^discussionbridgeResourceId: ([0-9a-f-]{36})\r?$/imu);
+      if (!match || !UUID.test(match[1])) throw new Error("Astro native publication identity is missing or invalid");
+      const id = match[1].toLowerCase();
+      if (files.has(id)) throw new Error("Astro native publication resource identity is duplicated across files");
+      files.set(id, path.resolve(file));
+    }
+  }
+  return files;
+}
+
 export async function materializeNativePublications(options: NativePublicationOptions) {
   const siteOrigin = exactOrigin(options.siteUrl, "Astro site URL");
   const serverOrigin = exactOrigin(options.serverUrl, "DiscussionBridge server URL");
   const secretBytes = new TextEncoder().encode(options.connectionSecret).byteLength;
   if (!CONNECTION.test(options.connectionId) || secretBytes < 32 || secretBytes > 256 || /[\x00-\x1f\x7f]/u.test(options.connectionSecret)) throw new Error("Invalid DiscussionBridge credentials");
+  let existingPublications: Map<string, string> | undefined;
   const fetchImplementation = options.fetchImplementation ?? fetch;
   const summary = { created: 0, updated: 0, unchanged: 0, skipped: 0, failed: 0 };
   let page = 1;
@@ -116,6 +157,12 @@ export async function materializeNativePublications(options: NativePublicationOp
     } else if (pagination.snapshot !== snapshot || Number(pagination.pages) !== expectedPages || Number(pagination.total) !== expectedTotal) {
       throw new Error("DiscussionBridge publication feed changed during synchronization");
     }
+    if (!existingPublications && response.bridge_records.some((raw) => {
+      const bindings = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>).bindings : null;
+      return Array.isArray(bindings) && bindings.some((binding) => !!binding && typeof binding === "object" && binding.native_materialization === true);
+    })) {
+      existingPublications = await indexNativePublications(options.docsDir);
+    }
     for (const raw of response.bridge_records) {
       if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Invalid Astro publication record");
       const feedResourceId = String((raw as Record<string, unknown>).resource_id ?? "").toLowerCase();
@@ -124,7 +171,10 @@ export async function materializeNativePublications(options: NativePublicationOp
       try {
         const item = publication(raw as Record<string, unknown>, siteOrigin, serverOrigin);
         if (!item) { summary.skipped++; continue; }
+        existingPublications ??= await indexNativePublications(options.docsDir);
         const file = path.join(options.docsDir, `${item.route}.md`);
+        const previousFile = existingPublications.get(item.resourceId);
+        if (previousFile && previousFile !== path.resolve(file)) throw new PublicationMigrationRequired("Astro publication URL change requires an explicit migration and redirect");
         const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, date: item.updatedAt, discussionCommentsDisplay: "interactive", discussionSync: false, discussionFromDiscourse: true, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
         const yaml = stringifyYaml(frontmatter).trim().replace(/^date: ([^\r\n]+)$/mu, 'date: "$1"');
         const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
@@ -133,8 +183,12 @@ export async function materializeNativePublications(options: NativePublicationOp
         if (prior === output) { summary.unchanged++; continue; }
         if (prior && !prior.includes(`discussionbridgeResourceId: ${item.resourceId}`)) throw new Error("Astro publication identity collision");
         await atomicWrite(file, output);
+        existingPublications.set(item.resourceId, path.resolve(file));
         summary[prior ? "updated" : "created"]++;
-      } catch { summary.failed++; }
+      } catch (error) {
+        if (error instanceof PublicationMigrationRequired) throw error;
+        summary.failed++;
+      }
     }
     if (page >= Number(pagination.pages)) break;
     page++;

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -18,6 +18,7 @@ function options(docsDir, records = [record]) {
 
 test("materializes one authorized Astro source atomically and exact retry is unchanged", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-native-"));
+  await writeFile(path.join(root, "ordinary.md"), "---\ntitle: Ordinary page\n---\n\ndiscussionbridgeNativePublication: true\ndiscussionbridgeResourceId: 11111111-1111-4111-8111-111111111111\n");
   assert.deepEqual(await materializeNativePublications(options(root)), { created: 1, updated: 0, unchanged: 0, skipped: 0, failed: 0 });
   assert.deepEqual(await materializeNativePublications(options(root)), { created: 0, updated: 0, unchanged: 1, skipped: 0, failed: 0 });
   const source = await readFile(path.join(root, "bridge-publisher.md"), "utf8");
@@ -30,6 +31,14 @@ test("materializes one authorized Astro source atomically and exact retry is unc
   assert.match(source, /date: "2026-09-01T08:00:00\.000Z"/);
   assert.match(source, /Native Astro content/);
   assert.doesNotMatch(source, /<script|bad\(\)/);
+
+  const moved = { ...record, bindings: [{ ...record.bindings[0], canonical_url: "https://astro.example/new-location/" }] };
+  await assert.rejects(() => materializeNativePublications(options(root, [moved])), /explicit migration and redirect/);
+  await assert.rejects(() => readFile(path.join(root, "new-location.md")), /ENOENT/);
+  assert.equal(await readFile(path.join(root, "bridge-publisher.md"), "utf8"), source);
+
+  await writeFile(path.join(root, "duplicate.md"), source);
+  await assert.rejects(() => materializeNativePublications(options(root)), /resource identity is duplicated across files/);
 });
 
 test("supports an optional source path and fails an invalid authorized destination", async () => {
