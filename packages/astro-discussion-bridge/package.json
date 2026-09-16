@@ -63,6 +63,7 @@
     "check": "tsc -p tsconfig.json --noEmit",
     "check:attribution": "node ../../scripts/check-package-attribution.mjs",
     "test": "npm run build && node --test test/*.test.mjs",
+    "verify:large-site": "npm run build && node scripts/verify-large-site.mjs",
     "pack:inspect": "npm pack --dry-run"
   },
   "keywords": [

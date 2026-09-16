@@ -27,6 +27,7 @@ const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 65_536;
 const MAX_CONTENT_HTML_BYTES = 48 * 1024;
 const MAX_SOURCE_AUTHORS = 20;
+const MARKDOWN_READ_BATCH_SIZE = 32;
 const markdownExtensions = new Set([".md", ".mdx"]);
 
 export interface ControlledCreationOptions {
@@ -118,10 +119,9 @@ async function publishControlledDiscussionsUnlocked(
   const files = await findMarkdownFiles(docsDir);
   const census: CensusEntry[] = [];
   const canonicalSources = new Map<string, string>();
-  const markdownRenderer = await createMarkdownProcessor({ syntaxHighlight: false });
+  let markdownRenderer: MarkdownRenderer | undefined;
 
-  for (const filePath of files) {
-    const source = await fs.readFile(filePath, "utf8");
+  for await (const { filePath, source } of readMarkdownSources(files)) {
     const parsed = parseMarkdown(source);
     const pageUrl = pageUrlForFile({
       docsDir,
@@ -204,6 +204,7 @@ async function publishControlledDiscussionsUnlocked(
       stringValue(parsed.frontmatter.title) ?? firstHeading(parsed.body) ?? titleFromFile(filePath),
       filePath,
     );
+    markdownRenderer ??= await createMarkdownProcessor({ syntaxHighlight: false });
     const contentHtml = await renderedPublishedContent(parsed.body, filePath, markdownRenderer);
     const authorship = validatedSourceAuthorship(
       parsed.frontmatter.authors,
@@ -578,6 +579,16 @@ async function findMarkdownFiles(root: string): Promise<string[]> {
   }
   await visit(root);
   return files.sort();
+}
+
+async function* readMarkdownSources(files: string[]): AsyncGenerator<{ filePath: string; source: string }> {
+  for (let offset = 0; offset < files.length; offset += MARKDOWN_READ_BATCH_SIZE) {
+    const batch = files.slice(offset, offset + MARKDOWN_READ_BATCH_SIZE);
+    const sources = await Promise.all(batch.map((filePath) => fs.readFile(filePath, "utf8")));
+    for (let index = 0; index < batch.length; index++) {
+      yield { filePath: batch[index], source: sources[index] };
+    }
+  }
 }
 
 function parseMarkdown(source: string): { frontmatter: Record<string, unknown>; body: string } {

@@ -214,6 +214,23 @@ generated page.
 
 ## Assurance boundary
 
+### Large-site verification
+
+Run the repeatable temporary 1,000-page build comparison and isolated adapter
+census with:
+
+```sh
+npm run verify:large-site
+```
+
+The verifier alternates a plain Astro build and the same build with
+DiscussionBridge publishing enabled, confirms the complete generated HTML
+census, measures the adapter's no-op corpus scan independently, and removes its
+temporary fixture. `DISCUSSIONBRIDGE_ASTRO_BENCHMARK_PAGES` and
+`DISCUSSIONBRIDGE_ASTRO_BENCHMARK_ROUNDS` may override the bounded defaults.
+Total Astro build timings are reported separately from adapter timings because
+host load and cache state can materially affect the complete build.
+
 This package is the Astro profile of the eight-profile DiscussionBridge Alpha.
 It must pass build, tests, package-inventory checks, live two-direction
 exercise, rollback capture, and the final paired code review before release.
