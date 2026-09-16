@@ -203,6 +203,33 @@ without creating a second page. Changing an existing publication URL requires
 an explicit migration and an old-URL redirect; this command does not create
 that redirect automatically.
 
+For a Cloudflare Workers Static Assets deployment, the operator can prepare
+the local content move and permanent redirect together:
+
+```sh
+discussionbridge-astro migrate-publication \
+  --docs-dir src/content/docs \
+  --site-url https://site.example.com/ \
+  --resource-id 11111111-1111-4111-8111-111111111111 \
+  --old-url https://site.example.com/old-path/ \
+  --new-url https://site.example.com/new-path/ \
+  --redirects-file public/_redirects
+```
+
+The command requires the existing native source file to match the exact old
+URL and resource ID. It refuses a destination collision or conflicting redirect,
+moves the source file, and adds a `301` rule to Cloudflare's `_redirects`
+manifest. It does **not** change the Bridge binding, build, deploy, or verify
+the public redirect. Keep publication synchronization paused during the
+cutover: with the old Bridge URL still active, it intentionally rejects the
+moved file rather than recreating the old path. Build and deploy the migrated
+site, verify that the old URL permanently redirects to the new page and that
+the new page retains the same resource and topic, then apply the matching
+Bridge presentation-binding correction and resume synchronization. If the
+redirect cannot be verified, restore the source and manifest before changing
+the Bridge binding. Do not use this Cloudflare-specific command for another
+hosting target without an equivalent verified redirect mechanism.
+
 ## Public exports
 
 - default Astro integration
@@ -211,6 +238,7 @@ that redirect automatically.
 - `astro-discussion-bridge/bridge-record`
 - `astro-discussion-bridge/native-publication`
 - `discussionbridge-astro sync-publications` CLI
+- `discussionbridge-astro migrate-publication` CLI (local Cloudflare cutover preparation)
 - `astro-discussion-bridge/Discussion.astro`
 - `astro-discussion-bridge/DiscourseDiscussion.astro`
 - `astro-discussion-bridge/DiscourseReplies.astro`

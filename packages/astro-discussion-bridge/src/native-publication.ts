@@ -1,4 +1,4 @@
-import { mkdir, open, readFile, readdir, rename, rm } from "node:fs/promises";
+import { lstat, mkdir, open, readFile, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import sanitizeHtml from "sanitize-html";
 import { stringify as stringifyYaml } from "yaml";
@@ -127,6 +127,62 @@ async function indexNativePublications(docsDir: string): Promise<Map<string, str
     }
   }
   return files;
+}
+
+export interface NativePublicationMigrationOptions {
+  docsDir: string;
+  siteUrl: string;
+  resourceId: string;
+  oldUrl: string;
+  newUrl: string;
+  redirectsFile: string;
+}
+
+async function exists(file: string): Promise<boolean> {
+  try { await lstat(file); return true; }
+  catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return false; throw error; }
+}
+
+export async function migrateNativePublication(options: NativePublicationMigrationOptions) {
+  const siteOrigin = exactOrigin(options.siteUrl, "Astro site URL");
+  if (!UUID.test(options.resourceId)) throw new Error("Invalid Astro publication resource ID");
+  if (path.basename(options.redirectsFile) !== "_redirects") throw new Error("Astro migration requires a Cloudflare _redirects file");
+  const oldUrl = exactUrl(options.oldUrl, siteOrigin, "Astro old publication URL");
+  const newUrl = exactUrl(options.newUrl, siteOrigin, "Astro new publication URL");
+  const routePattern = /^\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*\/$/u;
+  if (!routePattern.test(oldUrl.pathname) || !routePattern.test(newUrl.pathname) || oldUrl.href === newUrl.href) throw new Error("Invalid Astro publication URL migration paths");
+  const root = path.resolve(options.docsDir);
+  const files = await indexNativePublications(root);
+  const sourceFile = files.get(options.resourceId.toLowerCase());
+  if (!sourceFile) throw new Error("Astro publication resource does not have exactly one native source file");
+  const sourceRoute = path.relative(root, sourceFile).split(path.sep).join("/").replace(/\.md$/u, "");
+  if (`${siteOrigin}/${sourceRoute}/` !== oldUrl.href) throw new Error("Astro publication old URL does not match its native source file");
+  const destinationRoute = newUrl.pathname.slice(1, -1);
+  const destinationFile = path.resolve(root, `${destinationRoute}.md`);
+  const routeAlternates = [destinationFile, path.resolve(root, `${destinationRoute}.mdx`), path.resolve(root, destinationRoute, "index.md"), path.resolve(root, destinationRoute, "index.mdx")];
+  if ((await Promise.all(routeAlternates.map(exists))).some(Boolean)) throw new Error("Astro publication destination already has content");
+  const redirectsFile = path.resolve(options.redirectsFile);
+  let redirects = "";
+  try {
+    const status = await lstat(redirectsFile);
+    if (!status.isFile() || status.isSymbolicLink() || status.size > 100_000) throw new Error("Astro redirect manifest is not a bounded regular file");
+    redirects = await readFile(redirectsFile, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  const activeRules = redirects.split(/\r?\n/u).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
+  if (activeRules.length >= 2_000 || activeRules.some((line) => line.split(/\s+/u)[0] === oldUrl.pathname)) throw new Error("Astro publication redirect source conflicts with an existing rule or exceeds Cloudflare limits");
+  const rule = `${oldUrl.pathname} ${newUrl.pathname} 301`;
+  if (rule.length > 1_000) throw new Error("Astro publication redirect exceeds Cloudflare limits");
+  const nextRedirects = `${redirects.trimEnd()}${redirects.trim() ? "\n" : ""}${rule}\n`;
+  await mkdir(path.dirname(destinationFile), { recursive: true });
+  await rename(sourceFile, destinationFile);
+  try { await atomicWrite(redirectsFile, nextRedirects); }
+  catch (error) {
+    await rename(destinationFile, sourceFile);
+    throw error;
+  }
+  return { resourceId: options.resourceId.toLowerCase(), oldUrl: oldUrl.href, newUrl: newUrl.href, sourceFile, destinationFile, redirectRule: rule };
 }
 
 export async function materializeNativePublications(options: NativePublicationOptions) {

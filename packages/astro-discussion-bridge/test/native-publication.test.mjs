@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { materializeNativePublications } from "../dist/native-publication.js";
+import { materializeNativePublications, migrateNativePublication } from "../dist/native-publication.js";
 
 const record = {
   resource_id: "11111111-1111-4111-8111-111111111111", direction: "from_discourse", state: "healthy", title: "The Bridge publishes everywhere", topic_id: 53,
@@ -66,4 +66,44 @@ test("fails closed when a paginated publication feed drifts or repeats an identi
     fetchImplementation: async (url) => new Response(JSON.stringify({ bridge_records: [record], pagination: { page: Number(new URL(url).searchParams.get("page")), pages: 2, total: 2, snapshot: "snapshot-one" } }), { status: 200, headers: { "content-type": "application/json" } }),
   };
   await assert.rejects(() => materializeNativePublications(repeated), /duplicate or invalid resource identity/);
+});
+
+test("explicit Astro migration moves only the matching native page and writes a permanent redirect", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-migrate-"));
+  const docsDir = path.join(root, "content");
+  const redirectsFile = path.join(root, "public", "_redirects");
+  await materializeNativePublications(options(docsDir));
+  const oldFile = path.join(docsDir, "bridge-publisher.md");
+  const before = await readFile(oldFile, "utf8");
+  const migration = { docsDir, siteUrl: "https://astro.example/", resourceId: record.resource_id, oldUrl: "https://astro.example/bridge-publisher/", newUrl: "https://astro.example/new-location/", redirectsFile };
+  const result = await migrateNativePublication(migration);
+  assert.equal(result.redirectRule, "/bridge-publisher/ /new-location/ 301");
+  await assert.rejects(() => readFile(oldFile), /ENOENT/);
+  assert.equal(await readFile(path.join(docsDir, "new-location.md"), "utf8"), before);
+  assert.equal(await readFile(redirectsFile, "utf8"), "/bridge-publisher/ /new-location/ 301\n");
+  await assert.rejects(() => materializeNativePublications(options(docsDir)), /explicit migration and redirect/);
+  const moved = { ...record, bindings: [{ ...record.bindings[0], canonical_url: migration.newUrl }] };
+  assert.deepEqual(await materializeNativePublications(options(docsDir, [moved])), { created: 0, updated: 0, unchanged: 1, skipped: 0, failed: 0 });
+  await assert.rejects(() => migrateNativePublication(migration), /old URL does not match/);
+});
+
+test("Astro migration refuses destination and redirect conflicts without moving content", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-migrate-conflict-"));
+  const docsDir = path.join(root, "content");
+  const redirectsFile = path.join(root, "public", "_redirects");
+  await materializeNativePublications(options(docsDir));
+  const oldFile = path.join(docsDir, "bridge-publisher.md");
+  const before = await readFile(oldFile, "utf8");
+  const migration = { docsDir, siteUrl: "https://astro.example/", resourceId: record.resource_id, oldUrl: "https://astro.example/bridge-publisher/", newUrl: "https://astro.example/new-location/", redirectsFile };
+  await writeFile(path.join(docsDir, "new-location.md"), "another page");
+  await assert.rejects(() => migrateNativePublication(migration), /destination already has content/);
+  assert.equal(await readFile(oldFile, "utf8"), before);
+  await rm(path.join(docsDir, "new-location.md"));
+  await mkdir(path.dirname(redirectsFile), { recursive: true });
+  await writeFile(redirectsFile, "/bridge-publisher/ /elsewhere/ 301\n");
+  await assert.rejects(() => migrateNativePublication(migration), /redirect source conflicts/);
+  assert.equal(await readFile(oldFile, "utf8"), before);
+  assert.equal(await readFile(redirectsFile, "utf8"), "/bridge-publisher/ /elsewhere/ 301\n");
+  await assert.rejects(() => migrateNativePublication({ ...migration, oldUrl: "https://astro.example/not-the-page/" }), /old URL does not match/);
+  assert.equal(await readFile(oldFile, "utf8"), before);
 });
