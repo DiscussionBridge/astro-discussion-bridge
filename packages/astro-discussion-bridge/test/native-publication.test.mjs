@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { materializeNativePublications, migrateNativePublication } from "../dist/native-publication.js";
 
 const record = {
@@ -84,12 +87,70 @@ test("explicit Astro migration moves only the matching native page and writes a 
   await assert.rejects(() => materializeNativePublications(options(docsDir)), /explicit migration and redirect/);
   const moved = { ...record, bindings: [{ ...record.bindings[0], canonical_url: migration.newUrl }] };
   assert.deepEqual(await materializeNativePublications(options(docsDir, [moved])), { created: 0, updated: 0, unchanged: 1, skipped: 0, failed: 0 });
-  await assert.rejects(() => migrateNativePublication(migration), /old URL does not match/);
+  assert.equal((await migrateNativePublication(migration)).outcome, "already_current");
   const reverse = await migrateNativePublication({ ...migration, oldUrl: migration.newUrl, newUrl: migration.oldUrl });
   assert.equal(reverse.redirectRule, "/new-location/ /bridge-publisher/ 301");
   assert.equal(await readFile(oldFile, "utf8"), before);
   await assert.rejects(() => readFile(path.join(docsDir, "new-location.md")), /ENOENT/);
   assert.equal(await readFile(redirectsFile, "utf8"), "/new-location/ /bridge-publisher/ 301\n");
+});
+
+async function firstJsonLine(child) {
+  let stderr = "";
+  child.stderr.setEncoding("utf8");
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+  return new Promise((resolve, reject) => {
+    let buffer = "";
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      buffer += chunk;
+      const newline = buffer.indexOf("\n");
+      if (newline >= 0) {
+        try { resolve(JSON.parse(buffer.slice(0, newline))); }
+        catch (error) { reject(error); }
+      }
+    });
+    child.once("exit", (code) => reject(new Error(`Migration child exited ${code}: ${stderr}`)));
+    child.once("error", reject);
+  });
+}
+
+test("Astro publication migration recovers after hard termination at every durable boundary in both directions", async (t) => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "test";
+  t.after(() => { if (previousNodeEnv === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = previousNodeEnv; });
+  const phases = ["prepared", "redirected", "moved"];
+  for (const direction of ["forward", "reverse"]) {
+    for (const phase of phases) {
+      const root = await mkdtemp(path.join(os.tmpdir(), `discussionbridge-astro-hard-kill-${direction}-${phase}-`));
+      t.after(() => rm(root, { recursive: true, force: true }));
+      const docsDir = path.join(root, "content");
+      const redirectsFile = path.join(root, "public", "_redirects");
+      await materializeNativePublications(options(docsDir));
+      const forward = { docsDir, siteUrl: "https://astro.example/", resourceId: record.resource_id, oldUrl: "https://astro.example/bridge-publisher/", newUrl: "https://astro.example/new-location/", redirectsFile };
+      if (direction === "reverse") await migrateNativePublication(forward);
+      const migration = direction === "forward" ? forward : { ...forward, oldUrl: forward.newUrl, newUrl: forward.oldUrl };
+      const inputFile = path.join(root, "migration.json");
+      await writeFile(inputFile, JSON.stringify(migration));
+      const child = spawn(process.execPath, [fileURLToPath(new URL("../test-support/hard-kill-migration-child.mjs", import.meta.url)), inputFile], {
+        env: { ...process.env, NODE_ENV: "test", DISCUSSIONBRIDGE_TEST_MIGRATION_PAUSE: phase },
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      const checkpoint = await firstJsonLine(child);
+      assert.equal(checkpoint.phase, phase);
+      const exited = once(child, "exit");
+      assert.equal(child.kill("SIGKILL"), true);
+      await exited;
+      await new Promise((resolve) => setTimeout(resolve, 2_500));
+      assert.equal((await migrateNativePublication(migration)).outcome, "migrated");
+      assert.equal((await migrateNativePublication(migration)).outcome, "already_current");
+      const expectedFile = direction === "forward" ? path.join(docsDir, "new-location.md") : path.join(docsDir, "bridge-publisher.md");
+      assert.match(await readFile(expectedFile, "utf8"), /discussionbridgeResourceId: 11111111-1111-4111-8111-111111111111/);
+      const expectedRule = direction === "forward" ? "/bridge-publisher/ /new-location/ 301\n" : "/new-location/ /bridge-publisher/ 301\n";
+      assert.equal(await readFile(redirectsFile, "utf8"), expectedRule);
+      await assert.rejects(() => readFile(path.join(docsDir, ".discussionbridge-publication-url-migration.json")), /ENOENT/);
+    }
+  }
 });
 
 test("Astro migration refuses destination and redirect conflicts without moving content", async () => {
