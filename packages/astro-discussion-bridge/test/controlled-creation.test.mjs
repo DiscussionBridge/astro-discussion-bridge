@@ -7,6 +7,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
+  legacyUrlDerivedExternalId,
   publishControlledDiscussions,
   replaceFileAtomically,
   resolveControlledCreation,
@@ -16,6 +17,14 @@ const CONNECTION_ID = "dbc_aaaaaaaaaaaaaaaaaaaaaaaa";
 const CONNECTION_SECRET = "s".repeat(32);
 const RESOURCE_ID = "11111111-1111-4111-8111-111111111111";
 const EXTERNAL_ID = `astro-page:${"b".repeat(64)}`;
+
+test("legacy direct-API identity can be recovered once and then persisted", () => {
+  assert.equal(
+    legacyUrlDerivedExternalId("https://site.example/page/"),
+    "astro-page:cd4da9dfccee6802741f5c807920c6b2cb7be2816da9d9e35aca7dde925e42ba",
+  );
+  assert.throws(() => legacyUrlDerivedExternalId("https://site.example/%2e%2e/private"));
+});
 
 function bridgePayload(topicId, outcome = "created", resourceId = RESOURCE_ID) {
   return {
@@ -83,7 +92,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], CONNECTION_ID);
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], CONNECTION_SECRET);
   const body = JSON.parse(requests[0].init.body);
-  assert.equal(body.bridge_record.adapter_version, "0.2.0-alpha.22");
+  assert.equal(body.bridge_record.adapter_version, "0.2.0-alpha.23");
   assert.deepEqual(
     Object.keys(body.bridge_record).sort(),
     ["adapter_id", "adapter_version", "canonical_url", "content_html", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
@@ -221,6 +230,86 @@ test("an existing local binding is authenticated again and mismatch never overwr
 
   await assert.rejects(() => publishControlledDiscussions(options(root)), /different resource or topic than the stored mapping/);
   assert.equal(await fs.readFile(path.join(root, "page.md"), "utf8"), original);
+});
+
+test("a moved Astro source URL requires exact receiver proof and keeps its topic", async (t) => {
+  const root = await fixture({
+    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+  let postCount = 0;
+  let binding;
+  globalThis.fetch = async (_url, init) => {
+    if (init.method === "GET") return new Response(JSON.stringify({ bridge_record: {
+      resource_id: RESOURCE_ID, direction: "to_discourse", state: "healthy", topic_id: 40,
+      topic_url: "https://forum.example/community/t/bound/40", bindings: [binding],
+    } }), { status: 200, headers: { "content-type": "application/json" } });
+    postCount++;
+    return new Response(JSON.stringify(bridgePayload(40, "resolved")), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  };
+  await publishControlledDiscussions(options(root));
+  const file = path.join(root, "page.md");
+  const oldUrl = "https://site.example/page/";
+  const newUrl = "https://site.example/moved/";
+  await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("title: Bound", "title: Bound\nslug: moved"));
+  await assert.rejects(() => publishControlledDiscussions(options(root)), /exact verified receiver transition/);
+  assert.equal(postCount, 1);
+  const blocked = JSON.parse(await fs.readFile(options(root).stateFile, "utf8")).operations[EXTERNAL_ID];
+  assert.equal(blocked.canonicalUrl, oldUrl);
+  assert.equal(blocked.outcome, "reconciliation_required");
+  binding = { role: "source", state: "active", external_id: EXTERNAL_ID, canonical_url: newUrl,
+    url_migration: { old_url: oldUrl, new_url: newUrl, redirect_status: 301 } };
+  const [result] = await publishControlledDiscussions(options(root));
+  assert.equal(result.resourceId, RESOURCE_ID);
+  assert.equal(result.topicId, 40);
+  assert.equal(postCount, 2);
+  await publishControlledDiscussions(options(root));
+  assert.equal(postCount, 3);
+});
+
+test("an offline Astro adapter accepts only contiguous receiver-owned URL history", async (t) => {
+  const root = await fixture({
+    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+  const oldUrl = "https://site.example/page/";
+  const middleUrl = "https://site.example/middle/";
+  const newUrl = "https://site.example/new/";
+  let posts = 0;
+  let proofVerified = false;
+  globalThis.fetch = async (url, init) => {
+    if (init.method === "GET") {
+      if (String(url).includes("source-url-proof.json")) return new Response(JSON.stringify({ source_url_proof: {
+        resource_id: RESOURCE_ID, topic_id: 40, external_id: EXTERNAL_ID,
+        from_url: oldUrl, to_url: newUrl, verified: proofVerified, transition_count: 2,
+      } }), { status: 200, headers: { "content-type": "application/json" } });
+      return new Response(JSON.stringify({ bridge_record: {
+        resource_id: RESOURCE_ID, direction: "to_discourse", state: "healthy", topic_id: 40,
+        topic_url: "https://forum.example/community/t/bound/40", bindings: [{ role: "source",
+          state: "active", external_id: EXTERNAL_ID, canonical_url: newUrl,
+          url_migration: { old_url: middleUrl, new_url: newUrl, redirect_status: 301 } }],
+      } }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    posts++;
+    return new Response(JSON.stringify(bridgePayload(40, "resolved")), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  };
+  await publishControlledDiscussions(options(root));
+  const file = path.join(root, "page.md");
+  await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("title: Bound", "title: Bound\nslug: new"));
+  await assert.rejects(() => publishControlledDiscussions(options(root)), /complete receiver history/);
+  assert.equal(posts, 1);
+  proofVerified = true;
+  const [result] = await publishControlledDiscussions(options(root));
+  assert.equal(result.topicId, 40);
+  assert.equal(posts, 2);
 });
 
 test("a standalone Core embed pair is adopted without changing its topic identity", async (t) => {
@@ -694,6 +783,7 @@ test("response origin and both declared and streamed size limits are enforced", 
     sourceUrl: "https://site.example/page/",
     title: "Page",
     contentHtml: "<p>Page content.</p>",
+    externalId: EXTERNAL_ID,
   };
 
   globalThis.fetch = async () => {
@@ -731,6 +821,7 @@ test("connection identity, lane, and visibility are runtime validated before fet
     sourceUrl: "https://site.example/page/",
     title: "Page",
     contentHtml: "<p>Page content.</p>",
+    externalId: EXTERNAL_ID,
   };
   for (const options of [
     { connectionId: " bad", connectionSecret: CONNECTION_SECRET },
@@ -757,8 +848,10 @@ test("direct controlled creation enforces source and title bounds before fetch",
     sourceUrl: "https://site.example/page/",
     title: "Page",
     contentHtml: "<p>Page content.</p>",
+    externalId: EXTERNAL_ID,
   };
   for (const input of [
+    { ...base, externalId: undefined },
     { ...base, sourceUrl: "https://site.example/%2e%2e/private" },
     { ...base, sourceUrl: `https://site.example/${"x".repeat(2_048)}` },
     { ...base, title: "x".repeat(1_025) },

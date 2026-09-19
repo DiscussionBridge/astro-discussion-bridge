@@ -170,11 +170,18 @@ export async function migrateNativePublication(options: NativePublicationMigrati
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
-  const activeRules = redirects.split(/\r?\n/u).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
-  if (activeRules.length >= 2_000 || activeRules.some((line) => line.split(/\s+/u)[0] === oldUrl.pathname)) throw new Error("Astro publication redirect source conflicts with an existing rule or exceeds Cloudflare limits");
+  const lines = redirects.split(/\r?\n/u);
+  const activeRules = lines.map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
+  const destinationRules = activeRules.filter((line) => line.split(/\s+/u)[0] === newUrl.pathname);
+  const inverseRule = destinationRules.length === 1 &&
+    [`${newUrl.pathname} ${oldUrl.pathname} 301`, `${newUrl.pathname} ${oldUrl.pathname} 308`].includes(destinationRules[0])
+    ? destinationRules[0] : null;
+  if (destinationRules.length && !inverseRule) throw new Error("Astro publication destination has a conflicting redirect");
+  if (activeRules.length - (inverseRule ? 1 : 0) >= 2_000 || activeRules.some((line) => line.split(/\s+/u)[0] === oldUrl.pathname)) throw new Error("Astro publication redirect source conflicts with an existing rule or exceeds Cloudflare limits");
   const rule = `${oldUrl.pathname} ${newUrl.pathname} 301`;
   if (rule.length > 1_000) throw new Error("Astro publication redirect exceeds Cloudflare limits");
-  const nextRedirects = `${redirects.trimEnd()}${redirects.trim() ? "\n" : ""}${rule}\n`;
+  const remaining = inverseRule ? lines.filter((line) => line.trim() !== inverseRule).join("\n") : redirects;
+  const nextRedirects = `${remaining.trimEnd()}${remaining.trim() ? "\n" : ""}${rule}\n`;
   await mkdir(path.dirname(destinationFile), { recursive: true });
   await rename(sourceFile, destinationFile);
   try { await atomicWrite(redirectsFile, nextRedirects); }

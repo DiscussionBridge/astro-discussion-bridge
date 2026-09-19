@@ -85,6 +85,11 @@ test("explicit Astro migration moves only the matching native page and writes a 
   const moved = { ...record, bindings: [{ ...record.bindings[0], canonical_url: migration.newUrl }] };
   assert.deepEqual(await materializeNativePublications(options(docsDir, [moved])), { created: 0, updated: 0, unchanged: 1, skipped: 0, failed: 0 });
   await assert.rejects(() => migrateNativePublication(migration), /old URL does not match/);
+  const reverse = await migrateNativePublication({ ...migration, oldUrl: migration.newUrl, newUrl: migration.oldUrl });
+  assert.equal(reverse.redirectRule, "/new-location/ /bridge-publisher/ 301");
+  assert.equal(await readFile(oldFile, "utf8"), before);
+  await assert.rejects(() => readFile(path.join(docsDir, "new-location.md")), /ENOENT/);
+  assert.equal(await readFile(redirectsFile, "utf8"), "/new-location/ /bridge-publisher/ 301\n");
 });
 
 test("Astro migration refuses destination and redirect conflicts without moving content", async () => {
@@ -102,6 +107,9 @@ test("Astro migration refuses destination and redirect conflicts without moving 
   await mkdir(path.dirname(redirectsFile), { recursive: true });
   await writeFile(redirectsFile, "/bridge-publisher/ /elsewhere/ 301\n");
   await assert.rejects(() => migrateNativePublication(migration), /redirect source conflicts/);
+  await writeFile(redirectsFile, "/new-location/ /elsewhere/ 301\n");
+  await assert.rejects(() => migrateNativePublication(migration), /destination has a conflicting redirect/);
+  await writeFile(redirectsFile, "/bridge-publisher/ /elsewhere/ 301\n");
   assert.equal(await readFile(oldFile, "utf8"), before);
   assert.equal(await readFile(redirectsFile, "utf8"), "/bridge-publisher/ /elsewhere/ 301\n");
   await assert.rejects(() => migrateNativePublication({ ...migration, oldUrl: "https://astro.example/not-the-page/" }), /old URL does not match/);

@@ -65,6 +65,22 @@ visible as retryable state and the next exact build reuses its correlation and
 stable identity. A renewable filesystem lease excludes overlapping live builds;
 if its owning process is terminated, a later build reclaims the abandoned lease
 after the bounded stale interval and retries that same recorded operation.
+The direct `resolveControlledCreation` helper also requires an explicit stable
+`externalId`; it no longer derives one from the page URL. For an already
+published page, preserve the exact existing ID from its frontmatter, local
+publication state, or the receiver's authenticated source binding. Do not
+assign a fresh ID during a slug or path change: that could create another
+topic. First change the same page and install a direct permanent redirect,
+then use the receiver's **Change source URL** action for the existing record.
+The next build requires exact receiver proof of that transition and resolves
+the same resource and topic; a missing or ambiguous proof requires
+reconciliation.
+
+An application upgrading from the former direct helper can recover its exact
+old URL-derived ID once with `legacyUrlDerivedExternalId(oldCanonicalUrl)`.
+Persist that returned value with the native content and pass it as
+`externalId` on every later request. This helper is only an upgrade bridge for
+already-published content; never use it to assign identity to a new page.
 Inspect the bounded operator summary with:
 
 ```text
@@ -219,7 +235,10 @@ discussionbridge-astro migrate-publication \
 The command requires the existing native source file to match the exact old
 URL and resource ID. It refuses a destination collision or conflicting redirect,
 moves the source file, and adds a `301` rule to Cloudflare's `_redirects`
-manifest. It does **not** change the Bridge binding, build, deploy, or verify
+manifest. A direct reverse move removes the exact old inverse rule before
+writing the new one, so the two routes cannot redirect to each other. A
+destination with any other redirect remains a conflict requiring operator
+reconciliation. It does **not** change the Bridge binding, build, deploy, or verify
 the public redirect. Keep publication synchronization paused during the
 cutover: with the old Bridge URL still active, it intentionally rejects the
 moved file rather than recreating the old path. Build and deploy the migrated
