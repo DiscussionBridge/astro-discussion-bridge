@@ -64,6 +64,7 @@ test("package and source inventory expose only the eight-profile Astro adapter b
     "./controlled-creation",
     "./native-publication",
     "./operational-state",
+    "./publication-work",
     "./web-url",
   ].sort());
   assert.deepEqual(packageJson.dependencies, { "@astrojs/markdown-remark": "7.3.1", dompurify: "3.4.14", "proper-lockfile": "^4.1.2", "sanitize-html": "2.17.7", yaml: "^2.9.0" });

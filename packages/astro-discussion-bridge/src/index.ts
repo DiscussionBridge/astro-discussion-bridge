@@ -120,6 +120,7 @@ export { legacyUrlDerivedExternalId, publishControlledDiscussions } from "./cont
 export { isInteractiveCommentsMode, normalizeCommentsMode } from "./comments-mode.js";
 export { fetchFromDiscourseRecord } from "./bridge-record.js";
 export { materializeNativePublications } from "./native-publication.js";
+export { astroPlatformCatalog, finalizeAstroPublicationWork, prepareAstroPublicationWork } from "./publication-work.js";
 export { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
 export type {
   ControlledCreationOptions,

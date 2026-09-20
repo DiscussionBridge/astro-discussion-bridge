@@ -219,6 +219,32 @@ without creating a second page. Changing an existing publication URL requires
 an explicit migration and an old-URL redirect; this command does not create
 that redirect automatically.
 
+After the initial forum-scale backfill, unattended static synchronization uses
+the receiver-owned durable queue in two phases:
+
+```sh
+discussionbridge-astro prepare-publication-work \
+  --docs-dir src/content/docs \
+  --state-file /protected/discussionbridge/astro-publication-work.json \
+  --site-url https://site.example.com/
+
+# Build and deploy the exact prepared source, then:
+discussionbridge-astro finalize-publication-work \
+  --docs-dir src/content/docs \
+  --state-file /protected/discussionbridge/astro-publication-work.json \
+  --site-url https://site.example.com/
+```
+
+`prepare-publication-work` refreshes the Astro destination catalog, waits for
+the receiver mapping, claims bounded one-hour leases, and prepares only the
+changed or withdrawn native files. `finalize-publication-work` verifies the
+exact public resource and publication revision—or verified public absence for
+an unpublish—before acknowledging each lease. A platform-side edit that no
+longer matches the last DiscussionBridge-written SHA-256 is reported as
+attention and is never silently overwritten. Use
+`DISCUSSIONBRIDGE_CONNECTION_SECRET_FILE` for the protected unattended
+credential; it takes precedence over the legacy direct environment value.
+
 For a Cloudflare Workers Static Assets deployment, the operator can prepare
 the local content move and permanent redirect together:
 
@@ -256,7 +282,10 @@ hosting target without an equivalent verified redirect mechanism.
 - `astro-discussion-bridge/web-url`
 - `astro-discussion-bridge/bridge-record`
 - `astro-discussion-bridge/native-publication`
+- `astro-discussion-bridge/publication-work`
 - `discussionbridge-astro sync-publications` CLI
+- `discussionbridge-astro prepare-publication-work` and
+  `finalize-publication-work` CLI
 - `discussionbridge-astro migrate-publication` CLI (local Cloudflare cutover preparation)
 - `astro-discussion-bridge/Discussion.astro`
 - `astro-discussion-bridge/DiscourseDiscussion.astro`
