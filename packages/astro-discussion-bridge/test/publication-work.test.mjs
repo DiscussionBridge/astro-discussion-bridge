@@ -3,12 +3,18 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { finalizeAstroPublicationWork, prepareAstroPublicationWork } from "../dist/publication-work.js";
+import { astroPlatformCatalog, finalizeAstroPublicationWork, prepareAstroPublicationWork } from "../dist/publication-work.js";
 
 const resourceId = "11111111-1111-4111-8111-111111111111";
 const publicationRevision = "a".repeat(64);
 const mappingRevision = "b".repeat(64);
 const leaseToken = "c".repeat(64);
+
+test("Astro advertises a receiver-supported native collection", () => {
+  const catalog = astroPlatformCatalog();
+  assert.equal(catalog.containers[0].kind, "collection");
+  assert.equal(catalog.containers[0].id, "topics");
+});
 
 function sourceTopic() {
   return {

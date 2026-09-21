@@ -50,7 +50,7 @@ export function astroPlatformCatalog() {
   return {
     schema_version: 1,
     platform: "astro",
-    containers: [{ id: "topics", label: "Topics", kind: "content_collection", path: "/topics/", taxonomy_ids: [] }],
+    containers: [{ id: "topics", label: "Topics", kind: "collection", path: "/topics/", taxonomy_ids: [] }],
     taxonomies: [],
     authors: [{ id: "astro:build", label: "Astro build service", kind: "author" }],
     service_author_id: "astro:build",
