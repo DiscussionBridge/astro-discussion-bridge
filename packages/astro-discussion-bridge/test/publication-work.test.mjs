@@ -11,9 +11,11 @@ const mappingRevision = "b".repeat(64);
 const leaseToken = "c".repeat(64);
 
 test("Astro advertises a receiver-supported native collection", () => {
-  const catalog = astroPlatformCatalog();
+  const catalog = astroPlatformCatalog([{ id: "pledge", label: "Pledge", path: "/sections/pledge/" }]);
   assert.equal(catalog.containers[0].kind, "collection");
   assert.equal(catalog.containers[0].id, "topics");
+  assert.deepEqual(catalog.containers[0].taxonomy_ids, ["section"]);
+  assert.equal(catalog.taxonomies[0].terms[0].id, "pledge");
 });
 
 function sourceTopic() {
@@ -30,7 +32,7 @@ function sourceTopic() {
     destination: {
       state: "ready",
       destination_container_id: "topics",
-      destination_terms: [],
+      destination_terms: [{ destination_taxonomy_id: "section", destination_term_id: "pledge" }],
       destination_author_id: "astro:build",
       mapping_revision: mappingRevision,
     },
@@ -51,6 +53,7 @@ function options(root, fetchImplementation) {
     connectionId: "dbc_0123456789abcdef01234567",
     connectionSecret: "s".repeat(44),
     lane: "astro-obbba",
+    sections: [{ id: "pledge", label: "Pledge", path: "/sections/pledge/" }],
     fetchImplementation,
   };
 }
@@ -96,6 +99,7 @@ test("Astro claims, prepares, publicly verifies, and acknowledges one static pub
   const contents = await readFile(file, "utf8");
   assert.match(contents, /date: "2026-09-19T16:00:00.000Z"/u);
   assert.match(contents, /lastUpdated: "2026-09-20T17:00:00.000Z"/u);
+  assert.match(contents, /discussionbridgeSection: pledge/u);
   assert.match(contents, new RegExp(resourceId));
   assert.doesNotMatch(contents, /dbc_012345|ssssssss/u);
 

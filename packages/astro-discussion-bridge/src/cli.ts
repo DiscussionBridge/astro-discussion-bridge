@@ -43,6 +43,10 @@ const secretFile = process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET_FILE;
 const connectionSecret = secretFile
   ? (await readFile(secretFile, "utf8")).trim()
   : process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET ?? "";
+const sectionsFile = values.get("sections-file");
+const sections = sectionsFile
+  ? JSON.parse(await readFile(path.resolve(sectionsFile), "utf8"))
+  : [];
 if (command === "prepare-publication-work" || command === "finalize-publication-work") {
   if (!stateFile) throw new Error("Astro publication-work state file is required");
   const operation = command === "prepare-publication-work"
@@ -53,6 +57,7 @@ if (command === "prepare-publication-work" || command === "finalize-publication-
     stateFile: path.resolve(stateFile),
     siteUrl,
     routeBase: values.get("route-base") ?? "topics",
+    sections,
     serverUrl: process.env.DISCUSSIONBRIDGE_SERVER_URL ?? "",
     connectionId: process.env.DISCUSSIONBRIDGE_CONNECTION_ID ?? "",
     connectionSecret,

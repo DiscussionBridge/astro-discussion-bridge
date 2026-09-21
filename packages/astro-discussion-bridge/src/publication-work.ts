@@ -20,8 +20,15 @@ export interface AstroPublicationWorkOptions {
   connectionSecret: string;
   lane?: string;
   routeBase?: string;
+  sections?: AstroPublicationSection[];
   maximum?: number;
   fetchImplementation?: typeof fetch;
+}
+
+export interface AstroPublicationSection {
+  id: string;
+  label: string;
+  path: string;
 }
 
 interface PublicationState {
@@ -46,18 +53,24 @@ interface OperationalState {
   publications: Record<string, PublicationState>;
 }
 
-export function astroPlatformCatalog() {
+export function astroPlatformCatalog(rawSections: AstroPublicationSection[] = []) {
+  const sections = publicationSections(rawSections);
   return {
     schema_version: 1,
     platform: "astro",
-    containers: [{ id: "topics", label: "Topics", kind: "collection", path: "/topics/", taxonomy_ids: [] }],
-    taxonomies: [],
+    containers: [{ id: "topics", label: "Topics", kind: "collection", path: "/topics/", taxonomy_ids: sections.length ? ["section"] : [] }],
+    taxonomies: sections.length ? [{
+      id: "section",
+      label: "Sections",
+      kind: "taxonomy",
+      terms: sections.map(({ id, label, path }) => ({ id, label, kind: "term", path })),
+    }] : [],
     authors: [{ id: "astro:build", label: "Astro build service", kind: "author" }],
     service_author_id: "astro:build",
     presentation_modes: ["simple", "full", "fullInteractive", "native"],
     capabilities: { updates: true, unpublish: true, drafts: true },
     limits: { content_bytes: 49_152, title_bytes: 255, slug_bytes: 160 },
-    inventory: { authors_complete: true, terms_complete: true, authors_observed: 1, terms_observed: 0 },
+    inventory: { authors_complete: true, terms_complete: true, authors_observed: 1, terms_observed: sections.length },
   };
 }
 
@@ -115,7 +128,7 @@ export async function prepareAstroPublicationWork(options: AstroPublicationWorkO
   const fetchImplementation = options.fetchImplementation ?? fetch;
   const bridge = new BridgeClient(options, fetchImplementation);
   const current = await bridge.platformCatalogStatus();
-  const catalog = await bridge.updatePlatformCatalog(astroPlatformCatalog(), REVISION.test(String(current.catalog_revision ?? "")) ? current.catalog_revision : undefined);
+  const catalog = await bridge.updatePlatformCatalog(astroPlatformCatalog(options.sections), REVISION.test(String(current.catalog_revision ?? "")) ? current.catalog_revision : undefined);
   if (catalog.destination_mapping_state !== "current") throw new Error("Astro destination mapping requires operator configuration");
   return withState(options.stateFile, async (state) => {
     const summary = { claimed: 0, created: 0, updated: 0, unchanged: 0, unpublished: 0, failed: 0, errors: [] as Array<Record<string, unknown>>, requires_build: false, requires_finalize: false };
@@ -266,7 +279,13 @@ async function prepareUnpublish(options: AstroPublicationWorkOptions, bridge: Br
 function publicationPlan(options: AstroPublicationWorkOptions, source: Record<string, any>) {
   if (!Number.isSafeInteger(source.topic_id) || source.topic_id < 1 || !REVISION.test(source.publication_revision ?? "") || typeof source.source_revision !== "string") throw new Error("Invalid Astro source identity");
   const destination = source.destination;
-  if (!destination || destination.state !== "ready" || destination.destination_container_id !== "topics" || destination.destination_author_id !== "astro:build" || destination.destination_terms?.length || !REVISION.test(destination.mapping_revision ?? "")) throw new Error("Astro destination is not ready");
+  if (!destination || destination.state !== "ready" || destination.destination_container_id !== "topics" || destination.destination_author_id !== "astro:build" || !REVISION.test(destination.mapping_revision ?? "")) throw new Error("Astro destination is not ready");
+  const terms = Array.isArray(destination.destination_terms) ? destination.destination_terms : [];
+  if (terms.length > 1) throw new Error("Astro destination has multiple native sections");
+  const section = terms.length ? publicationSections(options.sections ?? []).find(({ id }) =>
+    terms[0]?.destination_taxonomy_id === "section" && terms[0]?.destination_term_id === id
+  ) : undefined;
+  if (terms.length && !section) throw new Error("Astro destination section is invalid");
   const site = origin(options.siteUrl, "site");
   const title = bounded(source.title, 255, "source title");
   const routeBase = (options.routeBase ?? "topics").replace(/^\/+|\/+$/gu, "");
@@ -298,6 +317,7 @@ function publicationPlan(options: AstroPublicationWorkOptions, source: Record<st
     route,
     canonicalUrl,
     externalId: `astro:topic:${source.topic_id}`,
+    section,
   };
 }
 
@@ -316,6 +336,7 @@ function nativeContent(plan: ReturnType<typeof publicationPlan>, resourceId: str
     discourseTopicUrl: plan.topicUrl,
     discussionbridgeSourceRevision: plan.sourceRevision,
     discussionbridgePublicationRevision: plan.publicationRevision,
+    ...(plan.section ? { discussionbridgeSection: plan.section.id } : {}),
   };
   const yaml = stringifyYaml(frontmatter).trim().replace(/^(date|lastUpdated): ([^\r\n]+)$/gmu, '$1: "$2"');
   return `---\n${yaml}\n---\n\n<span hidden data-discussionbridge-resource-id="${resourceId}" data-discussionbridge-publication-revision="${plan.publicationRevision}"></span>\n\n${plan.html}\n\n<hr>\n\n**Published from [The Bridge](${plan.topicUrl})**<br>\nSource author: ${plan.author} · Revision ${plan.sourceRevision} · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
@@ -397,5 +418,17 @@ function slug(value: string, topicId: number) { const result = value.normalize("
 function publicationRoute(value: unknown, site: string, routeBase: string) { const url = new URL(bounded(value, 2048, "publication URL")); if (url.origin !== site || url.search || url.hash || !url.pathname.startsWith(`/${routeBase}/`) || !url.pathname.endsWith("/")) throw new Error("Astro publication URL changed or is invalid"); return url.pathname.slice(1, -1); }
 function exactSourceUrl(value: unknown, server: string) { const url = new URL(bounded(value, 2048, "source topic URL")); if (url.origin !== server || url.search || url.hash) throw new Error("Invalid Astro source topic URL"); return url.href; }
 function sha256(value: string) { return createHash("sha256").update(value).digest("hex"); }
+function publicationSections(raw: AstroPublicationSection[]) {
+  if (!Array.isArray(raw) || raw.length > 100) throw new Error("Invalid Astro native section inventory");
+  const sections = raw.map((item) => {
+    const id = bounded(item?.id, 100, "section id");
+    const label = bounded(item?.label, 255, "section label");
+    const sectionPath = bounded(item?.path, 255, "section path");
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id) || sectionPath !== `/sections/${id}/`) throw new Error("Invalid Astro native section");
+    return { id, label, path: sectionPath };
+  });
+  if (new Set(sections.map(({ id }) => id)).size !== sections.length) throw new Error("Duplicate Astro native section");
+  return sections;
+}
 function boundedError(error: unknown) { return String((error as Error)?.message ?? error).replace(/[\u0000-\u001f\u007f]/gu, " ").slice(0, 1000); }
 function failureCode(error: unknown) { return boundedError(error).toLowerCase().replace(/[^a-z0-9_-]+/gu, "_").replace(/^_+|_+$/gu, "").slice(0, 64) || "astro_publication_failed"; }
