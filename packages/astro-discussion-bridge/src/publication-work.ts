@@ -63,7 +63,7 @@ export function astroPlatformCatalog(rawSections: AstroPublicationSection[] = []
       id: "section",
       label: "Sections",
       kind: "taxonomy",
-      terms: sections.map(({ id, label, path }) => ({ id, label, kind: "term", path })),
+      terms: sections.map(({ id, label }) => ({ id, label, kind: "term" })),
     }] : [],
     authors: [{ id: "astro:build", label: "Astro build service", kind: "author" }],
     service_author_id: "astro:build",
