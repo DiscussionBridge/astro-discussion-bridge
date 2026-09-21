@@ -34,7 +34,7 @@ function sourceTopic() {
       destination_author_id: "astro:build",
       mapping_revision: mappingRevision,
     },
-    content_html: "<h2>Forum source</h2><p>Published natively.</p>",
+    content_html: "<h2>Forum source</h2>\n<p>Published natively.</p>",
   };
 }
 

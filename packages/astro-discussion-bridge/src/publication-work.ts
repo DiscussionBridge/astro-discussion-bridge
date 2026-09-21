@@ -274,7 +274,7 @@ function publicationPlan(options: AstroPublicationWorkOptions, source: Record<st
   const priorUrl = source.publication?.canonical_url;
   const route = priorUrl ? publicationRoute(priorUrl, site, routeBase) : `${routeBase}/${slug(title, source.topic_id)}`;
   const canonicalUrl = `${site}/${route}/`;
-  const html = sanitizeHtml(bounded(source.content_html, 49_152, "source content"), {
+  const html = sanitizeHtml(boundedContent(source.content_html, 49_152, "source content"), {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2", "h3", "figure", "figcaption", "table", "thead", "tbody", "tr", "th", "td"]),
     allowedAttributes: { a: ["href", "title", "rel"], img: ["src", "alt", "title", "width", "height"], code: ["class"], pre: ["class"], div: ["class"], span: ["class"] },
     allowedSchemes: ["https"], allowProtocolRelative: false,
@@ -391,6 +391,7 @@ function origin(value: string, label: string) {
   return url.origin;
 }
 function bounded(value: unknown, maximum: number, label: string) { if (typeof value !== "string" || !value.trim() || Buffer.byteLength(value) > maximum || /[\u0000-\u001f\u007f]/u.test(value)) throw new Error(`Invalid Astro ${label}`); return value.trim(); }
+function boundedContent(value: unknown, maximum: number, label: string) { if (typeof value !== "string" || !value.trim() || Buffer.byteLength(value) > maximum || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(value)) throw new Error(`Invalid Astro ${label}`); return value.trim(); }
 function isoDate(value: unknown, label: string) { const result = bounded(value, 64, `${label} time`); if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z$/u.test(result) || !Number.isFinite(Date.parse(result))) throw new Error(`Invalid Astro ${label} time`); return result; }
 function slug(value: string, topicId: number) { const result = value.normalize("NFKD").toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(/^-|-$/gu, "").slice(0, 140); return `${result || "forum-topic"}-${topicId}`; }
 function publicationRoute(value: unknown, site: string, routeBase: string) { const url = new URL(bounded(value, 2048, "publication URL")); if (url.origin !== site || url.search || url.hash || !url.pathname.startsWith(`/${routeBase}/`) || !url.pathname.endsWith("/")) throw new Error("Astro publication URL changed or is invalid"); return url.pathname.slice(1, -1); }
