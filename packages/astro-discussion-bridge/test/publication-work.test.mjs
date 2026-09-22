@@ -110,6 +110,66 @@ test("Astro claims, prepares, publicly verifies, and acknowledges one static pub
   assert.equal(acknowledgements[0].outcome, "created");
 });
 
+test("Astro accumulates valid pending work up to one larger build batch", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-batch-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const stateFile = path.join(root, "protected", "publication-work.json");
+  await mkdir(path.dirname(stateFile), { recursive: true });
+  await writeFile(stateFile, `${JSON.stringify({ schema_version: 1, publications: { "52": {
+    topic_id: 52,
+    resource_id: "22222222-2222-4222-8222-222222222222",
+    external_id: "astro:topic:52",
+    canonical_url: "https://astro.example.com/topics/existing-52/",
+    file: "topics/existing-52.md",
+    publication_revision: "d".repeat(64),
+    outcome: "created",
+    state: "pending_publish",
+    lease_token: "e".repeat(64),
+    lease_expires_at: "2099-09-20T18:00:00.000Z",
+  } } }, null, 2)}\n`);
+  let claims = 0;
+  const fetchImplementation = async (url, init = {}) => {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith("/platform-catalog.json") && init.method === "GET") return json({ catalog_revision: null });
+    if (parsed.pathname.endsWith("/platform-catalog.json") && init.method === "PUT") return json({ destination_mapping_state: "current" });
+    if (parsed.pathname.endsWith("/publication-work/claim.json")) return json({ publication_work: claims++ === 0 ? {
+      topic_id: 53,
+      action: "publish",
+      source_revision: "post:99:version:2",
+      publication_revision: publicationRevision,
+      lease_token: leaseToken,
+      lease_expires_at: "2099-09-20T18:00:00.000Z",
+    } : null });
+    if (parsed.pathname.endsWith("/source-topics/53.json")) return json({ eligible: true, source_topic: sourceTopic() });
+    if (parsed.pathname.endsWith("/source-topics/53/resolve.json")) return json({
+      outcome: "created",
+      resource_id: resourceId,
+      external_id: "astro:topic:53",
+      canonical_url: "https://astro.example.com/topics/forum-scale-publishing-53/",
+    });
+    throw new Error(`Unexpected request ${init.method} ${url}`);
+  };
+  const configured = { ...options(root, fetchImplementation), maximum: 2 };
+  const result = await prepareAstroPublicationWork(configured);
+  assert.equal(result.claimed, 1);
+  assert.equal(result.created, 1);
+  assert.equal(result.requires_build, true);
+  assert.equal(result.requires_finalize, true);
+  const state = JSON.parse(await readFile(stateFile, "utf8"));
+  assert.equal(Object.values(state.publications).filter((item) => item.state === "pending_publish").length, 2);
+});
+
+test("Astro bounds larger build batches and request pacing", async () => {
+  await assert.rejects(
+    prepareAstroPublicationWork({ ...options("unused", async () => json({})), maximum: 201 }),
+    /Invalid publication work limit/u,
+  );
+  await assert.rejects(
+    prepareAstroPublicationWork({ ...options("unused", async () => json({})), requestDelayMs: 5001 }),
+    /Invalid DiscussionBridge request delay/u,
+  );
+});
+
 test("Astro refuses to overwrite a platform-side edit", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-drift-"));
   t.after(() => rm(root, { recursive: true, force: true }));

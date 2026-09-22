@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
+import { setTimeout as wait } from "node:timers/promises";
 import { lock } from "proper-lockfile";
 import sanitizeHtml from "sanitize-html";
 import { stringify as stringifyYaml } from "yaml";
@@ -22,6 +23,7 @@ export interface AstroPublicationWorkOptions {
   routeBase?: string;
   sections?: AstroPublicationSection[];
   maximum?: number;
+  requestDelayMs?: number;
   fetchImplementation?: typeof fetch;
 }
 
@@ -75,6 +77,8 @@ export function astroPlatformCatalog(rawSections: AstroPublicationSection[] = []
 }
 
 class BridgeClient {
+  private nextRequestAt = 0;
+
   constructor(private options: AstroPublicationWorkOptions, private fetchImplementation: typeof fetch) {}
 
   platformCatalogStatus() { return this.request("GET", "/discussion-bridge/v1/platform-catalog.json", undefined, 1024 * 1024); }
@@ -93,6 +97,10 @@ class BridgeClient {
   private async request(method: string, pathname: string, payload?: unknown, maximum = 256 * 1024): Promise<Record<string, any>> {
     const body = payload === undefined ? undefined : JSON.stringify(payload);
     if (body && Buffer.byteLength(body) > 256 * 1024) throw new Error("DiscussionBridge request is too large");
+    const delay = this.options.requestDelayMs ?? 0;
+    const waitFor = Math.max(0, this.nextRequestAt - Date.now());
+    if (waitFor) await wait(waitFor);
+    this.nextRequestAt = Date.now() + delay;
     const response = await this.fetchImplementation(`${origin(this.options.serverUrl, "server")}${pathname}`, {
       method,
       body,
@@ -124,7 +132,7 @@ class BridgeClient {
 export async function prepareAstroPublicationWork(options: AstroPublicationWorkOptions) {
   validateOptions(options);
   const maximum = options.maximum ?? 20;
-  if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 20) throw new Error("Invalid publication work limit");
+  if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 200) throw new Error("Invalid publication work limit");
   const fetchImplementation = options.fetchImplementation ?? fetch;
   const bridge = new BridgeClient(options, fetchImplementation);
   const current = await bridge.platformCatalogStatus();
@@ -132,13 +140,14 @@ export async function prepareAstroPublicationWork(options: AstroPublicationWorkO
   if (catalog.destination_mapping_state !== "current") throw new Error("Astro destination mapping requires operator configuration");
   return withState(options.stateFile, async (state) => {
     const summary = { claimed: 0, created: 0, updated: 0, unchanged: 0, unpublished: 0, failed: 0, errors: [] as Array<Record<string, unknown>>, requires_build: false, requires_finalize: false };
-    const pending = Object.values(state.publications).find((item) => item.state.startsWith("pending_") && item.lease_token);
-    if (pending) {
-      if (Date.parse(pending.lease_expires_at ?? "") > Date.now()) summary.requires_finalize = true;
-      else { pending.state = "attention"; delete pending.lease_token; delete pending.lease_expires_at; }
-      if (summary.requires_finalize) return summary;
+    let pending = 0;
+    for (const item of Object.values(state.publications)) {
+      if (!item.state.startsWith("pending_") || !item.lease_token) continue;
+      if (Date.parse(item.lease_expires_at ?? "") > Date.now()) pending++;
+      else { item.state = "attention"; delete item.lease_token; delete item.lease_expires_at; }
     }
-    for (let index = 0; index < maximum; index++) {
+    summary.requires_finalize = pending > 0;
+    for (let index = pending; index < maximum; index++) {
       const response = await bridge.claimPublicationWork();
       const work = validateWork(response.publication_work);
       if (!work) break;
@@ -366,6 +375,7 @@ async function boundedBody(response: Response, maximum: number) {
 function validateOptions(options: AstroPublicationWorkOptions) {
   origin(options.siteUrl, "site"); origin(options.serverUrl, "server");
   if (!CONNECTION.test(options.connectionId) || Buffer.byteLength(options.connectionSecret) < 32 || Buffer.byteLength(options.connectionSecret) > 256 || /[\u0000-\u001f\u007f]/u.test(options.connectionSecret)) throw new Error("Invalid DiscussionBridge credentials");
+  if (options.requestDelayMs !== undefined && (!Number.isSafeInteger(options.requestDelayMs) || options.requestDelayMs < 0 || options.requestDelayMs > 5000)) throw new Error("Invalid DiscussionBridge request delay");
 }
 
 function validateWork(value: unknown): Record<string, any> | null {

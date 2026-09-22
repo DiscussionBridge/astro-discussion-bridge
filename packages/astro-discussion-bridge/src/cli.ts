@@ -62,6 +62,8 @@ if (command === "prepare-publication-work" || command === "finalize-publication-
     connectionId: process.env.DISCUSSIONBRIDGE_CONNECTION_ID ?? "",
     connectionSecret,
     lane: process.env.DISCUSSIONBRIDGE_LANE,
+    maximum: integerOption(values.get("limit"), 20, 1, 200, "publication work limit"),
+    requestDelayMs: integerOption(values.get("request-delay-ms"), 0, 0, 5000, "request delay"),
   });
   process.stdout.write(`${JSON.stringify(summary)}\n`);
   if (summary.failed) process.exitCode = 1;
@@ -77,3 +79,11 @@ const summary = await materializeNativePublications({
 });
 process.stdout.write(`${JSON.stringify(summary)}\n`);
 if (summary.failed) process.exitCode = 1;
+
+function integerOption(value: string | undefined, fallback: number, minimum: number, maximum: number, label: string) {
+  if (value === undefined) return fallback;
+  if (!/^\d+$/u.test(value)) throw new Error(`Invalid Astro ${label}`);
+  const result = Number(value);
+  if (!Number.isSafeInteger(result) || result < minimum || result > maximum) throw new Error(`Invalid Astro ${label}`);
+  return result;
+}

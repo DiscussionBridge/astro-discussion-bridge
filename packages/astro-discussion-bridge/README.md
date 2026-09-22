@@ -226,7 +226,9 @@ the receiver-owned durable queue in two phases:
 discussionbridge-astro prepare-publication-work \
   --docs-dir src/content/docs \
   --state-file /protected/discussionbridge/astro-publication-work.json \
-  --site-url https://site.example.com/
+  --site-url https://site.example.com/ \
+  --limit 20 \
+  --request-delay-ms 1000
 
 # Build and deploy the exact prepared source, then:
 discussionbridge-astro finalize-publication-work \
@@ -244,6 +246,12 @@ longer matches the last DiscussionBridge-written SHA-256 is reported as
 attention and is never silently overwritten. Use
 `DISCUSSIONBRIDGE_CONNECTION_SECRET_FILE` for the protected unattended
 credential; it takes precedence over the legacy direct environment value.
+The default limit is 20. A controlled initial backfill may raise it to at most
+200 so multiple bounded receiver claims share one build and deployment. A
+later prepare invocation can add work to the same still-valid batch up to that
+limit; expired leases are moved to attention rather than silently reused. Use
+`--request-delay-ms` to pace receiver requests when the forum or its edge has a
+lower sustained request ceiling.
 
 For a Cloudflare Workers Static Assets deployment, the operator can prepare
 the local content move and permanent redirect together:
