@@ -16,6 +16,51 @@ test("Astro advertises a receiver-supported native collection", () => {
   assert.equal(catalog.containers[0].id, "topics");
   assert.deepEqual(catalog.containers[0].taxonomy_ids, ["section"]);
   assert.equal(catalog.taxonomies[0].terms[0].id, "pledge");
+  assert.equal(catalog.limits.content_bytes, 256 * 1024);
+});
+
+test("Astro accepts the bounded large native-content corpus and rejects larger source content", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-large-content-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  let claims = 0;
+  let source = { ...sourceTopic(), content_html: `<p>${"x".repeat(210_808)}</p>` };
+  const fetchImplementation = async (url, init = {}) => {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith("/platform-catalog.json") && init.method === "GET") return json({ catalog_revision: null });
+    if (parsed.pathname.endsWith("/platform-catalog.json") && init.method === "PUT") return json({ destination_mapping_state: "current" });
+    if (parsed.pathname.endsWith("/publication-work/claim.json")) return json({ publication_work: claims++ === 0 ? {
+      topic_id: 53,
+      action: "publish",
+      source_revision: "post:99:version:2",
+      publication_revision: publicationRevision,
+      lease_token: leaseToken,
+      lease_expires_at: "2099-09-20T18:00:00.000Z",
+    } : null });
+    if (parsed.pathname.endsWith("/source-topics/53.json")) return json({ eligible: true, source_topic: source });
+    if (parsed.pathname.endsWith("/source-topics/53/resolve.json")) return json({
+      outcome: "created",
+      resource_id: resourceId,
+      external_id: "astro:topic:53",
+      canonical_url: "https://astro.example.com/topics/forum-scale-publishing-53/",
+    });
+    if (parsed.pathname.endsWith("/publication-work/failure.json")) return json({ outcome: "recorded" });
+    throw new Error(`Unexpected request ${init.method} ${url}`);
+  };
+  const configured = options(root, fetchImplementation);
+  const accepted = await prepareAstroPublicationWork(configured);
+  assert.equal(accepted.created, 1);
+  assert.equal(accepted.failed, 0);
+
+  claims = 0;
+  source = { ...source, content_html: `<p>${"x".repeat(256 * 1024)}</p>` };
+  const state = JSON.parse(await readFile(configured.stateFile, "utf8"));
+  state.publications["53"].state = "healthy";
+  delete state.publications["53"].lease_token;
+  delete state.publications["53"].lease_expires_at;
+  await writeFile(configured.stateFile, `${JSON.stringify(state, null, 2)}\n`);
+  const rejected = await prepareAstroPublicationWork(configured);
+  assert.equal(rejected.failed, 1);
+  assert.equal(rejected.errors[0].reason, "Invalid Astro source content");
 });
 
 function sourceTopic() {

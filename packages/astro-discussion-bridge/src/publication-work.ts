@@ -11,6 +11,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const REVISION = /^[a-f0-9]{64}$/u;
 const LEASE = /^[a-f0-9]{64}$/u;
 const CONNECTION = /^dbc_[a-f0-9]{24}$/u;
+const MAX_NATIVE_CONTENT_BYTES = 256 * 1024;
+const MAX_SOURCE_TOPIC_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export interface AstroPublicationWorkOptions {
   docsDir: string;
@@ -71,7 +73,7 @@ export function astroPlatformCatalog(rawSections: AstroPublicationSection[] = []
     service_author_id: "astro:build",
     presentation_modes: ["simple", "full", "fullInteractive", "native"],
     capabilities: { updates: true, unpublish: true, drafts: true },
-    limits: { content_bytes: 49_152, title_bytes: 255, slug_bytes: 160 },
+    limits: { content_bytes: MAX_NATIVE_CONTENT_BYTES, title_bytes: 255, slug_bytes: 160 },
     inventory: { authors_complete: true, terms_complete: true, authors_observed: 1, terms_observed: sections.length },
   };
 }
@@ -86,7 +88,7 @@ class BridgeClient {
     return this.request("PUT", "/discussion-bridge/v1/platform-catalog.json", { catalog, ...(expected ? { expected_catalog_revision: expected } : {}) }, 1024 * 1024);
   }
   claimPublicationWork() { return this.request("POST", "/discussion-bridge/v1/publication-work/claim.json", { lease_seconds: 3600 }); }
-  sourceTopic(topicId: number) { return this.request("GET", `/discussion-bridge/v1/source-topics/${topicId}.json`, undefined, 384 * 1024); }
+  sourceTopic(topicId: number) { return this.request("GET", `/discussion-bridge/v1/source-topics/${topicId}.json`, undefined, MAX_SOURCE_TOPIC_RESPONSE_BYTES); }
   sourceRevocation(resourceId: string) { return this.request("GET", `/discussion-bridge/v1/source-revocations/${encodeURIComponent(resourceId)}.json`, undefined, 384 * 1024); }
   resolveSourceTopic(topicId: number, publication: unknown) { return this.request("POST", `/discussion-bridge/v1/source-topics/${topicId}/resolve.json`, { publication }); }
   acknowledge(resourceId: string, acknowledgement: unknown) { return this.request("PUT", `/discussion-bridge/v1/bridge-records/${encodeURIComponent(resourceId)}/acknowledgement.json`, { acknowledgement }); }
@@ -324,7 +326,7 @@ function publicationPlan(options: AstroPublicationWorkOptions, source: Record<st
   const priorUrl = source.publication?.canonical_url;
   const route = priorUrl ? publicationRoute(priorUrl, site, routeBase) : `${routeBase}/${slug(title, source.topic_id)}`;
   const canonicalUrl = `${site}/${route}/`;
-  const html = sanitizeHtml(boundedContent(source.content_html, 49_152, "source content"), {
+  const html = sanitizeHtml(boundedContent(source.content_html, MAX_NATIVE_CONTENT_BYTES, "source content"), {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "h1", "h2", "h3", "figure", "figcaption", "table", "thead", "tbody", "tr", "th", "td"]),
     allowedAttributes: { a: ["href", "title", "rel"], img: ["src", "alt", "title", "width", "height"], code: ["class"], pre: ["class"], div: ["class"], span: ["class"] },
     allowedSchemes: ["https"], allowProtocolRelative: false,
