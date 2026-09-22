@@ -161,9 +161,9 @@ export async function prepareAstroPublicationWork(options: AstroPublicationWorkO
           summary[prepared.outcome]++;
           summary.requires_build ||= prepared.changed;
         } else {
-          await prepareUnpublish(options, bridge, state, work);
+          const prepared = await prepareUnpublish(options, bridge, state, work);
           summary.unpublished++;
-          summary.requires_build = true;
+          summary.requires_build ||= prepared.changed;
         }
         summary.requires_finalize = true;
         await atomicWrite(options.stateFile, `${JSON.stringify(state, null, 2)}\n`);
@@ -269,7 +269,28 @@ async function prepareUnpublish(options: AstroPublicationWorkOptions, bridge: Br
   const revocation = response.revoked === true ? response.publication_revocation : null;
   if (!revocation || revocation.topic_id !== work.topic_id || revocation.publication_revision !== work.publication_revision) throw new Error("Claimed Astro withdrawal changed");
   const local = state.publications[String(work.topic_id)];
-  if (!local || local.resource_id !== work.resource_id) throw new Error("Astro publication for withdrawal is unavailable");
+  if (!local) {
+    if (revocation.last_delivery_outcome !== "unpublished" || revocation.external_id !== `astro:topic:${work.topic_id}`) throw new Error("Astro publication for withdrawal is unavailable");
+    const site = origin(options.siteUrl, "site");
+    const routeBase = (options.routeBase ?? "topics").replace(/^\/+|\/+$/gu, "");
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(routeBase)) throw new Error("Invalid Astro route base");
+    const route = publicationRoute(revocation.canonical_url, site, routeBase);
+    await verifyAbsent(String(revocation.canonical_url), options.fetchImplementation ?? fetch);
+    state.publications[String(work.topic_id)] = {
+      topic_id: work.topic_id,
+      resource_id: work.resource_id,
+      external_id: revocation.external_id,
+      canonical_url: revocation.canonical_url,
+      file: `${route}.md`,
+      publication_revision: work.publication_revision,
+      outcome: "unpublished",
+      state: "pending_unpublish",
+      lease_token: work.lease_token,
+      lease_expires_at: work.lease_expires_at,
+    };
+    return { changed: false };
+  }
+  if (local.resource_id !== work.resource_id) throw new Error("Astro publication for withdrawal is unavailable");
   const file = path.resolve(options.docsDir, local.file);
   if (local.written_sha256) {
     const prior = await readFile(file, "utf8");
@@ -283,6 +304,7 @@ async function prepareUnpublish(options: AstroPublicationWorkOptions, bridge: Br
     lease_token: work.lease_token,
     lease_expires_at: work.lease_expires_at,
   });
+  return { changed: true };
 }
 
 function publicationPlan(options: AstroPublicationWorkOptions, source: Record<string, any>) {

@@ -257,3 +257,49 @@ test("Astro removes a revoked native page and acknowledges only after public abs
   assert.equal(acknowledgements[0].outcome, "unpublished");
   assert.equal(acknowledgements[0].lease_token, leaseToken);
 });
+
+test("Astro idempotently acknowledges a repeated withdrawal when the prior publication is already absent", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-repeat-unpublish-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const canonicalUrl = "https://astro.example.com/topics/category-definition-53/";
+  let claims = 0;
+  const acknowledgements = [];
+  const fetchImplementation = async (url, init = {}) => {
+    const parsed = new URL(url);
+    if (parsed.origin === "https://astro.example.com") return new Response("missing", { status: 404 });
+    if (parsed.pathname.endsWith("/platform-catalog.json") && init.method === "GET") return json({ catalog_revision: null });
+    if (parsed.pathname.endsWith("/platform-catalog.json") && init.method === "PUT") return json({ destination_mapping_state: "current" });
+    if (parsed.pathname.endsWith("/publication-work/claim.json")) return json({ publication_work: claims++ === 0 ? {
+      topic_id: 53,
+      resource_id: resourceId,
+      action: "unpublish",
+      publication_revision: publicationRevision,
+      lease_token: leaseToken,
+      lease_expires_at: "2099-09-20T18:00:00.000Z",
+    } : null });
+    if (parsed.pathname.endsWith(`/source-revocations/${resourceId}.json`)) return json({
+      revoked: true,
+      publication_revocation: {
+        topic_id: 53,
+        publication_revision: publicationRevision,
+        last_delivery_outcome: "unpublished",
+        external_id: "astro:topic:53",
+        canonical_url: canonicalUrl,
+      },
+    });
+    if (parsed.pathname.endsWith(`/bridge-records/${resourceId}/acknowledgement.json`)) {
+      acknowledgements.push(JSON.parse(init.body).acknowledgement);
+      return json({ outcome: "acknowledged", resource_id: resourceId });
+    }
+    throw new Error(`Unexpected request ${init.method} ${url}`);
+  };
+  const configured = options(root, fetchImplementation);
+  const prepared = await prepareAstroPublicationWork(configured);
+  assert.equal(prepared.unpublished, 1);
+  assert.equal(prepared.failed, 0);
+  assert.equal(prepared.requires_build, false);
+  assert.equal(prepared.requires_finalize, true);
+  assert.equal((await finalizeAstroPublicationWork(configured)).acknowledged, 1);
+  assert.equal(acknowledgements[0].outcome, "unpublished");
+  assert.equal(acknowledgements[0].native_destination.canonical_url, canonicalUrl);
+});
