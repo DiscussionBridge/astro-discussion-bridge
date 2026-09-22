@@ -345,9 +345,9 @@ export async function materializeNativePublications(options: NativePublicationOp
         const file = path.join(options.docsDir, `${item.route}.md`);
         const previousFile = existingPublications.get(item.resourceId);
         if (previousFile && previousFile !== path.resolve(file)) throw new PublicationMigrationRequired("Astro publication URL change requires an explicit migration and redirect");
-        const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, date: item.updatedAt, discussionCommentsDisplay: "interactive", discussionSync: false, discussionFromDiscourse: true, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
+        const frontmatter = { title: item.title, description: "Published with DiscussionBridge from the source forum.", date: item.updatedAt, discussionCommentsDisplay: "interactive", discussionSync: false, discussionFromDiscourse: true, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
         const yaml = stringifyYaml(frontmatter).trim().replace(/^date: ([^\r\n]+)$/mu, 'date: "$1"');
-        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
+        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published with [DiscussionBridge](https://discussionbridge.dev/) from the [source forum](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
         let prior: string | null = null;
         try { prior = await readFile(file, "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
         if (prior === output) { summary.unchanged++; continue; }

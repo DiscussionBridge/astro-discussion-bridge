@@ -57,6 +57,7 @@ if (command === "prepare-publication-work" || command === "finalize-publication-
     stateFile: path.resolve(stateFile),
     siteUrl,
     routeBase: values.get("route-base") ?? "topics",
+    sourceForumLabel: values.get("source-forum-label") ?? "source forum",
     sections,
     serverUrl: process.env.DISCUSSIONBRIDGE_SERVER_URL ?? "",
     connectionId: process.env.DISCUSSIONBRIDGE_CONNECTION_ID ?? "",

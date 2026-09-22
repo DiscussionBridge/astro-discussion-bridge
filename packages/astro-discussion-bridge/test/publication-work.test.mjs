@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -46,7 +47,7 @@ test("Astro accepts the bounded large native-content corpus and rejects larger s
     if (parsed.pathname.endsWith("/publication-work/failure.json")) return json({ outcome: "recorded" });
     throw new Error(`Unexpected request ${init.method} ${url}`);
   };
-  const configured = options(root, fetchImplementation);
+  const configured = { ...options(root, fetchImplementation), sourceForumLabel: "Repeal OBBBA Forum" };
   const accepted = await prepareAstroPublicationWork(configured);
   assert.equal(accepted.created, 1);
   assert.equal(accepted.failed, 0);
@@ -135,7 +136,7 @@ test("Astro claims, prepares, publicly verifies, and acknowledges one static pub
     }
     throw new Error(`Unexpected request ${init.method} ${url}`);
   };
-  const configured = options(root, fetchImplementation);
+  const configured = { ...options(root, fetchImplementation), sourceForumLabel: "Repeal OBBBA Forum" };
   assert.deepEqual(await prepareAstroPublicationWork(configured), {
     claimed: 1, created: 1, updated: 0, unchanged: 0, unpublished: 0, failed: 0,
     errors: [], requires_build: true, requires_finalize: true,
@@ -145,6 +146,9 @@ test("Astro claims, prepares, publicly verifies, and acknowledges one static pub
   assert.match(contents, /date: "2026-09-19T16:00:00.000Z"/u);
   assert.match(contents, /lastUpdated: "2026-09-20T17:00:00.000Z"/u);
   assert.match(contents, /discussionbridgeSection: pledge/u);
+  assert.match(contents, /description: Published with DiscussionBridge from the Repeal OBBBA Forum\./u);
+  assert.match(contents, /Published with \[DiscussionBridge\]\(https:\/\/discussionbridge\.dev\/\) from the \[Repeal OBBBA Forum\]\(https:\/\/bridge\.example\.com\/t\/forum-scale-publishing\/53\)/u);
+  assert.doesNotMatch(contents, /The Bridge/u);
   assert.match(contents, new RegExp(resourceId));
   assert.doesNotMatch(contents, /dbc_012345|ssssssss/u);
 
@@ -252,6 +256,45 @@ test("Astro refuses to overwrite a platform-side edit", async (t) => {
   assert.equal(result.failed, 1);
   assert.equal(failures, 1);
   assert.match(result.errors[0].reason, /changed outside DiscussionBridge/u);
+});
+
+test("Astro accepts only the exact DiscussionBridge provenance migration of an owned page", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-provenance-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  let claims = 0;
+  const fetchImplementation = async (url, init = {}) => {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith("/platform-catalog.json") && init.method === "GET") return json({ catalog_revision: null });
+    if (parsed.pathname.endsWith("/platform-catalog.json") && init.method === "PUT") return json({ destination_mapping_state: "current" });
+    if (parsed.pathname.endsWith("/publication-work/claim.json")) return json({ publication_work: claims++ % 2 === 0 ? {
+      topic_id: 53,
+      action: "publish",
+      source_revision: "post:99:version:2",
+      publication_revision: publicationRevision,
+      lease_token: leaseToken,
+      lease_expires_at: "2099-09-20T18:00:00.000Z",
+    } : null });
+    if (parsed.pathname.endsWith("/source-topics/53.json")) return json({ eligible: true, source_topic: sourceTopic() });
+    if (parsed.pathname.endsWith("/source-topics/53/resolve.json")) return json({ outcome: "resolved", resource_id: resourceId, external_id: "astro:topic:53", canonical_url: "https://astro.example.com/topics/forum-scale-publishing-53/" });
+    throw new Error(`Unexpected request ${init.method} ${url}`);
+  };
+  const configured = { ...options(root, fetchImplementation), sourceForumLabel: "Repeal OBBBA Forum" };
+  await prepareAstroPublicationWork(configured);
+  const file = path.join(root, "content", "topics", "forum-scale-publishing-53.md");
+  const current = await readFile(file, "utf8");
+  const legacy = current
+    .replace("description: Published with DiscussionBridge from the Repeal OBBBA Forum.", "description: Published from The Bridge by Forum Author.")
+    .replace("**Published with [DiscussionBridge](https://discussionbridge.dev/) from the [Repeal OBBBA Forum](https://bridge.example.com/t/forum-scale-publishing/53)**", "**Published from [The Bridge](https://bridge.example.com/t/forum-scale-publishing/53)**");
+  const state = JSON.parse(await readFile(configured.stateFile, "utf8"));
+  state.publications["53"].written_sha256 = createHash("sha256").update(legacy).digest("hex");
+  state.publications["53"].state = "healthy";
+  delete state.publications["53"].lease_token;
+  delete state.publications["53"].lease_expires_at;
+  await writeFile(configured.stateFile, `${JSON.stringify(state, null, 2)}\n`);
+
+  const result = await prepareAstroPublicationWork(configured);
+  assert.equal(result.failed, 0);
+  assert.match(await readFile(file, "utf8"), /Published with \[DiscussionBridge\]/u);
 });
 
 test("Astro removes a revoked native page and acknowledges only after public absence", async (t) => {

@@ -23,6 +23,7 @@ export interface AstroPublicationWorkOptions {
   connectionSecret: string;
   lane?: string;
   routeBase?: string;
+  sourceForumLabel?: string;
   sections?: AstroPublicationSection[];
   maximum?: number;
   requestDelayMs?: number;
@@ -239,7 +240,7 @@ async function preparePublication(options: AstroPublicationWorkOptions, bridge: 
   const previous = state.publications[String(plan.topicId)];
   let prior: string | undefined;
   try { prior = await readFile(file, "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-  if (previous?.written_sha256 && prior && sha256(prior) !== previous.written_sha256) throw new Error("Astro native publication changed outside DiscussionBridge");
+  if (previous?.written_sha256 && prior && !matchesOwnedPublication(prior, previous.written_sha256)) throw new Error("Astro native publication changed outside DiscussionBridge");
   if (previous && previous.resource_id !== resourceId) throw new Error("Astro publication resource identity changed");
   const output = nativeContent(plan, resourceId);
   const receiverCurrent = source.publication?.destination_state === "healthy" && source.publication?.acknowledged_publication_revision === plan.publicationRevision;
@@ -296,7 +297,7 @@ async function prepareUnpublish(options: AstroPublicationWorkOptions, bridge: Br
   const file = path.resolve(options.docsDir, local.file);
   if (local.written_sha256) {
     const prior = await readFile(file, "utf8");
-    if (sha256(prior) !== local.written_sha256) throw new Error("Astro native publication changed outside DiscussionBridge");
+    if (!matchesOwnedPublication(prior, local.written_sha256)) throw new Error("Astro native publication changed outside DiscussionBridge");
   }
   await rm(file, { force: true });
   Object.assign(local, {
@@ -346,6 +347,7 @@ function publicationPlan(options: AstroPublicationWorkOptions, source: Record<st
     mappingRevision: destination.mapping_revision as string,
     destination: destination as Record<string, unknown>,
     author: bounded(source.author?.name, 200, "source author"),
+    sourceForumLabel: bounded(options.sourceForumLabel ?? "source forum", 200, "source forum label"),
     topicUrl: exactSourceUrl(source.topic_url, origin(options.serverUrl, "server")),
     route,
     canonicalUrl,
@@ -357,7 +359,7 @@ function publicationPlan(options: AstroPublicationWorkOptions, source: Record<st
 function nativeContent(plan: ReturnType<typeof publicationPlan>, resourceId: string) {
   const frontmatter = {
     title: plan.title,
-    description: `Published from The Bridge by ${plan.author}.`,
+    description: `Published with DiscussionBridge from the ${plan.sourceForumLabel}.`,
     date: plan.createdAt,
     lastUpdated: plan.updatedAt,
     discussionCommentsDisplay: "interactive",
@@ -372,7 +374,18 @@ function nativeContent(plan: ReturnType<typeof publicationPlan>, resourceId: str
     ...(plan.section ? { discussionbridgeSection: plan.section.id } : {}),
   };
   const yaml = stringifyYaml(frontmatter).trim().replace(/^(date|lastUpdated): ([^\r\n]+)$/gmu, '$1: "$2"');
-  return `---\n${yaml}\n---\n\n<span hidden data-discussionbridge-resource-id="${resourceId}" data-discussionbridge-publication-revision="${plan.publicationRevision}"></span>\n\n${plan.html}\n\n<hr>\n\n**Published from [The Bridge](${plan.topicUrl})**<br>\nSource author: ${plan.author} · Revision ${plan.sourceRevision} · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
+  return `---\n${yaml}\n---\n\n<span hidden data-discussionbridge-resource-id="${resourceId}" data-discussionbridge-publication-revision="${plan.publicationRevision}"></span>\n\n${plan.html}\n\n<hr>\n\n**Published with [DiscussionBridge](https://discussionbridge.dev/) from the [${plan.sourceForumLabel}](${plan.topicUrl})**<br>\nSource author: ${plan.author} · Revision ${plan.sourceRevision} · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
+}
+
+function matchesOwnedPublication(content: string, expectedSha256: string) {
+  if (sha256(content) === expectedSha256) return true;
+  const credit = content.match(/\*\*Published with \[DiscussionBridge\]\(https:\/\/discussionbridge\.dev\/\) from the \[[^\]]+\]\((https:\/\/[^)]+)\)\*\*/u);
+  const author = content.match(/^Source author: (.+?) · Revision /mu);
+  if (!credit || !author) return false;
+  const legacy = content
+    .replace(/^description: Published with DiscussionBridge from the .+\.$/mu, `description: Published from The Bridge by ${author[1]}.`)
+    .replace(credit[0], `**Published from [The Bridge](${credit[1]})**`);
+  return sha256(legacy) === expectedSha256;
 }
 
 async function verifyPublic(publication: PublicationState, fetchImplementation: typeof fetch) {

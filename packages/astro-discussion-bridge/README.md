@@ -203,7 +203,7 @@ screens. It never loads a renderer, stylesheet, font, or credential from a
 third-party CDN, and it does not reinterpret examples inside `code`, `pre`,
 `script`, or `style` elements.
 
-An operator may also authorize The Bridge to materialize a forum-owned
+An operator may also authorize DiscussionBridge to materialize a forum-owned
 publication as a genuine Astro content page. The binding must explicitly carry
 native-materialization authority; ordinary From Discourse presentation records
 are skipped. With the same protected build credentials configured, run:

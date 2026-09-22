@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { materializeNativePublications, migrateNativePublication } from "../dist/native-publication.js";
 
 const record = {
-  resource_id: "11111111-1111-4111-8111-111111111111", direction: "from_discourse", state: "healthy", title: "The Bridge publishes everywhere", topic_id: 53,
+  resource_id: "11111111-1111-4111-8111-111111111111", direction: "from_discourse", state: "healthy", title: "DiscussionBridge publishes everywhere", topic_id: 53,
   content_html: "<h2>One source</h2><script>bad()</script><p>Native Astro content.</p>",
   source: { platform: "discourse", origin: "https://bridge.example", topic_id: 53, topic_url: "https://bridge.example/t/publisher/53", post_id: 149, post_number: 1, post_version: 1, revision: "post:149:version:1", updated_at: "2026-09-01T08:00:00.000Z", author: { name: "DiscussionBridge", profile_url: "https://bridge.example/u/discussionbridge" } },
   bindings: [{ role: "presentation", state: "active", canonical_url: "https://astro.example/bridge-publisher/", native_materialization: true }],
