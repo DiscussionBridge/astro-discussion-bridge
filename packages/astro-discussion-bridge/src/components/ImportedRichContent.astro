@@ -1,0 +1,133 @@
+---
+import "katex/dist/katex.min.css";
+---
+
+<script>
+  async function renderImportedRichContent() {
+    const roots = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        "[data-discussionbridge-resource], [data-discussionbridge-resource-id]",
+      ),
+    );
+
+    for (const root of roots) {
+      const diagrams = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          "pre > code.lang-mermaid, pre > code.language-mermaid",
+        ),
+      ).map((code) => {
+        const pre = code.parentElement as HTMLPreElement;
+        pre.className = "mermaid discussionbridge-mermaid";
+        pre.textContent = code.textContent ?? "";
+        return pre;
+      });
+
+      if (diagrams.length > 0) {
+        const { default: mermaid } = await import("mermaid");
+        mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "default" });
+        await mermaid.run({ nodes: diagrams });
+      }
+
+      const cookedMath = Array.from(
+        root.querySelectorAll<HTMLElement>(".math:not(.katex)"),
+      ).filter((element) => !element.querySelector(".katex"));
+      const mathParagraphs = Array.from(root.querySelectorAll<HTMLParagraphElement>("p")).flatMap(
+        (paragraph) => {
+          const match = paragraph.textContent
+            ?.trim()
+            .match(/^(?:\[math\]([\s\S]*?)\[\/math\]|\$\$([\s\S]*?)\$\$)$/);
+          return match ? [{ paragraph, expression: (match[1] ?? match[2]).trim() }] : [];
+        },
+      );
+      const mathParagraphSet = new Set(mathParagraphs.map(({ paragraph }) => paragraph));
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const textNodes: Text[] = [];
+      while (walker.nextNode()) {
+        const node = walker.currentNode as Text;
+        const parent = node.parentElement;
+        if (
+          !parent ||
+          parent.closest("code, pre, script, style, .katex, .math") ||
+          mathParagraphSet.has(parent.closest("p") as HTMLParagraphElement)
+        ) continue;
+        if (/\[math\][\s\S]*?\[\/math\]|\$(?!\d)([^$\n]+?)(?<!\s)\$/u.test(node.data)) textNodes.push(node);
+      }
+
+      if (cookedMath.length === 0 && mathParagraphs.length === 0 && textNodes.length === 0) continue;
+      const { default: katex } = await import("katex");
+      for (const element of cookedMath) {
+        const expression = element.textContent?.trim();
+        if (!expression) continue;
+        katex.render(expression, element, {
+          displayMode: element.tagName === "DIV",
+          throwOnError: false,
+          strict: "warn",
+        });
+      }
+      for (const { paragraph, expression } of mathParagraphs) {
+        const target = document.createElement("div");
+        target.className = "discussionbridge-math";
+        katex.render(expression, target, { displayMode: true, throwOnError: false, strict: "warn" });
+        paragraph.replaceWith(target);
+      }
+      for (const node of textNodes) {
+        const fragment = document.createDocumentFragment();
+        let cursor = 0;
+        for (const match of node.data.matchAll(/\[math\]([\s\S]*?)\[\/math\]|\$(?!\d)([^$\n]+?)(?<!\s)\$/gu)) {
+          const index = match.index ?? 0;
+          fragment.append(node.data.slice(cursor, index));
+          const target = document.createElement("span");
+          target.className = "discussionbridge-math";
+          katex.render((match[1] ?? match[2]).trim(), target, {
+            displayMode: false,
+            throwOnError: false,
+            strict: "warn",
+          });
+          fragment.append(target);
+          cursor = index + match[0].length;
+        }
+        fragment.append(node.data.slice(cursor));
+        node.replaceWith(fragment);
+      }
+    }
+  }
+
+  await renderImportedRichContent();
+</script>
+
+<style is:global>
+  [data-discussionbridge-resource] .md-table,
+  [data-discussionbridge-resource-id] .md-table {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  [data-discussionbridge-resource] table,
+  [data-discussionbridge-resource-id] table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  [data-discussionbridge-resource] th,
+  [data-discussionbridge-resource] td,
+  [data-discussionbridge-resource-id] th,
+  [data-discussionbridge-resource-id] td {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid currentColor;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .discussionbridge-mermaid,
+  .discussionbridge-math {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .discussionbridge-mermaid svg {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+</style>

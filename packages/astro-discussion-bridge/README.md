@@ -193,6 +193,16 @@ direction and topic tuple, sanitizes cooked HTML through an allowlist, and
 emits only safe content plus the Discourse topic link. It never ships the
 connection secret to browser JavaScript.
 
+`FromDiscourse.astro` mounts the package's local rich-content renderer after
+the sanitized article is present. The same component is exported as
+`ImportedRichContent.astro` for custom imported-content roots. It renders
+Discourse Mermaid blocks with Mermaid's strict security mode, renders cooked
+math and supported `[math]`, `$$...$$`, and inline `$...$` forms with KaTeX,
+and makes Discourse `.md-table` wrappers horizontally scrollable on narrow
+screens. It never loads a renderer, stylesheet, font, or credential from a
+third-party CDN, and it does not reinterpret examples inside `code`, `pre`,
+`script`, or `style` elements.
+
 An operator may also authorize The Bridge to materialize a forum-owned
 publication as a genuine Astro content page. The binding must explicitly carry
 native-materialization authority; ordinary From Discourse presentation records

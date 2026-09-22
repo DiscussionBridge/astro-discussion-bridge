@@ -62,6 +62,7 @@ test("plugin-free full mode can start from the canonical Astro page URL", async 
 
 test("From Discourse component renders only server-retrieved sanitized record content", async () => {
   const component = await fs.readFile(path.join(packageDir, "src/components/FromDiscourse.astro"), "utf8");
+  const richContent = await fs.readFile(path.join(packageDir, "src/components/ImportedRichContent.astro"), "utf8");
   assert.match(component, /fetchFromDiscourseRecord/);
   assert.match(component, /showTopicLink/);
   assert.match(component, /showTopicLink &&/);
@@ -72,6 +73,12 @@ test("From Discourse component renders only server-retrieved sanitized record co
   assert.match(component, /aria-label="On this page"/);
   assert.match(component, /<h\(\[23\]\)/);
   assert.match(component, /headings\.length >= 2/);
+  assert.match(component, /<ImportedRichContent \/>/);
+  assert.match(richContent, /code\.lang-mermaid/);
+  assert.match(richContent, /securityLevel: "strict"/);
+  assert.match(richContent, /\.math:not\(\.katex\)/);
+  assert.match(richContent, /katex\.render/);
+  assert.match(richContent, /\.md-table/);
   assert.doesNotMatch(component, /client:|X-DiscussionBridge|connectionSecret\}/);
 });
 
