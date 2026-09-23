@@ -1,6 +1,7 @@
 ---
 import { fetchFromDiscourseRecord } from "astro-discussion-bridge/bridge-record";
 import sanitizeHtml from "sanitize-html";
+import ImportedRichContent from "./ImportedRichContent.astro";
 
 interface Props {
   resourceId: string;
@@ -60,6 +61,7 @@ const contentHtml = record.contentHtml.replace(
     </p>
   )}
 </section>
+<ImportedRichContent />
 
 <style>
   .discussionbridge-contents {

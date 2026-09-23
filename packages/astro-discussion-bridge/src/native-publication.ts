@@ -1,5 +1,6 @@
 import { lstat, mkdir, open, readFile, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
+import { lock } from "proper-lockfile";
 import sanitizeHtml from "sanitize-html";
 import { stringify as stringifyYaml } from "yaml";
 import { PRODUCT_VERSION } from "./version.js";
@@ -84,10 +85,17 @@ async function atomicWrite(file: string, contents: string) {
     const handle = await open(temporary, "wx");
     try { await handle.writeFile(contents, "utf8"); await handle.sync(); } finally { await handle.close(); }
     await rename(temporary, file);
+    await syncDirectory(path.dirname(file));
   } catch (error) {
     await rm(temporary, { force: true });
     throw error;
   }
+}
+
+async function syncDirectory(directory: string) {
+  if (process.platform === "win32") return;
+  const handle = await open(directory, "r");
+  try { await handle.sync(); } finally { await handle.close(); }
 }
 
 async function indexNativePublications(docsDir: string): Promise<Map<string, string>> {
@@ -138,6 +146,77 @@ export interface NativePublicationMigrationOptions {
   redirectsFile: string;
 }
 
+type MigrationPhase = "prepared" | "redirected" | "moved";
+
+interface MigrationJournal {
+  version: 1;
+  phase: MigrationPhase;
+  resourceId: string;
+  oldUrl: string;
+  newUrl: string;
+  sourceFile: string;
+  destinationFile: string;
+  redirectsFile: string;
+  redirectRule: string;
+}
+
+const MIGRATION_JOURNAL = ".discussionbridge-publication-url-migration.json";
+
+async function durableRename(source: string, destination: string) {
+  await mkdir(path.dirname(destination), { recursive: true });
+  await rename(source, destination);
+  await syncDirectory(path.dirname(destination));
+  if (path.dirname(source) !== path.dirname(destination)) await syncDirectory(path.dirname(source));
+}
+
+async function removeDurable(file: string) {
+  await rm(file, { force: true });
+  await syncDirectory(path.dirname(file));
+}
+
+async function readMigrationJournal(file: string): Promise<MigrationJournal | null> {
+  try {
+    const status = await lstat(file);
+    if (!status.isFile() || status.isSymbolicLink() || status.size > 8_192) throw new Error("Astro publication migration journal is invalid");
+    const value: unknown = JSON.parse(await readFile(file, "utf8"));
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Astro publication migration journal is invalid");
+    const journal = value as Record<string, unknown>;
+    if (journal.version !== 1 || !["prepared", "redirected", "moved"].includes(String(journal.phase)) ||
+        !UUID.test(String(journal.resourceId)) || ["oldUrl", "newUrl", "sourceFile", "destinationFile", "redirectsFile", "redirectRule"].some((key) => typeof journal[key] !== "string")) {
+      throw new Error("Astro publication migration journal is invalid");
+    }
+    return journal as unknown as MigrationJournal;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+async function migrationCheckpoint(phase: MigrationPhase, journalFile: string) {
+  if (process.env.NODE_ENV !== "test" || process.env.DISCUSSIONBRIDGE_TEST_MIGRATION_PAUSE !== phase) return;
+  process.stdout.write(`${JSON.stringify({ phase, journalFile })}\n`);
+  await new Promise<never>(() => {});
+}
+
+function redirectPlan(redirects: string, oldPath: string, newPath: string, label: string) {
+  const lines = redirects.split(/\r?\n/u);
+  const activeRules = lines.map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
+  const rule = `${oldPath} ${newPath} 301`;
+  const oldRules = activeRules.filter((line) => line.split(/\s+/u)[0] === oldPath);
+  const destinationRules = activeRules.filter((line) => line.split(/\s+/u)[0] === newPath);
+  const exactRule = oldRules.length === 1 && oldRules[0] === rule;
+  const inverseRule = destinationRules.length === 1 &&
+    [`${newPath} ${oldPath} 301`, `${newPath} ${oldPath} 308`].includes(destinationRules[0])
+    ? destinationRules[0] : null;
+  if (oldRules.length && !exactRule) throw new Error(`${label} publication redirect source conflicts with an existing rule`);
+  if (destinationRules.length && !inverseRule) throw new Error(`${label} publication destination has a conflicting redirect`);
+  if (activeRules.length - (inverseRule ? 1 : 0) - (exactRule ? 1 : 0) >= 2_000) throw new Error(`${label} publication redirect manifest exceeds Cloudflare limits`);
+  if (rule.length > 1_000) throw new Error(`${label} publication redirect exceeds Cloudflare limits`);
+  const remaining = lines.filter((line) => line.trim() !== inverseRule && line.trim() !== (exactRule ? rule : "")).join("\n");
+  const contents = `${remaining.trimEnd()}${remaining.trim() ? "\n" : ""}${rule}\n`;
+  return { rule, contents, exactRule };
+}
+
 async function exists(file: string): Promise<boolean> {
   try { await lstat(file); return true; }
   catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return false; throw error; }
@@ -152,16 +231,31 @@ export async function migrateNativePublication(options: NativePublicationMigrati
   const routePattern = /^\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*\/$/u;
   if (!routePattern.test(oldUrl.pathname) || !routePattern.test(newUrl.pathname) || oldUrl.href === newUrl.href) throw new Error("Invalid Astro publication URL migration paths");
   const root = path.resolve(options.docsDir);
-  const files = await indexNativePublications(root);
-  const sourceFile = files.get(options.resourceId.toLowerCase());
-  if (!sourceFile) throw new Error("Astro publication resource does not have exactly one native source file");
-  const sourceRoute = path.relative(root, sourceFile).split(path.sep).join("/").replace(/\.md$/u, "");
-  if (`${siteOrigin}/${sourceRoute}/` !== oldUrl.href) throw new Error("Astro publication old URL does not match its native source file");
+  await mkdir(root, { recursive: true });
+  const testLock = process.env.NODE_ENV === "test";
+  const release = await lock(root, { realpath: true, stale: testLock ? 2_000 : 30_000, update: testLock ? 1_000 : 10_000, retries: { retries: 20, factor: 1.2, minTimeout: 50, maxTimeout: 250 } });
+  try {
+  const normalizedResourceId = options.resourceId.toLowerCase();
   const destinationRoute = newUrl.pathname.slice(1, -1);
   const destinationFile = path.resolve(root, `${destinationRoute}.md`);
+  const sourceRoute = oldUrl.pathname.slice(1, -1);
+  const expectedSourceFile = path.resolve(root, `${sourceRoute}.md`);
   const routeAlternates = [destinationFile, path.resolve(root, `${destinationRoute}.mdx`), path.resolve(root, destinationRoute, "index.md"), path.resolve(root, destinationRoute, "index.mdx")];
-  if ((await Promise.all(routeAlternates.map(exists))).some(Boolean)) throw new Error("Astro publication destination already has content");
   const redirectsFile = path.resolve(options.redirectsFile);
+  const journalFile = path.join(root, MIGRATION_JOURNAL);
+  const redirectRule = `${oldUrl.pathname} ${newUrl.pathname} 301`;
+  const expectedJournal = { version: 1 as const, resourceId: normalizedResourceId, oldUrl: oldUrl.href, newUrl: newUrl.href, sourceFile: path.relative(root, expectedSourceFile), destinationFile: path.relative(root, destinationFile), redirectsFile, redirectRule };
+  let journal = await readMigrationJournal(journalFile);
+  if (journal && Object.entries(expectedJournal).some(([key, value]) => journal?.[key as keyof MigrationJournal] !== value)) {
+    throw new Error("A different Astro publication URL migration requires recovery first");
+  }
+  const files = await indexNativePublications(root);
+  const currentFile = files.get(normalizedResourceId);
+  if (!currentFile) throw new Error("Astro publication resource does not have exactly one native source file");
+  const currentRoute = path.relative(root, currentFile).split(path.sep).join("/").replace(/\.md$/u, "");
+  const currentUrl = `${siteOrigin}/${currentRoute}/`;
+  if (currentUrl !== oldUrl.href && currentFile !== destinationFile) throw new Error("Astro publication old URL does not match its native source file");
+  if (currentFile === expectedSourceFile && (await Promise.all(routeAlternates.map(exists))).some(Boolean)) throw new Error("Astro publication destination already has content");
   let redirects = "";
   try {
     const status = await lstat(redirectsFile);
@@ -170,19 +264,39 @@ export async function migrateNativePublication(options: NativePublicationMigrati
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
-  const activeRules = redirects.split(/\r?\n/u).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
-  if (activeRules.length >= 2_000 || activeRules.some((line) => line.split(/\s+/u)[0] === oldUrl.pathname)) throw new Error("Astro publication redirect source conflicts with an existing rule or exceeds Cloudflare limits");
-  const rule = `${oldUrl.pathname} ${newUrl.pathname} 301`;
-  if (rule.length > 1_000) throw new Error("Astro publication redirect exceeds Cloudflare limits");
-  const nextRedirects = `${redirects.trimEnd()}${redirects.trim() ? "\n" : ""}${rule}\n`;
-  await mkdir(path.dirname(destinationFile), { recursive: true });
-  await rename(sourceFile, destinationFile);
-  try { await atomicWrite(redirectsFile, nextRedirects); }
-  catch (error) {
-    await rename(destinationFile, sourceFile);
-    throw error;
+  let plan = redirectPlan(redirects, oldUrl.pathname, newUrl.pathname, "Astro");
+  if (currentFile === destinationFile && plan.exactRule && !journal) {
+    return { resourceId: normalizedResourceId, oldUrl: oldUrl.href, newUrl: newUrl.href, sourceFile: expectedSourceFile, destinationFile, redirectRule: plan.rule, outcome: "already_current" };
   }
-  return { resourceId: options.resourceId.toLowerCase(), oldUrl: oldUrl.href, newUrl: newUrl.href, sourceFile, destinationFile, redirectRule: rule };
+  if (!journal) {
+    journal = { ...expectedJournal, phase: "prepared" };
+    await atomicWrite(journalFile, `${JSON.stringify(journal, null, 2)}\n`);
+    await migrationCheckpoint("prepared", journalFile);
+  }
+  if (!plan.exactRule) {
+    await atomicWrite(redirectsFile, plan.contents);
+    redirects = plan.contents;
+    plan = redirectPlan(redirects, oldUrl.pathname, newUrl.pathname, "Astro");
+  }
+  if (journal.phase === "prepared") {
+    journal.phase = "redirected";
+    await atomicWrite(journalFile, `${JSON.stringify(journal, null, 2)}\n`);
+    await migrationCheckpoint("redirected", journalFile);
+  }
+  if (currentFile === expectedSourceFile) await durableRename(expectedSourceFile, destinationFile);
+  else if (currentFile !== destinationFile) throw new Error("Astro publication migration state is inconsistent");
+  if (journal.phase !== "moved") {
+    journal.phase = "moved";
+    await atomicWrite(journalFile, `${JSON.stringify(journal, null, 2)}\n`);
+    await migrationCheckpoint("moved", journalFile);
+  }
+  const finalFiles = await indexNativePublications(root);
+  if (finalFiles.get(normalizedResourceId) !== destinationFile || !plan.exactRule) throw new Error("Astro publication migration could not be verified");
+  await removeDurable(journalFile);
+  return { resourceId: normalizedResourceId, oldUrl: oldUrl.href, newUrl: newUrl.href, sourceFile: expectedSourceFile, destinationFile, redirectRule: plan.rule, outcome: "migrated" };
+  } finally {
+    await release();
+  }
 }
 
 export async function materializeNativePublications(options: NativePublicationOptions) {
@@ -231,9 +345,9 @@ export async function materializeNativePublications(options: NativePublicationOp
         const file = path.join(options.docsDir, `${item.route}.md`);
         const previousFile = existingPublications.get(item.resourceId);
         if (previousFile && previousFile !== path.resolve(file)) throw new PublicationMigrationRequired("Astro publication URL change requires an explicit migration and redirect");
-        const frontmatter = { title: item.title, description: `Published from The Bridge by ${item.authorName}.`, date: item.updatedAt, discussionCommentsDisplay: "interactive", discussionSync: false, discussionFromDiscourse: true, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
+        const frontmatter = { title: item.title, description: "Published with DiscussionBridge from the source forum.", date: item.updatedAt, discussionCommentsDisplay: "interactive", discussionSync: false, discussionFromDiscourse: true, discussionbridgeNativePublication: true, discussionbridgeResourceId: item.resourceId, discourseTopicId: item.topicId, discourseTopicUrl: item.topicUrl, discussionbridgeSourceRevision: item.revision };
         const yaml = stringifyYaml(frontmatter).trim().replace(/^date: ([^\r\n]+)$/mu, 'date: "$1"');
-        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published from [The Bridge](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
+        const output = `---\n${yaml}\n---\n\n${item.content}\n\n<hr>\n\n**Published with [DiscussionBridge](https://discussionbridge.dev/) from the [source forum](${item.topicUrl})**<br>\nSource author: ${item.authorName} · Revision ${item.revision} · Astro 7 · DiscussionBridge for Astro ${PRODUCT_VERSION}\n`;
         let prior: string | null = null;
         try { prior = await readFile(file, "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
         if (prior === output) { summary.unchanged++; continue; }

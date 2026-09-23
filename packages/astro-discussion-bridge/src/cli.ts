@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import path from "node:path";
+import { readFile } from "node:fs/promises";
 import { materializeNativePublications, migrateNativePublication } from "./native-publication.js";
 import { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
+import { finalizeAstroPublicationWork, prepareAstroPublicationWork } from "./publication-work.js";
 
 const args = process.argv.slice(2);
 const command = args.shift();
-if (command !== "sync-publications" && command !== "publication-status" && command !== "migrate-publication") throw new Error("Usage: discussionbridge-astro sync-publications|publication-status|migrate-publication [options]");
+if (!new Set(["sync-publications", "publication-status", "migrate-publication", "prepare-publication-work", "finalize-publication-work"]).has(command ?? "")) throw new Error("Usage: discussionbridge-astro sync-publications|publication-status|migrate-publication|prepare-publication-work|finalize-publication-work [options]");
 const values = new Map<string, string>();
 while (args.length) {
   const key = args.shift();
@@ -35,14 +37,54 @@ if (command === "migrate-publication") {
 }
 const docsDir = values.get("docs-dir");
 const siteUrl = values.get("site-url");
+const stateFile = values.get("state-file");
 if (!docsDir || !siteUrl) throw new Error("Astro docs directory and site URL are required");
+const secretFile = process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET_FILE;
+const connectionSecret = secretFile
+  ? (await readFile(secretFile, "utf8")).trim()
+  : process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET ?? "";
+const sectionsFile = values.get("sections-file");
+const sections = sectionsFile
+  ? JSON.parse(await readFile(path.resolve(sectionsFile), "utf8"))
+  : [];
+if (command === "prepare-publication-work" || command === "finalize-publication-work") {
+  if (!stateFile) throw new Error("Astro publication-work state file is required");
+  const operation = command === "prepare-publication-work"
+    ? prepareAstroPublicationWork
+    : finalizeAstroPublicationWork;
+  const summary = await operation({
+    docsDir: path.resolve(docsDir),
+    stateFile: path.resolve(stateFile),
+    siteUrl,
+    routeBase: values.get("route-base") ?? "topics",
+    sourceForumLabel: values.get("source-forum-label") ?? "source forum",
+    sections,
+    serverUrl: process.env.DISCUSSIONBRIDGE_SERVER_URL ?? "",
+    connectionId: process.env.DISCUSSIONBRIDGE_CONNECTION_ID ?? "",
+    connectionSecret,
+    lane: process.env.DISCUSSIONBRIDGE_LANE,
+    maximum: integerOption(values.get("limit"), 20, 1, 200, "publication work limit"),
+    requestDelayMs: integerOption(values.get("request-delay-ms"), 0, 0, 5000, "request delay"),
+  });
+  process.stdout.write(`${JSON.stringify(summary)}\n`);
+  if (summary.failed) process.exitCode = 1;
+  process.exit();
+}
 const summary = await materializeNativePublications({
   docsDir: path.resolve(docsDir),
   siteUrl,
   routeBase: values.get("route-base") ?? "comments",
   serverUrl: process.env.DISCUSSIONBRIDGE_SERVER_URL ?? "",
   connectionId: process.env.DISCUSSIONBRIDGE_CONNECTION_ID ?? "",
-  connectionSecret: process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET ?? "",
+  connectionSecret,
 });
 process.stdout.write(`${JSON.stringify(summary)}\n`);
 if (summary.failed) process.exitCode = 1;
+
+function integerOption(value: string | undefined, fallback: number, minimum: number, maximum: number, label: string) {
+  if (value === undefined) return fallback;
+  if (!/^\d+$/u.test(value)) throw new Error(`Invalid Astro ${label}`);
+  const result = Number(value);
+  if (!Number.isSafeInteger(result) || result < minimum || result > maximum) throw new Error(`Invalid Astro ${label}`);
+  return result;
+}

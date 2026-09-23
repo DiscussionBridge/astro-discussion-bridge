@@ -115,7 +115,7 @@ function render(root: HTMLElement, replies: PublicPost[], topicUrl: string, disc
   }
   if (truncated) {
     const limit = element("p", "discussion-bridge-simple__limit", `Showing the first ${MAX_REPLIES} comments. `);
-    limit.append(link(topicUrl, "View the complete discussion on The Bridge"), ".");
+    limit.append(link(topicUrl, "View the complete discussion on the source forum"), ".");
     fragment.append(limit);
   }
   root.replaceChildren(fragment, ...(attributions ? [attributions] : []));

@@ -116,10 +116,11 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Disc
   };
 }
 
-export { publishControlledDiscussions } from "./controlled-creation.js";
+export { legacyUrlDerivedExternalId, publishControlledDiscussions } from "./controlled-creation.js";
 export { isInteractiveCommentsMode, normalizeCommentsMode } from "./comments-mode.js";
 export { fetchFromDiscourseRecord } from "./bridge-record.js";
 export { materializeNativePublications } from "./native-publication.js";
+export { astroPlatformCatalog, finalizeAstroPublicationWork, prepareAstroPublicationWork } from "./publication-work.js";
 export { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
 export type {
   ControlledCreationOptions,

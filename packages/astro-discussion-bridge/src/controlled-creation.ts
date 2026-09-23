@@ -67,6 +67,8 @@ interface ControlledCreationResponse {
   topic_url?: unknown;
   direction?: unknown;
   core_fallback?: unknown;
+  bridge_record?: unknown;
+  source_url_proof?: unknown;
 }
 
 interface PreparedPage {
@@ -242,6 +244,21 @@ async function publishControlledDiscussionsUnlocked(
       continue;
     }
     const { page } = entry;
+    const prior = operationalState.operations[page.externalId];
+    if (prior && prior.canonicalUrl !== page.pageUrl) {
+      try {
+        await attestSourceUrlMove(page, prior, options);
+      } catch (error) {
+        const failed = beginPublicationAttempt(operationalState, {
+          externalId: page.externalId,
+          canonicalUrl: prior.canonicalUrl,
+        });
+        failPublicationAttempt(failed, error, classifyPublicationFailure(error));
+        await writePublicationOperationalState(stateFile, operationalState);
+        throw error;
+      }
+      prior.canonicalUrl = page.pageUrl;
+    }
     const operation = beginPublicationAttempt(operationalState, {
       externalId: page.externalId,
       canonicalUrl: page.pageUrl,
@@ -262,7 +279,9 @@ async function publishControlledDiscussionsUnlocked(
         correlationId: operation.correlationId,
       });
       if (
-        (page.existingResourceId && created.resourceId !== page.existingResourceId)
+        (prior?.resourceId && created.resourceId !== prior.resourceId)
+        || (prior?.topicId && created.topicId !== prior.topicId)
+        || (page.existingResourceId && created.resourceId !== page.existingResourceId)
         || (page.existingTopicId && created.topicId !== page.existingTopicId)
       ) {
         throw new Error(`DiscussionBridge resolved a different resource or topic than the stored mapping for ${page.filePath}.`);
@@ -304,6 +323,109 @@ async function publishControlledDiscussionsUnlocked(
   }
 
   return results;
+}
+
+async function attestSourceUrlMove(
+  page: PreparedPage,
+  prior: { canonicalUrl: string; resourceId?: string; topicId?: number },
+  options: PublishControlledDiscussionsOptions,
+): Promise<void> {
+  if (!prior.resourceId || !prior.topicId) {
+    throw new Error("DiscussionBridge source URL changed without a recorded receiver identity; reconcile before publishing.");
+  }
+  const base = parseServiceBaseUrl(options.discourseUrl);
+  const endpoint = resolveServiceRequestUrl(
+    `/discussion-bridge/v1/bridge-records/${encodeURIComponent(prior.resourceId)}.json`, base,
+  );
+  const response = await fetch(endpoint, {
+    method: "GET",
+    redirect: "error",
+    signal: AbortSignal.timeout(positiveBoundedInteger(
+      options.controlledCreation.requestTimeoutMs, DEFAULT_TIMEOUT_MS,
+      "controlledCreation requestTimeoutMs", 10 * 60 * 1000,
+    )),
+    headers: {
+      Accept: "application/json",
+      "X-DiscussionBridge-Connection": options.controlledCreation.connectionId,
+      "X-DiscussionBridge-Secret": options.controlledCreation.connectionSecret,
+    },
+  });
+  if (response.url) assertServiceResponseUrl(response.url, base, "source URL attestation response URL");
+  const payload = await safeJsonResponse(response, positiveBoundedInteger(
+    options.controlledCreation.maxResponseBytes, DEFAULT_MAX_RESPONSE_BYTES,
+    "controlledCreation maxResponseBytes", 64 * 1024 * 1024,
+  ));
+  const record = payload.bridge_record;
+  if (!response.ok || !record || typeof record !== "object" || Array.isArray(record)) {
+    throw new Error("DiscussionBridge source URL move is not attested by the existing Bridge Record.");
+  }
+  const identity = record as Record<string, unknown>;
+  const topicUrl = identity.topic_url;
+  const topic = typeof topicUrl === "string"
+    ? parsePublicDiscourseTopicUrl(topicUrl, options.discourseUrl, "source URL attestation topic URL")
+    : null;
+  const bindings = Array.isArray(identity.bindings) ? identity.bindings.filter((binding: unknown) =>
+    binding && typeof binding === "object" && !Array.isArray(binding)
+    && (binding as Record<string, unknown>).role === "source"
+    && (binding as Record<string, unknown>).state === "active") : [];
+  const binding = bindings[0] as Record<string, unknown> | undefined;
+  const transition = binding?.url_migration;
+  const migration = transition && typeof transition === "object" && !Array.isArray(transition)
+    ? transition as Record<string, unknown> : null;
+  if (identity.direction !== "to_discourse" || identity.state !== "healthy"
+      || identity.resource_id !== prior.resourceId || identity.topic_id !== prior.topicId
+      || topic?.topicId !== prior.topicId || bindings.length !== 1
+      || binding?.external_id !== page.externalId || binding.canonical_url !== page.pageUrl
+  ) {
+    throw new Error("DiscussionBridge source URL move lacks an exact verified receiver transition.");
+  }
+  if (migration?.old_url === prior.canonicalUrl && migration.new_url === page.pageUrl
+      && (migration.redirect_status === 301 || migration.redirect_status === 308)) return;
+  await attestSourceUrlChain(page, prior, options);
+}
+
+async function attestSourceUrlChain(
+  page: PreparedPage,
+  prior: { canonicalUrl: string; resourceId?: string; topicId?: number },
+  options: PublishControlledDiscussionsOptions,
+): Promise<void> {
+  const base = parseServiceBaseUrl(options.discourseUrl);
+  const query = new URLSearchParams({ from_url: prior.canonicalUrl, to_url: page.pageUrl });
+  const endpoint = resolveServiceRequestUrl(
+    `/discussion-bridge/v1/bridge-records/${encodeURIComponent(prior.resourceId!)}/source-url-proof.json?${query}`,
+    base,
+  );
+  const response = await fetch(endpoint, {
+    method: "GET",
+    redirect: "error",
+    signal: AbortSignal.timeout(positiveBoundedInteger(
+      options.controlledCreation.requestTimeoutMs, DEFAULT_TIMEOUT_MS,
+      "controlledCreation requestTimeoutMs", 10 * 60 * 1000,
+    )),
+    headers: {
+      Accept: "application/json",
+      "X-DiscussionBridge-Connection": options.controlledCreation.connectionId,
+      "X-DiscussionBridge-Secret": options.controlledCreation.connectionSecret,
+    },
+  });
+  if (response.url) assertServiceResponseUrl(response.url, base, "source URL history response URL");
+  const payload = await safeJsonResponse(response, positiveBoundedInteger(
+    options.controlledCreation.maxResponseBytes, DEFAULT_MAX_RESPONSE_BYTES,
+    "controlledCreation maxResponseBytes", 64 * 1024 * 1024,
+  ));
+  const raw = payload.source_url_proof;
+  if (!response.ok || !raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error("DiscussionBridge source URL move lacks a complete receiver history.");
+  }
+  const proof = raw as Record<string, unknown>;
+  if (proof.resource_id !== prior.resourceId || proof.topic_id !== prior.topicId
+      || proof.external_id !== page.externalId || proof.from_url !== prior.canonicalUrl
+      || proof.to_url !== page.pageUrl || proof.verified !== true
+      || typeof proof.transition_count !== "number"
+      || !Number.isSafeInteger(proof.transition_count)
+      || proof.transition_count < 2 || proof.transition_count > 20) {
+    throw new Error("DiscussionBridge source URL move lacks a complete receiver history.");
+  }
 }
 
 function validateOptions(options: PublishControlledDiscussionsOptions): {
@@ -359,7 +481,7 @@ export async function resolveControlledCreation(input: {
   sourceUrl: string;
   title: string;
   contentHtml: unknown;
-  externalId?: string;
+  externalId: string;
   sourceAuthors?: SourceAuthor[];
   primarySourceAuthorId?: string;
   existingTopicId?: number;
@@ -369,10 +491,7 @@ export async function resolveControlledCreation(input: {
   const sourceUrl = validatedSourceUrl(input.sourceUrl);
   const title = validatedTitle(input.title, "controlledCreation request");
   const contentHtml = validatedContentHtml(input.contentHtml, "controlledCreation request");
-  const externalId = input.externalId ?? `astro-page:${createHash("sha256").update(sourceUrl).digest("hex")}`;
-  if (!/^astro-page:[0-9a-f]{64}$/.test(externalId)) {
-    throw new Error("controlledCreation externalId must be an Astro page identity.");
-  }
+  const externalId = requiredExternalId(input.externalId, "controlledCreation externalId");
   if (input.existingTopicId !== undefined &&
       (!Number.isSafeInteger(input.existingTopicId) || input.existingTopicId <= 0)) {
     throw new Error("controlledCreation existingTopicId must be a positive safe integer.");
@@ -468,12 +587,24 @@ export async function resolveControlledCreation(input: {
   return { outcome: payload.outcome, reason: reason ?? payload.outcome, resourceId, topicId: payload.topic_id, topicUrl };
 }
 
+/**
+ * Reproduce the URL-derived identity used before an explicit externalId was
+ * mandatory. Use this only to recover and persist the identity of content
+ * already published by one of those adapter releases.
+ */
+export function legacyUrlDerivedExternalId(sourceUrl: string): string {
+  const normalized = validatedSourceUrl(sourceUrl);
+  return `astro-page:${createHash("sha256").update(normalized).digest("hex")}`;
+}
+
 function classifyPublicationFailure(error: unknown): { retryable: boolean; reconciliationRequired: boolean } {
   if (error instanceof ControlledCreationRequestError) {
     return { retryable: error.retryable, reconciliationRequired: error.reconciliationRequired };
   }
   const message = error instanceof Error ? error.message.toLowerCase() : "";
-  const reconciliationRequired = message.includes("reconciliation") || message.includes("different resource or topic");
+  const reconciliationRequired = message.includes("reconciliation") || message.includes("different resource or topic")
+    || message.includes("source url move lacks") || message.includes("source url move is not attested")
+    || message.includes("source url changed without");
   const explicitlyRejected = message.includes("was rejected") && !/http (408|429|5\d\d)/u.test(message);
   return { retryable: !explicitlyRejected && !reconciliationRequired, reconciliationRequired };
 }

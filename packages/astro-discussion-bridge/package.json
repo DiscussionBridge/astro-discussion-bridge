@@ -1,6 +1,6 @@
 {
   "name": "astro-discussion-bridge",
-  "version": "0.2.0-alpha.22",
+  "version": "0.2.0-alpha.34",
   "description": "Two-direction Astro adapter with plugin-free Simple/Full comments and plugin-backed Interactive discussion.",
   "type": "module",
   "license": "MIT",
@@ -39,6 +39,10 @@
       "types": "./dist/native-publication.d.ts",
       "import": "./dist/native-publication.js"
     },
+    "./publication-work": {
+      "types": "./dist/publication-work.d.ts",
+      "import": "./dist/publication-work.js"
+    },
     "./operational-state": {
       "types": "./dist/operational-state.d.ts",
       "import": "./dist/operational-state.js"
@@ -47,7 +51,8 @@
     "./DiscourseReplies.astro": "./src/components/DiscourseReplies.astro",
     "./Discussion.astro": "./src/components/Discussion.astro",
     "./DiscussionCredit.astro": "./src/components/DiscussionCredit.astro",
-    "./FromDiscourse.astro": "./src/components/FromDiscourse.astro"
+    "./FromDiscourse.astro": "./src/components/FromDiscourse.astro",
+    "./ImportedRichContent.astro": "./src/components/ImportedRichContent.astro"
   },
   "files": [
     "dist",
@@ -95,6 +100,8 @@
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.1",
     "dompurify": "3.4.14",
+    "katex": "0.18.4",
+    "mermaid": "11.17.2",
     "proper-lockfile": "^4.1.2",
     "sanitize-html": "2.17.7",
     "yaml": "^2.9.0"
