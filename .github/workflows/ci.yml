@@ -71,6 +71,9 @@ jobs:
       - name: Install exact dependencies
         run: npm ci
 
+      - name: Build package artifacts
+        run: npm run build
+
       - name: Audit production dependencies
         run: npm audit --audit-level=low
 
