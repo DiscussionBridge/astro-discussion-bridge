@@ -53,6 +53,7 @@ interface WorkerOperation {
   work: AstroPublicationWork;
   phase: WorkerPhase;
   stageToken: string;
+  requiresReclaim?: true;
   destinationBinding?: AstroDestinationBinding;
   synchronizedAt?: string;
   deployedAt?: string;
@@ -89,6 +90,7 @@ export async function runAstroPublicationWorker(options: RunAstroPublicationWork
     const state = await readWorkerState(options.stateFile);
     const summary = { claimed: 0, completed: 0, failed: 0, resumed: Object.keys(state.operations).length };
     for (const workId of Object.keys(state.operations)) {
+      if (state.operations[workId]?.requiresReclaim) continue;
       const outcome = await processOperation(options, state, workId, now);
       summary[outcome]++;
     }
@@ -99,8 +101,27 @@ export async function runAstroPublicationWorker(options: RunAstroPublicationWork
     });
     summary.claimed = claimed.work.length;
     for (const work of claimed.work) {
-      if (state.operations[work.workId]) throw new Error("DiscussionBridge claimed work already exists in local worker state.");
-      state.operations[work.workId] = { work, phase: "claimed", stageToken: work.stageToken };
+      const retained = state.operations[work.workId];
+      if (retained) {
+        if (!retained.requiresReclaim) throw new Error("DiscussionBridge claimed work already exists in active local worker state.");
+        try {
+          validateReclaimedWork(retained.work, work);
+        } catch (error) {
+          if (!(error instanceof AstroPublicationWorkerError)) throw error;
+          await registerAstroPublicationFailure(options.credentials, work, {
+            errorCode: error.errorCode,
+            errorDetail: error.message,
+            failedAt: now().toISOString(),
+          });
+          summary.failed++;
+          continue;
+        }
+        retained.work = work;
+        retained.stageToken = work.stageToken;
+        delete retained.requiresReclaim;
+      } else {
+        state.operations[work.workId] = { work, phase: "claimed", stageToken: work.stageToken };
+      }
       await writeWorkerState(options.stateFile, state);
       const outcome = await processOperation(options, state, work.workId, now);
       summary[outcome]++;
@@ -206,19 +227,57 @@ async function processOperation(
     return "completed";
   } catch (error) {
     if (error instanceof AstroPublicationLeaseExpiredError || (error instanceof Alpha21RequestError && error.errorCode === "work_expired")) {
-      delete state.operations[workId];
+      if (operation.phase === "claimed") delete state.operations[workId];
+      else operation.requiresReclaim = true;
       await writeWorkerState(options.stateFile, state);
       return "failed";
     }
     if (!(error instanceof AstroPublicationWorkerError)) throw error;
+    const retainForReclaim = operation.phase !== "claimed";
+    if (retainForReclaim) {
+      operation.requiresReclaim = true;
+      await writeWorkerState(options.stateFile, state);
+    }
     await registerAstroPublicationFailure(options.credentials, operation.work, {
       errorCode: error.errorCode,
       errorDetail: error.message,
       failedAt: now().toISOString(),
     });
-    delete state.operations[workId];
+    if (!retainForReclaim) delete state.operations[workId];
     await writeWorkerState(options.stateFile, state);
     return "failed";
+  }
+}
+
+function validateReclaimedWork(previous: AstroPublicationWork, current: AstroPublicationWork): void {
+  const immutable = (work: AstroPublicationWork) => ({
+    workId: work.workId,
+    resourceId: work.resourceId,
+    connectionId: work.connectionId,
+    action: work.action,
+    sourceRevision: work.sourceRevision,
+    sourceRevisionSequence: work.sourceRevisionSequence,
+    policyRevision: work.policyRevision,
+    destinationPolicyId: work.destinationPolicyId,
+    catalogRevision: work.catalogRevision,
+    presentationMode: work.presentationMode,
+    resolvedContainer: work.resolvedContainer,
+    resolvedTaxonomy: work.resolvedTaxonomy,
+    resolvedAuthor: work.resolvedAuthor,
+    nativeLimitPolicy: work.nativeLimitPolicy,
+  });
+  const generationAdvanced = current.retryGeneration > previous.retryGeneration;
+  const attemptValid = generationAdvanced || (
+    current.retryGeneration === previous.retryGeneration
+    && current.attemptCount >= previous.attemptCount
+  );
+  if (
+    JSON.stringify(immutable(previous)) !== JSON.stringify(immutable(current))
+    || !attemptValid
+    || current.leaseToken === previous.leaseToken
+    || current.stageToken === previous.stageToken
+  ) {
+    throw new AstroPublicationWorkerError("reconciliation_required", "Reclaimed publication work does not match retained durable state.");
   }
 }
 
@@ -306,7 +365,13 @@ async function readWorkerState(filePath: string): Promise<WorkerState> {
     const state = value as Partial<WorkerState>;
     if (state.schemaVersion !== STATE_VERSION || state.adapterId !== "astro-discussion-bridge" || !state.operations || typeof state.operations !== "object" || Array.isArray(state.operations)) throw new Error("DiscussionBridge publication worker state is invalid.");
     for (const [workId, operation] of Object.entries(state.operations)) {
-      if (!operation || operation.work.workId !== workId || !["claimed", "native_synchronized", "awaiting_deployment", "native_deployed", "awaiting_verification", "native_verified"].includes(operation.phase)) throw new Error("DiscussionBridge publication worker operation is invalid.");
+      if (
+        !operation
+        || operation.work.workId !== workId
+        || !["claimed", "native_synchronized", "awaiting_deployment", "native_deployed", "awaiting_verification", "native_verified"].includes(operation.phase)
+        || (operation.requiresReclaim !== undefined && operation.requiresReclaim !== true)
+        || (operation.requiresReclaim && operation.phase === "claimed")
+      ) throw new Error("DiscussionBridge publication worker operation is invalid.");
     }
     return state as WorkerState;
   } catch (error) {

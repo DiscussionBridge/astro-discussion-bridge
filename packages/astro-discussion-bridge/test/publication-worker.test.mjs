@@ -159,3 +159,100 @@ test("worker resumes after native synchronization without repeating the native m
   assert.deepEqual(requestStages, ["synchronized", "synchronized", "deployed", "verified"]);
   assert.deepEqual(JSON.parse(await readFile(stateFile, "utf8")).operations, {});
 });
+
+test("worker reclaims durable static stages without repeating completed mutations", async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-worker-reclaim-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const stateFile = path.join(directory, "worker-state.json");
+  const sourceStateFile = path.join(directory, "source-state.json");
+  await createSourceState(sourceStateFile);
+  let claimCount = 0;
+  const requestStages = [];
+  const failureCodes = [];
+  const leases = ["c".repeat(64), "d".repeat(64), "e".repeat(64)];
+  const stages = ["2".repeat(64), "5".repeat(64), "6".repeat(64)];
+  const fetchImplementation = async (url, init) => {
+    const parsed = new URL(url);
+    const correlationId = init.headers["X-DiscussionBridge-Correlation"];
+    if (parsed.pathname.endsWith("/connection.json")) return response(capability(correlationId), correlationId);
+    if (parsed.pathname.endsWith("/publication-work/claim.json")) {
+      const work = astroWork(correlationId);
+      work.lease_token = leases[claimCount];
+      work.stage_token = stages[claimCount];
+      work.attempt_count = claimCount + 1;
+      claimCount++;
+      return response({ publication_work: [work], claimed_at: "2026-09-27T18:30:00Z" }, correlationId);
+    }
+    if (parsed.pathname.endsWith("/source-topics/8.json")) return response(detailBase, correlationId);
+    if (parsed.pathname.endsWith("/acknowledgement.json")) {
+      const body = JSON.parse(init.body);
+      requestStages.push(body.stage);
+      return response({ ...acknowledgementResponses[body.stage], work_id: astroWork(correlationId).work_id }, correlationId);
+    }
+    if (parsed.pathname.endsWith("/failure.json")) {
+      const body = JSON.parse(init.body);
+      failureCodes.push(body.error_code);
+      return response({
+        work_id: astroWork(correlationId).work_id,
+        resulting_state: "retry_wait",
+        attempt_count: failureCodes.length,
+        next_retry_at: "2026-09-27T18:33:00Z",
+      }, correlationId);
+    }
+    throw new Error(`Unexpected request ${parsed.pathname}`);
+  };
+  const calls = { synchronize: 0, deploy: 0, verify: 0 };
+  const options = {
+    credentials: {
+      discourseUrl: "https://forum.example/",
+      connectionId: capabilityBase.connection_id,
+      connectionSecret: "s".repeat(40),
+      fetchImplementation,
+    },
+    stateFile,
+    sourceStateFile,
+    workerId: "astro-worker-1",
+    now: () => new Date("2026-09-27T18:30:30Z"),
+    destination: {
+      synchronize: async ({ publication }) => {
+        calls.synchronize++;
+        return {
+          destinationBinding: {
+            bindingId: "dbb_11111111111111111111111111111111",
+            externalId: "astro:page:roadmap",
+            canonicalUrl: "https://publisher.example/roadmap/",
+            publicationRevision: `astro:sha256:${createHash("sha256").update(publication.contentHtml).digest("hex")}`,
+            contentDisposition: publication.contentDisposition,
+          },
+          synchronizedAt: "2026-09-27T18:31:00Z",
+        };
+      },
+      deploy: async () => {
+        calls.deploy++;
+        if (calls.deploy === 1) throw new Error("simulated deployment failure");
+        return { deployedAt: "2026-09-27T18:31:30Z" };
+      },
+      verify: async () => {
+        calls.verify++;
+        if (calls.verify === 1) throw new Error("simulated public verification failure");
+        return { publiclyVerifiedAt: "2026-09-27T18:32:00Z" };
+      },
+    },
+  };
+
+  assert.deepEqual(await runAstroPublicationWorker(options), { claimed: 1, completed: 0, failed: 1, resumed: 0 });
+  let operation = Object.values(JSON.parse(await readFile(stateFile, "utf8")).operations)[0];
+  assert.equal(operation.phase, "awaiting_deployment");
+  assert.equal(operation.requiresReclaim, true);
+
+  assert.deepEqual(await runAstroPublicationWorker(options), { claimed: 1, completed: 0, failed: 1, resumed: 1 });
+  operation = Object.values(JSON.parse(await readFile(stateFile, "utf8")).operations)[0];
+  assert.equal(operation.phase, "awaiting_verification");
+  assert.equal(operation.requiresReclaim, true);
+
+  assert.deepEqual(await runAstroPublicationWorker(options), { claimed: 1, completed: 1, failed: 0, resumed: 1 });
+  assert.deepEqual(calls, { synchronize: 1, deploy: 2, verify: 2 });
+  assert.deepEqual(requestStages, ["synchronized", "deployed", "verified"]);
+  assert.deepEqual(failureCodes, ["deploy_failed", "public_verification_failed"]);
+  assert.deepEqual(JSON.parse(await readFile(stateFile, "utf8")).operations, {});
+});
