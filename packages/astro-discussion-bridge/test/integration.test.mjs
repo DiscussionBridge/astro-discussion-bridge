@@ -65,6 +65,8 @@ test("package and source inventory expose only the eight-profile Astro adapter b
     "./controlled-creation",
     "./native-publication",
     "./operational-state",
+    "./platform-catalog",
+    "./publication-work",
     "./source-publication",
     "./source-publication-state",
     "./web-url",

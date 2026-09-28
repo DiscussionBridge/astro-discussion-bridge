@@ -120,6 +120,13 @@ export { publishControlledDiscussions } from "./controlled-creation.js";
 export { isInteractiveCommentsMode, normalizeCommentsMode } from "./comments-mode.js";
 export { ADAPTER_CONTRACT_VERSION, PRODUCT_VERSION } from "./version.js";
 export { fetchFromDiscourseRecord } from "./bridge-record.js";
+export { fetchAstroCatalogPage, publishAstroCatalog } from "./platform-catalog.js";
+export {
+  acknowledgeAstroPublicationWork,
+  claimAstroPublicationWork,
+  registerAstroPublicationFailure,
+  renewAstroPublicationLease,
+} from "./publication-work.js";
 export {
   fetchSourceInventoryPage,
   fetchSourceRevocationDetail,
@@ -143,6 +150,13 @@ export type {
   PublishControlledDiscussionsOptions,
 } from "./controlled-creation.js";
 export type { BridgeRecordCredentials, PresentedBridgeRecord } from "./bridge-record.js";
+export type { AstroCatalogPage, AstroCatalogSegment } from "./platform-catalog.js";
+export type {
+  AstroAcknowledgementResult,
+  AstroDestinationBinding,
+  AstroPublicationWork,
+  AstroWorkAcknowledgement,
+} from "./publication-work.js";
 export type {
   RetrievedSourceContent,
   SourceInventoryItem,

@@ -227,6 +227,8 @@ generated page.
 - `astro-discussion-bridge/controlled-creation`
 - `astro-discussion-bridge/web-url`
 - `astro-discussion-bridge/bridge-record`
+- `astro-discussion-bridge/platform-catalog`
+- `astro-discussion-bridge/publication-work`
 - `astro-discussion-bridge/source-publication`
 - `astro-discussion-bridge/source-publication-state`
 - `astro-discussion-bridge/native-publication`

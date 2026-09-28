@@ -39,6 +39,14 @@
       "types": "./dist/source-publication-state.d.ts",
       "import": "./dist/source-publication-state.js"
     },
+    "./platform-catalog": {
+      "types": "./dist/platform-catalog.d.ts",
+      "import": "./dist/platform-catalog.js"
+    },
+    "./publication-work": {
+      "types": "./dist/publication-work.d.ts",
+      "import": "./dist/publication-work.js"
+    },
     "./web-url": {
       "types": "./dist/web-url.d.ts",
       "import": "./dist/web-url.js"
