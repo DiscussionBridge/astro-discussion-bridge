@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: packages/astro-discussion-bridge
+
+jobs:
+  node-compatibility:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22.x, 24.x]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use HTTPS for the released contract dependency
+        run: |
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: packages/astro-discussion-bridge/package-lock.json
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Run complete tests
+        run: npm test
+
+      - name: Check TypeScript
+        run: npm run check
+
+  complete-package-gates:
+    name: Consumers, scale, and package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use HTTPS for the released contract dependency
+        run: |
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global --add url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+          cache-dependency-path: packages/astro-discussion-bridge/package-lock.json
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --audit-level=low
+
+      - name: Verify attribution and package contents
+        run: |
+          npm run check:attribution
+          npm run pack:inspect
+
+      - name: Verify Astro and Starlight consumers
+        run: npm run verify:consumers
+
+      - name: Verify the 1,000-page estate
+        run: npm run verify:large-site
+
+      - name: Verify normal tarball installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_dir="$(mktemp -d)"
+          consumer_dir="$(mktemp -d)"
+          trap 'rm -rf "$artifact_dir" "$consumer_dir"' EXIT
+          tarball="$(npm pack --pack-destination "$artifact_dir" --silent)"
+          cd "$consumer_dir"
+          npm init --yes >/dev/null
+          npm install --save-exact "$artifact_dir/$tarball"
+          node --input-type=module <<'NODE'
+          const root = await import("astro-discussion-bridge");
+          const client = await import("astro-discussion-bridge/alpha21-client");
+          const worker = await import("astro-discussion-bridge/publication-worker");
+          if (
+            root.PRODUCT_VERSION !== "0.2.0-alpha.35"
+            || root.ADAPTER_CONTRACT_VERSION !== "0.2.0-alpha.21"
+            || typeof client.fetchAlpha21ConnectionCapability !== "function"
+            || typeof worker.runAstroPublicationWorker !== "function"
+          ) process.exit(1);
+          NODE
+          test -f node_modules/astro-discussion-bridge/src/components/DiscourseDiscussion.astro
+          test -f node_modules/astro-discussion-bridge/src/components/Discussion.astro
+          test -f node_modules/astro-discussion-bridge/src/components/FromDiscourse.astro
+
+      - name: Confirm gates did not mutate tracked source
+        working-directory: .
+        run: git diff --exit-code
