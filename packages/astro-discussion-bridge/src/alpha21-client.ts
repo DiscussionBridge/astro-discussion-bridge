@@ -62,6 +62,7 @@ export interface Alpha21JsonRequest {
   credentials: Alpha21Credentials;
   body?: Record<string, unknown>;
   correlationId?: string;
+  correlationBody?: "top_level" | "bridge_record";
   maximumRequestBytes?: number;
   maximumResponseBytes?: number;
 }
@@ -138,11 +139,11 @@ export async function requestAlpha21Json(input: Alpha21JsonRequest): Promise<Alp
   let requestBody: string | undefined;
   if (input.body !== undefined) {
     if (!isObject(input.body)) throw new Error("DiscussionBridge request body must be an object.");
-    const bodyCorrelation = input.body.correlation_id;
-    if (bodyCorrelation !== undefined && bodyCorrelation !== correlationId) {
-      throw new Error("DiscussionBridge request correlation header and body must match.");
-    }
-    requestBody = JSON.stringify({ ...input.body, correlation_id: correlationId });
+    const correlationBody = input.correlationBody ?? "top_level";
+    const correlatedBody = correlationBody === "bridge_record"
+      ? withNestedBridgeRecordCorrelation(input.body, correlationId)
+      : withTopLevelCorrelation(input.body, correlationId);
+    requestBody = JSON.stringify(correlatedBody);
     const maximumRequestBytes = positiveBoundedInteger(
       input.maximumRequestBytes,
       65_536,
@@ -180,8 +181,45 @@ export async function requestAlpha21Json(input: Alpha21JsonRequest): Promise<Alp
   if (responseHeader !== correlationId || payload.correlation_id !== correlationId) {
     throw new Error("DiscussionBridge response correlation does not match the request.");
   }
-  if (!response.ok) throw responseError(response, payload, correlationId, input.credentials.connectionSecret);
+  if (!response.ok) throw responseError(
+    response,
+    payload,
+    correlationId,
+    [input.credentials.connectionSecret, input.credentials.connectionId],
+  );
   return { payload, correlationId, status: response.status };
+}
+
+function withTopLevelCorrelation(
+  body: Record<string, unknown>,
+  correlationId: string,
+): Record<string, unknown> {
+  const bodyCorrelation = body.correlation_id;
+  if (bodyCorrelation !== undefined && bodyCorrelation !== correlationId) {
+    throw new Error("DiscussionBridge request correlation header and body must match.");
+  }
+  return { ...body, correlation_id: correlationId };
+}
+
+function withNestedBridgeRecordCorrelation(
+  body: Record<string, unknown>,
+  correlationId: string,
+): Record<string, unknown> {
+  if (Object.hasOwn(body, "correlation_id")) {
+    throw new Error("DiscussionBridge resolve correlation belongs inside bridge_record.");
+  }
+  const bridgeRecord = body.bridge_record;
+  if (!isObject(bridgeRecord)) {
+    throw new Error("DiscussionBridge resolve request requires a bridge_record object.");
+  }
+  const bodyCorrelation = bridgeRecord.correlation_id;
+  if (bodyCorrelation !== undefined && bodyCorrelation !== correlationId) {
+    throw new Error("DiscussionBridge request correlation header and body must match.");
+  }
+  return {
+    ...body,
+    bridge_record: { ...bridgeRecord, correlation_id: correlationId },
+  };
 }
 
 export async function fetchAlpha21ConnectionCapability(
@@ -336,11 +374,14 @@ function responseError(
   response: Response,
   payload: Record<string, unknown>,
   correlationId: string,
-  secret: string,
+  protectedValues: string[],
 ): Alpha21RequestError {
   exactFields(payload, ["error_code", "message", "correlation_id"], [], "error response");
   const errorCode = boundedNonblank(payload.error_code, 100, "error code");
-  const message = boundedNonblank(payload.message, 2_048, "error message").split(secret).join("[REDACTED]");
+  const message = protectedValues.reduce(
+    (redacted, value) => redacted.split(value).join("[REDACTED]"),
+    boundedNonblank(payload.message, 2_048, "error message"),
+  );
   return new Alpha21RequestError(
     errorCode,
     `DiscussionBridge request failed (${response.status}, ${errorCode}): ${message}`,

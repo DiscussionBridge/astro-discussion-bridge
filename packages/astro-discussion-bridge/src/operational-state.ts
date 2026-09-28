@@ -3,7 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { lock } from "proper-lockfile";
 
-const STATE_VERSION = 1;
+const STATE_VERSION = 2;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type PublicationOutcome = "pending" | "created" | "resolved" | "retryable_failure" | "rejected" | "reconciliation_required";
@@ -22,10 +22,16 @@ export interface PublicationOperation {
   topicId?: number;
   topicUrl?: string;
   lastSuccessAt?: string;
+  sourceRevision?: string;
+  sourceRevisionSequence?: number;
+  sourceCreatedAt?: string;
+  sourceUpdatedAt?: string;
+  sourceContentBytes?: number;
+  sourceContentSha256?: string;
 }
 
 export interface PublicationOperationalState {
-  schemaVersion: 1;
+  schemaVersion: 2;
   adapterId: "astro-discussion-bridge";
   operations: Record<string, PublicationOperation>;
 }
@@ -87,9 +93,24 @@ export async function withPublicationOperationalStateLock<T>(
   }
 }
 
-export function beginPublicationAttempt(state: PublicationOperationalState, identity: { externalId: string; canonicalUrl: string }, now = new Date()): PublicationOperation {
+export function beginPublicationAttempt(
+  state: PublicationOperationalState,
+  identity: {
+    externalId: string;
+    canonicalUrl: string;
+    revision?: {
+      sourceRevision: string;
+      sourceCreatedAt: string;
+      sourceUpdatedAt: string;
+      sourceContentBytes: number;
+      sourceContentSha256: string;
+    };
+  },
+  now = new Date(),
+): PublicationOperation {
   const prior = state.operations[identity.externalId];
   if (prior && prior.canonicalUrl !== identity.canonicalUrl) throw new Error("DiscussionBridge operational state contains a canonical identity collision.");
+  const revision = resolveRevision(prior, identity.revision);
   const operation: PublicationOperation = {
     ...prior,
     externalId: identity.externalId,
@@ -100,6 +121,7 @@ export function beginPublicationAttempt(state: PublicationOperationalState, iden
     retryable: false,
     reconciliationRequired: false,
     lastAttemptAt: now.toISOString(),
+    ...revision,
   };
   delete operation.lastError;
   state.operations[identity.externalId] = operation;
@@ -162,10 +184,18 @@ function emptyState(): PublicationOperationalState {
 
 function validateState(value: unknown): PublicationOperationalState {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("DiscussionBridge operational state is invalid.");
-  const candidate = value as Partial<PublicationOperationalState>;
-  if (candidate.schemaVersion !== STATE_VERSION || candidate.adapterId !== "astro-discussion-bridge" || !candidate.operations || typeof candidate.operations !== "object" || Array.isArray(candidate.operations)) throw new Error("DiscussionBridge operational state is invalid.");
+  const candidate = value as {
+    schemaVersion?: number;
+    adapterId?: unknown;
+    operations?: unknown;
+  };
+  if ((candidate.schemaVersion !== 1 && candidate.schemaVersion !== STATE_VERSION) || candidate.adapterId !== "astro-discussion-bridge" || !candidate.operations || typeof candidate.operations !== "object" || Array.isArray(candidate.operations)) throw new Error("DiscussionBridge operational state is invalid.");
   for (const [key, operation] of Object.entries(candidate.operations)) validateOperation(key, operation);
-  return candidate as PublicationOperationalState;
+  return {
+    schemaVersion: STATE_VERSION,
+    adapterId: "astro-discussion-bridge",
+    operations: candidate.operations as Record<string, PublicationOperation>,
+  };
 }
 
 function validateOperation(key: string, value: unknown): asserts value is PublicationOperation {
@@ -177,6 +207,85 @@ function validateOperation(key: string, value: unknown): asserts value is Public
   }
   if (operation.resourceId !== undefined && !UUID.test(operation.resourceId)) throw new Error("DiscussionBridge operational state entry is invalid.");
   if (operation.topicId !== undefined && (!Number.isSafeInteger(operation.topicId) || operation.topicId < 1)) throw new Error("DiscussionBridge operational state entry is invalid.");
+  const revisionFields = [
+    operation.sourceRevision,
+    operation.sourceRevisionSequence,
+    operation.sourceCreatedAt,
+    operation.sourceUpdatedAt,
+    operation.sourceContentBytes,
+    operation.sourceContentSha256,
+  ];
+  if (revisionFields.some((field) => field !== undefined)) {
+    if (
+      typeof operation.sourceRevision !== "string"
+      || !/^astro-sha256:[a-f0-9]{64}$/.test(operation.sourceRevision)
+      || !Number.isSafeInteger(operation.sourceRevisionSequence)
+      || Number(operation.sourceRevisionSequence) < 1
+      || !validDate(operation.sourceCreatedAt)
+      || !validDate(operation.sourceUpdatedAt)
+      || Date.parse(operation.sourceUpdatedAt) < Date.parse(operation.sourceCreatedAt)
+      || !Number.isSafeInteger(operation.sourceContentBytes)
+      || Number(operation.sourceContentBytes) < 0
+      || Number(operation.sourceContentBytes) > 16 * 1024 * 1024
+      || typeof operation.sourceContentSha256 !== "string"
+      || !/^[a-f0-9]{64}$/.test(operation.sourceContentSha256)
+    ) throw new Error("DiscussionBridge operational revision state is invalid.");
+  }
+}
+
+function resolveRevision(
+  prior: PublicationOperation | undefined,
+  incoming: {
+    sourceRevision: string;
+    sourceCreatedAt: string;
+    sourceUpdatedAt: string;
+    sourceContentBytes: number;
+    sourceContentSha256: string;
+  } | undefined,
+): Partial<PublicationOperation> {
+  if (!incoming) return {};
+  if (!/^astro-sha256:[a-f0-9]{64}$/.test(incoming.sourceRevision)) {
+    throw new Error("DiscussionBridge source revision is invalid.");
+  }
+  if (!validDate(incoming.sourceCreatedAt) || !validDate(incoming.sourceUpdatedAt)) {
+    throw new Error("DiscussionBridge source timestamps are invalid.");
+  }
+  if (Date.parse(incoming.sourceUpdatedAt) < Date.parse(incoming.sourceCreatedAt)) {
+    throw new Error("DiscussionBridge source update time precedes source creation.");
+  }
+  if (!Number.isSafeInteger(incoming.sourceContentBytes) || incoming.sourceContentBytes < 0 || incoming.sourceContentBytes > 16 * 1024 * 1024) {
+    throw new Error("DiscussionBridge complete source content size is invalid.");
+  }
+  if (!/^[a-f0-9]{64}$/.test(incoming.sourceContentSha256)) {
+    throw new Error("DiscussionBridge complete source content hash is invalid.");
+  }
+
+  if (prior?.sourceRevision === incoming.sourceRevision) {
+    if (
+      prior.sourceContentBytes !== incoming.sourceContentBytes
+      || prior.sourceContentSha256 !== incoming.sourceContentSha256
+    ) throw new Error("DiscussionBridge source revision conflicts with its stored content identity.");
+    return {
+      sourceRevision: prior.sourceRevision,
+      sourceRevisionSequence: prior.sourceRevisionSequence,
+      sourceCreatedAt: prior.sourceCreatedAt,
+      sourceUpdatedAt: prior.sourceUpdatedAt,
+      sourceContentBytes: prior.sourceContentBytes,
+      sourceContentSha256: prior.sourceContentSha256,
+    };
+  }
+
+  if (prior?.sourceUpdatedAt && Date.parse(incoming.sourceUpdatedAt) <= Date.parse(prior.sourceUpdatedAt)) {
+    throw new Error("DiscussionBridge changed source content requires a later source modification time.");
+  }
+  return {
+    sourceRevision: incoming.sourceRevision,
+    sourceRevisionSequence: (prior?.sourceRevisionSequence ?? 0) + 1,
+    sourceCreatedAt: prior?.sourceCreatedAt ?? incoming.sourceCreatedAt,
+    sourceUpdatedAt: incoming.sourceUpdatedAt,
+    sourceContentBytes: incoming.sourceContentBytes,
+    sourceContentSha256: incoming.sourceContentSha256,
+  };
 }
 
 function validDate(value: unknown): value is string {

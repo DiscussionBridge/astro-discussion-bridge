@@ -101,10 +101,26 @@ authors:
 primaryAuthor: astro:phil
 ```
 
-The eligible page body must render to nonempty HTML within the 48 KiB
-published-content bound. The complete local corpus is rendered and validated
-before the first remote request; unsupported MDX constructs, empty output, and
-oversized output fail the build rather than creating a link-only topic.
+The eligible page body must render to nonempty HTML no larger than the
+Alpha.21 complete-source bound of 16 MiB. Before any remote mutation, the
+adapter validates the complete local corpus and the authenticated connection
+capability. A complete first post stays within the smaller of the protocol's
+48 KiB resolve bound and the operator-reported Discourse content limit. Larger
+sources become structurally valid bounded excerpts with an explicit excerpt
+notice and prominent **Read More** link to the exact canonical Astro page;
+the complete rendered-source byte count and SHA-256 still travel with the
+request. HTML is never cut blindly.
+
+Every authoritative revision carries one persisted opaque revision identity,
+positive sequence, source-created time, and source-updated time. Astro-native
+`pubDate` (or `date`) and `updatedDate` (or a dated `lastUpdated`) frontmatter
+take precedence. When those native values are absent, the adapter uses source
+file creation/modification metadata and then preserves the accepted values in
+durable state. Normal and wiki-marked pages follow the same path: an exact
+replay is idempotent, while changed title, rendered content, or authorship
+advances the sequence and updates the existing Bridge Record/topic without
+changing its native identity. Creation, source modification, synchronization,
+and public-verification times are not interchangeable.
 
 `authors` is optional. When present it is one author object or an array of at
 most 20 author objects. Each object requires a stable `id` and display `name`;

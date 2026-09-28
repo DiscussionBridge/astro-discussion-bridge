@@ -56,6 +56,28 @@ test("protected requests carry exact Alpha.21 authentication and correlation", a
   assert.equal(response.correlationId, "request-01");
 });
 
+test("resolve requests place correlation only inside bridge_record", async () => {
+  let captured;
+  await requestAlpha21Json({
+    method: "POST",
+    path: "/discussion-bridge/v1/bridge-records/resolve.json",
+    credentials: {
+      discourseUrl: "https://forum.example/",
+      connectionId,
+      connectionSecret,
+      fetchImplementation: async (_url, init) => {
+        captured = JSON.parse(init.body);
+        return jsonResponse({ outcome: "resolved", correlation_id: "resolve-01" }, "resolve-01");
+      },
+    },
+    correlationId: "resolve-01",
+    correlationBody: "bridge_record",
+    body: { bridge_record: { direction: "to_discourse" } },
+  });
+  assert.equal(Object.hasOwn(captured, "correlation_id"), false);
+  assert.equal(captured.bridge_record.correlation_id, "resolve-01");
+});
+
 test("connection capability is validated against released Alpha.21 constants", async () => {
   const capability = await fetchAlpha21ConnectionCapability({
     discourseUrl: "https://forum.example/",
@@ -124,7 +146,7 @@ test("correlation, response bounds, redirects, and content type fail closed", as
   }
 });
 
-test("bounded error envelopes remain typed and redact the connection secret", async () => {
+test("bounded error envelopes remain typed and redact protected connection values", async () => {
   await assert.rejects(
     requestAlpha21Json({
       method: "GET",
@@ -135,7 +157,7 @@ test("bounded error envelopes remain typed and redact the connection secret", as
         connectionSecret,
         fetchImplementation: async () => jsonResponse({
           error_code: "validation_failed",
-          message: `bad value ${connectionSecret}`,
+          message: `bad value ${connectionSecret} ${connectionId}`,
           correlation_id: "request-04",
         }, "request-04", { status: 422 }),
       },
@@ -147,6 +169,7 @@ test("bounded error envelopes remain typed and redact the connection secret", as
       assert.equal(error.status, 422);
       assert.equal(error.correlationId, "request-04");
       assert.doesNotMatch(error.message, new RegExp(connectionSecret));
+      assert.doesNotMatch(error.message, new RegExp(connectionId));
       assert.match(error.message, /\[REDACTED\]/);
       return true;
     },
