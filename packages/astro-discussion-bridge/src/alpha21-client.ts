@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { ADAPTER_CONTRACT_VERSION } from "./version.js";
 import {
   assertServiceResponseUrl,
+  normalizePublicHttpUrl,
   parseServiceBaseUrl,
   resolveServiceRequestUrl,
 } from "./web-url.js";
@@ -14,6 +15,7 @@ const MAX_CORRELATION_BYTES = 200;
 const MAX_FORUM_NAME_BYTES = 200;
 const MAX_POLICY_REVISION_BYTES = 255;
 const CONNECTION_ID = /^dbc_[a-f0-9]{24}$/;
+const RESOURCE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PRESENTATION_MODES = ["simple", "full", "interactive"] as const;
 const DIRECTIONS = new Set(["to_discourse", "from_discourse", "discourse_network"]);
 const OPERATIONS = new Set([
@@ -103,6 +105,25 @@ export interface Alpha21ConnectionCapability {
   destinationPolicies: Alpha21DestinationPolicy[];
   catalogRequired: boolean;
   policyRevision: string;
+}
+
+export interface Alpha21SourceUrlTransition {
+  oldUrl: string;
+  newUrl: string;
+  redirectStatus: 301 | 308;
+  verifiedAt: string;
+}
+
+export interface Alpha21SourceUrlProof {
+  resourceId: string;
+  topicId: number;
+  externalId: string;
+  fromUrl: string;
+  toUrl: string;
+  verified: true;
+  transitionCount: number;
+  verifiedAt: string;
+  transitions: Alpha21SourceUrlTransition[];
 }
 
 export class Alpha21RequestError extends Error {
@@ -233,6 +254,85 @@ export async function fetchAlpha21ConnectionCapability(
     correlationId,
   });
   return validateConnectionCapability(response.payload, credentials.connectionId);
+}
+
+export async function fetchAlpha21SourceUrlProof(
+  credentials: Alpha21Credentials,
+  input: { resourceId: string; fromUrl: string; toUrl: string },
+  correlationId?: string,
+): Promise<Alpha21SourceUrlProof> {
+  const resourceId = requiredResourceId(input.resourceId, "source URL proof resource ID");
+  const fromUrl = normalizePublicHttpUrl(input.fromUrl, "source URL proof prior URL");
+  const toUrl = normalizePublicHttpUrl(input.toUrl, "source URL proof current URL");
+  if (fromUrl === toUrl) throw new Error("DiscussionBridge source URL proof requires a changed URL.");
+  const query = new URLSearchParams({ from_url: fromUrl, to_url: toUrl });
+  const response = await requestAlpha21Json({
+    method: "GET",
+    path: `/discussion-bridge/v1/bridge-records/${encodeURIComponent(resourceId)}/source-url-proof.json?${query.toString()}`,
+    credentials,
+    correlationId,
+  });
+  const proof = response.payload;
+  exactFields(proof, [
+    "resource_id", "topic_id", "external_id", "from_url", "to_url", "verified",
+    "transition_count", "verified_at", "transitions", "correlation_id",
+  ], [], "source URL proof");
+  if (requiredResourceId(proof.resource_id, "source URL proof resource ID") !== resourceId) {
+    throw new Error("DiscussionBridge source URL proof returned the wrong resource.");
+  }
+  const topicId = positiveInteger(proof.topic_id, "source URL proof topic ID");
+  const externalId = boundedNonblank(proof.external_id, 255, "source URL proof external ID");
+  const returnedFromUrl = normalizePublicHttpUrl(
+    boundedNonblank(proof.from_url, 2_048, "source URL proof prior URL"),
+    "source URL proof prior URL",
+  );
+  const returnedToUrl = normalizePublicHttpUrl(
+    boundedNonblank(proof.to_url, 2_048, "source URL proof current URL"),
+    "source URL proof current URL",
+  );
+  if (returnedFromUrl !== fromUrl || returnedToUrl !== toUrl || proof.verified !== true) {
+    throw new Error("DiscussionBridge source URL proof does not attest the requested move.");
+  }
+  if (!Array.isArray(proof.transitions) || proof.transitions.length < 1 || proof.transitions.length > 20) {
+    throw new Error("DiscussionBridge source URL proof transition chain is invalid.");
+  }
+  if (!Number.isSafeInteger(proof.transition_count) || Number(proof.transition_count) !== proof.transitions.length) {
+    throw new Error("DiscussionBridge source URL proof transition count is invalid.");
+  }
+  const transitions: Alpha21SourceUrlTransition[] = [];
+  let cursor = fromUrl;
+  const seen = new Set([cursor]);
+  for (const candidate of proof.transitions) {
+    const transition = requiredObject(candidate, "source URL transition");
+    exactFields(transition, ["old_url", "new_url", "redirect_status", "verified_at"], [], "source URL transition");
+    const oldUrl = normalizePublicHttpUrl(
+      boundedNonblank(transition.old_url, 2_048, "source URL transition prior URL"),
+      "source URL transition prior URL",
+    );
+    const newUrl = normalizePublicHttpUrl(
+      boundedNonblank(transition.new_url, 2_048, "source URL transition current URL"),
+      "source URL transition current URL",
+    );
+    if (oldUrl !== cursor || (transition.redirect_status !== 301 && transition.redirect_status !== 308)) {
+      throw new Error("DiscussionBridge source URL proof ancestry is not contiguous and permanent.");
+    }
+    if (!seen.add(newUrl)) throw new Error("DiscussionBridge source URL proof ancestry contains a cycle.");
+    const verifiedAt = timestamp(transition.verified_at, "source URL transition verification time");
+    transitions.push({ oldUrl, newUrl, redirectStatus: transition.redirect_status, verifiedAt });
+    cursor = newUrl;
+  }
+  if (cursor !== toUrl) throw new Error("DiscussionBridge source URL proof ancestry does not reach the current URL.");
+  return {
+    resourceId,
+    topicId,
+    externalId,
+    fromUrl,
+    toUrl,
+    verified: true,
+    transitionCount: transitions.length,
+    verifiedAt: timestamp(proof.verified_at, "source URL proof verification time"),
+    transitions,
+  };
 }
 
 function validateConnectionCapability(
@@ -469,6 +569,28 @@ function stringArray(value: unknown, label: string, maximumBytes = 255): string[
 function requiredObject(value: unknown, label: string): Record<string, unknown> {
   if (!isObject(value)) throw new Error(`DiscussionBridge ${label} must be an object.`);
   return value;
+}
+
+function requiredResourceId(value: unknown, label: string): string {
+  if (typeof value !== "string" || !RESOURCE_ID.test(value)) {
+    throw new Error(`DiscussionBridge ${label} is invalid.`);
+  }
+  return value.toLowerCase();
+}
+
+function positiveInteger(value: unknown, label: string): number {
+  if (!Number.isSafeInteger(value) || Number(value) < 1) {
+    throw new Error(`DiscussionBridge ${label} is invalid.`);
+  }
+  return Number(value);
+}
+
+function timestamp(value: unknown, label: string): string {
+  const text = boundedNonblank(value, 64, label);
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/.test(text) || !Number.isFinite(Date.parse(text))) {
+    throw new Error(`DiscussionBridge ${label} is invalid.`);
+  }
+  return text;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

@@ -2,8 +2,9 @@ import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { lock } from "proper-lockfile";
+import type { Alpha21SourceUrlProof } from "./alpha21-client.js";
 
-const STATE_VERSION = 2;
+const STATE_VERSION = 3;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type PublicationOutcome = "pending" | "created" | "resolved" | "retryable_failure" | "rejected" | "reconciliation_required";
@@ -28,10 +29,17 @@ export interface PublicationOperation {
   sourceUpdatedAt?: string;
   sourceContentBytes?: number;
   sourceContentSha256?: string;
+  sourceUrlMigration?: {
+    fromUrl: string;
+    toUrl: string;
+    transitionCount: number;
+    verifiedAt: string;
+    state: "verified_pending_resolve" | "resolved";
+  };
 }
 
 export interface PublicationOperationalState {
-  schemaVersion: 2;
+  schemaVersion: 3;
   adapterId: "astro-discussion-bridge";
   operations: Record<string, PublicationOperation>;
 }
@@ -136,7 +144,41 @@ export function completePublicationAttempt(operation: PublicationOperation, resu
   operation.topicId = result.topicId;
   operation.topicUrl = result.topicUrl;
   operation.lastSuccessAt = now.toISOString();
+  if (operation.sourceUrlMigration?.state === "verified_pending_resolve") {
+    if (operation.sourceUrlMigration.toUrl !== operation.canonicalUrl) {
+      throw new Error("DiscussionBridge source URL migration state no longer matches the canonical URL.");
+    }
+    operation.sourceUrlMigration.state = "resolved";
+  }
   delete operation.lastError;
+}
+
+export function stageVerifiedSourceUrlMigration(
+  state: PublicationOperationalState,
+  externalId: string,
+  proof: Alpha21SourceUrlProof,
+): PublicationOperation {
+  const operation = state.operations[externalId];
+  if (!operation || operation.externalId !== externalId) {
+    throw new Error("DiscussionBridge source URL changed without durable local identity.");
+  }
+  if (
+    operation.canonicalUrl !== proof.fromUrl
+    || operation.resourceId !== proof.resourceId
+    || operation.topicId !== proof.topicId
+    || proof.externalId !== externalId
+  ) {
+    throw new Error("DiscussionBridge source URL proof does not match durable local identity.");
+  }
+  operation.canonicalUrl = proof.toUrl;
+  operation.sourceUrlMigration = {
+    fromUrl: proof.fromUrl,
+    toUrl: proof.toUrl,
+    transitionCount: proof.transitionCount,
+    verifiedAt: proof.verifiedAt,
+    state: "verified_pending_resolve",
+  };
+  return operation;
 }
 
 export function stagePublicationResult(operation: PublicationOperation, result: { outcome: "created" | "resolved"; resourceId: string; topicId: number; topicUrl: string }): void {
@@ -189,7 +231,7 @@ function validateState(value: unknown): PublicationOperationalState {
     adapterId?: unknown;
     operations?: unknown;
   };
-  if ((candidate.schemaVersion !== 1 && candidate.schemaVersion !== STATE_VERSION) || candidate.adapterId !== "astro-discussion-bridge" || !candidate.operations || typeof candidate.operations !== "object" || Array.isArray(candidate.operations)) throw new Error("DiscussionBridge operational state is invalid.");
+  if (![1, 2, STATE_VERSION].includes(candidate.schemaVersion ?? -1) || candidate.adapterId !== "astro-discussion-bridge" || !candidate.operations || typeof candidate.operations !== "object" || Array.isArray(candidate.operations)) throw new Error("DiscussionBridge operational state is invalid.");
   for (const [key, operation] of Object.entries(candidate.operations)) validateOperation(key, operation);
   return {
     schemaVersion: STATE_VERSION,
@@ -207,6 +249,21 @@ function validateOperation(key: string, value: unknown): asserts value is Public
   }
   if (operation.resourceId !== undefined && !UUID.test(operation.resourceId)) throw new Error("DiscussionBridge operational state entry is invalid.");
   if (operation.topicId !== undefined && (!Number.isSafeInteger(operation.topicId) || operation.topicId < 1)) throw new Error("DiscussionBridge operational state entry is invalid.");
+  if (operation.sourceUrlMigration !== undefined) {
+    const migration = operation.sourceUrlMigration;
+    if (
+      typeof migration !== "object"
+      || typeof migration.fromUrl !== "string"
+      || typeof migration.toUrl !== "string"
+      || migration.fromUrl === migration.toUrl
+      || migration.toUrl !== operation.canonicalUrl
+      || !Number.isSafeInteger(migration.transitionCount)
+      || migration.transitionCount < 1
+      || migration.transitionCount > 20
+      || !validDate(migration.verifiedAt)
+      || !["verified_pending_resolve", "resolved"].includes(migration.state)
+    ) throw new Error("DiscussionBridge operational source URL migration is invalid.");
+  }
   const revisionFields = [
     operation.sourceRevision,
     operation.sourceRevisionSequence,

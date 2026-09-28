@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   Alpha21RequestError,
   fetchAlpha21ConnectionCapability,
+  fetchAlpha21SourceUrlProof,
   requestAlpha21Json,
 } from "../dist/alpha21-client.js";
 
@@ -13,6 +14,10 @@ const contract = JSON.parse(await readFile(
 ));
 const capabilityFixture = JSON.parse(await readFile(
   new URL("../node_modules/discussionbridge-adapter-contract/fixtures/connection-capability-to-discourse.json", import.meta.url),
+  "utf8",
+));
+const sourceUrlProofFixture = JSON.parse(await readFile(
+  new URL("../node_modules/discussionbridge-adapter-contract/fixtures/source-url-proof.json", import.meta.url),
   "utf8",
 ));
 const connectionId = capabilityFixture.connection_id;
@@ -195,6 +200,72 @@ test("capability fields cannot expand or contradict the authenticated policy", a
           init.headers[contract.common.correlation_header],
         ),
       }, `capability-${String(name).replaceAll(" ", "-")}`));
+    });
+  }
+});
+
+test("source URL proof consumes the exact Alpha.21 ancestry response", async () => {
+  let requestedUrl;
+  const proof = await fetchAlpha21SourceUrlProof({
+    discourseUrl: "https://forum.example/community/",
+    connectionId,
+    connectionSecret,
+    fetchImplementation: async (url, init) => {
+      requestedUrl = String(url);
+      const correlationId = init.headers[contract.common.correlation_header];
+      return jsonResponse({ ...sourceUrlProofFixture, correlation_id: correlationId }, correlationId);
+    },
+  }, {
+    resourceId: sourceUrlProofFixture.resource_id,
+    fromUrl: sourceUrlProofFixture.from_url,
+    toUrl: sourceUrlProofFixture.to_url,
+  }, "source-url-proof-test");
+  assert.equal(
+    requestedUrl,
+    `https://forum.example/community/discussion-bridge/v1/bridge-records/${sourceUrlProofFixture.resource_id}/source-url-proof.json?from_url=https%3A%2F%2Fpublisher.example%2Farticles%2Fcommunity-guide%2F&to_url=https%3A%2F%2Fpublisher.example%2Fguides%2Fcommunity%2F`,
+  );
+  assert.equal(proof.resourceId, sourceUrlProofFixture.resource_id);
+  assert.equal(proof.topicId, sourceUrlProofFixture.topic_id);
+  assert.equal(proof.externalId, sourceUrlProofFixture.external_id);
+  assert.equal(proof.transitionCount, 1);
+  assert.deepEqual(proof.transitions, [{
+    oldUrl: sourceUrlProofFixture.from_url,
+    newUrl: sourceUrlProofFixture.to_url,
+    redirectStatus: 308,
+    verifiedAt: "2026-09-27T19:00:00Z",
+  }]);
+});
+
+test("source URL proof fails closed on identity, ancestry, and schema drift", async (t) => {
+  const cases = [
+    ["wrong resource", { resource_id: "11111111-1111-4111-8111-111111111111" }],
+    ["not verified", { verified: false }],
+    ["wrong count", { transition_count: 2 }],
+    ["unknown field", { unexpected: true }],
+    ["broken ancestry", { transitions: [{
+      ...sourceUrlProofFixture.transitions[0],
+      old_url: "https://publisher.example/elsewhere/",
+    }] }],
+    ["temporary redirect", { transitions: [{
+      ...sourceUrlProofFixture.transitions[0],
+      redirect_status: 302,
+    }] }],
+  ];
+  for (const [name, change] of cases) {
+    await t.test(name, async () => {
+      await assert.rejects(fetchAlpha21SourceUrlProof({
+        discourseUrl: "https://forum.example/",
+        connectionId,
+        connectionSecret,
+        fetchImplementation: async (_url, init) => {
+          const correlationId = init.headers[contract.common.correlation_header];
+          return jsonResponse({ ...sourceUrlProofFixture, ...change, correlation_id: correlationId }, correlationId);
+        },
+      }, {
+        resourceId: sourceUrlProofFixture.resource_id,
+        fromUrl: sourceUrlProofFixture.from_url,
+        toUrl: sourceUrlProofFixture.to_url,
+      }, `source-url-${String(name).replaceAll(" ", "-")}`));
     });
   }
 });

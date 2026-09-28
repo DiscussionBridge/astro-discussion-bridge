@@ -9,6 +9,7 @@ import { PRODUCT_VERSION } from "./version.js";
 import {
   Alpha21RequestError,
   fetchAlpha21ConnectionCapability,
+  fetchAlpha21SourceUrlProof,
   requestAlpha21Json,
   type Alpha21ConnectionCapability,
   type Alpha21Credentials,
@@ -24,6 +25,7 @@ import {
   completePublicationAttempt,
   failPublicationAttempt,
   readPublicationOperationalState,
+  stageVerifiedSourceUrlMigration,
   stagePublicationResult,
   withPublicationOperationalStateLock,
   writePublicationOperationalState,
@@ -110,6 +112,7 @@ type CensusEntry =
 interface PublishControlledDiscussionsDependencies {
   replaceFile?: typeof replaceFileAtomically;
   afterResultStaged?: (filePath: string) => Promise<void>;
+  afterSourceUrlMigrationStaged?: (filePath: string) => Promise<void>;
   lockOptions?: { staleMs?: number; updateMs?: number };
 }
 
@@ -293,6 +296,33 @@ async function publishControlledDiscussionsUnlocked(
       continue;
     }
     const { page } = entry;
+    let prior = operationalState.operations[page.externalId];
+    let sourceUrlMigrationStaged = false;
+    if (prior && prior.canonicalUrl !== page.pageUrl) {
+      try {
+        if (!prior.resourceId || !prior.topicId) {
+          throw new Error("DiscussionBridge source URL changed without durable receiver identity; reconciliation is required.");
+        }
+        const proof = await fetchAlpha21SourceUrlProof(credentials, {
+          resourceId: prior.resourceId,
+          fromUrl: prior.canonicalUrl,
+          toUrl: page.pageUrl,
+        });
+        stageVerifiedSourceUrlMigration(operationalState, page.externalId, proof);
+        await writePublicationOperationalState(stateFile, operationalState);
+        prior = operationalState.operations[page.externalId];
+        sourceUrlMigrationStaged = true;
+      } catch (error) {
+        const failed = beginPublicationAttempt(operationalState, {
+          externalId: page.externalId,
+          canonicalUrl: prior.canonicalUrl,
+        });
+        failPublicationAttempt(failed, error, { retryable: false, reconciliationRequired: true });
+        await writePublicationOperationalState(stateFile, operationalState);
+        throw error;
+      }
+    }
+    if (sourceUrlMigrationStaged) await dependencies.afterSourceUrlMigrationStaged?.(page.filePath);
     const operation = beginPublicationAttempt(operationalState, {
       externalId: page.externalId,
       canonicalUrl: page.pageUrl,
@@ -328,7 +358,9 @@ async function publishControlledDiscussionsUnlocked(
         capability,
       });
       if (
-        (page.existingResourceId && created.resourceId !== page.existingResourceId)
+        (prior?.resourceId && created.resourceId !== prior.resourceId)
+        || (prior?.topicId && created.topicId !== prior.topicId)
+        || (page.existingResourceId && created.resourceId !== page.existingResourceId)
         || (page.existingTopicId && created.topicId !== page.existingTopicId)
       ) {
         throw new Error(`DiscussionBridge resolved a different resource or topic than the stored mapping for ${page.filePath}.`);

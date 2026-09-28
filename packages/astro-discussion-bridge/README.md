@@ -137,6 +137,15 @@ and topic URL must all be present and internally consistent. The adapter
 authenticates with the plugin again and requires the returned durable Bridge
 Record tuple to match before preserving the binding.
 
+Moving an already-bound Astro page is fail-closed. The operator first completes
+the receiver's approved source-URL migration, including a permanent redirect.
+On the next build, the adapter requests the exact bounded Alpha.21 ancestry
+proof for the prior and current URLs, requires the same resource, topic and
+Astro external identity, and atomically stages that proof before resolving the
+same Bridge Record at the new URL. An interrupted build resumes from the staged
+proof without creating a replacement topic. The adapter does not create or
+manage provider-specific redirects.
+
 ## Presentation
 
 Use `Discussion.astro` with a completed mapping:

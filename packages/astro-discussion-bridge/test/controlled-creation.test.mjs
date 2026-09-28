@@ -313,6 +313,88 @@ test("an existing local binding is authenticated again and mismatch never overwr
   assert.equal(await fs.readFile(path.join(root, "page.md"), "utf8"), original);
 });
 
+test("a moved Astro source URL requires exact ancestry and resumes from durable staged proof", async (t) => {
+  const root = await fixture({
+    "page.md": "---\ntitle: Bound\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nBound page content.\n",
+  });
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const previousFetch = globalThis.fetch;
+  t.after(() => { globalThis.fetch = previousFetch; });
+  let proofMode = "wrong-identity";
+  let proofRequests = 0;
+  let resolveRequests = 0;
+  globalThis.fetch = async (url, init) => {
+    const correlationId = init.headers["X-DiscussionBridge-Correlation"];
+    if (String(url).endsWith("/discussion-bridge/v1/connection.json")) {
+      return protocolResponse(capabilityPayload(correlationId), correlationId);
+    }
+    if (String(url).includes("/source-url-proof.json?")) {
+      proofRequests++;
+      assert.match(String(url), /from_url=https%3A%2F%2Fsite\.example%2Fpage%2F/);
+      assert.match(String(url), /to_url=https%3A%2F%2Fsite\.example%2Fmoved%2F/);
+      const state = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+      const externalId = Object.keys(state.operations)[0];
+      return protocolResponse({
+        resource_id: RESOURCE_ID,
+        topic_id: 40,
+        external_id: proofMode === "wrong-identity" ? `${externalId}-wrong` : externalId,
+        from_url: "https://site.example/page/",
+        to_url: "https://site.example/moved/",
+        verified: true,
+        transition_count: 1,
+        verified_at: "2026-09-28T19:00:00Z",
+        transitions: [{
+          old_url: "https://site.example/page/",
+          new_url: "https://site.example/moved/",
+          redirect_status: 308,
+          verified_at: "2026-09-28T19:00:00Z",
+        }],
+      }, correlationId);
+    }
+    resolveRequests++;
+    const request = JSON.parse(init.body).bridge_record;
+    return protocolResponse({
+      ...bridgePayload(40, resolveRequests === 1 ? "created" : "resolved"),
+      accepted_source_revision: request.source_revision,
+      accepted_source_revision_sequence: request.source_revision_sequence,
+    }, correlationId, resolveRequests === 1 ? 201 : 200);
+  };
+
+  await publishControlledDiscussions(options(root));
+  const file = path.join(root, "page.md");
+  await fs.writeFile(file, (await fs.readFile(file, "utf8")).replace("title: Bound", "title: Bound\nslug: moved"));
+  await assert.rejects(() => publishControlledDiscussions(options(root)), /proof does not match durable local identity/);
+  let state = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  const externalId = Object.keys(state.operations)[0];
+  assert.equal(state.operations[externalId].canonicalUrl, "https://site.example/page/");
+  assert.equal(state.operations[externalId].outcome, "reconciliation_required");
+  assert.equal(resolveRequests, 1);
+
+  proofMode = "verified";
+  await assert.rejects(() => publishControlledDiscussions(options(root), {
+    afterSourceUrlMigrationStaged: async () => { throw new Error("simulated interruption after durable URL proof"); },
+  }), /simulated interruption/);
+  state = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  assert.equal(state.schemaVersion, 3);
+  assert.equal(state.operations[externalId].canonicalUrl, "https://site.example/moved/");
+  assert.deepEqual(state.operations[externalId].sourceUrlMigration, {
+    fromUrl: "https://site.example/page/",
+    toUrl: "https://site.example/moved/",
+    transitionCount: 1,
+    verifiedAt: "2026-09-28T19:00:00Z",
+    state: "verified_pending_resolve",
+  });
+
+  const [result] = await publishControlledDiscussions(options(root));
+  assert.equal(result.resourceId, RESOURCE_ID);
+  assert.equal(result.topicId, 40);
+  assert.equal(result.pageUrl, "https://site.example/moved/");
+  assert.equal(proofRequests, 2);
+  assert.equal(resolveRequests, 2);
+  state = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
+  assert.equal(state.operations[externalId].sourceUrlMigration.state, "resolved");
+});
+
 test("a standalone Core embed pair is adopted without changing its topic identity", async (t) => {
   const root = await fixture({
     "page.md": `---\ntitle: Existing full embed\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/existing-full-embed/40\n---\nExisting page content.\n`,
@@ -705,7 +787,7 @@ test("schema-1 operational state upgrades atomically while preserving mapping id
   await publishControlledDiscussions(options(root));
   const upgraded = JSON.parse(await fs.readFile(options(root).stateFile, "utf8"));
   const operation = upgraded.operations[externalId];
-  assert.equal(upgraded.schemaVersion, 2);
+  assert.equal(upgraded.schemaVersion, 3);
   assert.equal(operation.correlationId, correlationId);
   assert.equal(operation.attempts, 3);
   assert.equal(operation.sourceRevisionSequence, 1);
