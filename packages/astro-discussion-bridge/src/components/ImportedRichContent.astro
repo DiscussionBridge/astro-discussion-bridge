@@ -1,0 +1,128 @@
+---
+import "katex/dist/katex.min.css";
+---
+
+<script>
+  type DiscussionBridgeRichWindow = Window & {
+    __discussionBridgeRichContentInstalled?: boolean;
+    __discussionBridgeRichContentQueue?: Promise<void>;
+  };
+
+  async function renderDiscussionBridgeRichContent() {
+    const roots = Array.from(document.querySelectorAll<HTMLElement>(
+      "[data-discussionbridge-resource], [data-discussionbridge-resource-id]",
+    ));
+    for (const root of roots) {
+      const diagrams = Array.from(root.querySelectorAll<HTMLElement>(
+        "pre > code.lang-mermaid:not([data-discussionbridge-rendered]), pre > code.language-mermaid:not([data-discussionbridge-rendered])",
+      )).map((code) => {
+        code.dataset.discussionbridgeRendered = "pending";
+        const container = document.createElement("div");
+        container.className = "mermaid discussionbridge-mermaid";
+        container.textContent = code.textContent ?? "";
+        code.parentElement?.replaceWith(container);
+        return container;
+      });
+      if (diagrams.length) {
+        const { default: mermaid } = await import("mermaid");
+        mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "default" });
+        await mermaid.run({ nodes: diagrams });
+      }
+
+      for (const table of root.querySelectorAll<HTMLTableElement>("table")) {
+        if (table.parentElement?.classList.contains("discussionbridge-table")) continue;
+        const wrapper = document.createElement("div");
+        wrapper.className = "discussionbridge-table";
+        table.replaceWith(wrapper);
+        wrapper.append(table);
+      }
+
+      const cookedMath = Array.from(root.querySelectorAll<HTMLElement>(".math:not(.katex):not([data-discussionbridge-rendered])"));
+      const mathParagraphs = Array.from(root.querySelectorAll<HTMLParagraphElement>("p:not([data-discussionbridge-rendered])")).flatMap((paragraph) => {
+        const match = paragraph.textContent?.trim().match(/^(?:\[math\]([\s\S]*?)\[\/math\]|\$\$([\s\S]*?)\$\$)$/u);
+        return match ? [{ paragraph, expression: (match[1] ?? match[2]).trim() }] : [];
+      });
+      const mathParagraphSet = new Set(mathParagraphs.map(({ paragraph }) => paragraph));
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const textNodes: Text[] = [];
+      while (walker.nextNode()) {
+        const node = walker.currentNode as Text;
+        const parent = node.parentElement;
+        if (!parent || parent.closest("code, pre, script, style, .katex, .math") || mathParagraphSet.has(parent.closest("p") as HTMLParagraphElement)) continue;
+        if (/\[math\][\s\S]*?\[\/math\]|\$(?!\d)([^$\n]+?)(?<!\s)\$/u.test(node.data)) textNodes.push(node);
+      }
+      if (!cookedMath.length && !mathParagraphs.length && !textNodes.length) continue;
+      const { default: katex } = await import("katex");
+      for (const element of cookedMath) {
+        const expression = element.textContent?.trim();
+        if (!expression) continue;
+        element.dataset.discussionbridgeRendered = "true";
+        katex.render(expression, element, { displayMode: element.tagName === "DIV", throwOnError: false, strict: "warn" });
+      }
+      for (const { paragraph, expression } of mathParagraphs) {
+        const target = document.createElement("div");
+        target.className = "discussionbridge-math";
+        target.dataset.discussionbridgeRendered = "true";
+        katex.render(expression, target, { displayMode: true, throwOnError: false, strict: "warn" });
+        paragraph.replaceWith(target);
+      }
+      for (const node of textNodes) {
+        const fragment = document.createDocumentFragment();
+        let cursor = 0;
+        for (const match of node.data.matchAll(/\[math\]([\s\S]*?)\[\/math\]|\$(?!\d)([^$\n]+?)(?<!\s)\$/gu)) {
+          const index = match.index ?? 0;
+          fragment.append(node.data.slice(cursor, index));
+          const target = document.createElement("span");
+          target.className = "discussionbridge-math";
+          target.dataset.discussionbridgeRendered = "true";
+          katex.render((match[1] ?? match[2]).trim(), target, { displayMode: false, throwOnError: false, strict: "warn" });
+          fragment.append(target);
+          cursor = index + match[0].length;
+        }
+        fragment.append(node.data.slice(cursor));
+        node.replaceWith(fragment);
+      }
+    }
+  }
+
+  const richWindow = window as DiscussionBridgeRichWindow;
+  const schedule = () => {
+    richWindow.__discussionBridgeRichContentQueue = (richWindow.__discussionBridgeRichContentQueue ?? Promise.resolve())
+      .then(renderDiscussionBridgeRichContent)
+      .catch((error) => console.error("DiscussionBridge rich-content rendering failed.", error));
+  };
+  if (!richWindow.__discussionBridgeRichContentInstalled) {
+    richWindow.__discussionBridgeRichContentInstalled = true;
+    document.addEventListener("astro:page-load", schedule);
+  }
+  schedule();
+</script>
+
+<style is:global>
+  .discussionbridge-table,
+  .discussionbridge-mermaid,
+  .discussionbridge-math {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  [data-discussionbridge-resource] table,
+  [data-discussionbridge-resource-id] table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  [data-discussionbridge-resource] th,
+  [data-discussionbridge-resource] td,
+  [data-discussionbridge-resource-id] th,
+  [data-discussionbridge-resource-id] td {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid currentColor;
+    text-align: left;
+    vertical-align: top;
+  }
+  .discussionbridge-mermaid svg {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+</style>

@@ -128,6 +128,8 @@ export {
   renewAstroPublicationLease,
 } from "./publication-work.js";
 export { AstroPublicationWorkerError, runAstroPublicationWorker } from "./publication-worker.js";
+export { createAstroFilesystemDestination } from "./astro-filesystem-destination.js";
+export { createAstroPublicVerifier } from "./astro-public-verification.js";
 export {
   fetchSourceInventoryPage,
   fetchSourceRevocationDetail,
@@ -165,6 +167,8 @@ export type {
   PreparedAstroPublication,
   RunAstroPublicationWorkerOptions,
 } from "./publication-worker.js";
+export type { AstroFilesystemDestinationOptions } from "./astro-filesystem-destination.js";
+export type { AstroPublicVerificationOptions } from "./astro-public-verification.js";
 export type {
   RetrievedSourceContent,
   SourceInventoryItem,

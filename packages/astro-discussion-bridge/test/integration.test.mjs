@@ -60,6 +60,7 @@ test("package and source inventory expose only the eight-profile Astro adapter b
     "./DiscourseDiscussion.astro",
     "./DiscourseReplies.astro",
     "./FromDiscourse.astro",
+    "./ImportedRichContent.astro",
     "./alpha21-client",
     "./bridge-record",
     "./controlled-creation",
@@ -68,12 +69,17 @@ test("package and source inventory expose only the eight-profile Astro adapter b
     "./platform-catalog",
     "./publication-work",
     "./publication-worker",
+    "./astro-filesystem-destination",
+    "./astro-public-verification",
     "./source-publication",
     "./source-publication-state",
     "./web-url",
   ].sort());
-  assert.deepEqual(packageJson.dependencies, { "@astrojs/markdown-remark": "7.2.4", dompurify: "3.4.14", "proper-lockfile": "^4.1.2", "sanitize-html": "2.17.7", yaml: "^2.9.0" });
+  assert.deepEqual(packageJson.dependencies, { "@astrojs/markdown-remark": "7.2.4", dompurify: "3.4.14", katex: "0.18.4", mermaid: "11.17.2", "proper-lockfile": "^4.1.2", "sanitize-html": "2.17.7", yaml: "^2.9.0" });
   assert.equal(packageJson.files.includes("src/simple-live.ts"), true);
+  assert.equal(packageJson.files.includes("scripts"), true);
+  assert.equal(packageJson.scripts["verify:large-site"], "npm run build && node scripts/verify-large-site.mjs");
+  assert.equal(packageJson.scripts["verify:consumers"], "npm run build && node scripts/verify-consumer-builds.mjs");
   assert.equal(packageJson.files.includes("TODO.md"), false);
 
   const forbidden = /api[-_ ]?key|sync[-_ ]?existing|official[-_ ]?source|relationships?|navigation|multi[-_ ]?target|OBBBA|WordPress|Ghost|Statamic|control plane/i;

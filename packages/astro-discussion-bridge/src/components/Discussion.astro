@@ -2,6 +2,7 @@
 import DiscourseDiscussion from "./DiscourseDiscussion.astro";
 import DiscourseReplies from "./DiscourseReplies.astro";
 import DiscussionCredit from "./DiscussionCredit.astro";
+import ImportedRichContent from "./ImportedRichContent.astro";
 import config from "virtual:discussion-bridge/config";
 import {
   isInteractiveCommentsMode,
@@ -73,3 +74,4 @@ function stringValue(value: unknown): string | undefined {
     <DiscussionCredit />
   </>
 )}
+{sourcePresentation && <ImportedRichContent />}

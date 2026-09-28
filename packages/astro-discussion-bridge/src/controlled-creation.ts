@@ -280,6 +280,9 @@ async function publishControlledDiscussionsUnlocked(
     });
   }
 
+  if (census.every((entry) => entry.kind === "skipped")) {
+    return census.map((entry) => (entry as Extract<CensusEntry, { kind: "skipped" }>).result);
+  }
   const credentials = alpha21Credentials(options.discourseUrl, options.controlledCreation);
   const capability = await fetchAlpha21ConnectionCapability(credentials);
   requireToDiscourseCapability(capability, options.controlledCreation);

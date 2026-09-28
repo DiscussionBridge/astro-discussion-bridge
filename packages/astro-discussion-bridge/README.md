@@ -220,6 +220,24 @@ page retains the source revision and topic identity and uses the ordinary
 `interactive` discussion component. The connection secret never enters the
 generated page.
 
+The Alpha.21 set-and-forget publication path is exposed separately through
+`publication-worker` and `astro-filesystem-destination`. It consumes only
+receiver-resolved work, journals each native mutation, preserves one stable
+binding across updates and URL-stable title changes, and refuses unowned files,
+symlinks, identity collisions, revision regressions, and unapproved moves.
+`hold` and `unpublish` remove only an exact owned file; `restore` recreates the
+same binding. Set `DISCUSSIONBRIDGE_FORUM_NAME` (or pass `forumName`) for the
+human-visible source-forum label. Deployment remains a platform-owned callback;
+`astro-public-verification` verifies the resulting public resource and exact
+source revision before the final static acknowledgement.
+
+`ImportedRichContent.astro` is included by the From Discourse and native
+discussion presentation. It renders Mermaid with strict security, KaTeX math,
+and responsive tables on the initial document and every `astro:page-load`, so
+Astro and Starlight client navigation do not leave later pages unprocessed.
+Run `npm run verify:large-site` to execute the packaged deterministic 1,000-page
+Astro build and adapter-scan verifier.
+
 ## Public exports
 
 - default Astro integration
@@ -230,6 +248,8 @@ generated page.
 - `astro-discussion-bridge/platform-catalog`
 - `astro-discussion-bridge/publication-work`
 - `astro-discussion-bridge/publication-worker`
+- `astro-discussion-bridge/astro-filesystem-destination`
+- `astro-discussion-bridge/astro-public-verification`
 - `astro-discussion-bridge/source-publication`
 - `astro-discussion-bridge/source-publication-state`
 - `astro-discussion-bridge/native-publication`
@@ -239,6 +259,7 @@ generated page.
 - `astro-discussion-bridge/DiscourseReplies.astro`
 - `astro-discussion-bridge/DiscussionCredit.astro`
 - `astro-discussion-bridge/FromDiscourse.astro`
+- `astro-discussion-bridge/ImportedRichContent.astro`
 
 ## Assurance boundary
 
