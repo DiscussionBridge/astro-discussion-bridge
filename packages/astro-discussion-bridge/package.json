@@ -47,6 +47,10 @@
       "types": "./dist/publication-work.d.ts",
       "import": "./dist/publication-work.js"
     },
+    "./publication-worker": {
+      "types": "./dist/publication-worker.d.ts",
+      "import": "./dist/publication-worker.js"
+    },
     "./web-url": {
       "types": "./dist/web-url.d.ts",
       "import": "./dist/web-url.js"

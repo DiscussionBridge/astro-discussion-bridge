@@ -2,11 +2,13 @@ import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { lock } from "proper-lockfile";
+import { Alpha21RequestError, type Alpha21Credentials } from "./alpha21-client.js";
 import type {
   SourceInventoryPage,
   SourceRevocationPage,
   SourceTopicDetail,
 } from "./source-publication.js";
+import { fetchSourceInventoryPage, fetchSourceTopicDetail } from "./source-publication.js";
 
 const STATE_VERSION = 1;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -119,6 +121,51 @@ export async function withSourcePublicationStateLock<T>(
   }
   try { return await action(); }
   finally { await release(); }
+}
+
+export async function synchronizeInitialSourceSnapshot(
+  credentials: Alpha21Credentials,
+  filePath: string,
+  options: { limit?: number; now?: () => Date } = {},
+): Promise<{ pages: number; resources: number; resumed: boolean }> {
+  return withSourcePublicationStateLock(filePath, async () => {
+    const state = await readSourcePublicationState(filePath);
+    const resumed = Boolean(state.inventory && !state.inventory.complete);
+    if (state.inventory?.complete) return { pages: 0, resources: Object.keys(state.publications).length, resumed: false };
+    let pages = 0;
+    for (;;) {
+      let page: SourceInventoryPage;
+      try {
+        page = await fetchSourceInventoryPage(credentials, {
+          snapshot: state.inventory?.snapshot,
+          policyRevision: state.inventory?.policyRevision,
+          cursor: state.inventory?.nextCursor ?? undefined,
+          limit: options.limit ?? 100,
+        });
+      } catch (error) {
+        if (error instanceof Alpha21RequestError && error.errorCode === "snapshot_expired") {
+          state.inventory = null;
+          await writeSourcePublicationState(filePath, state);
+          continue;
+        }
+        throw error;
+      }
+      for (const item of page.items) {
+        const detail = await fetchSourceTopicDetail(credentials, item.topicId, item.sourceRevision);
+        if (detail.resourceId !== item.resourceId || detail.sourceRevisionSequence !== item.sourceRevisionSequence) {
+          throw new Error("DiscussionBridge source snapshot detail does not match its inventory item.");
+        }
+        persistSourceTopicDetail(state, detail, (options.now ?? (() => new Date()))());
+        await writeSourcePublicationState(filePath, state);
+      }
+      advanceSourceInventoryCheckpoint(state, page, (options.now ?? (() => new Date()))());
+      await writeSourcePublicationState(filePath, state);
+      pages++;
+      if (page.complete) break;
+      if (!page.nextCursor) throw new Error("DiscussionBridge incomplete source snapshot omitted its next cursor.");
+    }
+    return { pages, resources: Object.keys(state.publications).length, resumed };
+  });
 }
 
 export function advanceSourceInventoryCheckpoint(

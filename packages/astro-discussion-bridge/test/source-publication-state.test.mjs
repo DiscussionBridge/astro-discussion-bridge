@@ -8,8 +8,15 @@ import {
   advanceSourceRevocationCheckpoint,
   persistSourceTopicDetail,
   readSourcePublicationState,
+  synchronizeInitialSourceSnapshot,
   writeSourcePublicationState,
 } from "../dist/source-publication-state.js";
+import { readFile as readContractFixture } from "node:fs/promises";
+
+const contractFixture = async (name) => JSON.parse(await readContractFixture(
+  new URL(`../node_modules/discussionbridge-adapter-contract/fixtures/${name}`, import.meta.url),
+  "utf8",
+));
 
 function detail(overrides = {}) {
   return {
@@ -112,4 +119,44 @@ test("revocation checkpoint persists deduplicated identities and rejects conflic
     ...page,
     items: [{ ...item, reason: "source_deleted" }],
   }, at), /conflicts/);
+});
+
+test("initial snapshot persists exact pages once and becomes inert after completion", async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-initial-snapshot-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const file = path.join(directory, "source-state.json");
+  const capabilityBase = await contractFixture("connection-capability.json");
+  const inventoryBase = await contractFixture("source-inventory-page.json");
+  const detailBase = await contractFixture("source-detail-inline.json");
+  let requests = 0;
+  const fetchImplementation = async (url, init) => {
+    requests++;
+    const parsed = new URL(url);
+    const correlationId = init.headers["X-DiscussionBridge-Correlation"];
+    const respond = (payload) => new Response(JSON.stringify({ ...payload, correlation_id: correlationId }), {
+      status: 200,
+      headers: { "content-type": "application/json", "X-DiscussionBridge-Correlation": correlationId },
+    });
+    if (parsed.pathname.endsWith("/connection.json")) return respond({
+      ...structuredClone(capabilityBase),
+      destination_policies: capabilityBase.destination_policies.map((policy) => ({ ...policy, profile: "astro" })),
+    });
+    if (parsed.pathname.endsWith("/source-topics.json")) return respond(inventoryBase);
+    return respond(detailBase);
+  };
+  const credentials = {
+    discourseUrl: "https://forum.example/",
+    connectionId: capabilityBase.connection_id,
+    connectionSecret: "s".repeat(40),
+    fetchImplementation,
+  };
+  const first = await synchronizeInitialSourceSnapshot(credentials, file, {
+    now: () => new Date("2026-09-28T12:00:00Z"),
+  });
+  assert.deepEqual(first, { pages: 1, resources: 1, resumed: false });
+  const afterFirst = requests;
+  const second = await synchronizeInitialSourceSnapshot(credentials, file);
+  assert.deepEqual(second, { pages: 0, resources: 1, resumed: false });
+  assert.equal(requests, afterFirst);
+  assert.equal((await readSourcePublicationState(file)).inventory.complete, true);
 });

@@ -229,6 +229,7 @@ generated page.
 - `astro-discussion-bridge/bridge-record`
 - `astro-discussion-bridge/platform-catalog`
 - `astro-discussion-bridge/publication-work`
+- `astro-discussion-bridge/publication-worker`
 - `astro-discussion-bridge/source-publication`
 - `astro-discussion-bridge/source-publication-state`
 - `astro-discussion-bridge/native-publication`

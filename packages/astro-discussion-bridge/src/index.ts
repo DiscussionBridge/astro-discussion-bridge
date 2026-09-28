@@ -127,6 +127,7 @@ export {
   registerAstroPublicationFailure,
   renewAstroPublicationLease,
 } from "./publication-work.js";
+export { AstroPublicationWorkerError, runAstroPublicationWorker } from "./publication-worker.js";
 export {
   fetchSourceInventoryPage,
   fetchSourceRevocationDetail,
@@ -139,6 +140,7 @@ export {
   advanceSourceRevocationCheckpoint,
   persistSourceTopicDetail,
   readSourcePublicationState,
+  synchronizeInitialSourceSnapshot,
   withSourcePublicationStateLock,
   writeSourcePublicationState,
 } from "./source-publication-state.js";
@@ -157,6 +159,12 @@ export type {
   AstroPublicationWork,
   AstroWorkAcknowledgement,
 } from "./publication-work.js";
+export type {
+  AstroPublicationDestination,
+  AstroPublicationWorkerFailureCode,
+  PreparedAstroPublication,
+  RunAstroPublicationWorkerOptions,
+} from "./publication-worker.js";
 export type {
   RetrievedSourceContent,
   SourceInventoryItem,
