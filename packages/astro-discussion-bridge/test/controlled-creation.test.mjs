@@ -53,16 +53,16 @@ function options(root) {
   };
 }
 
-test("only explicitly authorized published fullInteractive pages make a controlled request", async (t) => {
+test("only explicitly authorized published interactive pages make a controlled request", async (t) => {
   const root = await fixture({
-    "authorized.md": "---\ntitle: Authorized\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\n# Authorized\n\nMeaningful **Astro** content.\n\n<script>unsafe()</script>\n",
-    "omitted.md": "---\ndiscussionCommentsDisplay: fullInteractive\n---\n",
-    "false.md": "---\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: false\n---\n",
-    "string-false.md": "---\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: \"true\"\n---\n",
-    "draft.md": "---\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndraft: true\n---\n",
-    "draft-string.md": "---\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndraft: \"true\"\n---\n",
-    "unpublished.md": "---\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\npublished: false\n---\n",
-    "published-string.md": "---\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\npublished: \"false\"\n---\n",
+    "authorized.md": "---\ntitle: Authorized\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\n# Authorized\n\nMeaningful **Astro** content.\n\n<script>unsafe()</script>\n",
+    "omitted.md": "---\ndiscussionCommentsDisplay: interactive\n---\n",
+    "false.md": "---\ndiscussionCommentsDisplay: interactive\ndiscussionSync: false\n---\n",
+    "string-false.md": "---\ndiscussionCommentsDisplay: interactive\ndiscussionSync: \"true\"\n---\n",
+    "draft.md": "---\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\ndraft: true\n---\n",
+    "draft-string.md": "---\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\ndraft: \"true\"\n---\n",
+    "unpublished.md": "---\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\npublished: false\n---\n",
+    "published-string.md": "---\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\npublished: \"false\"\n---\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const requests = [];
@@ -83,7 +83,7 @@ test("only explicitly authorized published fullInteractive pages make a controll
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Connection"], CONNECTION_ID);
   assert.equal(requests[0].init.headers["X-DiscussionBridge-Secret"], CONNECTION_SECRET);
   const body = JSON.parse(requests[0].init.body);
-  assert.equal(body.bridge_record.adapter_version, "0.2.0-alpha.21");
+  assert.equal(body.bridge_record.adapter_version, "0.2.0-alpha.35");
   assert.deepEqual(
     Object.keys(body.bridge_record).sort(),
     ["adapter_id", "adapter_version", "canonical_url", "content_html", "correlation_id", "direction", "external_id", "lane", "published", "title", "visibility"].sort(),
@@ -131,7 +131,7 @@ test("Astro author frontmatter sends bounded primary and coauthor identities", a
   const root = await fixture({
     "authored.md": `---
 title: Authored page
-discussionCommentsDisplay: fullInteractive
+discussionCommentsDisplay: interactive
 discussionSync: true
 authors:
   - id: astro:phil
@@ -190,7 +190,7 @@ test("author identities fail before fetch when malformed, duplicate, or outside 
     const root = await fixture({
       [`invalid-${index}.md`]: `---
 title: Invalid author
-discussionCommentsDisplay: fullInteractive
+discussionCommentsDisplay: interactive
 discussionSync: true
 ${authors}
 ---
@@ -208,7 +208,7 @@ Invalid author content.
 
 test("an existing local binding is authenticated again and mismatch never overwrites", async (t) => {
   const root = await fixture({
-    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
+    "page.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const original = await fs.readFile(path.join(root, "page.md"), "utf8");
@@ -225,7 +225,7 @@ test("an existing local binding is authenticated again and mismatch never overwr
 
 test("a standalone Core embed pair is adopted without changing its topic identity", async (t) => {
   const root = await fixture({
-    "page.md": `---\ntitle: Existing full embed\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/existing-full-embed/40\n---\nExisting page content.\n`,
+    "page.md": `---\ntitle: Existing full embed\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/existing-full-embed/40\n---\nExisting page content.\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requested;
@@ -253,7 +253,7 @@ test("a standalone Core embed pair is adopted without changing its topic identit
 
 test("a matching stored mapping is reauthenticated and a wrong-origin or internally inconsistent URL fails before request", async (t) => {
   const root = await fixture({
-    "matching.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
+    "matching.md": `---\ntitle: Bound\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/40\n---\nBound page content.\n`,
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
@@ -274,11 +274,11 @@ test("a matching stored mapping is reauthenticated and a wrong-origin or interna
   assert.equal(result.topicId, 40);
   assert.equal(requestedExternalId, EXTERNAL_ID);
 
-  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://attacker.invalid/t/bound/40\n---\nBound page content.\n`);
+  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://attacker.invalid/t/bound/40\n---\nBound page content.\n`);
   await assert.rejects(() => publishControlledDiscussions(options(root)), /left the configured Discourse origin/);
   assert.equal(requests, 1);
 
-  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/41\n---\nBound page content.\n`);
+  await fs.writeFile(path.join(root, "matching.md"), `---\ntitle: Bound\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\ndiscussionbridgeExternalId: ${EXTERNAL_ID}\ndiscussionbridgeResourceId: ${RESOURCE_ID}\ndiscourseTopicId: 40\ndiscourseTopicUrl: https://forum.example/community/t/bound/41\n---\nBound page content.\n`);
   await assert.rejects(() => publishControlledDiscussions(options(root)), /topic ID and URL disagree/);
   assert.equal(requests, 1);
 });
@@ -303,7 +303,7 @@ test("stored binding pairs must be wholly absent or wholly valid before any requ
 
   for (const [name, binding] of Object.entries(invalid)) {
     const root = await fixture({
-      [name]: `---\ntitle: Invalid\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n${binding}\n---\n`,
+      [name]: `---\ntitle: Invalid\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n${binding}\n---\n`,
     });
     try {
       await assert.rejects(() => publishControlledDiscussions(options(root)));
@@ -315,7 +315,7 @@ test("stored binding pairs must be wholly absent or wholly valid before any requ
 });
 
 test("the complete authorized corpus rejects canonical source collisions before request or write", async (t) => {
-  const source = "---\ntitle: Collision\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nCollision content.\n";
+  const source = "---\ntitle: Collision\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nCollision content.\n";
   const root = await fixture({ "foo.md": source, "foo/index.md": source });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
@@ -333,7 +333,7 @@ test("the complete authorized corpus rejects canonical source collisions before 
 });
 
 test("routeBase is a contained relative prefix and preserves a site subpath", async (t) => {
-  const source = "---\ntitle: Route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nRoute content.\n";
+  const source = "---\ntitle: Route\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nRoute content.\n";
   const root = await fixture({ "page.md": source });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const previousFetch = globalThis.fetch;
@@ -359,7 +359,7 @@ test("routeBase is a contained relative prefix and preserves a site subpath", as
 });
 
 test("file routes and custom Astro slugs are safe canonical identities", async (t) => {
-  const source = (extra = "") => `---\ntitle: Route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n${extra}---\nRoute content.\n`;
+  const source = (extra = "") => `---\ntitle: Route\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n${extra}---\nRoute content.\n`;
   const previousFetch = globalThis.fetch;
   let requests = 0;
   globalThis.fetch = async (_url, init) => {
@@ -406,8 +406,8 @@ test("file routes and custom Astro slugs are safe canonical identities", async (
 
 test("file-derived and slug-derived canonical identities collide before mutation", async (t) => {
   const root = await fixture({
-    "foo.md": "---\ntitle: File route\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nFile route content.\n",
-    "other.md": "---\ntitle: Slug route\nslug: foo\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nSlug route content.\n",
+    "foo.md": "---\ntitle: File route\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nFile route content.\n",
+    "other.md": "---\ntitle: Slug route\nslug: foo\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nSlug route content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
@@ -423,8 +423,8 @@ test("file-derived and slug-derived canonical identities collide before mutation
 
 test("all local page validation completes before the first remote mutation", async (t) => {
   const root = await fixture({
-    "a-valid.md": "---\ntitle: Valid\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nValid content.\n",
-    "z-invalid.md": "---\ntitle: Invalid\nslug: ../escape\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nInvalid route content.\n",
+    "a-valid.md": "---\ntitle: Valid\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nValid content.\n",
+    "z-invalid.md": "---\ntitle: Invalid\nslug: ../escape\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nInvalid route content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let requests = 0;
@@ -437,7 +437,7 @@ test("all local page validation completes before the first remote mutation", asy
 
 test("controlled response validation fails closed and redacts credentials", async (t) => {
   const root = await fixture({
-    "page.md": "---\ntitle: Bound\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nBound content.\n",
+    "page.md": "---\ntitle: Bound\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nBound content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const previousFetch = globalThis.fetch;
@@ -479,7 +479,7 @@ test("atomic replacement preserves the original when rename fails", async (t) =>
 
 test("a failed atomic binding write can retry the same plugin mapping as resolved", async (t) => {
   const root = await fixture({
-    "page.md": "---\ntitle: Retry\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nRetry content.\n",
+    "page.md": "---\ntitle: Retry\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nRetry content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const target = path.join(root, "page.md");
@@ -526,7 +526,7 @@ test("a failed atomic binding write can retry the same plugin mapping as resolve
 
 test("an interruption after remote success leaves pending state until the binding commits", async (t) => {
   const root = await fixture({
-    "page.md": "---\ntitle: Interrupted\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nInterrupted content.\n",
+    "page.md": "---\ntitle: Interrupted\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nInterrupted content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const target = path.join(root, "page.md");
@@ -572,7 +572,7 @@ test("an interruption after remote success leaves pending state until the bindin
 
 test("overlapping publication builds fail closed on the shared state file", async (t) => {
   const root = await fixture({
-    "page.md": "---\ntitle: Concurrent\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nConcurrent content.\n",
+    "page.md": "---\ntitle: Concurrent\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nConcurrent content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   let releaseFirst;
@@ -609,7 +609,7 @@ test("overlapping publication builds fail closed on the shared state file", asyn
 
 test("a hard-killed owner is reclaimed once and retries the staged identity", async (t) => {
   const root = await fixture({
-    "page.md": "---\ntitle: Hard kill\ndiscussionCommentsDisplay: fullInteractive\ndiscussionSync: true\n---\nHard-kill content.\n",
+    "page.md": "---\ntitle: Hard kill\ndiscussionCommentsDisplay: interactive\ndiscussionSync: true\n---\nHard-kill content.\n",
   });
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const child = spawn(process.execPath, [fileURLToPath(new URL("./hard-kill-publication-child.mjs", import.meta.url)), root], {

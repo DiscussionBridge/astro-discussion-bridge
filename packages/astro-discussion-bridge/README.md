@@ -9,7 +9,7 @@ It has three bounded functions:
 - authenticated From Discourse retrieval and sanitized static presentation;
   and
 - three deliberate comments presentations: plugin-free `simple`, plugin-free
-  `full`, and plugin-backed comments-only `fullInteractive`.
+  `full`, and plugin-backed comments-only `interactive`.
 
 It is not an API-key publisher, import tool, multi-forum framework, generic
 diagnostic client, or independent forum control plane.
@@ -28,8 +28,8 @@ export default defineConfig({
       siteUrl: "https://site.example.com",
       comments: {
         enabled: true,
-        display: "fullInteractive",
-        // Keep fullInteractive bounded; long discussions scroll in the frame.
+        display: "interactive",
+        // Keep interactive bounded; long discussions scroll in the frame.
         dynamicHeight: false,
         credit: { enabled: true },
       },
@@ -73,7 +73,7 @@ discussionbridge-astro publication-status \
 ```
 
 The default comments presentation is plugin-free `full`. Choosing
-`fullInteractive` and enabling `publishOnBuild` is an explicit upgrade into the
+`interactive` and enabling `publishOnBuild` is an explicit upgrade into the
 Bridge-enhanced path; installing this package does not silently require the
 Discourse plugin or connection credentials.
 
@@ -90,7 +90,7 @@ Only a published Markdown or MDX page with both of these exact values may issue
 a request:
 
 ```yaml
-discussionCommentsDisplay: fullInteractive
+discussionCommentsDisplay: interactive
 discussionSync: true
 authors:
   - id: astro:phil
@@ -148,14 +148,14 @@ The component accepts one explicit presentation mode:
   gives Core the canonical Astro page URL so Discourse can create or resolve
   its ordinary embed topic. It requires only normal Discourse embedding
   configuration, not the DiscussionBridge plugin or a connection credential.
-- `fullInteractive` uses the plugin-authorized full-app comments frame so
+- `interactive` uses the plugin-authorized full-app comments frame so
   Discourse owns authentication, composer/actions, moderation, persistence,
   and dynamic iframe height while the companion first post remains out of the
   comments layout.
 
 All three render the optional DiscussionBridge credit. The plugin-free choices
 remain supported because not every site wants to install the receiving plugin;
-`fullInteractive` exists because the stock embed cannot provide the same
+`interactive` exists because the stock embed cannot provide the same
 comments-frame interaction and layout.
 
 For a From Discourse page, render the record during the server-side/static
@@ -193,7 +193,7 @@ stable Bridge resource, author, revision, and bounded sanitized content before
 atomically writing `comments/<slug>.md`. Exact retries are unchanged; a
 different resource attempting to claim the same file fails closed. The written
 page retains the source revision and topic identity and uses the ordinary
-`fullInteractive` discussion component. The connection secret never enters the
+`interactive` discussion component. The connection secret never enters the
 generated page.
 
 ## Public exports

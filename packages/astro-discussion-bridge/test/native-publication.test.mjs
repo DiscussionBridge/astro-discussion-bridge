@@ -24,7 +24,6 @@ test("materializes one authorized Astro source atomically and exact retry is unc
   assert.match(source, /discussionFromDiscourse: true/);
   assert.match(source, /discussionbridgeNativePublication: true/);
   assert.match(source, /discussionCommentsDisplay: interactive/);
-  assert.doesNotMatch(source, /discussionCommentsDisplay: fullInteractive/);
   assert.match(source, /discussionbridgeResourceId: 11111111-1111-4111-8111-111111111111/);
   assert.match(source, /discourseTopicId: 53/);
   assert.match(source, /date: "2026-09-01T08:00:00\.000Z"/);

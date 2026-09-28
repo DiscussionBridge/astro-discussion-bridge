@@ -4,8 +4,10 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import discussionBridge, {
+  ADAPTER_CONTRACT_VERSION,
   isInteractiveCommentsMode,
   normalizeCommentsMode,
+  PRODUCT_VERSION,
 } from "../dist/index.js";
 
 const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -75,16 +77,19 @@ test("From Discourse component renders only server-retrieved sanitized record co
   assert.doesNotMatch(component, /client:|X-DiscussionBridge|connectionSecret\}/);
 });
 
-test("Interactive accepts the canonical and deprecated mode values", () => {
+test("only the canonical presentation vocabulary is accepted", () => {
   assert.equal(normalizeCommentsMode("interactive"), "interactive");
-  assert.equal(normalizeCommentsMode("fullInteractive"), "interactive");
   assert.equal(isInteractiveCommentsMode("interactive"), true);
-  assert.equal(isInteractiveCommentsMode("fullInteractive"), true);
   assert.equal(normalizeCommentsMode("bridge"), undefined);
   assert.throws(() => discussionBridge({
     discourseUrl: "https://forum.example/",
     comments: { display: "bridge" },
   }), /Comments display must be/);
+});
+
+test("component and central contract identities remain distinct and exact", () => {
+  assert.equal(PRODUCT_VERSION, "0.2.0-alpha.35");
+  assert.equal(ADAPTER_CONTRACT_VERSION, "0.2.0-alpha.21");
 });
 
 test("Interactive defaults to a bounded viewport and configured ceilings fail closed", async () => {

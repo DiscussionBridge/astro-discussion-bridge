@@ -118,6 +118,7 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Disc
 
 export { publishControlledDiscussions } from "./controlled-creation.js";
 export { isInteractiveCommentsMode, normalizeCommentsMode } from "./comments-mode.js";
+export { ADAPTER_CONTRACT_VERSION, PRODUCT_VERSION } from "./version.js";
 export { fetchFromDiscourseRecord } from "./bridge-record.js";
 export { materializeNativePublications } from "./native-publication.js";
 export { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
@@ -143,7 +144,7 @@ function resolveOptions(options: DiscussionBridgeOptions): {
   }
   const commentsDisplay = normalizeCommentsMode(options.comments?.display ?? "full");
   if (!commentsDisplay) {
-    throw new Error("Comments display must be simple, full, interactive, or the deprecated fullInteractive value.");
+    throw new Error("Comments display must be simple, full, or interactive.");
   }
   return {
     public: {
