@@ -1,0 +1,115 @@
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import {
+  advanceSourceInventoryCheckpoint,
+  advanceSourceRevocationCheckpoint,
+  persistSourceTopicDetail,
+  readSourcePublicationState,
+  writeSourcePublicationState,
+} from "../dist/source-publication-state.js";
+
+function detail(overrides = {}) {
+  return {
+    resourceId: "a4965d46-e657-4af4-af47-6439e544eeb9",
+    topicId: 8,
+    topicUrl: "https://forum.example/t/forum-originated-roadmap/8",
+    title: "Forum-Originated Roadmap",
+    sourceRevision: "post:12:version:4",
+    sourceRevisionSequence: 4,
+    sourceCreatedAt: "2026-09-01T16:00:00Z",
+    sourceUpdatedAt: "2026-09-27T18:30:00Z",
+    sourceAuthors: [{ name: "Editor" }],
+    categories: [{ id: 2, name: "Roadmap" }],
+    tags: [{ id: 9, name: "release" }],
+    presentationMode: "interactive",
+    contentDisposition: "complete",
+    networkProvenance: null,
+    contentHtml: "<p>This discussion started in Discourse.</p>",
+    sanitizedContentHtml: "<p>This discussion started in Discourse.</p>",
+    sourceContentBytes: 44,
+    sourceContentSha256: "6a53e7c575a7b194305b793db9d549e43effbc443e3a9106629b2305884c63e6",
+    ...overrides,
+  };
+}
+
+test("source state persists source metadata separately from synchronization time", async (t) => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "discussionbridge-astro-source-state-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const file = path.join(directory, "state.json");
+  const state = await readSourcePublicationState(file);
+  const synchronizedAt = new Date("2026-09-28T12:00:00Z");
+  const persisted = persistSourceTopicDetail(state, detail(), synchronizedAt);
+  assert.equal(persisted.sourceUpdatedAt, "2026-09-27T18:30:00Z");
+  assert.equal(persisted.synchronizedAt, "2026-09-28T12:00:00.000Z");
+  advanceSourceInventoryCheckpoint(state, {
+    snapshot: "dbs_snapshot_001",
+    policyRevision: "policy:2026-09-27:1",
+    items: [],
+    nextCursor: "cursor-2",
+    complete: false,
+  }, synchronizedAt);
+  await writeSourcePublicationState(file, state);
+  const reloaded = await readSourcePublicationState(file);
+  assert.deepEqual(reloaded, state);
+  const raw = await readFile(file, "utf8");
+  assert.match(raw, /"sourceUpdatedAt": "2026-09-27T18:30:00Z"/);
+  assert.match(raw, /"synchronizedAt": "2026-09-28T12:00:00.000Z"/);
+});
+
+test("source state rejects revision conflicts, regressions, and mixed incomplete snapshots", async () => {
+  const state = await readSourcePublicationState("Z:/path-that-does-not-exist/source-state.json");
+  persistSourceTopicDetail(state, detail());
+  assert.throws(() => persistSourceTopicDetail(state, detail({
+    sourceContentSha256: "0".repeat(64),
+  })), /conflicts/);
+  assert.throws(() => persistSourceTopicDetail(state, detail({
+    sourceRevision: "post:12:version:3",
+    sourceRevisionSequence: 3,
+  })), /regressed/);
+  advanceSourceInventoryCheckpoint(state, {
+    snapshot: "dbs_snapshot_001",
+    policyRevision: "policy:1",
+    items: [],
+    nextCursor: "cursor-2",
+    complete: false,
+  });
+  assert.throws(() => advanceSourceInventoryCheckpoint(state, {
+    snapshot: "dbs_snapshot_002",
+    policyRevision: "policy:1",
+    items: [],
+    nextCursor: null,
+    complete: true,
+  }), /cannot mix/);
+});
+
+test("revocation checkpoint persists deduplicated identities and rejects conflicting replay", async () => {
+  const state = await readSourcePublicationState("Z:/path-that-does-not-exist/revocation-state.json");
+  const item = {
+    revocationId: "dbr_11111111111111111111111111111111",
+    resourceId: "a4965d46-e657-4af4-af47-6439e544eeb9",
+    sourceRevision: "post:12:version:5",
+    sourceRevisionSequence: 5,
+    reason: "source_unpublished",
+    effectiveAt: "2026-09-28T18:00:00Z",
+    restorable: true,
+  };
+  const page = {
+    highWater: "dbrh_001",
+    policyRevision: "policy:1",
+    items: [item],
+    nextCursor: null,
+    complete: true,
+  };
+  const at = new Date("2026-09-28T19:00:00Z");
+  advanceSourceRevocationCheckpoint(state, page, at);
+  advanceSourceRevocationCheckpoint(state, page, at);
+  assert.equal(Object.keys(state.revocations).length, 1);
+  assert.equal(state.revocations[item.revocationId].effectiveAt, item.effectiveAt);
+  assert.throws(() => advanceSourceRevocationCheckpoint(state, {
+    ...page,
+    items: [{ ...item, reason: "source_deleted" }],
+  }, at), /conflicts/);
+});

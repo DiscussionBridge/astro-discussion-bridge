@@ -120,6 +120,21 @@ export { publishControlledDiscussions } from "./controlled-creation.js";
 export { isInteractiveCommentsMode, normalizeCommentsMode } from "./comments-mode.js";
 export { ADAPTER_CONTRACT_VERSION, PRODUCT_VERSION } from "./version.js";
 export { fetchFromDiscourseRecord } from "./bridge-record.js";
+export {
+  fetchSourceInventoryPage,
+  fetchSourceRevocationDetail,
+  fetchSourceRevocationPage,
+  fetchSourceTopicDetail,
+  retrieveSourceContent,
+} from "./source-publication.js";
+export {
+  advanceSourceInventoryCheckpoint,
+  advanceSourceRevocationCheckpoint,
+  persistSourceTopicDetail,
+  readSourcePublicationState,
+  withSourcePublicationStateLock,
+  writeSourcePublicationState,
+} from "./source-publication-state.js";
 export { materializeNativePublications } from "./native-publication.js";
 export { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
 export type {
@@ -128,6 +143,22 @@ export type {
   PublishControlledDiscussionsOptions,
 } from "./controlled-creation.js";
 export type { BridgeRecordCredentials, PresentedBridgeRecord } from "./bridge-record.js";
+export type {
+  RetrievedSourceContent,
+  SourceInventoryItem,
+  SourceInventoryPage,
+  SourceRevocation,
+  SourceRevocationDetail,
+  SourceRevocationPage,
+  SourceTopicDetail,
+} from "./source-publication.js";
+export type {
+  PersistedSourcePublication,
+  PersistedSourceRevocation,
+  SourceInventoryCheckpoint,
+  SourcePublicationState,
+  SourceRevocationCheckpoint,
+} from "./source-publication-state.js";
 export type { CommentsModeInput, PublicCommentsMode } from "./comments-mode.js";
 
 function resolveOptions(options: DiscussionBridgeOptions): {

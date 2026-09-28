@@ -31,6 +31,14 @@
       "types": "./dist/alpha21-client.d.ts",
       "import": "./dist/alpha21-client.js"
     },
+    "./source-publication": {
+      "types": "./dist/source-publication.d.ts",
+      "import": "./dist/source-publication.js"
+    },
+    "./source-publication-state": {
+      "types": "./dist/source-publication-state.d.ts",
+      "import": "./dist/source-publication-state.js"
+    },
     "./web-url": {
       "types": "./dist/web-url.d.ts",
       "import": "./dist/web-url.js"

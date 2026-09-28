@@ -188,10 +188,18 @@ import FromDiscourse from "astro-discussion-bridge/FromDiscourse.astro";
 />
 ```
 
-The component performs an authenticated bounded GET, verifies the resource,
-direction and topic tuple, sanitizes cooked HTML through an allowlist, and
-emits only safe content plus the Discourse topic link. It never ships the
-connection secret to browser JavaScript.
+The component verifies the authenticated Alpha.21 capability and active Astro
+presentation binding, then retrieves the exact resource and source revision.
+Inline source content is integrity-checked directly. Larger source content is
+retrieved through revision-pinned 32 KiB chunks and is not decoded, sanitized,
+or presented until every chunk hash, the exact total byte count, and the
+complete SHA-256 agree. It emits only allowlisted content plus the Discourse
+topic link and never ships the connection secret to browser JavaScript.
+
+The source-publication API also exposes immutable inventory pages, exact
+revision detail, and the independent revocation feed. Resume calls retain both
+the snapshot/high-water identity and its policy revision; a changed identity
+or policy fails closed instead of silently mixing two snapshots.
 
 An operator may also authorize The Bridge to materialize a forum-owned
 publication as a genuine Astro content page. The binding must explicitly carry
@@ -219,6 +227,8 @@ generated page.
 - `astro-discussion-bridge/controlled-creation`
 - `astro-discussion-bridge/web-url`
 - `astro-discussion-bridge/bridge-record`
+- `astro-discussion-bridge/source-publication`
+- `astro-discussion-bridge/source-publication-state`
 - `astro-discussion-bridge/native-publication`
 - `discussionbridge-astro sync-publications` CLI
 - `astro-discussion-bridge/Discussion.astro`

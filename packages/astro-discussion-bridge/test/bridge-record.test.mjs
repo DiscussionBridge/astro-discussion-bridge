@@ -1,73 +1,144 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { fetchFromDiscourseRecord } from "../dist/bridge-record.js";
 
-const credentials = {
-  discourseUrl: "https://forum.example/community/",
-  connectionId: "dbc_aaaaaaaaaaaaaaaaaaaaaaaa",
-  connectionSecret: "s".repeat(32),
+const fixture = async (name) => JSON.parse(await readFile(
+  new URL(`../node_modules/discussionbridge-adapter-contract/fixtures/${name}`, import.meta.url),
+  "utf8",
+));
+const capabilityBase = await fixture("connection-capability.json");
+const recordBase = await fixture("from-discourse-record.json");
+const resourceId = recordBase.bridge_record.resource_id;
+const credentialsBase = {
+  discourseUrl: "https://forum.example/",
+  connectionId: capabilityBase.connection_id,
+  connectionSecret: "s".repeat(40),
 };
-const resourceId = "11111111-1111-4111-8111-111111111111";
 
-function payload(overrides = {}) {
+function capability(correlationId, overrides = {}) {
   return {
-    bridge_record: {
-      resource_id: resourceId,
-      direction: "from_discourse",
-      state: "healthy",
-      title: "Forum roadmap",
-      topic_id: 42,
-      topic_url: "https://forum.example/community/t/forum-roadmap/42",
-      content_html: '<h2>Roadmap</h2><script>alert(1)</script><p onclick="bad()">Safe</p><a href="javascript:bad()">bad</a>',
-      ...overrides,
-    },
+    ...structuredClone(capabilityBase),
+    destination_policies: capabilityBase.destination_policies.map((policy) => ({ ...policy, profile: "astro" })),
+    ...overrides,
+    correlation_id: correlationId,
   };
 }
 
-test("From Discourse retrieval is authenticated, bounded, identity-checked, and sanitized", async (t) => {
-  const prior = globalThis.fetch;
-  let request;
-  globalThis.fetch = async (url, init) => {
-    request = { url: String(url), init };
-    return new Response(JSON.stringify(payload()), { status: 200, headers: { "content-type": "application/json" } });
+function response(payload, correlationId, status = 200) {
+  return new Response(JSON.stringify({ ...payload, correlation_id: correlationId }), {
+    status,
+    headers: { "content-type": "application/json", "X-DiscussionBridge-Correlation": correlationId },
+  });
+}
+
+function mockedFetch(record, chunks = [], capabilityOverrides = {}) {
+  const requests = [];
+  const implementation = async (url, init) => {
+    const parsed = new URL(url);
+    const correlationId = init.headers["X-DiscussionBridge-Correlation"];
+    requests.push({ url: parsed, init });
+    if (parsed.pathname.endsWith("/discussion-bridge/v1/connection.json")) {
+      return response(capability(correlationId, capabilityOverrides), correlationId);
+    }
+    if (parsed.pathname.endsWith(`/discussion-bridge/v1/bridge-records/${resourceId}.json`)) {
+      return response({ bridge_record: record }, correlationId);
+    }
+    if (parsed.pathname.endsWith(`/discussion-bridge/v1/source-topics/${record.topic_id}/content.json`)) {
+      const number = Number(parsed.searchParams.get("chunk"));
+      assert.equal(parsed.searchParams.get("source_revision"), record.source_revision);
+      const bytes = chunks[number - 1];
+      return response({
+        source_revision: record.source_revision,
+        chunk: number,
+        chunk_count: chunks.length,
+        decoded_bytes: bytes.length,
+        chunk_sha256: createHash("sha256").update(bytes).digest("hex"),
+        content_base64: bytes.toString("base64"),
+      }, correlationId);
+    }
+    throw new Error(`Unexpected request ${parsed.pathname}`);
   };
-  t.after(() => { globalThis.fetch = prior; });
-  const record = await fetchFromDiscourseRecord(resourceId, credentials);
-  assert.equal(request.url, `https://forum.example/community/discussion-bridge/v1/bridge-records/${resourceId}.json`);
-  assert.equal(request.init.method, "GET");
-  assert.equal(request.init.redirect, "error");
-  assert.equal(request.init.headers["X-DiscussionBridge-Connection"], credentials.connectionId);
-  assert.equal(request.init.headers["X-DiscussionBridge-Secret"], credentials.connectionSecret);
-  assert.equal(record.topicId, 42);
-  assert.match(record.contentHtml, /<h2>Roadmap<\/h2>/);
-  assert.match(record.contentHtml, /<p>Safe<\/p>/);
-  assert.doesNotMatch(record.contentHtml, /script|onclick|javascript:/i);
-});
+  return { implementation, requests };
+}
 
-test("From Discourse retrieval fails closed on identity, direction, origin, and response bounds", async (t) => {
-  const prior = globalThis.fetch;
-  t.after(() => { globalThis.fetch = prior; });
-  for (const overrides of [
-    { resource_id: "22222222-2222-4222-8222-222222222222" },
-    { direction: "to_discourse" },
-    { state: "failed" },
-    { topic_url: "https://attacker.invalid/t/roadmap/42" },
-    { topic_url: "https://forum.example/community/t/roadmap/41" },
-  ]) {
-    globalThis.fetch = async () => new Response(JSON.stringify(payload(overrides)), { status: 200, headers: { "content-type": "application/json" } });
-    await assert.rejects(() => fetchFromDiscourseRecord(resourceId, credentials));
+function withContent(html, overrides = {}) {
+  const bytes = Buffer.from(html, "utf8");
+  return {
+    ...structuredClone(recordBase.bridge_record),
+    content_transport: {
+      mode: "inline",
+      media_type: "text/html; charset=utf-8",
+      byte_length: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+      content_html: html,
+    },
+    ...overrides,
+  };
+}
+
+test("From Discourse presentation uses exact Alpha.21 capability, record, correlation, and sanitization", async () => {
+  const record = withContent('<h2>Roadmap</h2><script>alert(1)</script><p onclick="bad()">Safe</p><a href="javascript:bad()">bad</a>');
+  const mock = mockedFetch(record);
+  const presented = await fetchFromDiscourseRecord(resourceId, { ...credentialsBase, fetchImplementation: mock.implementation });
+  assert.equal(mock.requests.length, 2);
+  for (const request of mock.requests) {
+    assert.equal(request.init.headers["X-DiscussionBridge-Contract"], "0.2.0-alpha.21");
+    assert.equal(request.init.headers["X-DiscussionBridge-Connection"], credentialsBase.connectionId);
+    assert.equal(request.init.headers["X-DiscussionBridge-Secret"], credentialsBase.connectionSecret);
   }
-  globalThis.fetch = async () => new Response("{}", { status: 200, headers: { "content-type": "application/json", "content-length": "65537" } });
-  await assert.rejects(() => fetchFromDiscourseRecord(resourceId, credentials), /too large/);
+  assert.equal(presented.topicId, 8);
+  assert.equal(presented.sourceRevision, "post:12:version:4");
+  assert.equal(presented.sourceUpdatedAt, "2026-09-27T18:30:00Z");
+  assert.match(presented.contentHtml, /<h2>Roadmap<\/h2>/);
+  assert.match(presented.contentHtml, /<p>Safe<\/p>/);
+  assert.doesNotMatch(presented.contentHtml, /script|onclick|javascript:/i);
 });
 
-test("From Discourse credentials and resource identity reject before fetch", async (t) => {
-  const prior = globalThis.fetch;
+test("From Discourse presentation reassembles verified chunked content above 48 KiB", async () => {
+  const html = `<h2>Complete source</h2><p>${"large-source-".repeat(6_000)}</p>`;
+  const complete = Buffer.from(html, "utf8");
+  const chunks = [];
+  for (let offset = 0; offset < complete.length; offset += 32_768) chunks.push(complete.subarray(offset, offset + 32_768));
+  const record = {
+    ...structuredClone(recordBase.bridge_record),
+    content_transport: {
+      mode: "chunked",
+      media_type: "text/html; charset=utf-8",
+      byte_length: complete.length,
+      sha256: createHash("sha256").update(complete).digest("hex"),
+      chunk_count: chunks.length,
+      decoded_chunk_maximum_bytes: 32_768,
+    },
+  };
+  const mock = mockedFetch(record, chunks);
+  const presented = await fetchFromDiscourseRecord(resourceId, { ...credentialsBase, fetchImplementation: mock.implementation });
+  assert.ok(presented.sourceContentBytes > 49_152);
+  assert.equal(presented.sourceContentSha256, record.content_transport.sha256);
+  assert.match(presented.contentHtml, /Complete source/);
+  assert.equal(mock.requests.length, 2 + chunks.length);
+});
+
+test("From Discourse presentation fails closed on resource, direction, topic, binding, and capability", async () => {
+  const cases = [
+    [{ ...structuredClone(recordBase.bridge_record), resource_id: "22222222-2222-4222-8222-222222222222" }, {}],
+    [{ ...structuredClone(recordBase.bridge_record), direction: "to_discourse" }, {}],
+    [{ ...structuredClone(recordBase.bridge_record), topic_url: "https://attacker.invalid/t/roadmap/8" }, {}],
+    [{ ...structuredClone(recordBase.bridge_record), bindings: [] }, {}],
+    [structuredClone(recordBase.bridge_record), { directions: ["to_discourse"] }],
+  ];
+  for (const [record, capabilityOverrides] of cases) {
+    const mock = mockedFetch(record, [], capabilityOverrides);
+    await assert.rejects(() => fetchFromDiscourseRecord(resourceId, { ...credentialsBase, fetchImplementation: mock.implementation }));
+  }
+});
+
+test("From Discourse credentials and resource identity reject before any request", async () => {
   let requests = 0;
-  globalThis.fetch = async () => { requests += 1; throw new Error("must not fetch"); };
-  t.after(() => { globalThis.fetch = prior; });
-  await assert.rejects(() => fetchFromDiscourseRecord("invalid", credentials), /resource ID/);
-  await assert.rejects(() => fetchFromDiscourseRecord(resourceId, { ...credentials, connectionId: "astro-alpha" }), /connection ID/);
-  await assert.rejects(() => fetchFromDiscourseRecord(resourceId, { ...credentials, connectionSecret: "short" }), /connection secret/);
+  const fetchImplementation = async () => { requests += 1; throw new Error("must not fetch"); };
+  await assert.rejects(() => fetchFromDiscourseRecord("invalid", { ...credentialsBase, fetchImplementation }), /resource ID/);
+  await assert.rejects(() => fetchFromDiscourseRecord(resourceId, { ...credentialsBase, connectionId: "astro-alpha", fetchImplementation }), /connection ID/);
+  await assert.rejects(() => fetchFromDiscourseRecord(resourceId, { ...credentialsBase, connectionSecret: "short", fetchImplementation }), /connection secret/);
   assert.equal(requests, 0);
 });
