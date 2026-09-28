@@ -27,6 +27,10 @@
       "types": "./dist/controlled-creation.d.ts",
       "import": "./dist/controlled-creation.js"
     },
+    "./alpha21-client": {
+      "types": "./dist/alpha21-client.d.ts",
+      "import": "./dist/alpha21-client.js"
+    },
     "./web-url": {
       "types": "./dist/web-url.d.ts",
       "import": "./dist/web-url.js"
@@ -83,6 +87,7 @@
     "@types/proper-lockfile": "^4.1.4",
     "@types/sanitize-html": "^2.16.0",
     "astro": "^7.2.4",
+    "discussionbridge-adapter-contract": "github:DiscussionBridge/discussionbridge-adapter-contract#v0.2.0-alpha.21",
     "typescript": "^5.5.0",
     "vite": "^6.0.0"
   },

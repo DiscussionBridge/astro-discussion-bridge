@@ -60,6 +60,7 @@ test("package and source inventory expose only the eight-profile Astro adapter b
     "./DiscourseDiscussion.astro",
     "./DiscourseReplies.astro",
     "./FromDiscourse.astro",
+    "./alpha21-client",
     "./bridge-record",
     "./controlled-creation",
     "./native-publication",

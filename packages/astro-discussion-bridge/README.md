@@ -199,6 +199,7 @@ generated page.
 ## Public exports
 
 - default Astro integration
+- `astro-discussion-bridge/alpha21-client`
 - `astro-discussion-bridge/controlled-creation`
 - `astro-discussion-bridge/web-url`
 - `astro-discussion-bridge/bridge-record`
