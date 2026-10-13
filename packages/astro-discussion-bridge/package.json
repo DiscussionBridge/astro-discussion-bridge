@@ -1,6 +1,6 @@
 {
   "name": "astro-discussion-bridge",
-  "version": "0.2.0-alpha.21",
+  "version": "0.3.0-alpha.1",
   "description": "Two-direction Astro adapter with plugin-free Simple/Full comments and plugin-backed Interactive discussion.",
   "type": "module",
   "license": "MIT",
@@ -47,7 +47,8 @@
     "./DiscourseReplies.astro": "./src/components/DiscourseReplies.astro",
     "./Discussion.astro": "./src/components/Discussion.astro",
     "./DiscussionCredit.astro": "./src/components/DiscussionCredit.astro",
-    "./FromDiscourse.astro": "./src/components/FromDiscourse.astro"
+    "./FromDiscourse.astro": "./src/components/FromDiscourse.astro",
+    "./RichContent.astro": "./src/components/RichContent.astro"
   },
   "files": [
     "dist",
@@ -56,14 +57,21 @@
     "src/comments-mode.ts",
     "README.md",
     "src/simple-live.ts",
-    "src/virtual.d.ts"
+    "src/virtual.d.ts",
+    "src/browser-rich-content.mjs",
+    "scripts/build-rich-content.mjs",
+    "scripts/verify-thousand-pages.mjs",
+    ".env.example"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "check:attribution": "node ../../scripts/check-package-attribution.mjs",
     "test": "npm run build && node --test test/*.test.mjs",
-    "pack:inspect": "npm pack --dry-run"
+    "pack:inspect": "npm pack --dry-run",
+    "build:rich": "node scripts/build-rich-content.mjs",
+    "verify:thousand-pages": "node scripts/verify-thousand-pages.mjs",
+    "prepack": "npm run build && npm run build:rich"
   },
   "keywords": [
     "astro",
@@ -84,7 +92,12 @@
     "@types/sanitize-html": "^2.16.0",
     "astro": "^7.2.4",
     "typescript": "^5.5.0",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "esbuild": "0.28.1",
+    "mermaid": "11.17.2",
+    "katex": "0.16.47",
+    "package-manager-detector": "1.6.0",
+    "tinyexec": "1.2.4"
   },
   "peerDependenciesMeta": {
     "@astrojs/starlight": {

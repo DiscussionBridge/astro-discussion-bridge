@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fetchFromDiscourseRecord } from "../dist/bridge-record.js";
+import { createHash } from "node:crypto";
 
 const credentials = {
   discourseUrl: "https://forum.example/community/",
@@ -33,7 +34,7 @@ test("From Discourse retrieval is authenticated, bounded, identity-checked, and 
   };
   t.after(() => { globalThis.fetch = prior; });
   const record = await fetchFromDiscourseRecord(resourceId, credentials);
-  assert.equal(request.url, `https://forum.example/community/discussion-bridge/v1/bridge-records/${resourceId}.json`);
+  assert.equal(request.url, `https://forum.example/community/discussion-bridge/v1/bridge-records/${resourceId}.json?publication_contract=0.3.0-alpha.1`);
   assert.equal(request.init.method, "GET");
   assert.equal(request.init.redirect, "error");
   assert.equal(request.init.headers["X-DiscussionBridge-Connection"], credentials.connectionId);
@@ -57,7 +58,7 @@ test("From Discourse retrieval fails closed on identity, direction, origin, and 
     globalThis.fetch = async () => new Response(JSON.stringify(payload(overrides)), { status: 200, headers: { "content-type": "application/json" } });
     await assert.rejects(() => fetchFromDiscourseRecord(resourceId, credentials));
   }
-  globalThis.fetch = async () => new Response("{}", { status: 200, headers: { "content-type": "application/json", "content-length": "65537" } });
+  globalThis.fetch = async () => new Response("{}", { status: 200, headers: { "content-type": "application/json", "content-length": "2097153" } });
   await assert.rejects(() => fetchFromDiscourseRecord(resourceId, credentials), /too large/);
 });
 
@@ -70,4 +71,48 @@ test("From Discourse credentials and resource identity reject before fetch", asy
   await assert.rejects(() => fetchFromDiscourseRecord(resourceId, { ...credentials, connectionId: "astro-alpha" }), /connection ID/);
   await assert.rejects(() => fetchFromDiscourseRecord(resourceId, { ...credentials, connectionSecret: "short" }), /connection secret/);
   assert.equal(requests, 0);
+});
+
+test("direct From presentation hydrates complete UTF8 chunks within a configured Discourse subfolder", async (t) => {
+  const prior = globalThis.fetch;
+  t.after(() => { globalThis.fetch = prior; });
+  const body = Buffer.from(`<p>${"Ω".repeat(40000)}Complete ending</p>`);
+  const sha256 = createHash("sha256").update(body).digest("hex");
+  const source = { status: "active", edition: "a".repeat(64), content: { bytes: body.length, sha256, path: `/discussion-bridge/v1/bridge-records/${resourceId}/content.json`, chunk_bytes: 32768 } };
+  let chunks = 0;
+  globalThis.fetch = async (url, init) => {
+    const request = new URL(url);
+    assert.equal(request.origin, "https://forum.example");
+    assert.ok(request.pathname.startsWith("/community/discussion-bridge/"));
+    assert.equal(init.headers["X-DiscussionBridge-Connection"], credentials.connectionId);
+    let data;
+    if (request.pathname.endsWith("/content.json")) {
+      chunks++;
+      const offset = Number(request.searchParams.get("offset"));
+      const bytes = body.subarray(offset, offset + 32768);
+      const next = offset + bytes.length;
+      data = { resource_id: resourceId, edition: source.edition, offset, total_bytes: body.length, content_sha256: sha256, chunk_base64: bytes.toString("base64"), next_offset: next === body.length ? null : next };
+    } else data = payload({ source, content_html: null });
+    return new Response(JSON.stringify(data), { headers: { "content-type": "application/json" } });
+  };
+  assert.match((await fetchFromDiscourseRecord(resourceId, credentials)).contentHtml, /Complete ending/);
+  assert.equal(chunks, 3);
+});
+
+test("direct From presentation retries a changed source edition three times and refuses withdrawal", async (t) => {
+  const prior = globalThis.fetch;
+  t.after(() => { globalThis.fetch = prior; });
+  const source = { status: "active", edition: "a".repeat(64), content: { bytes: 1, sha256: "b".repeat(64), path: `/discussion-bridge/v1/bridge-records/${resourceId}/content.json`, chunk_bytes: 32768 } };
+  let requests = 0;
+  globalThis.fetch = async (url) => {
+    if (new URL(url).pathname.endsWith("/content.json")) {
+      requests++;
+      return new Response(JSON.stringify({ reason: "edition_changed" }), { status: 409, headers: { "content-type": "application/json" } });
+    }
+    return new Response(JSON.stringify(payload({ source, content_html: null })), { headers: { "content-type": "application/json" } });
+  };
+  await assert.rejects(() => fetchFromDiscourseRecord(resourceId, credentials), /edition changed/);
+  assert.equal(requests, 3);
+  globalThis.fetch = async () => new Response(JSON.stringify(payload({ content_html: null, source: { status: "withdrawn" } })), { headers: { "content-type": "application/json" } });
+  await assert.rejects(() => fetchFromDiscourseRecord(resourceId, credentials), /invalid/);
 });

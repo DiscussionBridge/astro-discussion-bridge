@@ -17,10 +17,11 @@ build/
 # Logs and local scratch
 *.log
 tmp/
-.tmp/npm-cache/
+.tmp/
 .DS_Store
 Thumbs.db
 
 # Generated docs-site content
 sites/docs/src/content/docs/
 .discussionbridge-cache/
+

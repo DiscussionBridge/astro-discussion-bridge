@@ -15,6 +15,7 @@ globalThis.fetch = async (_url, init) => {
     topic_url: "https://forum.example/community/t/example/55",
     direction: "to_discourse",
     core_fallback: false,
+    source_revision: request.source_publication.revision,
   }), { status: 201, headers: { "content-type": "application/json" } });
 };
 

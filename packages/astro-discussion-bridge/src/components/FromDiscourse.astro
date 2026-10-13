@@ -1,22 +1,28 @@
 ---
 import { fetchFromDiscourseRecord } from "astro-discussion-bridge/bridge-record";
 import sanitizeHtml from "sanitize-html";
+import Discussion from "./Discussion.astro";
+import type { CommentsModeInput } from "../comments-mode";
 
 interface Props {
   resourceId: string;
   discourseUrl: string;
   showTopicLink?: boolean;
+  /** Explicit operator-selected discussion presentation; omitted keeps body-only behavior. */
+  display?: CommentsModeInput;
 }
 
 const connectionId = process.env.DISCUSSIONBRIDGE_CONNECTION_ID;
-const connectionSecret = process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET;
-if (!connectionId || !connectionSecret) {
+const secretFile = process.env.DISCUSSIONBRIDGE_SECRET_FILE;
+const connectionSecret = secretFile ? undefined : process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET;
+if (!connectionId || (!connectionSecret && !secretFile)) {
   throw new Error("From Discourse presentation requires server-only DiscussionBridge credentials.");
 }
 const record = await fetchFromDiscourseRecord(Astro.props.resourceId, {
   discourseUrl: Astro.props.discourseUrl,
   connectionId,
   connectionSecret,
+  secretFile,
 });
 const showTopicLink = Astro.props.showTopicLink ?? true;
 const usedSlugs = new Set<string>();
@@ -54,10 +60,17 @@ const contentHtml = record.contentHtml.replace(
     </nav>
   )}
   <Fragment set:html={contentHtml} />
+  {record.sourceUpdatedAt && (
+    <p>Updated <time datetime={record.sourceUpdatedAt}>{record.sourceUpdatedAt}</time></p>
+  )}
   {showTopicLink && (
     <p class="discussionbridge-credit">
-      <a href={record.topicUrl} rel="nofollow noopener noreferrer">Continue the discussion in Discourse</a>
+      <a href={record.topicUrl} rel="nofollow noopener noreferrer">Continue the discussion in {record.forumName}</a>
     </p>
+  )}
+  {Astro.props.display !== undefined && (
+    <Discussion display={Astro.props.display} discourseUrl={Astro.props.discourseUrl}
+      topicId={record.topicId} topicUrl={record.topicUrl} frontmatter={{ discussionFromDiscourse: true }} />
   )}
 </section>
 

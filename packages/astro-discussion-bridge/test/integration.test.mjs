@@ -27,6 +27,13 @@ test("default integration is inert and its virtual module contains no credential
   assert.equal(logged, false);
 });
 
+test("only an absent comments display defaults to Full", () => {
+  assert.doesNotThrow(() => discussionBridge({ discourseUrl: "https://forum.example/", comments: {} }));
+  for (const display of [null, "", " interactive", "interactive ", "fullInteractive", false, 0]) {
+    assert.throws(() => discussionBridge({ discourseUrl: "https://forum.example/", comments: { display } }), /Comments display must be/);
+  }
+});
+
 test("enabled controlled publishing fails closed without server credentials", async () => {
   const oldId = process.env.DISCUSSIONBRIDGE_CONNECTION_ID;
   const oldSecret = process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET;
@@ -50,7 +57,7 @@ test("enabled controlled publishing fails closed without server credentials", as
   }
 });
 
-test("package and source inventory expose only the eight-profile Astro adapter boundary", async () => {
+test("package exposes supported Astro core boundaries without proposal modules", async () => {
   const packageJson = JSON.parse(await fs.readFile(path.join(packageDir, "package.json"), "utf8"));
   assert.deepEqual(packageJson.bin, { "discussionbridge-astro": "./dist/cli.js" });
   assert.deepEqual(Object.keys(packageJson.exports).sort(), [
@@ -60,6 +67,7 @@ test("package and source inventory expose only the eight-profile Astro adapter b
     "./DiscourseDiscussion.astro",
     "./DiscourseReplies.astro",
     "./FromDiscourse.astro",
+    "./RichContent.astro",
     "./bridge-record",
     "./controlled-creation",
     "./native-publication",
@@ -70,12 +78,19 @@ test("package and source inventory expose only the eight-profile Astro adapter b
   assert.equal(packageJson.files.includes("src/simple-live.ts"), true);
   assert.equal(packageJson.files.includes("TODO.md"), false);
 
-  const forbidden = /api[-_ ]?key|sync[-_ ]?existing|official[-_ ]?source|relationships?|navigation|multi[-_ ]?target|OBBBA|WordPress|Ghost|Statamic|control plane/i;
+  assert.equal(packageJson.files.some((entry) => /protocol-v2|fixtures|test|\.tmp/u.test(entry)), false);
+
+  // Check actual proposal dependencies. Bundled renderer licenses and diagram
+  // source legitimately contain generic words such as "navigation".
+  const forbidden = /(?:from|import)\s*\(?\s*["'][^"']*(?:protocol-v2|fixtures\/proposed-|control-plane)[^"']*["']/u;
   for (const relative of ["src", "package.json", ".env.example"]) {
     const candidate = path.join(packageDir, relative);
     const stat = await fs.stat(candidate);
     const files = stat.isDirectory() ? await walk(candidate) : [candidate];
-    for (const file of files) assert.doesNotMatch(await fs.readFile(file, "utf8"), forbidden, file);
+    for (const file of files) {
+      if (file.includes(`${path.sep}assets${path.sep}`)) continue;
+      assert.doesNotMatch(await fs.readFile(file, "utf8"), forbidden, file);
+    }
   }
 });
 

@@ -25,8 +25,12 @@ const frontmatter = Astro.props.frontmatter ?? Astro.props;
 const topicId = Astro.props.topicId ?? frontmatter.discourseTopicId;
 const topicUrl = stringValue(Astro.props.topicUrl ?? frontmatter.discourseTopicUrl);
 const display = normalizeCommentsMode(
-  Astro.props.display ?? frontmatter.discussionCommentsDisplay ?? config.comments.display,
-) ?? config.comments.display;
+  Astro.props.display !== undefined
+    ? Astro.props.display
+    : frontmatter.discussionCommentsDisplay !== undefined
+      ? frontmatter.discussionCommentsDisplay
+      : config.comments.display,
+);
 const sourcePresentation =
   frontmatter.discussionFromDiscourse === true ||
   frontmatter.discussionbridgeNativePublication === true;
@@ -47,7 +51,7 @@ function stringValue(value: unknown): string | undefined {
 
 ---
 
-{config.comments.enabled && (
+{config.comments.enabled && display !== undefined && (
   <>
     {display === "simple" ? (
       <DiscourseReplies

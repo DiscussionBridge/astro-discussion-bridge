@@ -26,9 +26,11 @@ const summary = await materializeNativePublications({
   docsDir: path.resolve(docsDir),
   siteUrl,
   routeBase: values.get("route-base") ?? "comments",
+  commentsDisplay: values.get("comments-display") as "simple" | "full" | "interactive" | undefined,
   serverUrl: process.env.DISCUSSIONBRIDGE_SERVER_URL ?? "",
   connectionId: process.env.DISCUSSIONBRIDGE_CONNECTION_ID ?? "",
-  connectionSecret: process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET ?? "",
+  connectionSecret: process.env.DISCUSSIONBRIDGE_SECRET_FILE ? undefined : process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET,
+  secretFile: process.env.DISCUSSIONBRIDGE_SECRET_FILE,
 });
 process.stdout.write(`${JSON.stringify(summary)}\n`);
 if (summary.failed) process.exitCode = 1;

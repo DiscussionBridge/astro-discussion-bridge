@@ -3,12 +3,84 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
+import {
+  normalizePublicHttpUrl,
+  normalizeServiceBaseUrl,
+  parsePublicDiscourseTopicUrl,
+} from "../dist/web-url.js";
 import discussionBridge, {
   isInteractiveCommentsMode,
   normalizeCommentsMode,
 } from "../dist/index.js";
 
 const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+// Execute the component's actual server-side frontmatter, not a copied selector.
+// This is a source-boundary test, not an Astro render or browser qualification.
+async function componentEvaluator(name, bindings, result) {
+  const source = await fs.readFile(path.join(packageDir, "src/components", name), "utf8");
+  const frontmatter = source.split(/^---\s*$/m)[1];
+  assert.equal(typeof frontmatter, "string", "component frontmatter is required");
+  const parsed = ts.createSourceFile(name + ".ts", frontmatter, ts.ScriptTarget.Latest, true);
+  const withoutImports = ts.factory.updateSourceFile(
+    parsed,
+    parsed.statements.filter((statement) => !ts.isImportDeclaration(statement)),
+  );
+  const compiled = ts.transpileModule(ts.createPrinter().printFile(withoutImports), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
+    reportDiagnostics: true,
+  });
+  assert.deepEqual(compiled.diagnostics.filter((entry) => entry.category === ts.DiagnosticCategory.Error), []);
+  return new Function(...Object.keys(bindings), compiled.outputText + "\nreturn (" + result + ");");
+}
+
+test("actual Discussion selector preserves invalid overrides and canonical precedence", async () => {
+  const bindings = { Astro: null, config: null, normalizeCommentsMode, isInteractiveCommentsMode };
+  const evaluate = await componentEvaluator("Discussion.astro", bindings, "display");
+  const select = (props, frontmatter, configured = "interactive") => evaluate(
+    { props: { ...props, frontmatter } },
+    { comments: { enabled: true, display: configured } },
+    normalizeCommentsMode,
+    isInteractiveCommentsMode,
+  );
+  assert.equal(select({}, {}), "interactive", "absent inputs may use the configured default");
+  assert.equal(select({ display: undefined }, { discussionCommentsDisplay: undefined }), "interactive");
+  for (const mode of ["simple", "full", "interactive"]) {
+    assert.equal(select({}, {}, mode), mode);
+    assert.equal(select({}, { discussionCommentsDisplay: mode }), mode);
+    assert.equal(select({ display: mode }, { discussionCommentsDisplay: null }), mode);
+  }
+  for (const invalid of [
+    null, "", false, 0, [], {}, "bridge", "fullInteractive", "full_interactive",
+    " interactive", "interactive ", " interactive ", "\tinteractive\t",
+    "\ninteractive\n", "\rinteractive\r", "\r\ninteractive\r\n",
+    "\u00a0interactive\u00a0", "\u2003interactive\u2003", "\ufeffinteractive\ufeff",
+  ]) {
+    assert.equal(select({}, { discussionCommentsDisplay: invalid }), undefined, "invalid page override must not inherit Interactive");
+    assert.equal(select({ display: invalid }, { discussionCommentsDisplay: "interactive" }), undefined, "invalid direct override must take precedence");
+  }
+});
+
+test("actual Interactive component retains valid mapping and missing-mapping denial", async () => {
+  const bindings = {
+    Astro: null, config: null, normalizePublicHttpUrl, normalizeServiceBaseUrl,
+    parsePublicDiscourseTopicUrl, isInteractiveCommentsMode,
+  };
+  const evaluate = await componentEvaluator("DiscourseDiscussion.astro", bindings, "{ fullApp, resolvedTopicId, sourceUrl }");
+  const run = (props, display = "interactive") => evaluate(
+    { props, url: new URL("https://site.example/page/") },
+    { discourseUrl: "https://forum.example/community/", comments: { enabled: true, display } },
+    normalizePublicHttpUrl, normalizeServiceBaseUrl, parsePublicDiscourseTopicUrl, isInteractiveCommentsMode,
+  );
+  assert.deepEqual(run({ topicId: 42, topicUrl: "https://forum.example/community/t/page/42" }), {
+    fullApp: true, resolvedTopicId: 42, sourceUrl: undefined,
+  });
+  assert.throws(() => run({}), /Interactive requires one completed Bridge topic mapping/);
+  assert.throws(() => run({ topicId: 42, topicUrl: "https://forum.example/community/t/page/43" }), /same topic/);
+  assert.equal(run({}, "full").fullApp, false);
+  assert.equal(run({}, "full").sourceUrl, "https://site.example/page/");
+});
 
 test("presentation preserves Simple, Full, and mapped Interactive modes followed by one credit", async () => {
   const discussion = await fs.readFile(path.join(packageDir, "src/components/Discussion.astro"), "utf8");
@@ -19,6 +91,8 @@ test("presentation preserves Simple, Full, and mapped Interactive modes followed
   assert.equal((discussion.match(/<DiscourseReplies\b/g) ?? []).length, 1);
   assert.equal((discussion.match(/<DiscussionCredit\b/g) ?? []).length, 1);
   assert.match(discussion, /display === "simple"/);
+  assert.match(discussion, /config\.comments\.enabled && display !== undefined/);
+  assert.doesNotMatch(discussion, /\)\s*\?\? config\.comments\.display/);
   assert.match(discussion, /fullApp=\{isInteractiveCommentsMode\(display\)\}/);
   assert.match(discussion, /frontmatter\.discussionFromDiscourse === true/);
   assert.match(discussion, /frontmatter\.discussionbridgeNativePublication === true/);
@@ -75,11 +149,17 @@ test("From Discourse component renders only server-retrieved sanitized record co
   assert.doesNotMatch(component, /client:|X-DiscussionBridge|connectionSecret\}/);
 });
 
-test("Interactive accepts the canonical and deprecated mode values", () => {
+test("Interactive accepts only the canonical mode value", () => {
   assert.equal(normalizeCommentsMode("interactive"), "interactive");
-  assert.equal(normalizeCommentsMode("fullInteractive"), "interactive");
   assert.equal(isInteractiveCommentsMode("interactive"), true);
-  assert.equal(isInteractiveCommentsMode("fullInteractive"), true);
+  for (const mode of ["fullInteractive", "full_interactive"]) {
+    assert.equal(normalizeCommentsMode(mode), undefined);
+    assert.equal(isInteractiveCommentsMode(mode), false);
+    assert.throws(() => discussionBridge({
+      discourseUrl: "https://forum.example/",
+      comments: { display: mode },
+    }), /Comments display must be/);
+  }
   assert.equal(normalizeCommentsMode("bridge"), undefined);
   assert.throws(() => discussionBridge({
     discourseUrl: "https://forum.example/",

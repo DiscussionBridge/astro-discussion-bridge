@@ -1,0 +1,19 @@
+---
+import "../assets/discussionbridge-rich-content.css";
+import runtimeUrl from "../assets/discussionbridge-rich-content.js?url";
+
+interface Props {
+  /** Native article container selected by this site's operator. */
+  selector?: string;
+}
+const selector = Astro.props.selector ?? "article";
+---
+
+<span hidden data-discussionbridge-rich data-root={selector}></span>
+<script is:inline src={runtimeUrl}></script>
+
+<style is:global>
+  .discussionbridge-rich-diagram,
+  .discussionbridge-rich-math { max-width: 100%; overflow-x: auto; }
+  .discussionbridge-rich-diagram svg { display: block; height: auto; max-width: 100%; margin-inline: auto; }
+</style>

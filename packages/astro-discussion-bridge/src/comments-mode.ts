@@ -1,9 +1,9 @@
 export type PublicCommentsMode = "simple" | "full" | "interactive";
-export type CommentsModeInput = PublicCommentsMode | "fullInteractive";
+export type CommentsModeInput = PublicCommentsMode;
 
 export function normalizeCommentsMode(value: unknown): PublicCommentsMode | undefined {
   if (value === "simple" || value === "full" || value === "interactive") return value;
-  return value === "fullInteractive" ? "interactive" : undefined;
+  return undefined;
 }
 
 export function isInteractiveCommentsMode(value: unknown): boolean {

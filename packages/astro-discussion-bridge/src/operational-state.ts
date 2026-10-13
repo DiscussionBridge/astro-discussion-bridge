@@ -22,6 +22,7 @@ export interface PublicationOperation {
   topicId?: number;
   topicUrl?: string;
   lastSuccessAt?: string;
+  sourceRevision?: string;
 }
 
 export interface PublicationOperationalState {
@@ -106,24 +107,26 @@ export function beginPublicationAttempt(state: PublicationOperationalState, iden
   return operation;
 }
 
-export function completePublicationAttempt(operation: PublicationOperation, result: { outcome: "created" | "resolved"; resourceId: string; topicId: number; topicUrl: string }, now = new Date()): void {
+export function completePublicationAttempt(operation: PublicationOperation, result: { outcome: "created" | "resolved"; resourceId: string; topicId: number; topicUrl: string; sourceRevision?: string }, now = new Date()): void {
   operation.outcome = result.outcome;
   operation.retryable = false;
   operation.reconciliationRequired = false;
   operation.resourceId = result.resourceId;
   operation.topicId = result.topicId;
   operation.topicUrl = result.topicUrl;
+  if (result.sourceRevision) operation.sourceRevision = result.sourceRevision;
   operation.lastSuccessAt = now.toISOString();
   delete operation.lastError;
 }
 
-export function stagePublicationResult(operation: PublicationOperation, result: { outcome: "created" | "resolved"; resourceId: string; topicId: number; topicUrl: string }): void {
+export function stagePublicationResult(operation: PublicationOperation, result: { outcome: "created" | "resolved"; resourceId: string; topicId: number; topicUrl: string; sourceRevision?: string }): void {
   operation.outcome = "pending";
   operation.retryable = true;
   operation.reconciliationRequired = true;
   operation.resourceId = result.resourceId;
   operation.topicId = result.topicId;
   operation.topicUrl = result.topicUrl;
+  if (result.sourceRevision) operation.sourceRevision = result.sourceRevision;
   operation.lastError = "Receiver accepted the publication; platform binding commit is pending.";
   delete operation.lastSuccessAt;
 }
@@ -177,6 +180,7 @@ function validateOperation(key: string, value: unknown): asserts value is Public
   }
   if (operation.resourceId !== undefined && !UUID.test(operation.resourceId)) throw new Error("DiscussionBridge operational state entry is invalid.");
   if (operation.topicId !== undefined && (!Number.isSafeInteger(operation.topicId) || operation.topicId < 1)) throw new Error("DiscussionBridge operational state entry is invalid.");
+  if (operation.sourceRevision !== undefined && !/^[0-9a-f]{64}$/u.test(operation.sourceRevision)) throw new Error("DiscussionBridge operational source revision is invalid.");
 }
 
 function validDate(value: unknown): value is string {

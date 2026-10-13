@@ -6,6 +6,7 @@ import sanitizeHtml from "sanitize-html";
 import { parse as parseYaml } from "yaml";
 import { isInteractiveCommentsMode } from "./comments-mode.js";
 import { PRODUCT_VERSION } from "./version.js";
+import { resolveServerSecret } from "./server-secret.js";
 import {
   assertServiceResponseUrl,
   normalizePublicHttpUrl,
@@ -27,11 +28,13 @@ const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 65_536;
 const MAX_CONTENT_HTML_BYTES = 48 * 1024;
 const MAX_SOURCE_AUTHORS = 20;
+const MAX_SOURCE_READ_BATCH = 32;
 const markdownExtensions = new Set([".md", ".mdx"]);
 
 export interface ControlledCreationOptions {
   connectionId: string;
-  connectionSecret: string;
+  connectionSecret?: string;
+  secretFile?: string;
   lane?: string;
   visibility?: "unlisted";
   adapterVersion?: string;
@@ -66,6 +69,17 @@ interface ControlledCreationResponse {
   topic_url?: unknown;
   direction?: unknown;
   core_fallback?: unknown;
+  source_revision?: unknown;
+}
+
+export interface SourcePublication {
+  revision: string;
+  previous_revision: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  content_sha256: string;
+  content_bytes: number;
+  excerpted: boolean;
 }
 
 interface PreparedPage {
@@ -80,6 +94,7 @@ interface PreparedPage {
   adoptExistingTopicId?: number;
   sourceAuthors?: SourceAuthor[];
   primarySourceAuthorId?: string;
+  sourcePublication: SourcePublication;
 }
 
 export interface SourceAuthor {
@@ -102,6 +117,7 @@ export async function publishControlledDiscussions(
   options: PublishControlledDiscussionsOptions,
   dependencies: PublishControlledDiscussionsDependencies = {},
 ): Promise<ControlledDiscussionResult[]> {
+  options = { ...options, controlledCreation: await resolveServerSecret(options.controlledCreation) };
   const stateFile = path.resolve(options.stateFile);
   return withPublicationOperationalStateLock(stateFile, () =>
     publishControlledDiscussionsUnlocked(options, dependencies), dependencies.lockOptions);
@@ -118,10 +134,12 @@ async function publishControlledDiscussionsUnlocked(
   const files = await findMarkdownFiles(docsDir);
   const census: CensusEntry[] = [];
   const canonicalSources = new Map<string, string>();
-  const markdownRenderer = await createMarkdownProcessor({ syntaxHighlight: false });
+  const sourceIdentities = new Map<string, string>();
+  const bridgeIdentities = new Map<string, string>();
+  const topicIdentities = new Map<number, string>();
+  let markdownRenderer: MarkdownRenderer | undefined;
 
-  for (const filePath of files) {
-    const source = await fs.readFile(filePath, "utf8");
+  for await (const { filePath, source } of readMarkdownSources(files)) {
     const parsed = parseMarkdown(source);
     const pageUrl = pageUrlForFile({
       docsDir,
@@ -131,7 +149,7 @@ async function publishControlledDiscussionsUnlocked(
       slug: parsed.frontmatter.slug,
       hasSlug: Object.hasOwn(parsed.frontmatter, "slug"),
     });
-    const display = stringValue(parsed.frontmatter.discussionCommentsDisplay);
+    const display = parsed.frontmatter.discussionCommentsDisplay;
     const syncEnabled = parsed.frontmatter.discussionSync === true;
     const draft = lifecycleBoolean(parsed.frontmatter, "draft");
     const published = lifecycleBoolean(parsed.frontmatter, "published");
@@ -162,10 +180,11 @@ async function publishControlledDiscussionsUnlocked(
     const hasTopicUrl = Object.hasOwn(parsed.frontmatter, "discourseTopicUrl");
     const hasExternalId = Object.hasOwn(parsed.frontmatter, "discussionbridgeExternalId");
     const hasCompleteBridgeBinding = hasResourceId && hasTopicId && hasTopicUrl && hasExternalId;
+    const hasExplicitUnboundIdentity = hasExternalId && !hasResourceId && !hasTopicId && !hasTopicUrl;
     const hasStandaloneTopicPair = !hasResourceId && hasTopicId && hasTopicUrl && !hasExternalId;
     const hasNoBinding = !hasResourceId && !hasTopicId && !hasTopicUrl && !hasExternalId;
-    if (!hasCompleteBridgeBinding && !hasStandaloneTopicPair && !hasNoBinding) {
-      throw new Error(`Stored discussion identity must be absent, a standalone topic ID/URL pair, or a complete DiscussionBridge tuple for ${filePath}.`);
+    if (!hasCompleteBridgeBinding && !hasExplicitUnboundIdentity && !hasStandaloneTopicPair && !hasNoBinding) {
+      throw new Error(`Stored discussion identity must be absent, an explicit unbound external ID, a standalone topic ID/URL pair, or a complete DiscussionBridge tuple for ${filePath}.`);
     }
     let existingResourceId: string | undefined;
     let existingTopicId: number | undefined;
@@ -185,7 +204,9 @@ async function publishControlledDiscussionsUnlocked(
         throw new Error(`Stored DiscussionBridge topic ID and URL disagree for ${filePath}.`);
       }
     } else {
-      externalId = stableExternalId(validated.siteBase, docsDir, filePath);
+      externalId = hasExplicitUnboundIdentity
+        ? requiredExternalId(parsed.frontmatter.discussionbridgeExternalId, "Explicit discussionbridgeExternalId")
+        : stableExternalId(validated.siteBase, docsDir, filePath);
       if (hasStandaloneTopicPair) {
         existingTopicId = requiredPositiveTopicId(parsed.frontmatter.discourseTopicId, "Stored discourseTopicId");
         const existingTopicReference = parsePublicDiscourseTopicUrl(
@@ -200,10 +221,28 @@ async function publishControlledDiscussionsUnlocked(
       }
     }
 
+    if (existingResourceId !== undefined && Object.values(operationalState.operations).some((operation) =>
+      (operation.resourceId === existingResourceId || operation.topicId === existingTopicId) && operation.externalId !== externalId)) {
+      throw new Error(`Stored DiscussionBridge external identity disagrees with durable native publication identity for ${filePath}.`);
+    }
+
+    for (const [map, identity] of [[sourceIdentities, externalId], [bridgeIdentities, existingResourceId]] as const) {
+      if (identity === undefined) continue;
+      const owner = map.get(identity);
+      if (owner) throw new Error(`Authorized DiscussionBridge pages share one stored native or Bridge identity: ${owner} and ${filePath}.`);
+      map.set(identity, filePath);
+    }
+    if (existingTopicId !== undefined) {
+      const owner = topicIdentities.get(existingTopicId);
+      if (owner) throw new Error(`Authorized DiscussionBridge pages share one stored topic identity: ${owner} and ${filePath}.`);
+      topicIdentities.set(existingTopicId, filePath);
+    }
+
     const title = validatedTitle(
       stringValue(parsed.frontmatter.title) ?? firstHeading(parsed.body) ?? titleFromFile(filePath),
       filePath,
     );
+    markdownRenderer ??= await createMarkdownProcessor({ syntaxHighlight: false });
     const contentHtml = await renderedPublishedContent(parsed.body, filePath, markdownRenderer);
     const authorship = validatedSourceAuthorship(
       parsed.frontmatter.authors,
@@ -211,6 +250,19 @@ async function publishControlledDiscussionsUnlocked(
       validated.siteBase,
       filePath,
     );
+    const createdAt = sourceDate(parsed.frontmatter.date);
+    const updatedAt = sourceDate(parsed.frontmatter.lastUpdated ?? parsed.frontmatter.updated_at);
+    if (createdAt && updatedAt && new Date(updatedAt) < new Date(createdAt)) throw new Error(`Invalid native source chronology for ${filePath}.`);
+    const storedRevision = parsed.frontmatter.discussionbridgeSourcePublicationRevision;
+    if (storedRevision !== undefined && (typeof storedRevision !== "string" || !/^[0-9a-f]{64}$/u.test(storedRevision))) throw new Error(`Invalid stored source publication revision for ${filePath}.`);
+    const acceptedRevision = operationalState.operations[externalId]?.sourceRevision ?? storedRevision as string | undefined;
+    const sourcePublication: SourcePublication = {
+      revision: createHash("sha256").update(JSON.stringify([title, contentHtml, authorship.sourceAuthors ?? [], authorship.primarySourceAuthorId ?? null, createdAt, updatedAt])).digest("hex"),
+      previous_revision: acceptedRevision ?? null,
+      created_at: createdAt, updated_at: updatedAt,
+      content_sha256: createHash("sha256").update(contentHtml).digest("hex"),
+      content_bytes: Buffer.byteLength(contentHtml), excerpted: Buffer.byteLength(contentHtml) > MAX_CONTENT_HTML_BYTES,
+    };
     const priorPath = canonicalSources.get(pageUrl);
     if (priorPath) {
       throw new Error(`Authorized DiscussionBridge pages resolve to the same canonical source URL ${pageUrl}: ${priorPath} and ${filePath}.`);
@@ -230,6 +282,7 @@ async function publishControlledDiscussionsUnlocked(
         adoptExistingTopicId,
         sourceAuthors: authorship.sourceAuthors,
         primarySourceAuthorId: authorship.primarySourceAuthorId,
+        sourcePublication,
       },
     });
   }
@@ -253,7 +306,9 @@ async function publishControlledDiscussionsUnlocked(
         options: options.controlledCreation,
         sourceUrl: page.pageUrl,
         title: page.title,
-        contentHtml: page.contentHtml,
+        contentHtml: page.sourcePublication.excerpted ? excerptContent(page.contentHtml, page.pageUrl) : page.contentHtml,
+        completeContentHtml: page.contentHtml,
+        sourcePublication: page.sourcePublication,
         externalId: page.externalId,
         sourceAuthors: page.sourceAuthors,
         primarySourceAuthorId: page.primarySourceAuthorId,
@@ -279,6 +334,7 @@ async function publishControlledDiscussionsUnlocked(
       discussionbridgeResourceId: created.resourceId,
       discourseTopicId: String(created.topicId),
       discourseTopicUrl: created.topicUrl,
+      ...(created.sourceRevision ? { discussionbridgeSourcePublicationRevision: created.sourceRevision } : {}),
     });
     if (updated !== page.source) {
       try {
@@ -322,7 +378,7 @@ function validateOptions(options: PublishControlledDiscussionsOptions): {
   };
 }
 
-function validateConnectionSettings(options: ControlledCreationOptions): void {
+function validateConnectionSettings(options: ControlledCreationOptions): asserts options is ControlledCreationOptions & { connectionSecret: string } {
   const connectionId = options.connectionId;
   if (
     typeof connectionId !== "string"
@@ -363,7 +419,10 @@ export async function resolveControlledCreation(input: {
   primarySourceAuthorId?: string;
   existingTopicId?: number;
   correlationId?: string;
-}): Promise<{ outcome: "created" | "resolved"; reason: string; resourceId: string; topicId: number; topicUrl: string }> {
+  sourcePublication?: SourcePublication;
+  completeContentHtml?: string;
+}): Promise<{ outcome: "created" | "resolved"; reason: string; resourceId: string; topicId: number; topicUrl: string; sourceRevision?: string }> {
+  input.options = await resolveServerSecret(input.options);
   validateConnectionSettings(input.options);
   const sourceUrl = validatedSourceUrl(input.sourceUrl);
   const title = validatedTitle(input.title, "controlledCreation request");
@@ -382,6 +441,7 @@ export async function resolveControlledCreation(input: {
     new URL(sourceUrl),
     "controlledCreation request",
   );
+  if (input.sourcePublication) validateSourcePublication(input.sourcePublication, contentHtml);
   const serviceBase = parseServiceBaseUrl(input.discourseUrl);
   if (serviceBase.protocol !== "https:") throw new Error("controlledCreation requires HTTPS for its connection secret.");
   const endpoint = resolveServiceRequestUrl(
@@ -391,6 +451,23 @@ export async function resolveControlledCreation(input: {
   const correlationId = input.correlationId ?? randomUUID();
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(correlationId)) {
     throw new Error("controlledCreation correlationId must be a UUID.");
+  }
+  const bridgeRecord: Record<string, unknown> = {
+    direction: "to_discourse", external_id: externalId, canonical_url: sourceUrl, title,
+    content_html: contentHtml, published: true, adapter_id: "astro-discussion-bridge",
+    adapter_version: input.options.adapterVersion ?? PRODUCT_VERSION,
+    visibility: input.options.visibility ?? "unlisted",
+    ...(input.options.lane ? { lane: input.options.lane } : {}), correlation_id: correlationId,
+    ...(input.existingTopicId ? { existing_topic_id: input.existingTopicId } : {}),
+    ...(authorship.sourceAuthors ? { source_authors: authorship.sourceAuthors, primary_source_author_id: authorship.primarySourceAuthorId } : {}),
+    ...(input.sourcePublication ? { source_publication: { ...input.sourcePublication } } : {}),
+  };
+  let maximumExcerpt = MAX_CONTENT_HTML_BYTES;
+  while (Buffer.byteLength(JSON.stringify({ bridge_record: bridgeRecord })) > 65_536) {
+    if (!input.sourcePublication || typeof input.completeContentHtml !== "string") throw new Error("DiscussionBridge publication request exceeds its transport envelope.");
+    maximumExcerpt = Math.floor(maximumExcerpt / 2);
+    bridgeRecord.content_html = excerptContent(input.completeContentHtml, sourceUrl, maximumExcerpt);
+    (bridgeRecord.source_publication as SourcePublication).excerpted = true;
   }
   const response = await fetch(endpoint, {
     method: "POST",
@@ -406,26 +483,7 @@ export async function resolveControlledCreation(input: {
       "X-DiscussionBridge-Connection": input.options.connectionId,
       "X-DiscussionBridge-Secret": input.options.connectionSecret,
     },
-    body: JSON.stringify({
-      bridge_record: {
-        direction: "to_discourse",
-        external_id: externalId,
-        canonical_url: sourceUrl,
-        title,
-        content_html: contentHtml,
-        published: true,
-        adapter_id: "astro-discussion-bridge",
-        adapter_version: input.options.adapterVersion ?? PRODUCT_VERSION,
-        visibility: input.options.visibility ?? "unlisted",
-        ...(input.options.lane ? { lane: input.options.lane } : {}),
-        correlation_id: correlationId,
-        ...(input.existingTopicId ? { existing_topic_id: input.existingTopicId } : {}),
-        ...(authorship.sourceAuthors ? {
-          source_authors: authorship.sourceAuthors,
-          primary_source_author_id: authorship.primarySourceAuthorId,
-        } : {}),
-      },
-    }),
+    body: JSON.stringify({ bridge_record: bridgeRecord }),
   });
   if (response.url) assertServiceResponseUrl(response.url, serviceBase, "controlledCreation response URL");
 
@@ -464,7 +522,8 @@ export async function resolveControlledCreation(input: {
   if (topicReference.topicId !== payload.topic_id) {
     throw new Error("DiscussionBridge controlled creation returned a mismatched topic URL.");
   }
-  return { outcome: payload.outcome, reason: reason ?? payload.outcome, resourceId, topicId: payload.topic_id, topicUrl };
+  if (input.sourcePublication && payload.source_revision !== input.sourcePublication.revision) throw new Error("DiscussionBridge receiver did not confirm the requested source revision.");
+  return { outcome: payload.outcome, reason: reason ?? payload.outcome, resourceId, topicId: payload.topic_id, topicUrl, ...(input.sourcePublication ? { sourceRevision: input.sourcePublication.revision } : {}) };
 }
 
 function classifyPublicationFailure(error: unknown): { retryable: boolean; reconciliationRequired: boolean } {
@@ -715,6 +774,16 @@ function requiredString(value: unknown, label: string): string {
   return value;
 }
 
+async function* readMarkdownSources(files: string[]) {
+  for (let offset = 0; offset < files.length; offset += MAX_SOURCE_READ_BATCH) {
+    const batch = await Promise.all(files.slice(offset, offset + MAX_SOURCE_READ_BATCH).map(async (filePath) => ({
+      filePath,
+      source: await fs.readFile(filePath, "utf8"),
+    })));
+    for (const entry of batch) yield entry;
+  }
+}
+
 async function renderedPublishedContent(
   body: string,
   filePath: string,
@@ -738,7 +807,40 @@ async function renderedPublishedContent(
     allowedSchemes: ["http", "https", "mailto"],
     allowedSchemesByTag: { img: ["http", "https"] },
   });
-  return validatedContentHtml(sanitized, filePath);
+  if (!sanitized.trim() || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(sanitized)) throw new Error(`Invalid portable source content for ${filePath}.`);
+  return sanitized;
+}
+
+function sourceDate(value: unknown): string | null {
+  if (value === undefined || value === null || typeof value === "boolean" || (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(value))) return null;
+  const input = value instanceof Date ? value.toISOString() : value;
+  if (typeof input !== "string" || input.length > 64 || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/u.test(input) || !Number.isFinite(Date.parse(input)) || new Date(`${input.slice(0, 10)}T00:00:00Z`).toISOString().slice(0, 10) !== input.slice(0, 10)) throw new Error("Invalid native source date.");
+  return input;
+}
+
+function validateSourcePublication(value: SourcePublication, contentHtml: string): void {
+  if (!/^[0-9a-f]{64}$/u.test(value.revision) || !(value.previous_revision === null || /^[0-9a-f]{64}$/u.test(value.previous_revision)) || !/^[0-9a-f]{64}$/u.test(value.content_sha256) || !Number.isSafeInteger(value.content_bytes) || value.content_bytes < 1 || typeof value.excerpted !== "boolean" || !(value.created_at === null || typeof value.created_at === "string") || !(value.updated_at === null || typeof value.updated_at === "string")) throw new Error("Invalid source publication metadata.");
+  const created = sourceDate(value.created_at);
+  const updated = sourceDate(value.updated_at);
+  if (created && updated && new Date(updated) < new Date(created)) throw new Error("Invalid source publication chronology.");
+  if (!value.excerpted && (Buffer.byteLength(contentHtml) !== value.content_bytes || createHash("sha256").update(contentHtml).digest("hex") !== value.content_sha256)) throw new Error("Source publication content identity is inconsistent.");
+}
+
+function excerptContent(completeHtml: string, canonicalUrl: string, maximum = MAX_CONTENT_HTML_BYTES): string {
+  const escape = (value: string) => value.replace(/[&<>"']/gu, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]!);
+  const footer = `<p><a href="${escape(canonicalUrl)}">Read More</a></p>`;
+  const budget = maximum - Buffer.byteLength(footer) - 7;
+  if (budget <= 0) throw new Error("DiscussionBridge publication metadata does not fit its transport envelope.");
+  const plain = sanitizeHtml(completeHtml, { allowedTags: [], allowedAttributes: {}, textFilter: text => `${text} ` });
+  let prefix = "";
+  let bytes = 0;
+  for (const character of plain) {
+    const width = Buffer.byteLength(character);
+    if (bytes + width > budget) break;
+    prefix += character;
+    bytes += width;
+  }
+  return `<p>${prefix.trimEnd().replace(/&[^;]*$/u, "")}</p>${footer}`;
 }
 
 function validatedContentHtml(value: unknown, label: string): string {

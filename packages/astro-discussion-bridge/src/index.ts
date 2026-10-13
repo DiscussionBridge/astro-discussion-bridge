@@ -38,6 +38,7 @@ export interface ControlledPublishOptions {
   routeBase?: string;
   connectionId?: string;
   connectionSecret?: string;
+  secretFile?: string;
   lane?: string;
   visibility?: "unlisted";
   requestTimeoutMs?: number;
@@ -141,9 +142,9 @@ function resolveOptions(options: DiscussionBridgeOptions): {
   ) {
     throw new Error('Comments height ceilings must be omitted or "none" so Discourse Core owns full-app iframe sizing.');
   }
-  const commentsDisplay = normalizeCommentsMode(options.comments?.display ?? "full");
+  const commentsDisplay = normalizeCommentsMode(options.comments?.display === undefined ? "full" : options.comments.display);
   if (!commentsDisplay) {
-    throw new Error("Comments display must be simple, full, interactive, or the deprecated fullInteractive value.");
+    throw new Error("Comments display must be simple, full, or interactive.");
   }
   return {
     public: {
@@ -170,14 +171,15 @@ function resolveOptions(options: DiscussionBridgeOptions): {
 function resolveControlledCreation(options: ControlledPublishOptions): ControlledCreationOptions {
   const connectionId = nonEmpty(options.connectionId)
     ?? nonEmpty(process.env.DISCUSSIONBRIDGE_CONNECTION_ID);
-  const connectionSecret = options.connectionSecret
-    ?? process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET;
-  if (!connectionId || !connectionSecret) {
-    throw new Error("Controlled publish-on-build requires server-only DISCUSSIONBRIDGE_CONNECTION_ID and DISCUSSIONBRIDGE_CONNECTION_SECRET values.");
+  const secretFile = options.secretFile ?? (options.connectionSecret ? undefined : process.env.DISCUSSIONBRIDGE_SECRET_FILE);
+  const connectionSecret = options.connectionSecret ?? (secretFile ? undefined : process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET);
+  if (!connectionId || (!connectionSecret && !secretFile)) {
+    throw new Error("Controlled publish-on-build requires server-only connection ID and connection secret or DISCUSSIONBRIDGE_SECRET_FILE.");
   }
   return {
     connectionId,
     connectionSecret,
+    secretFile,
     lane: options.lane,
     visibility: options.visibility,
     requestTimeoutMs: options.requestTimeoutMs,
