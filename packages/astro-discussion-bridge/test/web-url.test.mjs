@@ -52,7 +52,7 @@ test("public links reject active schemes, credentials, ambiguity, and unsupporte
     "https://user:secret@forum.example.com/t/21",
     "https://forum.example.com/categories",
     "https://forum.example.com/t/topic/not-a-number",
-    "https://forum.example.com/t/9007199254740993",
+    "https://forum.example.com/t/9223372036854775808",
     "https://forum.example.com/t/topic/21?redirect=1",
     "https://forum.example.com/t/topic/21#post",
     "https://forum.example.com/t/topic%2fescape/21",
@@ -141,8 +141,5 @@ test("topic references distinguish slugless post routes within the exact service
     /left the configured Discourse origin or path boundary/,
   );
   assert.throws(() => parseDiscourseTopicReference("t/topic/123/4/5", base), /unsupported route shape/);
-  assert.throws(
-    () => parseDiscourseTopicReference("t/9007199254740993", base),
-    /unsupported route shape/,
-  );
+  assert.deepEqual(parseDiscourseTopicReference("t/9007199254740993", base), { topicId: "9007199254740993" });
 });

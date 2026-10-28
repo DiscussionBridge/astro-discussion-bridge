@@ -1,216 +1,86 @@
+import type { AstroIntegration } from "astro";
+import { normalizeCommentsMode, type CommentsModeInput } from "./comments-mode.js";
+import { normalizePublicHttpUrl, parseServiceBaseUrl } from "./web-url.js";
+import { validateForumName } from "./forum-name.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Plugin } from "vite";
-import {
-  publishControlledDiscussions,
-  type ControlledCreationOptions,
-} from "./controlled-creation.js";
-import {
-  normalizeCommentsMode,
-  type CommentsModeInput,
-  type PublicCommentsMode,
-} from "./comments-mode.js";
-import { normalizePublicHttpUrl, normalizeServiceBaseUrl } from "./web-url.js";
-
-type DiscussionBridgeIntegration = {
-  name: string;
-  hooks: {
-    "astro:config:setup": (params: {
-      config: { root: URL };
-      updateConfig: (config: { vite?: { plugins?: Plugin[] } }) => void;
-    }) => Promise<void>;
-    "astro:build:start": (params: {
-      logger: { info: (message: string) => void };
-    }) => Promise<void>;
-  };
-};
-
-export interface DiscussionBridgeCreditOptions {
-  enabled?: boolean;
-  prefix?: string;
-  label?: string;
-  href?: string;
-}
-
-export interface ControlledPublishOptions {
-  enabled?: boolean;
-  docsDir?: string;
-  routeBase?: string;
-  connectionId?: string;
-  connectionSecret?: string;
-  lane?: string;
-  visibility?: "unlisted";
-  requestTimeoutMs?: number;
-  maxResponseBytes?: number;
-  stateFile?: string;
-}
+import { publishControlledDiscussions, type ControlledCreationOptions, type PublishControlledDiscussionsOptions } from "./controlled-creation.js";
+import { startControlledSourceBuild, recordControlledSourceBuild } from "./cms-to-source-build.js";
+import { stageCmsNativePublications, recordCmsNativeBuild, deployCmsNativeBuild, renewCmsNativeBuild, type CmsNativeCommand } from "./cms-pipeline.js";
+import type { CmsPipelineOptions } from "./cms-pipeline.js";
 
 export interface DiscussionBridgeOptions {
   discourseUrl: string;
   siteUrl?: string;
+  publishOnBuild?: ControlledCreationOptions & { enabled?: boolean; docsDir?: string; stateFile?: string; routeBase?: string };
+  fromDiscourse?: Omit<CmsPipelineOptions, "serverUrl" | "siteUrl" | "docsDir" | "stateFile"> & { enabled?: boolean; docsDir: string; stateFile: string; routeBase?: string; deployment?: CmsNativeCommand };
   comments?: {
-    enabled?: boolean;
-    display?: CommentsModeInput;
-    embedHeight?: string;
-    dynamicHeight?: boolean;
-    embedMinHeight?: string;
-    embedMaxHeight?: "none";
-    embedViewportMaxHeight?: "none";
-    className?: string;
-    credit?: DiscussionBridgeCreditOptions;
-  };
-  publishOnBuild?: ControlledPublishOptions;
-}
-
-interface PublicOptions {
-  discourseUrl: string;
-  comments: {
-    enabled: boolean;
-    display: PublicCommentsMode;
-    embedHeight: string;
-    dynamicHeight: boolean;
-    embedMinHeight: string;
-    className?: string;
-    credit: {
-      enabled: boolean;
-      prefix: string;
-      label: string;
-      href: string;
-    };
+    enabled?: boolean; display?: CommentsModeInput; embedHeight?: string; dynamicHeight?: boolean; embedMinHeight?: string;
+    embedMaxHeight?: "none"; embedViewportMaxHeight?: "none"; className?: string;
+    credit?: { enabled?: boolean; prefix?: string; label?: string; href?: string };
   };
 }
 
-const virtualModuleId = "virtual:discussion-bridge/config";
-const resolvedVirtualModuleId = `\0${virtualModuleId}`;
-
-export default function discussionBridge(options: DiscussionBridgeOptions): DiscussionBridgeIntegration {
-  const resolved = resolveOptions(options);
-  let projectRoot = process.cwd();
-
-  return {
-    name: "astro-discussion-bridge",
-    hooks: {
-      "astro:config:setup": async ({ config, updateConfig }) => {
-        projectRoot = fileURLToPath(config.root);
-        updateConfig({ vite: { plugins: [virtualConfigPlugin(resolved.public)] } });
-      },
-      "astro:build:start": async ({ logger }) => {
-        if (!resolved.publish.enabled) return;
-        const siteUrl = resolved.siteUrl ?? process.env.SITE_URL;
-        if (!siteUrl) throw new Error("Controlled publish-on-build requires siteUrl or SITE_URL.");
-        const controlledCreation = resolveControlledCreation(resolved.publish);
-        const results = await publishControlledDiscussions({
-          docsDir: path.resolve(projectRoot, resolved.publish.docsDir),
-          stateFile: path.resolve(projectRoot, resolved.publish.stateFile ?? ".discussionbridge/astro-publication-state.json"),
-          routeBase: resolved.publish.routeBase,
-          siteUrl,
-          discourseUrl: resolved.public.discourseUrl,
-          controlledCreation,
-        });
-        const created = results.filter((result) => result.status === "created").length;
-        const resolvedCount = results.filter((result) => result.status === "resolved").length;
-        const skipped = results.filter((result) => result.status === "skipped").length;
-        logger.info(`DiscussionBridge controlled publication complete: ${created} created, ${resolvedCount} resolved, ${skipped} skipped.`);
-      },
-    },
+/** Native/Core presentation remains independent of configured V4 publication. */
+export default function discussionBridge(options: DiscussionBridgeOptions): AstroIntegration {
+  const display = normalizeCommentsMode(options.comments?.display === undefined ? "full" : options.comments.display);
+  if (!display) throw new Error("Comments display must be simple, full, or interactive.");
+  if (options.comments?.embedMaxHeight !== undefined && options.comments.embedMaxHeight !== "none"
+    || options.comments?.embedViewportMaxHeight !== undefined && options.comments.embedViewportMaxHeight !== "none") throw new Error("Discourse Core owns full-app iframe sizing; height ceilings must be omitted or none.");
+  const credit = options.comments?.credit;
+  const config = {
+    discourseUrl: parseServiceBaseUrl(options.discourseUrl).href,
+    forumName: process.env.DISCUSSIONBRIDGE_FORUM_NAME === undefined ? undefined : validateForumName(process.env.DISCUSSIONBRIDGE_FORUM_NAME, "DISCUSSIONBRIDGE_FORUM_NAME"),
+    comments: { enabled: options.comments?.enabled ?? true, display, embedHeight: options.comments?.embedHeight ?? "800px",
+      dynamicHeight: options.comments?.dynamicHeight ?? false, embedMinHeight: options.comments?.embedMinHeight ?? "360", className: options.comments?.className,
+      credit: { enabled: credit?.enabled ?? true, prefix: credit?.prefix?.trim() || "Connected by", label: credit?.label?.trim() || "DiscussionBridge",
+        href: normalizePublicHttpUrl(credit?.href?.trim() || "https://discussionbridge.dev/", "comments.credit.href", { allowQuery: true, allowFragment: true }) } },
   };
+  let projectRoot = "", from: CmsPipelineOptions | undefined, source: PublishControlledDiscussionsOptions | undefined, buildDir = "", nativeBuild = false, nativeBase = "/", nativeAssets = "", renewal: ReturnType<typeof setInterval> | undefined, renewalError: unknown;
+  const stopRenewal = () => { if (renewal) clearInterval(renewal); renewal = undefined; };
+  return { name: "astro-discussion-bridge", hooks: { "astro:config:setup": ({ config: nativeConfig, command, updateConfig, injectScript }) => {
+    projectRoot = fileURLToPath(nativeConfig.root);
+    nativeBuild = command === "build";
+    updateConfig({ vite: { plugins: [{ name: "astro-discussion-bridge-config", resolveId(id) { return id === "virtual:discussion-bridge/config" ? "\0virtual:discussion-bridge/config" : undefined; },
+      load(id) { return id === "\0virtual:discussion-bridge/config" ? `export default ${JSON.stringify(config)};` : undefined; } }] } });
+    injectScript("page", `import { startSimpleComments } from 'astro-discussion-bridge/simple-live'; document.addEventListener('astro:page-load', startSimpleComments); startSimpleComments();`);
+  }, "astro:config:done": async ({ config: nativeConfig, logger }) => {
+    const siteUrl = options.siteUrl ?? nativeConfig.site;
+    if (options.publishOnBuild?.enabled || options.fromDiscourse?.enabled) {
+      if (!siteUrl) throw new Error("Native V4 publication requires its actual configured site URL.");
+    }
+    if (options.fromDiscourse?.enabled) {
+      const configured = options.fromDiscourse;
+      from = { ...configured, serverUrl: options.discourseUrl, siteUrl: siteUrl!, docsDir: path.resolve(projectRoot, configured.docsDir), stateFile: path.resolve(projectRoot, configured.stateFile) };
+      const staged = await stageCmsNativePublications(from); logger.info(`DiscussionBridge staged ${staged.prepared.length} native publications; build/deploy/public settlement pending.`);
+      for (const limitation of staged.localLimitations) logger.warn(`DiscussionBridge local limitation for ${limitation.workId}: ${limitation.detail}`);
+    }
+    if (options.publishOnBuild?.enabled) {
+      const publish = options.publishOnBuild;
+      source = { docsDir: path.resolve(projectRoot, publish.docsDir ?? "src/content"), stateFile: path.resolve(projectRoot, publish.stateFile ?? ".discussionbridge/astro-to-state.json"),
+        siteUrl: siteUrl!, discourseUrl: options.discourseUrl, routeBase: publish.routeBase, controlledCreation: publish };
+      const results = await publishControlledDiscussions(source);
+      for (const result of results) if (result.reason?.startsWith("Awaiting actual native Content")) logger.warn(`DiscussionBridge ${result.reason} File: ${result.filePath}`);
+      if (nativeBuild) await startControlledSourceBuild(source);
+    }
+    buildDir = fileURLToPath(nativeConfig.outDir);
+    nativeBase = nativeConfig.base; nativeAssets = nativeConfig.build.assets;
+    if (from) { renewal = setInterval(() => { void renewCmsNativeBuild(from!).catch(error => { renewalError = error; stopRenewal(); }); }, 60000); renewal.unref?.(); }
+  }, "astro:build:done": async ({ dir, assets }) => {
+    stopRenewal(); if (renewalError) throw renewalError;
+    if (source && nativeBuild) await recordControlledSourceBuild(source, fileURLToPath(dir), assets, nativeBase, nativeAssets);
+    if (from) { await recordCmsNativeBuild(from, buildDir); if (options.fromDiscourse?.deployment) await deployCmsNativeBuild(from, options.fromDiscourse.deployment); }
+  } } };
 }
-
-export { publishControlledDiscussions } from "./controlled-creation.js";
-export { isInteractiveCommentsMode, normalizeCommentsMode } from "./comments-mode.js";
-export { fetchFromDiscourseRecord } from "./bridge-record.js";
-export { materializeNativePublications } from "./native-publication.js";
-export { readPublicationOperationalState, summarizePublicationOperationalState } from "./operational-state.js";
-export type {
-  ControlledCreationOptions,
-  ControlledDiscussionResult,
-  PublishControlledDiscussionsOptions,
-} from "./controlled-creation.js";
-export type { BridgeRecordCredentials, PresentedBridgeRecord } from "./bridge-record.js";
-export type { CommentsModeInput, PublicCommentsMode } from "./comments-mode.js";
-
-function resolveOptions(options: DiscussionBridgeOptions): {
-  public: PublicOptions;
-  siteUrl?: string;
-  publish: Required<Pick<ControlledPublishOptions, "enabled" | "docsDir">> & ControlledPublishOptions;
-} {
-  if (!options.discourseUrl) throw new Error("astro-discussion-bridge requires discourseUrl.");
-  if (
-    (options.comments?.embedMaxHeight !== undefined && options.comments.embedMaxHeight !== "none")
-    || (options.comments?.embedViewportMaxHeight !== undefined && options.comments.embedViewportMaxHeight !== "none")
-  ) {
-    throw new Error('Comments height ceilings must be omitted or "none" so Discourse Core owns full-app iframe sizing.');
-  }
-  const commentsDisplay = normalizeCommentsMode(options.comments?.display ?? "full");
-  if (!commentsDisplay) {
-    throw new Error("Comments display must be simple, full, interactive, or the deprecated fullInteractive value.");
-  }
-  return {
-    public: {
-      discourseUrl: normalizeServiceBaseUrl(options.discourseUrl),
-      comments: {
-        enabled: options.comments?.enabled ?? true,
-        display: commentsDisplay,
-        embedHeight: options.comments?.embedHeight ?? "800px",
-        dynamicHeight: options.comments?.dynamicHeight ?? false,
-        embedMinHeight: options.comments?.embedMinHeight ?? "360",
-        className: options.comments?.className,
-        credit: resolveCredit(options.comments?.credit),
-      },
-    },
-    siteUrl: options.siteUrl ? normalizeServiceBaseUrl(options.siteUrl, "Site URL") : undefined,
-    publish: {
-      ...options.publishOnBuild,
-      enabled: options.publishOnBuild?.enabled ?? false,
-      docsDir: options.publishOnBuild?.docsDir ?? "src/content",
-    },
-  };
-}
-
-function resolveControlledCreation(options: ControlledPublishOptions): ControlledCreationOptions {
-  const connectionId = nonEmpty(options.connectionId)
-    ?? nonEmpty(process.env.DISCUSSIONBRIDGE_CONNECTION_ID);
-  const connectionSecret = options.connectionSecret
-    ?? process.env.DISCUSSIONBRIDGE_CONNECTION_SECRET;
-  if (!connectionId || !connectionSecret) {
-    throw new Error("Controlled publish-on-build requires server-only DISCUSSIONBRIDGE_CONNECTION_ID and DISCUSSIONBRIDGE_CONNECTION_SECRET values.");
-  }
-  return {
-    connectionId,
-    connectionSecret,
-    lane: options.lane,
-    visibility: options.visibility,
-    requestTimeoutMs: options.requestTimeoutMs,
-    maxResponseBytes: options.maxResponseBytes,
-  };
-}
-
-function resolveCredit(options: DiscussionBridgeCreditOptions | undefined) {
-  const href = normalizePublicHttpUrl(options?.href?.trim() || "https://discussionbridge.dev/", "comments.credit.href", {
-    allowQuery: true,
-    allowFragment: true,
-  });
-  return {
-    enabled: options?.enabled ?? true,
-    prefix: options?.prefix?.trim() || "Connected by",
-    label: options?.label?.trim() || "DiscussionBridge",
-    href,
-  };
-}
-
-function virtualConfigPlugin(config: PublicOptions): Plugin {
-  return {
-    name: "astro-discussion-bridge-config",
-    resolveId(id) {
-      return id === virtualModuleId ? resolvedVirtualModuleId : undefined;
-    },
-    load(id) {
-      return id === resolvedVirtualModuleId ? `export default ${JSON.stringify(config)};` : undefined;
-    },
-  };
-}
-
-function nonEmpty(value: string | undefined): string | undefined {
-  const trimmed = value?.trim();
-  return trimmed || undefined;
-}
+export { normalizeCommentsMode } from "./comments-mode.js";
+export { publishControlledDiscussions, withdrawControlledSource, captureNativeRenderedSource, captureControlledSourceNative } from "./controlled-creation.js";
+export { beginControlledSourceUrlMove, finalizeControlledSourceUrlMove, abortControlledSourceUrlMove, controlledSourceUrlHistory } from "./cms-to-source-move.js";
+export { runControlledSourceCommand } from "./cms-to-source-command.js";
+export { sourceArticleAttributes } from "./to-source-profile.js";
+export { stageCmsNativePublications, recordCmsNativeBuild, finalizeCmsNativeWork, abortCmsNativeWork, deployCmsNativeBuild } from "./cms-pipeline.js";
+export { beginCmsNativeUrlMove, prepareCmsNativeUrlMove, finalizeCmsNativeUrlMove, abortCmsNativeUrlMove } from "./cms-presentation.js";
+export { inspectCmsAttentionNative, restoreCmsAttentionBaseline } from "./cms-attention-native.js";
+export { checkCmsAttention, synchronizeCmsAttentionRecoveries } from "./cms-attention.js";
+export { runCmsAttentionBaselineCommand } from "./cms-attention-command.js";
+export type { CmsAttentionOptions } from "./cms-attention-native.js";
+export type { AttentionInspection, AttentionObservation, AttentionRecovery } from "./cms-attention-types.js";

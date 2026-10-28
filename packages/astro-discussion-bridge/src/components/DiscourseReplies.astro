@@ -2,6 +2,8 @@
 import sanitizeHtml from "sanitize-html";
 import discourseWordmark from "../assets/discourse-wordmark.svg?raw";
 import config from "virtual:discussion-bridge/config";
+import { readPublicForumSettings, resolveConnectedForumName, resolveForumName } from "../forum-name";
+import { normalizeTopicId, parsePublicTopicJson } from "../topic-identity";
 import {
   normalizeServiceBaseUrl,
   parsePublicDiscourseTopicUrl,
@@ -13,6 +15,9 @@ interface Props {
   heading?: string;
   topicId?: unknown;
   topicUrl?: unknown;
+  /** Effective connected label, not a local override. */
+  forumName?: unknown;
+  connectedSource?: boolean;
 }
 
 interface PublicPost {
@@ -22,7 +27,7 @@ interface PublicPost {
   created_at: string;
   display_username?: string;
   post_number: number;
-  topic_id: number;
+  topic_id: string;
   topic_slug: string;
   username: string;
 }
@@ -42,10 +47,10 @@ const topicReference = Astro.props.topicUrl === undefined
       discourseUrl,
       "DiscourseReplies topicUrl",
     );
-const topicId = positiveTopicId(Astro.props.topicId, "DiscourseReplies topicId")
-  ?? topicReference?.topicId;
+const topicId = normalizeTopicId(Astro.props.topicId, "DiscourseReplies topicId")
+  ?? normalizeTopicId(topicReference?.topicId, "DiscourseReplies topicUrl ID");
 if (!topicId) throw new Error("DiscourseReplies requires one public topic ID.");
-if (topicReference && topicReference.topicId !== topicId) {
+if (topicReference && String(topicReference.topicId) !== topicId) {
   throw new Error("DiscourseReplies topicId and topicUrl must identify the same topic.");
 }
 
@@ -79,8 +84,11 @@ const initialReplies = replies.slice(0, INITIAL_REPLIES);
 const remainingReplies = replies.slice(INITIAL_REPLIES);
 const exceedsBound = stream.length - 1 > MAX_REPLIES;
 const heading = Astro.props.heading ?? "Comments";
-let poweredBy = false;
-try { poweredBy = await poweredByDiscourse(); } catch { poweredBy = false; }
+const settings = await readPublicForumSettings(discourseUrl).catch(() => undefined);
+const forumName = Astro.props.connectedSource
+  ? await resolveConnectedForumName(Astro.props.forumName)
+  : resolveForumName(config.forumName, settings?.title);
+const poweredBy = settings?.poweredBy ?? false;
 
 interface TopicPayload {
   post_stream?: { posts?: unknown[]; stream?: unknown[] };
@@ -100,32 +108,12 @@ async function publicTopicJson(url: URL): Promise<TopicPayload> {
   if (new TextEncoder().encode(responseText).byteLength > MAX_RESPONSE_BYTES) {
     throw new Error("DiscourseReplies response exceeded the 512 KiB limit.");
   }
-  const decoded: unknown = JSON.parse(responseText);
+  const decoded = parsePublicTopicJson(responseText);
   if (!decoded || typeof decoded !== "object") throw new Error("DiscourseReplies response JSON is invalid.");
   return decoded as TopicPayload;
 }
 
-async function poweredByDiscourse(): Promise<boolean> {
-  const response = await fetch(`${discourseUrl}/`, {
-    headers: {
-      Accept: "text/html",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
-    },
-    redirect: "error",
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!response.ok || response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "text/html") throw new Error("DiscourseReplies requires the public Discourse bootstrap.");
-  const html = await response.text();
-  if (new TextEncoder().encode(html).byteLength > MAX_RESPONSE_BYTES) throw new Error("DiscourseReplies bootstrap exceeded the 512 KiB limit.");
-  const match = /<script[^>]+id=["']data-preloaded["'][^>]*>([\s\S]*?)<\/script>/iu.exec(html);
-  if (!match) throw new Error("DiscourseReplies bootstrap settings are unavailable.");
-  const outer = JSON.parse(match[1]);
-  const settings = typeof outer?.siteSettings === "string" ? JSON.parse(outer.siteSettings) : null;
-  if (typeof settings?.enable_powered_by_discourse !== "boolean") throw new Error("DiscourseReplies branding setting is invalid.");
-  return settings.enable_powered_by_discourse;
-}
-
-function validPublicPost(value: unknown, expectedTopicId: number): value is PublicPost {
+function validPublicPost(value: unknown, expectedTopicId: string): value is PublicPost {
   if (!value || typeof value !== "object") return false;
   const post = value as Partial<PublicPost>;
   return Number.isSafeInteger(post.id) && Number(post.id) > 0
@@ -180,6 +168,8 @@ function cookedHtml(post: PublicPost): string {
   data-discourse-origin={discourseUrl}
   data-topic-id={topicId}
   data-topic-url={topicUrl}
+  data-forum-name={Astro.props.connectedSource ? forumName : config.forumName}
+  data-discussionbridge-mode="simple"
 >
   <div class="discussion-bridge-simple__header"><h2>{heading}</h2><a href={topicUrl}>Join the discussion</a></div>
   {replies.length ? (
@@ -201,7 +191,7 @@ function cookedHtml(post: PublicPost): string {
         ))}</ol>
       </details>
     ) : null}
-    {exceedsBound ? <p class="discussion-bridge-simple__limit">Showing the first {MAX_REPLIES} comments. <a href={topicUrl}>View the complete discussion on The Bridge</a>.</p> : null}
+    {exceedsBound ? <p class="discussion-bridge-simple__limit">Showing the first {MAX_REPLIES} comments. <a href={topicUrl}>View the complete discussion on {forumName}</a>.</p> : null}
     </>
   ) : <p>No comments yet. <a href={topicUrl}>Start the conversation on Discourse.</a></p>}
   <div data-discussionbridge-attributions>
@@ -213,7 +203,7 @@ function cookedHtml(post: PublicPost): string {
 </section>
 
 <script>
-  import { startSimpleComments } from "../simple-live";
+  import { startSimpleComments } from "astro-discussion-bridge/simple-live";
   startSimpleComments();
 </script>
 

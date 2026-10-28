@@ -1,0 +1,1 @@
+{"version":3,"file":"comments-mode.d.ts","sourceRoot":"","sources":["../src/comments-mode.ts"],"names":[],"mappings":"AAAA,MAAM,MAAM,kBAAkB,GAAG,QAAQ,GAAG,MAAM,GAAG,aAAa,CAAC;AACnE,MAAM,MAAM,iBAAiB,GAAG,kBAAkB,CAAC;AAEnD,wBAAgB,qBAAqB,CAAC,KAAK,EAAE,OAAO,GAAG,kBAAkB,GAAG,SAAS,CAGpF;AAED,wBAAgB,yBAAyB,CAAC,KAAK,EAAE,OAAO,GAAG,OAAO,CAEjE"}

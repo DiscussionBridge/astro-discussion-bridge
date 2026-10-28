@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "typeRoots": [
+      "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules/@types"
+    ],
+    "paths": {
+      "proper-lockfile": [
+        "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules/@types/proper-lockfile/index.d.ts"
+      ],
+      "yaml": [
+        "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules/yaml/dist/index.d.ts"
+      ],
+      "astro": [
+        "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules/astro/dist/types/public/index.d.ts"
+      ],
+      "sanitize-html": [
+        "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules/@types/sanitize-html/index.d.ts"
+      ],
+      "@astrojs/markdown-remark": [
+        "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules/@astrojs/markdown-remark/dist/index.d.ts"
+      ],
+      "dompurify": [
+        "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules/dompurify/dist/purify.es.d.mts"
+      ]
+    }
+  },
+  "extends": "../packages/astro-discussion-bridge/tsconfig.json"
+}

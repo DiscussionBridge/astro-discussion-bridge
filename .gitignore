@@ -1,26 +1,5 @@
-# Dependencies and builds
-node_modules/
-dist/
-build/
-.astro/
-
-# Local env
-.env
-.env.*
-!.env.example
-
-# Package artifacts
-*.tgz
-*.tar
-*.tar.gz
-
-# Logs and local scratch
-*.log
-tmp/
-.tmp/npm-cache/
-.DS_Store
-Thumbs.db
-
-# Generated docs-site content
-sites/docs/src/content/docs/
-.discussionbridge-cache/
+.tools/
+.artifacts/
+**/node_modules/
+**/dist/
+**/.tmp/

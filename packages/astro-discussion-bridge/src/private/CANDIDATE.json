@@ -1,0 +1,184 @@
+{
+  "candidate_id": "discussionbridge-v4-core-20261025-r6",
+  "implementation_version": "0.4.0-alpha.1",
+  "wire_version": "v4",
+  "status": "implementation_candidate_not_exact_approved_not_frozen",
+  "release_version": null,
+  "normative": {
+    "path": "normative/CONTRACT.json",
+    "bytes": 187682,
+    "sha256": "df31c5d2fc387a8b12b388438450eccd97966de34c82b1bf417634b21a36b495"
+  },
+  "routes": [
+    "V4-01",
+    "V4-02",
+    "V4-03",
+    "V4-04",
+    "V4-05",
+    "V4-06",
+    "V4-07",
+    "V4-08",
+    "V4-09",
+    "V4-10",
+    "V4-11",
+    "V4-12",
+    "V4-13",
+    "V4-14",
+    "V4-15",
+    "V4-16",
+    "V4-17",
+    "V4-18",
+    "V4-19",
+    "V4-20",
+    "V4-21",
+    "V4-22",
+    "V4-23",
+    "V4-24",
+    "V4-25",
+    "V4-26",
+    "V4-27",
+    "V4-28",
+    "V4-29",
+    "V4-30",
+    "V4-31",
+    "V4-32",
+    "V4-33",
+    "V4-34",
+    "V4-35",
+    "V4-36"
+  ],
+  "schema": {
+    "path": "src/cms-schema.json",
+    "bytes": 115670,
+    "sha256": "8563a9b1346e3bf82635bd65a46bb1e25415a1003d7432f8fcb8c1c6e4f03c14"
+  },
+  "javascript": {
+    "path": "src/cms-runtime.mjs",
+    "bytes": 35144,
+    "sha256": "e1790fd800abcae9772d327625ea188f04ec68c63ce7917cb0785f5cdea22538"
+  },
+  "php": {
+    "path": "src/php/CmsCodec.php",
+    "bytes": 51502,
+    "sha256": "6eece074e1268d2d90890afd0215da80c06c23961b497a4df190f7876af0fc19",
+    "namespace": "DiscussionBridge\\CmsV4"
+  },
+  "native_interfaces": [
+    {
+      "id": "NATIVE-01",
+      "method": "POST",
+      "path": "/admin/publishing/topics/{topic_id}/publish",
+      "authorization": "native_session_csrf_xhr_staff_guardian_publisher_enabled",
+      "fields": {
+        "publication": [
+          "content_connection_id",
+          "external_id",
+          "canonical_url",
+          "lane(optional)",
+          "presentation_mode(optional current authorized policy)"
+        ]
+      },
+      "rule": "Current visible native source/current policy creates actual materialization through SourceLifecycle/MappingPrepare/intent in one native transaction with shared URL collision guards. No old native_materialization toggle, staff scope override or earlier-record attach/adopt. Native administration, not Content Connection wire."
+    },
+    {
+      "id": "NATIVE-02",
+      "method": "PUT",
+      "path": "/admin/publishing/publications/{resource_id}/presentation",
+      "authorization": "native_session_csrf_xhr_staff_guardian_publisher_enabled",
+      "fields": {
+        "publication": [
+          "canonical_url"
+        ]
+      },
+      "rule": "Exact owned resource presentation correction; current native/CAS/URL safety checks, never arbitrary rebind or credential expansion."
+    },
+    {
+      "id": "NATIVE-03",
+      "method": "GET",
+      "path": "/admin/publishing/topics/{topic_id}/status",
+      "authorization": "native_session_csrf_xhr_staff_guardian_publisher_enabled",
+      "rule": "Truthful current publication status for current visible topic; no connection secret or lease token."
+    },
+    {
+      "id": "NATIVE-04",
+      "method": "GET",
+      "path": "/admin/publishing",
+      "authorization": "native_admin",
+      "rule": "Current publishing overview, not public feed."
+    },
+    {
+      "id": "NATIVE-05",
+      "method": "GET/PUT",
+      "path": "/admin/content-connections/{connection_id}/cms-configuration",
+      "authorization": "native_admin",
+      "rule": "Native policy/configuration; Content Connection callers have read-only V4 connection/policy routes."
+    },
+    {
+      "id": "NATIVE-06",
+      "method": "GET",
+      "path": "/admin/content-connections/{connection_id}/cms-delivery",
+      "authorization": "native_admin",
+      "rule": "Current native delivery/status/issue presentation."
+    },
+    {
+      "id": "NATIVE-07",
+      "method": "GET",
+      "path": "/admin/content-connections/{connection_id}/cms-preview",
+      "authorization": "native_admin",
+      "rule": "Read-only current-scope preview; no work/enablement/create."
+    },
+    {
+      "id": "NATIVE-08",
+      "method": "GET",
+      "path": "/admin/content-connections/{connection_id}/cms-catalog",
+      "authorization": "native_admin",
+      "rule": "Descriptive current native catalog configuration, not policy authority."
+    },
+    {
+      "id": "NATIVE-09",
+      "method": "POST",
+      "path": "/admin/content-connections/{connection_id}/cms-attention/check",
+      "authorization": "native_session_csrf_xhr_admin_guardian_current_connection_topic",
+      "input": "AttentionAdminCheck",
+      "response": "AttentionAdminResult",
+      "rule": "Explicit selected1..25 current attention checks; transactional per-item receipt, no retry/repair/attempt/lease/build/deploy/restore; safe per-item status."
+    },
+    {
+      "id": "NATIVE-10",
+      "method": "POST",
+      "path": "/admin/content-connections/{connection_id}/cms-attention/retry",
+      "authorization": "native_session_csrf_xhr_admin_guardian_current_connection_topic",
+      "input": "AttentionAdminRetry",
+      "response": "AttentionAdminResult",
+      "rule": "Explicit per-item current reconciliation and admin authority. One fresh unique linked pending successor; supersede oldattention with whole snapshot. Disclosed exact restored-baseline settlement only on selected true; no applied static adoption or cancelled hold release."
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "SOURCE_HTML",
+      "status": "discussion_required_not_approved",
+      "boundary": "Meaning-preserving entire-article preparation/native-original retention, format-neutral text/non-text eligibility, captured-source relative-target preservation and active-function preservation through supported native handling or specific lost-function disclosure/operator choice are approved. Exact execution permissions/mechanisms and URI/media/provider/fallback/default/true-absence rules remain unselected; no additional sanitizer policy or UI/wire machinery is inferred."
+    },
+    {
+      "id": "NATIVE_SOURCE_MOVE_PROOF",
+      "status": "component_definition_required_not_approved",
+      "boundary": "Actual native source-public ownership/extraction/hash/nonce profile and expected-edition move integration; declared fields do not implement it."
+    },
+    {
+      "id": "NATIVE_ADMIN_RETRY",
+      "status": "adopted_subset_implementation_and_native_qualification_required",
+      "boundary": "Adopted attention-recovery-1 specifies bounded observation/discovery/explicit unique successor admission and proof-backed restored-static-baseline settlement. Actual component/native/public qualification remains required; applied static adoption and cancelled same-intent recovery remain outside scope. No generic attestation."
+    },
+    {
+      "id": "APPLIED_PRESENTATION_REBIND",
+      "status": "unprescribed_branch_attention",
+      "boundary": "Applied newURL/replacement generation while receiver remains oldURL has no fabricated oldURL receipt or inferred rebind; attention/both reservations."
+    },
+    {
+      "id": "SUPPORT_ACCESS",
+      "status": "product_details_approved_implementation_native_and_exact_source_qualification_pending",
+      "boundary": "Direct Phil decision 2026-10-27 approves separately enabled native support and an explicit administrator-reviewed native-mail request containing contact address, forum URL, plugin version, request ID and problem text to supportrequest@discussionbridge.dev. Native invitation/account creation and an explicit local grant remain separate. The scoped native support role may read status/redacted health and use only currently authorized check/retry/reconciliation/synchronization and one existing topic's include/exclude selection within current public availability, native Guardian visibility and configured source/connection/policy scope. Global policy, connections, secrets, access grants and URL-migration authority remain administrator-owned and are not delegated by a support grant. Local revocation is immediate. Commercial handling remains outside the plugin; no Operator/remote entitlement or automatic payment/grace/expiry machinery. Author implementation exists; implementation/native qualification and exact-source/whole-candidate approval remain pending. No delivery/access/publication result is implied."
+    }
+  ],
+  "limitation": "Typed/value-local validation does not establish receiver/native authority/locks/ownership/public proof/qualification/formal review/exact approval/freeze/release/deployment."
+}

@@ -1,6 +1,7 @@
 declare module "virtual:discussion-bridge/config" {
   const config: {
     discourseUrl: string;
+    forumName?: string;
     comments: {
       enabled: boolean;
       display: "simple" | "full" | "interactive";

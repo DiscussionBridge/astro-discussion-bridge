@@ -1,3 +1,5 @@
+import { normalizeTopicId } from "./topic-identity.js";
+
 export function parseServiceBaseUrl(value: string, label = "Discourse URL"): URL {
   if (
     typeof value !== "string"
@@ -69,7 +71,7 @@ export function normalizePublicHttpUrl(
 export interface PublicDiscourseTopicUrl {
   href: string;
   serviceBase: string;
-  topicId: number;
+  topicId: number | string;
   slug?: string;
   postNumber?: number;
 }
@@ -180,7 +182,7 @@ export function serviceRelativeRequestTarget(value: string, serviceBase: URL): s
 export function parseDiscourseTopicReference(
   value: string,
   serviceBase: URL,
-): { topicId: number; slug?: string; postNumber?: number } {
+): { topicId: number | string; slug?: string; postNumber?: number } {
   const relative = serviceRelativeRequestTarget(value, serviceBase);
   const rawParts = relative.split("?", 1)[0].split("/");
   if (rawParts.some((part, index) => !part && index > 0 && index < rawParts.length - 1)) {
@@ -190,22 +192,22 @@ export function parseDiscourseTopicReference(
   if (parts[0] !== "t") throw new Error("Discourse topic reference must use the /t/ route.");
 
   const route = parts.slice(1);
-  let topicId: number | undefined;
+  let topicId: number | string | undefined;
   let postNumber: number | undefined;
   let slug: string | undefined;
-  if (route.length === 1 && positiveIntegerSegment(route[0])) {
-    topicId = Number(route[0]);
-  } else if (route.length === 2 && route.every(positiveIntegerSegment)) {
-    topicId = Number(route[0]);
+  if (route.length === 1 && topicIdSegment(route[0])) {
+    topicId = topicIdSegment(route[0]);
+  } else if (route.length === 2 && topicIdSegment(route[0]) && positiveIntegerSegment(route[1])) {
+    topicId = topicIdSegment(route[0]);
     postNumber = Number(route[1]);
   } else if (
     (route.length === 2 || route.length === 3)
     && !/^\d+$/.test(route[0])
-    && positiveIntegerSegment(route[1])
+    && topicIdSegment(route[1])
     && (route.length === 2 || positiveIntegerSegment(route[2]))
   ) {
     slug = route[0];
-    topicId = Number(route[1]);
+    topicId = topicIdSegment(route[1]);
     if (route[2]) postNumber = Number(route[2]);
   }
   if (!topicId) throw new Error("Discourse topic reference has an unsupported route shape.");
@@ -214,6 +216,14 @@ export function parseDiscourseTopicReference(
     ...(slug ? { slug } : {}),
     ...(postNumber ? { postNumber } : {}),
   };
+}
+
+function topicIdSegment(value: string | undefined): number | string | undefined {
+  try {
+    const exact = normalizeTopicId(value);
+    if (exact === undefined) return undefined;
+    return Number.isSafeInteger(Number(exact)) ? Number(exact) : exact;
+  } catch { return undefined; }
 }
 
 function positiveIntegerSegment(value: string | undefined): boolean {

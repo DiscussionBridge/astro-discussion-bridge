@@ -25,8 +25,15 @@ const frontmatter = Astro.props.frontmatter ?? Astro.props;
 const topicId = Astro.props.topicId ?? frontmatter.discourseTopicId;
 const topicUrl = stringValue(Astro.props.topicUrl ?? frontmatter.discourseTopicUrl);
 const display = normalizeCommentsMode(
-  Astro.props.display ?? frontmatter.discussionCommentsDisplay ?? config.comments.display,
-) ?? config.comments.display;
+  Astro.props.display !== undefined
+    ? Astro.props.display
+    : frontmatter.discussionCommentsDisplay !== undefined
+      ? frontmatter.discussionCommentsDisplay
+      : config.comments.display,
+);
+if (config.comments.enabled && display === undefined) {
+  throw new Error("Discussion display must be simple, full, or interactive.");
+}
 const sourcePresentation =
   frontmatter.discussionFromDiscourse === true ||
   frontmatter.discussionbridgeNativePublication === true;
@@ -47,7 +54,7 @@ function stringValue(value: unknown): string | undefined {
 
 ---
 
-{config.comments.enabled && (
+{config.comments.enabled && display !== undefined && (
   <>
     {display === "simple" ? (
       <DiscourseReplies
@@ -57,6 +64,8 @@ function stringValue(value: unknown): string | undefined {
         sourceUrl={Astro.props.sourceUrl}
         topicId={topicId}
         topicUrl={topicUrl}
+        connectedSource={sourcePresentation}
+        forumName={frontmatter.discussionbridgeForumName}
       />
     ) : (
       <DiscourseDiscussion

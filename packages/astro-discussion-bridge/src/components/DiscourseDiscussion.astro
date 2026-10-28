@@ -6,6 +6,7 @@ import {
   parsePublicDiscourseTopicUrl,
 } from "astro-discussion-bridge/web-url";
 import { isInteractiveCommentsMode } from "../comments-mode";
+import { normalizeTopicId } from "../topic-identity";
 
 interface Props {
   class?: string;
@@ -30,7 +31,7 @@ const embedMinHeight = config.comments.embedMinHeight;
 const fullApp = Astro.props.fullApp ?? isInteractiveCommentsMode(config.comments.display);
 const heading = Astro.props.heading ?? "Comments";
 const topicIdValue = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
-const topicId = positiveTopicId(topicIdValue, "DiscourseDiscussion topicId");
+const topicId = normalizeTopicId(topicIdValue, "DiscourseDiscussion topicId");
 const topicUrlValue = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
 const topicReference = topicUrlValue === undefined
   ? undefined
@@ -39,10 +40,10 @@ const topicReference = topicUrlValue === undefined
       discourseUrl,
       "DiscourseDiscussion topicUrl",
     );
-if (topicId !== undefined && topicReference && topicReference.topicId !== topicId) {
+if (topicId !== undefined && topicReference && String(topicReference.topicId) !== topicId) {
   throw new Error("DiscourseDiscussion topicId and topicUrl must identify the same topic.");
 }
-const resolvedTopicId = topicId ?? topicReference?.topicId;
+const resolvedTopicId = topicId ?? normalizeTopicId(topicReference?.topicId, "DiscourseDiscussion topicUrl ID");
 const topicUrl = topicReference?.href;
 const sourceUrl = resolvedTopicId === undefined
   ? normalizePublicHttpUrl(
@@ -54,15 +55,6 @@ if (config.comments.enabled && fullApp && resolvedTopicId === undefined) {
   throw new Error("DiscourseDiscussion Interactive requires one completed Bridge topic mapping.");
 }
 
-function positiveTopicId(value: unknown, label: string): number | undefined {
-  if (value === undefined) return undefined;
-  const text = typeof value === "number" ? String(value) : value;
-  if (typeof text !== "string" || !/^[1-9]\d*$/.test(text) || !Number.isSafeInteger(Number(text))) {
-    throw new Error(`${label} must be a positive safe integer.`);
-  }
-  return Number(text);
-}
-
 function requiredString(value: unknown, label: string): string {
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} must be a non-empty string.`);
   return value;
@@ -70,7 +62,10 @@ function requiredString(value: unknown, label: string): string {
 ---
 
 {config.comments.enabled && (
-  <section class:list={["discussion-bridge-discussion", Astro.props.class]}>
+  <section class:list={["discussion-bridge-discussion", Astro.props.class]}
+    data-discussionbridge-mode={fullApp ? "interactive" : "full"}
+    data-discussionbridge-topic-id={resolvedTopicId}
+    data-discussionbridge-discourse-url={discourseUrl}>
     <div class="discussion-bridge-discussion__header">
       <h2>{heading}</h2>
       {topicUrl && <a href={topicUrl}>Open discussion</a>}

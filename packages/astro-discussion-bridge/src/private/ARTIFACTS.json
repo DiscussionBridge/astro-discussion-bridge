@@ -1,0 +1,62 @@
+{
+  "format": 1,
+  "candidate_id": "discussionbridge-v4-core-20261025-r6",
+  "implementation_version": "0.4.0-alpha.1",
+  "wire_version": "v4",
+  "status": "implementation_candidate_not_exact_approved_not_frozen",
+  "release_version": null,
+  "normative": {
+    "path": "normative/CONTRACT.json",
+    "bytes": 187682,
+    "sha256": "df31c5d2fc387a8b12b388438450eccd97966de34c82b1bf417634b21a36b495"
+  },
+  "derivation_sources": [
+    {
+      "path": "scripts/generate.mjs",
+      "bytes": 6032,
+      "sha256": "0d5d9652dc73a48904d2b647536222373bb4f814847a60dbbffa51554f6494c8"
+    },
+    {
+      "path": "implementation/cms-runtime.mjs.in",
+      "bytes": 34979,
+      "sha256": "3fb16d30104cd7b3488fd2ca2531f72f2d2b28ffe8a77945b52483fd1cb5a485"
+    },
+    {
+      "path": "implementation/CmsCodec.php.in",
+      "bytes": 51442,
+      "sha256": "b6917208269cc91dca494cefb771d175f8049cc5e3503ed7e4641f2d66eca124"
+    }
+  ],
+  "members": [
+    {
+      "path": "src/cms-schema.json",
+      "bytes": 115670,
+      "sha256": "8563a9b1346e3bf82635bd65a46bb1e25415a1003d7432f8fcb8c1c6e4f03c14"
+    },
+    {
+      "path": "src/cms-runtime.mjs",
+      "bytes": 35144,
+      "sha256": "e1790fd800abcae9772d327625ea188f04ec68c63ce7917cb0785f5cdea22538"
+    },
+    {
+      "path": "src/php/CmsCodec.php",
+      "bytes": 51502,
+      "sha256": "6eece074e1268d2d90890afd0215da80c06c23961b497a4df190f7876af0fc19"
+    },
+    {
+      "path": "src/cms-contract.mjs",
+      "bytes": 415,
+      "sha256": "eb65a87a3fcf1948ecfd39dfe22a6356a388141a7ac233ee3b8d966d2a08fa9c"
+    },
+    {
+      "path": "CANDIDATE.json",
+      "bytes": 8423,
+      "sha256": "b67d0ead78f331b0489a5f850ec6a5bbb047c1cdaf757ed60b00d88433616263"
+    },
+    {
+      "path": "ROUTES.md",
+      "bytes": 5899,
+      "sha256": "091711d740c036dca4be96f93d86a9b8da534b46021cd34469c90f602191222d"
+    }
+  ]
+}

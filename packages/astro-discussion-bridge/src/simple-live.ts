@@ -1,11 +1,13 @@
 import DOMPurify from "dompurify";
+import { readPublicForumSettings, resolveForumName, type PublicForumSettings } from "./forum-name.js";
+import { normalizeTopicId, parsePublicTopicJson } from "./topic-identity.js";
 
 const MAX_RESPONSE_BYTES = 512 * 1024;
 const MAX_REPLIES = 50;
 const INITIAL_REPLIES = 5;
 const FETCH_BATCH_SIZE = 20;
 const BRANDING_CACHE_MS = 10 * 60 * 1000;
-const brandingCache = new Map<string, { expiresAt: number; value: Promise<boolean> }>();
+const brandingCache = new Map<string, { expiresAt: number; value: Promise<PublicForumSettings> }>();
 
 interface PublicPost {
   id: number;
@@ -14,7 +16,7 @@ interface PublicPost {
   created_at: string;
   display_username?: string;
   post_number: number;
-  topic_id: number;
+  topic_id: string;
   username: string;
 }
 
@@ -24,12 +26,16 @@ interface TopicPayload {
 
 export async function refreshSimpleComments(root: HTMLElement): Promise<void> {
   const discourseUrl = exactOrigin(root.dataset.discourseOrigin);
-  const topicId = positiveInteger(root.dataset.topicId);
+  const topicId = normalizeTopicId(root.dataset.topicId);
+  if (topicId === undefined) throw new Error("Missing topic ID.");
   const topicUrl = exactTopicUrl(root.dataset.topicUrl, discourseUrl, topicId);
-  const [topic, poweredBy] = await Promise.all([
+  const [topic, settings] = await Promise.all([
     publicJson(new URL(`/t/${topicId}.json`, `${discourseUrl}/`), discourseUrl),
-    poweredByDiscourse(discourseUrl).catch(() => undefined),
+    publicForumSettings(discourseUrl).catch(() => undefined),
   ]);
+  let forumName: string;
+  try { forumName = resolveForumName(root.dataset.forumName, settings?.title); }
+  catch (error) { brandingCache.delete(discourseUrl); throw error; }
   const stream = topic.post_stream?.stream;
   const initial = topic.post_stream?.posts;
   if (!Array.isArray(stream) || !Array.isArray(initial)) throw new Error("Invalid public topic stream.");
@@ -53,8 +59,8 @@ export async function refreshSimpleComments(root: HTMLElement): Promise<void> {
 
   const replies = replyIds.map((id) => posts.get(id));
   if (replies.some((post) => !post)) throw new Error("Incomplete public reply set.");
-  if (typeof poweredBy === "boolean") root.querySelector<HTMLElement>("[data-discussionbridge-powered-by]")?.toggleAttribute("hidden", !poweredBy);
-  render(root, replies as PublicPost[], topicUrl, discourseUrl, stream.length - 1 > MAX_REPLIES);
+  if (typeof settings?.poweredBy === "boolean") root.querySelector<HTMLElement>("[data-discussionbridge-powered-by]")?.toggleAttribute("hidden", !settings.poweredBy);
+  render(root, replies as PublicPost[], topicUrl, discourseUrl, stream.length - 1 > MAX_REPLIES, forumName);
   root.dataset.discussionbridgeSimpleState = "live";
 }
 
@@ -83,12 +89,12 @@ async function publicJson(url: URL, expectedOrigin: string): Promise<TopicPayloa
   if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES) throw new Error("Public response is too large.");
   const text = await response.text();
   if (new TextEncoder().encode(text).byteLength > MAX_RESPONSE_BYTES) throw new Error("Public response is too large.");
-  const value: unknown = JSON.parse(text);
+  const value = parsePublicTopicJson(text);
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Public response JSON is invalid.");
   return value as TopicPayload;
 }
 
-function render(root: HTMLElement, replies: PublicPost[], topicUrl: string, discourseUrl: string, truncated: boolean): void {
+function render(root: HTMLElement, replies: PublicPost[], topicUrl: string, discourseUrl: string, truncated: boolean, forumName: string): void {
   const attributions = root.querySelector<HTMLElement>("[data-discussionbridge-attributions]");
   const fragment = document.createDocumentFragment();
   const header = element("div", "discussion-bridge-simple__header");
@@ -115,39 +121,19 @@ function render(root: HTMLElement, replies: PublicPost[], topicUrl: string, disc
   }
   if (truncated) {
     const limit = element("p", "discussion-bridge-simple__limit", `Showing the first ${MAX_REPLIES} comments. `);
-    limit.append(link(topicUrl, "View the complete discussion on The Bridge"), ".");
+    limit.append(link(topicUrl, "View the complete discussion on " + forumName), ".");
     fragment.append(limit);
   }
   root.replaceChildren(fragment, ...(attributions ? [attributions] : []));
 }
 
-async function poweredByDiscourse(origin: string): Promise<boolean> {
+async function publicForumSettings(origin: string): Promise<PublicForumSettings> {
   const now = Date.now();
   const cached = brandingCache.get(origin);
   if (cached && cached.expiresAt > now) return cached.value;
-  const value = readPoweredByDiscourse(origin);
+  const value = readPublicForumSettings(origin);
   brandingCache.set(origin, { expiresAt: now + BRANDING_CACHE_MS, value });
   try { return await value; } catch (error) { brandingCache.delete(origin); throw error; }
-}
-
-async function readPoweredByDiscourse(origin: string): Promise<boolean> {
-  const response = await fetch(`${origin}/`, {
-    credentials: "omit", headers: { Accept: "text/html" }, redirect: "error", signal: AbortSignal.timeout(10_000),
-  });
-  if (response.url && new URL(response.url).origin !== origin) throw new Error("Discourse bootstrap changed forum origin.");
-  if (!response.ok || response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "text/html") throw new Error("Invalid Discourse bootstrap response.");
-  const text = await response.text();
-  if (new TextEncoder().encode(text).byteLength > MAX_RESPONSE_BYTES) throw new Error("Discourse bootstrap is too large.");
-  const document = new DOMParser().parseFromString(text, "text/html");
-  const raw = document.querySelector<HTMLScriptElement>("script#data-preloaded")?.textContent;
-  if (!raw) throw new Error("Discourse bootstrap settings are unavailable.");
-  const outer: unknown = JSON.parse(raw);
-  const settingsRaw = typeof outer === "object" && outer && !Array.isArray(outer) ? (outer as { siteSettings?: unknown }).siteSettings : undefined;
-  if (typeof settingsRaw !== "string") throw new Error("Discourse bootstrap settings are invalid.");
-  const settings: unknown = JSON.parse(settingsRaw);
-  const enabled = typeof settings === "object" && settings && !Array.isArray(settings) ? (settings as { enable_powered_by_discourse?: unknown }).enable_powered_by_discourse : undefined;
-  if (typeof enabled !== "boolean") throw new Error("Discourse branding setting is invalid.");
-  return enabled;
 }
 
 function replyList(posts: PublicPost[], topicUrl: string, discourseUrl: string): HTMLOListElement {
@@ -200,7 +186,7 @@ function sanitizedBody(cooked: string, discourseUrl: string): DocumentFragment {
   return clean;
 }
 
-function validPost(value: unknown, topicId: number): value is PublicPost {
+function validPost(value: unknown, topicId: string): value is PublicPost {
   if (!value || typeof value !== "object") return false;
   const post = value as Partial<PublicPost>;
   return Number.isSafeInteger(post.id) && Number(post.id) > 0
@@ -218,7 +204,7 @@ function exactOrigin(value: string | undefined): string {
   return url.origin;
 }
 
-function exactTopicUrl(value: string | undefined, origin: string, topicId: number): string {
+function exactTopicUrl(value: string | undefined, origin: string, topicId: string): string {
   if (!value) throw new Error("Missing topic URL.");
   const url = new URL(value);
   if (url.protocol !== "https:" || url.origin !== origin || !new RegExp(`/t/(?:[^/]+/)?${topicId}(?:/|$)`).test(url.pathname)) throw new Error("Invalid topic URL.");

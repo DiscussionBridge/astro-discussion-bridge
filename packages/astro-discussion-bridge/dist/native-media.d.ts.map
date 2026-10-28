@@ -1,0 +1,1 @@
+{"version":3,"file":"native-media.d.ts","sourceRoot":"","sources":["../src/native-media.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,2BAA2B,EAAE,MAAM,yBAAyB,CAAC;AAUtE,sFAAsF;AACtF,qBAAa,2BAA4B,SAAQ,2BAA2B;;CAE3E;AACD,wBAAgB,2CAA2C,CAAC,YAAY,EAAE,MAAM,QAmB/E;AA6CD,6EAA6E;AAC7E,wBAAgB,2BAA2B,CAAC,YAAY,EAAE,MAAM,EAAE,YAAY,EAAE,MAAM,EAAE,0BAA0B,UAAQ,QAQzH"}

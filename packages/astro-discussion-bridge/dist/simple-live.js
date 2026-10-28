@@ -1,0 +1,253 @@
+import DOMPurify from "dompurify";
+import { readPublicForumSettings, resolveForumName } from "./forum-name.js";
+import { normalizeTopicId, parsePublicTopicJson } from "./topic-identity.js";
+const MAX_RESPONSE_BYTES = 512 * 1024;
+const MAX_REPLIES = 50;
+const INITIAL_REPLIES = 5;
+const FETCH_BATCH_SIZE = 20;
+const BRANDING_CACHE_MS = 10 * 60 * 1000;
+const brandingCache = new Map();
+export async function refreshSimpleComments(root) {
+    const discourseUrl = exactOrigin(root.dataset.discourseOrigin);
+    const topicId = normalizeTopicId(root.dataset.topicId);
+    if (topicId === undefined)
+        throw new Error("Missing topic ID.");
+    const topicUrl = exactTopicUrl(root.dataset.topicUrl, discourseUrl, topicId);
+    const [topic, settings] = await Promise.all([
+        publicJson(new URL(`/t/${topicId}.json`, `${discourseUrl}/`), discourseUrl),
+        publicForumSettings(discourseUrl).catch(() => undefined),
+    ]);
+    let forumName;
+    try {
+        forumName = resolveForumName(root.dataset.forumName, settings?.title);
+    }
+    catch (error) {
+        brandingCache.delete(discourseUrl);
+        throw error;
+    }
+    const stream = topic.post_stream?.stream;
+    const initial = topic.post_stream?.posts;
+    if (!Array.isArray(stream) || !Array.isArray(initial))
+        throw new Error("Invalid public topic stream.");
+    const replyIds = stream.slice(1, MAX_REPLIES + 1).map(positiveInteger);
+    const posts = new Map();
+    for (const value of initial) {
+        if (validPost(value, topicId))
+            posts.set(value.id, value);
+    }
+    const missing = replyIds.filter((id) => !posts.has(id));
+    for (let offset = 0; offset < missing.length; offset += FETCH_BATCH_SIZE) {
+        const endpoint = new URL(`/t/${topicId}/posts.json`, `${discourseUrl}/`);
+        for (const id of missing.slice(offset, offset + FETCH_BATCH_SIZE))
+            endpoint.searchParams.append("post_ids[]", String(id));
+        const batch = await publicJson(endpoint, discourseUrl);
+        if (!Array.isArray(batch.post_stream?.posts))
+            throw new Error("Invalid public post batch.");
+        for (const value of batch.post_stream.posts) {
+            if (!validPost(value, topicId))
+                throw new Error("Invalid public reply.");
+            posts.set(value.id, value);
+        }
+    }
+    const replies = replyIds.map((id) => posts.get(id));
+    if (replies.some((post) => !post))
+        throw new Error("Incomplete public reply set.");
+    if (typeof settings?.poweredBy === "boolean")
+        root.querySelector("[data-discussionbridge-powered-by]")?.toggleAttribute("hidden", !settings.poweredBy);
+    render(root, replies, topicUrl, discourseUrl, stream.length - 1 > MAX_REPLIES, forumName);
+    root.dataset.discussionbridgeSimpleState = "live";
+}
+export function startSimpleComments() {
+    for (const root of Array.from(document.querySelectorAll("[data-discussionbridge-simple-live]"))) {
+        refreshSimpleComments(root).catch(() => {
+            root.dataset.discussionbridgeSimpleState = "snapshot";
+            root.querySelector("[data-discussionbridge-simple-status]")?.removeAttribute("hidden");
+        });
+    }
+}
+async function publicJson(url, expectedOrigin) {
+    const response = await fetch(url, {
+        credentials: "omit",
+        headers: { Accept: "application/json" },
+        redirect: "error",
+        signal: AbortSignal.timeout(10_000),
+    });
+    if (response.url && new URL(response.url).origin !== expectedOrigin)
+        throw new Error("Public response changed forum origin.");
+    if (!response.ok)
+        throw new Error(`Public topic request failed (${response.status}).`);
+    if (response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "application/json") {
+        throw new Error("Public topic response is not JSON.");
+    }
+    const declared = Number(response.headers.get("content-length"));
+    if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES)
+        throw new Error("Public response is too large.");
+    const text = await response.text();
+    if (new TextEncoder().encode(text).byteLength > MAX_RESPONSE_BYTES)
+        throw new Error("Public response is too large.");
+    const value = parsePublicTopicJson(text);
+    if (!value || typeof value !== "object" || Array.isArray(value))
+        throw new Error("Public response JSON is invalid.");
+    return value;
+}
+function render(root, replies, topicUrl, discourseUrl, truncated, forumName) {
+    const attributions = root.querySelector("[data-discussionbridge-attributions]");
+    const fragment = document.createDocumentFragment();
+    const header = element("div", "discussion-bridge-simple__header");
+    header.append(element("h2", "", "Comments"), link(topicUrl, "Open discussion"));
+    fragment.append(header);
+    if (!replies.length) {
+        const empty = element("p", "", "No comments yet. ");
+        empty.append(link(topicUrl, "Start the conversation on Discourse."));
+        fragment.append(empty);
+    }
+    else {
+        fragment.append(replyList(replies.slice(0, INITIAL_REPLIES), topicUrl, discourseUrl));
+        const remaining = replies.slice(INITIAL_REPLIES);
+        if (remaining.length) {
+            const details = element("details", "discussion-bridge-simple__more");
+            const summary = document.createElement("summary");
+            summary.append(element("span", "discussion-bridge-simple__more-closed", `Show ${remaining.length} more ${remaining.length === 1 ? "comment" : "comments"}`), element("span", "discussion-bridge-simple__more-open", "Show fewer comments"));
+            details.append(summary, replyList(remaining, topicUrl, discourseUrl));
+            fragment.append(details);
+        }
+    }
+    if (truncated) {
+        const limit = element("p", "discussion-bridge-simple__limit", `Showing the first ${MAX_REPLIES} comments. `);
+        limit.append(link(topicUrl, "View the complete discussion on " + forumName), ".");
+        fragment.append(limit);
+    }
+    root.replaceChildren(fragment, ...(attributions ? [attributions] : []));
+}
+async function publicForumSettings(origin) {
+    const now = Date.now();
+    const cached = brandingCache.get(origin);
+    if (cached && cached.expiresAt > now)
+        return cached.value;
+    const value = readPublicForumSettings(origin);
+    brandingCache.set(origin, { expiresAt: now + BRANDING_CACHE_MS, value });
+    try {
+        return await value;
+    }
+    catch (error) {
+        brandingCache.delete(origin);
+        throw error;
+    }
+}
+function replyList(posts, topicUrl, discourseUrl) {
+    const list = document.createElement("ol");
+    for (const post of posts) {
+        const item = document.createElement("li");
+        const article = document.createElement("article");
+        const avatar = element("div", "discussion-bridge-simple__avatar");
+        avatar.setAttribute("aria-hidden", "true");
+        const template = post.avatar_template?.replace("{size}", "48");
+        if (template) {
+            const avatarUrl = safeHttpsUrl(template, discourseUrl);
+            if (avatarUrl) {
+                const image = document.createElement("img");
+                image.src = avatarUrl;
+                image.alt = "";
+                image.loading = "lazy";
+                avatar.append(image);
+            }
+        }
+        if (!avatar.childNodes.length)
+            avatar.textContent = post.username.slice(0, 1).toUpperCase();
+        const content = document.createElement("div");
+        const meta = document.createElement("header");
+        meta.append(element("strong", "", post.display_username?.trim() || post.username));
+        const dateLink = link(`${topicUrl}/${post.post_number}`, "");
+        const time = document.createElement("time");
+        time.dateTime = post.created_at;
+        time.textContent = new Date(post.created_at).toLocaleDateString();
+        dateLink.append(time);
+        meta.append(dateLink);
+        const body = element("div", "discussion-bridge-simple__body");
+        body.append(sanitizedBody(post.cooked, discourseUrl));
+        content.append(meta, body);
+        article.append(avatar, content);
+        item.append(article);
+        list.append(item);
+    }
+    return list;
+}
+function sanitizedBody(cooked, discourseUrl) {
+    const clean = DOMPurify.sanitize(cooked, {
+        ALLOWED_TAGS: ["a", "blockquote", "br", "code", "div", "em", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "li", "ol", "p", "pre", "s", "span", "strong", "ul"],
+        ALLOWED_ATTR: ["alt", "class", "height", "href", "src", "title", "width"],
+        RETURN_DOM_FRAGMENT: true,
+    });
+    for (const node of Array.from(clean.querySelectorAll("[href], [src]"))) {
+        for (const attribute of ["href", "src"]) {
+            const value = node.getAttribute(attribute);
+            if (!value)
+                continue;
+            const safe = safeHttpsUrl(value, discourseUrl);
+            if (safe)
+                node.setAttribute(attribute, safe);
+            else
+                node.removeAttribute(attribute);
+        }
+        if (node instanceof HTMLAnchorElement)
+            node.rel = "nofollow noopener noreferrer";
+    }
+    return clean;
+}
+function validPost(value, topicId) {
+    if (!value || typeof value !== "object")
+        return false;
+    const post = value;
+    return Number.isSafeInteger(post.id) && Number(post.id) > 0
+        && Number.isSafeInteger(post.post_number) && Number(post.post_number) > 1
+        && post.topic_id === topicId
+        && typeof post.username === "string" && post.username.trim().length > 0 && post.username.length <= 100
+        && typeof post.created_at === "string" && Number.isFinite(Date.parse(post.created_at))
+        && typeof post.cooked === "string";
+}
+function exactOrigin(value) {
+    if (!value)
+        throw new Error("Missing forum origin.");
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.username || url.password || url.pathname !== "/" || url.search || url.hash)
+        throw new Error("Invalid forum origin.");
+    return url.origin;
+}
+function exactTopicUrl(value, origin, topicId) {
+    if (!value)
+        throw new Error("Missing topic URL.");
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.origin !== origin || !new RegExp(`/t/(?:[^/]+/)?${topicId}(?:/|$)`).test(url.pathname))
+        throw new Error("Invalid topic URL.");
+    return url.href.replace(/\/$/, "");
+}
+function positiveInteger(value) {
+    const text = typeof value === "number" ? String(value) : value;
+    if (typeof text !== "string" || !/^[1-9]\d*$/.test(text) || !Number.isSafeInteger(Number(text)))
+        throw new Error("Invalid positive integer.");
+    return Number(text);
+}
+function safeHttpsUrl(value, base) {
+    try {
+        const url = new URL(value, `${base}/`);
+        return url.protocol === "https:" ? url.href : undefined;
+    }
+    catch {
+        return undefined;
+    }
+}
+function element(tag, className = "", text = "") {
+    const node = document.createElement(tag);
+    if (className)
+        node.className = className;
+    if (text)
+        node.textContent = text;
+    return node;
+}
+function link(href, text) {
+    const node = document.createElement("a");
+    node.href = href;
+    node.textContent = text;
+    node.rel = "nofollow noopener noreferrer";
+    return node;
+}
