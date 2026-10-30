@@ -33,7 +33,7 @@ test("definitive typed422 survives native build restart/status without repeat; c
   assert.equal(await readFile(state.file, "utf8"), before); assert.equal(state.state.creations, 0);
   await assert.rejects(buildToConsumer(state), rejected);
   assert.equal(intercepted.calls.length, 1); assert.deepEqual((await operation(state)).to.pending, pending);
-  const { stdout } = await promisify(execFile)(process.execPath, ["--import", new URL("../../../.tools/register.mjs", import.meta.url).href, fileURLToPath(new URL("../dist/cli.js", import.meta.url)), "source-status", "--state-file", state.options.stateFile], { windowsHide: true });
+  const { stdout } = await promisify(execFile)(process.execPath, ["--import", new URL("./register-runtime.mjs", import.meta.url).href, fileURLToPath(new URL("../dist/cli.js", import.meta.url)), "source-status", "--state-file", state.options.stateFile], { windowsHide: true });
   const status = JSON.parse(stdout)[0]; assert.equal(status.rejection.code, errorBody.code); assert.equal(status.rejection.httpStatus, 422); assert.equal(status.rejection.retryable, false);
   assert.doesNotMatch(stdout, /synthetic-secret|content_html|lease_token/);
   intercepted.allow();

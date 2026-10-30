@@ -127,7 +127,7 @@ const { entry } = Astro.props; const { Content } = await render(entry); const re
 ---
 <!doctype html><html lang="en"><head><title>{entry.data.title}</title></head><body><header>Consumer brand</header><article data-discussionbridge-cms-native={receipt.native_id} data-discussionbridge-cms-resource={receipt.resource_id} data-discussionbridge-cms-revision={entry.data.discussionbridgeSourceRevision} data-discussionbridge-cms-mode={entry.data.discussionCommentsDisplay} data-discussionbridge-cms-canonical={receipt.canonical_url} data-discussionbridge-cms-move={receipt.move_id} data-discussionbridge-cms-nonce={receipt.proof_nonce} data-discussionbridge-cms-ownership={entry.data.discussionbridgeCmsOwnershipSha256}><h1 data-discussionbridge-cms-title>{entry.data.title}</h1><Content/><Discussion frontmatter={entry.data}/></article><footer>Consumer footer</footer></body></html>`);
   const integration = packedRoot ? (await import(pathToFileURL(path.join(packedRoot, "dist/index.js")).href)).default : discussionBridge;
-  const runtimeRoot = "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules";
+  const runtimeRoot = fileURLToPath(new URL("../../node_modules/", import.meta.url));
   const nativeRuntime = createRequire(path.join(runtimeRoot, "astro/package.json"));
   const packedManifest = packedRoot ? JSON.parse(await readFile(path.join(packedRoot, "package.json"), "utf8")) : undefined;
   const packageResolve = value => {

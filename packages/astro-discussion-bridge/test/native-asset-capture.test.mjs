@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { ownedPng } from "./helpers/native-png.mjs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 import { build } from "astro";
 import { parseFrontmatter } from "@astrojs/markdown-remark";
@@ -28,7 +28,7 @@ const html=await container.renderToString(Content,{request:Astro.request});
 await writeFile(${JSON.stringify(captureFile)},JSON.stringify({filePath:fileURLToPath(new URL(entry.filePath,${JSON.stringify(pathToFileURL(state.root + path.sep).href)})),body:entry.body,sourceArticleUrl:Astro.url.href,html}));
 ---
 <!doctype html><html><head><title>{entry.data.title}</title></head><body><header>Native consumer</header><Content/></body></html>`);
-  const runtimeRoot = "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules";
+  const runtimeRoot = fileURLToPath(new URL("../node_modules/", import.meta.url));
   const nativeRuntime = createRequire(path.join(runtimeRoot, "astro/package.json"));
   await build({ root: pathToFileURL(state.root + path.sep), configFile: false, site: state.options.siteUrl, force: true, trailingSlash: "always", logLevel: "silent",
     vite: { resolve: { alias: [{ find: "astro", replacement: "astro", customResolver: value => nativeRuntime.resolve(value) }] } } });

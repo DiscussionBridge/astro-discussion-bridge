@@ -31,7 +31,7 @@ test('exact retained normal artifact ships and executes current offline native q
   const seeds = Array.from({ length: input.targetCount }, (_, index) => ({ seedKey: `content-only-${index}`, title: `Native ${index}`, slug: `native-${index}`, markdown: `Native plain text ${index}.\n\n[Original target](../original/)\n`, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: null, authors: [] }));
   await writeFile(input.contentFile, JSON.stringify(seeds)); await writeFile(input.connectionSecretFile, 'unit-fixture-only-no-real-credential-0001', { mode: 0o600 }); await writeFile(input.caFile, rootCertificates[0]);
   const inputFile = path.join(root, 'inputs.json'); await writeFile(inputFile, JSON.stringify(input));
-  const cli = path.join(packed, 'scripts/verify-thousand-pages.mjs'), register = new URL('../../../.tools/register.mjs', import.meta.url).href;
+  const cli = path.join(packed, 'scripts/verify-thousand-pages.mjs'), register = new URL('./register-runtime.mjs', import.meta.url).href;
   const cliPlan = await promisify(execFile)(process.execPath, ['--import', register, cli, 'plan', inputFile], { cwd: packed, windowsHide: true });
   assert.equal(JSON.parse(cliPlan.stdout).qualification, 'NOT_RUN'); assert.equal(JSON.parse(cliPlan.stdout).artifact.sha256, receipt.sha256);
   const configured = await lib.readQualificationInputs(inputFile); assert.equal(configured.artifact.sha256, receipt.sha256);

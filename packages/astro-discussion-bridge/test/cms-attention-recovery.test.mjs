@@ -16,6 +16,14 @@ import { toFixture } from "./fixtures/cms-to.mjs";
 import { publishControlledDiscussions } from "../dist/controlled-creation.js";
 import { readPublicationOperationalState } from "../dist/operational-state.js";
 const hash = value => createHash("sha256").update(value).digest("hex");
+// This feature revision is independent of the overall runtime assembly label.
+const recoveryCandidate = "discussionbridge-v4-core-20261025-r6";
+test("root runtime pairing does not rename the separate recovery capability", () => {
+  const capability = { protocol_revision: "attention-recovery-1", candidate_id: recoveryCandidate, inspection_profiles: ["astro-static-1"] };
+  assert.notEqual(candidateId, recoveryCandidate);
+  assert.equal(validateCms("AttentionRecoveryCapability", capability), capability);
+  assert.throws(() => validateCms("AttentionRecoveryCapability", { ...capability, candidate_id: candidateId }));
+});
 const interop = [];
 const recordInterop = (id, inspection, observation, expected_status) => {
   validateCms("AttentionInspection", inspection); validateCms("AttentionObservation", observation);
@@ -141,7 +149,7 @@ function recoveryService(f) {
   f.options.fetchImplementation = async (url, init) => {
     const endpoint = new URL(url), after = Number(endpoint.searchParams.get("after") ?? 0), body = init.body ? JSON.parse(init.body) : undefined;
     requests.push({ pathname: endpoint.pathname, method: init.method });
-    if (endpoint.pathname.endsWith("attention-recovery.json")) return Response.json({ protocol_revision: "attention-recovery-1", candidate_id: candidateId, inspection_profiles: ["astro-static-1"] });
+    if (endpoint.pathname.endsWith("attention-recovery.json")) return Response.json({ protocol_revision: "attention-recovery-1", candidate_id: recoveryCandidate, inspection_profiles: ["astro-static-1"] });
     if (endpoint.pathname.endsWith("attention-inspections.json")) return Response.json({ items: after === 0 ? [f.inspection] : [], next_after: 1, has_more: false });
     if (endpoint.pathname.endsWith("/report.json")) {
       reports.push(body); if (lostReport) { lostReport = false; throw new Error("synthetic report committed; response lost"); }

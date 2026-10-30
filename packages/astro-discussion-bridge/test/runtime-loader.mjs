@@ -3,7 +3,7 @@ import { pathToFileURL } from "node:url";
 
 // Test-only resolution of already installed, version-checked dependencies.
 // Relative source/runtime imports always resolve inside the current V4 package.
-const installed = createRequire(new URL("../../../../../astro/packages/astro-discussion-bridge/package.json", import.meta.url));
+const installed = createRequire(new URL("../package.json", import.meta.url));
 const currentPackage = new URL("../", import.meta.url).href;
 const dependencies = new Set(["proper-lockfile", "sanitize-html", "@astrojs/markdown-remark", "dompurify", "yaml", "astro", "sharp"]);
 

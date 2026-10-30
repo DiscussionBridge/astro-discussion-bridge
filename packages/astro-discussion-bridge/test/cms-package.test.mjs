@@ -22,6 +22,8 @@ async function run(executable, args, cwd) {
 }
 
 test("actual current V4 archive contains one pinned pair and compiles native To/From consumers", async t => {
+  const trace = phase => { if (process.env.DISCUSSIONBRIDGE_TEST_TRACE === "1") console.log(`[package consumer stage] ${phase}`); };
+  trace("start");
   const npmCli = process.env.npm_execpath ?? path.join(path.dirname(process.execPath), "node_modules/npm/bin/npm-cli.js");
   assert.ok(path.isAbsolute(npmCli)); await readFile(npmCli);
   const parent = path.join(packageRoot, ".tmp"); await mkdir(parent, { recursive: true });
@@ -47,7 +49,9 @@ test("actual current V4 archive contains one pinned pair and compiles native To/
     const actual = await readFile(path.join(packed, "src/private", path.basename(member.path)));
     assert.equal(actual.length, member.bytes); assert.equal(createHash("sha256").update(actual).digest("hex"), member.sha256);
   }
+  trace("ordinary archive checked; native From build starting");
   const from = await staticFixture(t, {}, undefined, "full", false), fromOutput = await buildCmsConsumer(from, true, packed);
+  trace("native From build completed");
   assert.match(fromOutput, /Complete native source/); assert.match(fromOutput, /Consumer footer/);
   const fromJournal = JSON.parse(await readFile(from.options.stateFile, "utf8"));
   assert.equal(fromJournal.transactions[from.expectedWorkId].stage, "prepared"); assert.equal(fromJournal.transactions[from.expectedWorkId].buildArtifact.html, fromOutput);
@@ -55,12 +59,16 @@ test("actual current V4 archive contains one pinned pair and compiles native To/
   await nativePackage.finalizeCmsNativeWork({ ...from.options, publicFetchImplementation: async () => new Response(fromOutput, { headers: { "Content-Type": "text/html" } }) }, from.expectedWorkId, { deploymentId: "packaged-consumer-response-seam", deployedAt: new Date().toISOString() });
   const movedWork = await from.nextAction("publish_revision"), movedUrl = "https://astro.example/comments/packaged-native-move/";
   await nativePackage.beginCmsNativeUrlMove(from.options, from.nativeMapping.mapping_id, movedUrl);
+  trace("native From URL-move build starting");
   const movedOutput = await buildCmsConsumer(from, false, packed, movedUrl);
+  trace("native From URL-move build completed");
   await nativePackage.recordCmsNativeBuild(from.options, path.join(from.root, "dist"));
   const movedJournal = JSON.parse(await readFile(from.options.stateFile, "utf8")), moved = movedJournal.transactions[movedWork.workId].presentationMove;
   assert.equal(moved.phase, "applied"); assert.equal(moved.build.html, movedOutput); assert.equal(moved.mapping.destination_native_id, from.nativeMapping.destination_native_id);
   assert.ok(movedOutput.includes(`data-discussionbridge-cms-nonce="${moved.receipt.proof_nonce}"`)); assert.ok(movedOutput.includes(`data-discussionbridge-cms-canonical="${movedUrl}"`));
+  trace("large native To build starting");
   const to = await toFixture(t, nativeSource('"'.repeat(45000)), "53"), toOutput = await buildToConsumer(to, packed);
+  trace("large native To build completed");
   assert.match(toOutput, /Consumer owns navigation/); assert.equal(to.received[0].bridge_record.representation.kind, "generated_excerpt"); assert.equal(to.state.creations, 1);
   assert.doesNotMatch(fromOutput + toOutput, /lease_token|connectionSecret|synthetic-secret|cms-runtime|\.tools/);
   const acceptedRevision = to.state.record.source_revision;
@@ -71,7 +79,9 @@ test("actual current V4 archive contains one pinned pair and compiles native To/
   const assetTo = await toFixture(t, nativeSource('![Packaged native image](../assets/native.png)'), "53");
   await mkdir(path.join(assetTo.root, "src/content/assets"), { recursive: true });
   await writeFile(path.join(assetTo.root, "src/content/assets/native.png"), ownedPng());
+  trace("native image To build starting");
   const assetOutput = await buildToConsumer(assetTo, packed, true);
+  trace("native image To build completed");
   const assetOperation = Object.values((await assetTo.journal()).operations)[0], assetCapture = assetOperation.to.articleCaptures[assetOperation.to.acceptedCaptureId];
   const assetUrl = new URL(/\bsrc="([^"]+)"/u.exec(assetCapture.preparedHtml)[1]);
   const emittedAsset = await readFile(path.join(assetTo.root, "dist", assetUrl.pathname));

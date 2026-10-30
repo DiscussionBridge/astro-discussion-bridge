@@ -20,9 +20,10 @@
     "./RichContent.astro": "./src/components/RichContent.astro"
   },
   "files": ["dist", "src/components", "src/assets", "src/private", "src/comments-mode.ts", "src/forum-name.ts", "src/web-url.ts", "src/topic-identity.ts", "docs", "scripts/verify-thousand-pages.mjs", "scripts/qualification-lib.mjs"],
-  "scripts": { "build": "tsc -p tsconfig.json", "test:package": "node --test test/cms-package.test.mjs", "verify:thousand-pages": "node scripts/verify-thousand-pages.mjs" },
-  "dependencies": { "@astrojs/markdown-remark": "7.2.4", "dompurify": "3.4.14", "proper-lockfile": "^4.1.2", "sanitize-html": "2.17.7", "yaml": "^2.9.0" },
+  "scripts": { "build": "tsc -p tsconfig.json", "build:browser": "node scripts/build-rich-content.mjs", "test": "node scripts/run-tests.mjs", "test:package": "node scripts/run-tests.mjs cms-package.test.mjs", "verify:thousand-pages": "node scripts/verify-thousand-pages.mjs" },
+  "dependencies": { "@astrojs/markdown-remark": "7.2.4", "dompurify": "3.4.17", "proper-lockfile": "^4.1.2", "sanitize-html": "2.18.1", "yaml": "^2.9.0" },
   "peerDependencies": { "astro": "^6.0.0 || ^7.0.0", "@astrojs/starlight": ">=0.35.0" },
   "peerDependenciesMeta": { "@astrojs/starlight": { "optional": true } },
-  "devDependencies": { "typescript": "^5.5.0", "@types/node": "^22.0.0", "@types/proper-lockfile": "^4.1.4", "@types/sanitize-html": "^2.16.0", "esbuild": "0.28.1", "mermaid": "11.17.2", "katex": "0.16.47" }
+  "devDependencies": { "astro": "7.2.4", "@astrojs/starlight": "0.41.7", "typescript": "5.9.3", "@types/node": "^22.0.0", "@types/proper-lockfile": "^4.1.4", "@types/sanitize-html": "^2.16.0", "esbuild": "0.28.1", "mermaid": "11.17.2", "katex": "0.18.2", "playwright-core": "1.62.1" },
+  "overrides": { "dompurify": "$dompurify", "katex": "$katex" }
 }

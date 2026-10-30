@@ -111,7 +111,7 @@ test("REAL disposable child builds slug route under the same source fence; succe
   await beginControlledSourceUrlMove(s.options, s.file, "https://astro.example/articles/child-built/"); s.expectedSlug = "child-built";
   const config = path.join(s.root, "protected-test-build.json"), receiverOrigin = await s.receiverBridge();
   await writeFile(config, JSON.stringify({ root: s.root, docsDir: s.docsDir, file: s.file, expectedSlug: s.expectedSlug, receiverOrigin, holdNativeWriterMs: 2500, options: s.options }), { mode: 0o600 });
-  const command = { executable: process.execPath, cwd: s.root, timeoutMs: 90000, args: ["--import", new URL("../../../.tools/register.mjs", import.meta.url).href, fileURLToPath(new URL("./helpers/source-build-child.mjs", import.meta.url)), config] };
+  const command = { executable: process.execPath, cwd: s.root, timeoutMs: 90000, args: ["--import", new URL("./register-runtime.mjs", import.meta.url).href, fileURLToPath(new URL("./helpers/source-build-child.mjs", import.meta.url)), config] };
   let receipt;
   try { receipt = await runControlledSourceCommand(s.options, s.file, "build", command); }
   catch (error) { let diagnostic; try { diagnostic = JSON.parse(await readFile(path.join(s.root, "child-native-error.json"), "utf8")); } catch {}

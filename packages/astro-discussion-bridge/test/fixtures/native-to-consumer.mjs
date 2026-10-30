@@ -36,7 +36,7 @@ ${captureCode}
     const target = typeof exported === "string" ? exported : exported?.import;
     assert.equal(typeof target, "string"); return path.resolve(packageRoot, target);
   };
-  const runtimeRoot = "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules";
+  const runtimeRoot = fileURLToPath(new URL("../../node_modules/", import.meta.url));
   const runtime = createRequire(path.join(runtimeRoot, "astro/package.json"));
   const plugin = packedRoot ? (await import(pathToFileURL(path.join(packedRoot, "dist/index.js")).href)).default : integration;
   // This no-install fixture binds the actual exported package module in the

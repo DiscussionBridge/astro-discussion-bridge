@@ -3,11 +3,30 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { preflightDirectory, preflightFile, statOrAbsent } from "./managed-output.mjs";
+import { bundledLicense } from "./bundled-license.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dependencyRoot = process.env.DISCUSSIONBRIDGE_BUILD_DEPENDENCY_ROOT ?? root;
 const require = createRequire(import.meta.url);
 const { build } = require(require.resolve("esbuild", { paths: [dependencyRoot] }));
+const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
+const provenancePath = "src/assets/RICH_CONTENT_PROVENANCE.json";
+const expectedOutputs = ["src/assets/discussionbridge-rich-content.js", "src/assets/discussionbridge-rich-content.css", "src/assets/MERMAID_LICENSE.txt", "src/assets/KATEX_LICENSE.txt"];
+preflightDirectory(root, "src/assets/THIRD_PARTY_LICENSES");
+for (const file of [...expectedOutputs, provenancePath]) preflightFile(root, file);
+const prior = statOrAbsent(path.join(root, provenancePath)) ? JSON.parse(fs.readFileSync(path.join(root, provenancePath), "utf8")) : {};
+const priorNotices = prior.bundledPackages ?? [];
+function ownedNotice(item) {
+  if (typeof item.file !== "string" || !/^src\/assets\/THIRD_PARTY_LICENSES\/[A-Za-z0-9_.-]+\.txt$/.test(item.file)) throw new Error("Unsafe prior generated license path");
+  const stat = preflightFile(root, item.file), file = path.join(root, item.file);
+  if (stat) {
+    const bytes = fs.readFileSync(file);
+    if (bytes.length !== item.bytes || sha256(bytes) !== item.sha256) throw new Error(`Modified prior generated license: ${item.file}`);
+  }
+  return file;
+}
+for (const notice of priorNotices) ownedNotice(notice);
 const result = await build({
   absWorkingDir: root,
   entryPoints: ["src/browser-rich-content.mjs"],
@@ -17,14 +36,18 @@ const result = await build({
   // Fonts remain part of the selected local CSS, with no CDN dependency.
   loader: { ".woff2": "dataurl", ".woff": "dataurl", ".ttf": "dataurl" },
   metafile: true,
+  write: false,
 });
 const dependencies = {};
+const outputWrites = new Map(result.outputFiles.map(file => [path.relative(root, file.path).split(path.sep).join("/"), Buffer.from(file.contents)]));
+if (outputWrites.size !== 2 || expectedOutputs.slice(0, 2).some(file => !outputWrites.has(file))) throw new Error("Unexpected rich-content output set");
 for (const name of ["esbuild", "mermaid", "katex", "dompurify"]) {
   const file = path.join(dependencyRoot, "node_modules", name, "package.json");
   const metadata = JSON.parse(fs.readFileSync(file, "utf8"));
   dependencies[name] = { version: metadata.version, license: metadata.license };
   if (name === "mermaid" || name === "katex") {
-    fs.copyFileSync(path.join(path.dirname(file), "LICENSE"), path.join(root, `src/assets/${name.toUpperCase()}_LICENSE.txt`));
+    const license = bundledLicense(path.dirname(file), metadata);
+    outputWrites.set(`src/assets/${name.toUpperCase()}_LICENSE.txt`, Buffer.from(license.text));
   }
 }
 const digest = relative => {
@@ -32,6 +55,7 @@ const digest = relative => {
   return { bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") };
 };
 const notices = new Map();
+const noticeWrites = new Map();
 for (const input of Object.keys(result.metafile.inputs)) {
   let directory = path.dirname(path.resolve(root, input));
   while (directory !== path.dirname(directory)) {
@@ -41,12 +65,12 @@ for (const input of Object.keys(result.metafile.inputs)) {
       if (directory !== root && typeof metadata.name === "string" && typeof metadata.version === "string") {
         const key = `${metadata.name}@${metadata.version}`;
         if (!notices.has(key)) {
-          const license = fs.readdirSync(directory).find(file => /^licen[cs]e(?:\.(?:md|txt))?$/i.test(file));
-          const text = license ? fs.readFileSync(path.join(directory, license), "utf8") : `License declared by package: ${JSON.stringify(metadata.license)}\nSource: ${JSON.stringify(metadata.repository)}\n`;
+          const { text, source } = bundledLicense(directory, metadata);
           const relative = `src/assets/THIRD_PARTY_LICENSES/${key.replace(/[^a-zA-Z0-9_.-]/g, "_")}.txt`;
-          fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true });
-          fs.writeFileSync(path.join(root, relative), text);
-          notices.set(key, { name: metadata.name, version: metadata.version, license: metadata.license, file: relative, ...digest(relative) });
+          const stat = preflightFile(root, relative), bytes = Buffer.from(text);
+          if (stat && !priorNotices.some(item => item.file === relative) && !fs.readFileSync(path.join(root, relative)).equals(bytes)) throw new Error(`Unowned generated license target: ${relative}`);
+          noticeWrites.set(relative, bytes);
+          notices.set(key, { name: metadata.name, version: metadata.version, license: metadata.license, file: relative, licenseSource: source, bytes: bytes.length, sha256: sha256(bytes) });
         }
       }
       break;
@@ -54,9 +78,22 @@ for (const input of Object.keys(result.metafile.inputs)) {
     directory = path.dirname(directory);
   }
 }
-fs.writeFileSync(path.join(root, "src/assets/RICH_CONTENT_PROVENANCE.json"), `${JSON.stringify({
-  format: 1, build: "local declared dependency runtime; newly bundled native browser source; not cold-install proof", dependencies,
+const provenance = {
+  format: 1, build: "npm ci && npm run build:browser", dependencies,
   bundledPackages: [...notices.entries()].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0).map(([, value]) => value),
-  inputs: Object.fromEntries(["package.json", "src/browser-rich-content.mjs", "scripts/build-rich-content.mjs"].map(file => [file, digest(file)])),
-  outputs: Object.fromEntries(["src/assets/discussionbridge-rich-content.js", "src/assets/discussionbridge-rich-content.css", "src/assets/MERMAID_LICENSE.txt", "src/assets/KATEX_LICENSE.txt"].map(file => [file, digest(file)])),
-}, null, 2)}\n`);
+  inputs: Object.fromEntries(["package.json", "package-lock.json", "src/browser-rich-content.mjs", "scripts/build-rich-content.mjs", "scripts/managed-output.mjs", "scripts/bundled-license.mjs"].map(file => [file, digest(file)])),
+  outputs: Object.fromEntries([...outputWrites].map(([file, bytes]) => [file, { bytes: bytes.length, sha256: sha256(bytes) }])),
+};
+for (const file of [...outputWrites.keys(), ...noticeWrites.keys(), provenancePath]) preflightFile(root, file);
+preflightDirectory(root, "src/assets/THIRD_PARTY_LICENSES");
+for (const [file, bytes] of [...outputWrites, ...noticeWrites]) {
+  fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+  fs.writeFileSync(path.join(root, file), bytes);
+}
+const currentNotices = new Set(noticeWrites.keys());
+for (const item of priorNotices) {
+  if (currentNotices.has(item.file)) continue;
+  const file = ownedNotice(item);
+  if (statOrAbsent(file)) fs.unlinkSync(file);
+}
+fs.writeFileSync(path.join(root, provenancePath), `${JSON.stringify(provenance, null, 2)}\n`);

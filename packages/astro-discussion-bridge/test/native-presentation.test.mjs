@@ -12,7 +12,7 @@ test("actual native Astro renders all three current modes and fresh local rich a
   const packageRoot = fileURLToPath(new URL("../", import.meta.url)), parent = path.join(packageRoot, ".tmp"); await mkdir(parent, { recursive: true });
   const root = await ownedTempFixture(t, "discussionbridge-native-presentation-", parent), pages = path.join(root, "src/pages"); await mkdir(pages, { recursive: true });
   await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "test-owned-v4-native-consumer", type: "module", private: true }));
-  const runtimeRoot = "C:/CodeProjects/Products/DiscussionBridge/codex crap/astro/packages/astro-discussion-bridge/node_modules";
+  const runtimeRoot = fileURLToPath(new URL("../node_modules/", import.meta.url));
   const nativeRuntime = createRequire(path.join(runtimeRoot, "astro/package.json"));
   const requests = [], priorFetch = globalThis.fetch;
   globalThis.fetch = async (value, init = {}) => {

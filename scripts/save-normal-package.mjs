@@ -3,12 +3,13 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repo = fileURLToPath(new URL("../", import.meta.url)), packageRoot = path.join(repo, "packages/astro-discussion-bridge");
-const compiler = process.env.DISCUSSIONBRIDGE_TYPESCRIPT_CLI;
+const compiler = process.env.DISCUSSIONBRIDGE_TYPESCRIPT_CLI ?? createRequire(path.join(packageRoot, "package.json")).resolve("typescript/bin/tsc");
 const npmCli = process.env.npm_execpath ?? path.join(path.dirname(process.execPath), "node_modules/npm/bin/npm-cli.js");
-const compilerConfig = path.join(repo, ".tools/tsconfig.json");
+const compilerConfig = path.join(packageRoot, "tsconfig.json");
 assert.ok(compiler && path.isAbsolute(compiler), "Set the existing local TypeScript CLI path.");
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 async function run(executable, args, cwd) {

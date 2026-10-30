@@ -1,0 +1,3 @@
+# Exact generated SDK/assets/package identities must survive any checkout host.
+* -text
+packages/astro-discussion-bridge/src/assets/discussionbridge-rich-content.js whitespace=-trailing-space

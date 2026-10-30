@@ -1,15 +1,22 @@
 export const implementationVersion: "0.4.0-alpha.1";
-export const candidateId: "discussionbridge-v4-core-20261025-r6";
+export const candidateId: "discussionbridge-v4-core-20261029-r7";
 export const wireVersion: "v4";
 export const specIdentity: Readonly<{ path: string; bytes: number; sha256: string }>;
 export const cmsSchemaIdentity: Readonly<{ path: string; sha256: string }>;
 export const cmsSchema: { routes: ReadonlyArray<{ id: string; method: string; path: string; input: string | null; query: string | null; response: string; success_http: number[] }>; types: Record<string, unknown> };
 export class CmsValidationError extends Error { code: string; path: string; http: number; }
 export function validateCms<T>(name: string, value: T): T;
+export function cmsUrlAuthority(value: string): Readonly<{ rawHost: string; asciiHost: string; effectivePort: number }>;
+export const attentionRecoveryRevision: "attention-recovery-1";
+export function assertAttentionRecoveryCapability<T>(capability: T, profile: string): T;
+export function validateAttentionFeedPage<T>(type: string, page: T, after?: number): T;
+export function validateAttentionRecoveryLease<T>(recovery: unknown, lease: T): T;
 export function applyCmsDefaults<T>(name: string, value: T): T;
 export function validateCmsRoute(id: string, value: { body?: unknown; query?: object; path?: object; method?: string }): unknown;
 export function validateCmsResponse<T>(id: string, value: T, status: number): T;
 export function parseCmsJson(raw: Uint8Array | string, options?: { maximumBytes?: number; rejectInvalidNumbers?: boolean }): unknown;
+export function parseCmsQuery(type: string | null, raw?: string): Record<string, unknown>;
+export function parseCmsRequest(id: string, input: { rawBody?: Uint8Array | string; mediaType?: string; contentEncoding?: string; queryString?: string; path?: object; method?: string }): unknown;
 export function nativeOwnershipReceiptSha256(value: unknown): string;
 export function semanticIdentity(value: unknown): string;
 export function cmsWorkTransition(state: string, event: string): string;

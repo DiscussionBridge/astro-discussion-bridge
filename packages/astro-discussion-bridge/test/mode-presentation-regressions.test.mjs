@@ -10,7 +10,7 @@ import { refreshSimpleComments } from "../dist/simple-live.js";
 import { ownedTempFixture } from "./helpers/owned-temp.mjs";
 
 const packageRoot = fileURLToPath(new URL("../", import.meta.url));
-const installed = createRequire(new URL("../../../../../astro/packages/astro-discussion-bridge/package.json", import.meta.url));
+const installed = createRequire(new URL("../package.json", import.meta.url));
 const { build } = await import(pathToFileURL(installed.resolve("astro")).href);
 const runtimeRoot = path.dirname(path.dirname(installed.resolve("astro/package.json")));
 const topicIds = ["53", "9007199254740991", "9007199254740992", "9007199254740993", "9223372036854775807"];
