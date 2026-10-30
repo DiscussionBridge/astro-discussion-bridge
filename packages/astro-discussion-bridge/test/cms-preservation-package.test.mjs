@@ -25,7 +25,7 @@ test("exact normal saved package retains typed rejection/restart history and bui
   assert.equal(paths.filter(name => name.endsWith("cms-schema.json")).length, 1); assert.equal(paths.filter(name => name.endsWith("cms-runtime.mjs")).length, 1);
   assert.equal(paths.some(name => /(?:^|\/)(?:test|fixtures|\.tools|\.tmp|\.artifacts|\.git|\.discussionbridge|node_modules)(?:\/|$)/u.test(name)), false);
   const artifacts = JSON.parse(await readFile(path.join(packed, "src/private/ARTIFACTS.json"), "utf8"));
-  assert.equal(artifacts.candidate_id, "discussionbridge-v4-core-20261015-r5");
+  assert.equal(artifacts.candidate_id, "discussionbridge-v4-core-20261029-r7");
   for (const pin of artifacts.members.filter(member => ["src/cms-schema.json", "src/cms-runtime.mjs", "CANDIDATE.json", "ROUTES.md"].includes(member.path))) { const actual = await readFile(path.join(packed, "src/private", path.basename(pin.path))); assert.equal(actual.length, pin.bytes); assert.equal(digest(actual), pin.sha256); }
   const candidate = JSON.parse(await readFile(path.join(packed, "src/private/CANDIDATE.json"), "utf8")), schema = JSON.parse(await readFile(path.join(packed, "src/private/cms-schema.json"), "utf8"));
   const runtime = await import(pathToFileURL(path.join(packed, "src/private/cms-runtime.mjs")).href);

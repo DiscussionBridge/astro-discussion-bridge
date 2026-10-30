@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import { deployCmsNativeBuild, stageCmsNativePublications } from "../dist/cms-pipeline.js";
 import { cmsNativeReservation } from "../dist/cms-coordinator.js";
@@ -11,7 +12,11 @@ import { buildCmsConsumer } from "./fixtures/cms-static.mjs";
 import { connection, connectionId, source, work, mapping, uuid } from "./fixtures/cms-coordinator.mjs";
 
 test("actual static batch settles independent work receipts and fences an unreconciled owned result before a new OS command", async t => {
-  const root = await ownedTempFixture(t, "discussionbridge-astro-cms-batch-");
+  // Like the other no-install native fixtures, keep the consumer below the
+  // package root so Astro can resolve its directly imported component styles.
+  const parent = fileURLToPath(new URL("../.tmp/", import.meta.url));
+  await mkdir(parent, { recursive: true });
+  const root = await ownedTempFixture(t, "discussionbridge-astro-cms-batch-", parent);
   const entries = [], mutations = [];
   function add(index) {
     const cooked = `<p>Complete independent source ${index}.</p>`, topicId = String(53 + index);

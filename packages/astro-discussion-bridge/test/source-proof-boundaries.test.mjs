@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import path from "node:path";
 import test from "node:test";
 import { verifyControlledSourcePublic } from "../dist/cms-to-source-build.js";
 import { sourceArticleAttributes, validateSourceCapture } from "../dist/to-source-profile.js";
@@ -13,7 +14,7 @@ function fixture() {
     rootDev: "1", rootIno: "1", nativeId: "source.md", externalId: "source-one", resourceId: "11111111-1111-4111-8111-111111111111", topicId: "53", canonicalUrl: url, sourceRevision: "moved-edition", fence: 1,
     originalArticleSha256: sha("Complete native body."), preparedSourceSha256: sha(nativeHtml), preparedSourceBytes: Buffer.byteLength(nativeHtml), nativeSnapshotSha256: sha("synthetic native snapshot"),
     moveId: "22222222-2222-4222-8222-222222222222", proofNonce: Buffer.alloc(32, 7).toString("base64url") };
-  const capture = { buildId: "33333333-3333-4333-8333-333333333333", file: "C:/synthetic-native/source.md", fileSha256: sha("synthetic file"), originalKey: sha("synthetic original key"), canonicalUrl: url,
+  const capture = { buildId: "33333333-3333-4333-8333-333333333333", file: path.resolve("synthetic-native/source.md"), fileSha256: sha("synthetic file"), originalKey: sha("synthetic original key"), canonicalUrl: url,
     revision: receipt.sourceRevision, birthBase: "https://source.example/articles/old/", nativeHtml, ownership: receipt, ownershipSha256: sha(semanticIdentity(receipt)), title: "Native article", authors: [{ id: "writer", name: "Writer" }] };
   const escaped = value => String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
   const attrs = Object.entries(sourceArticleAttributes(capture)).filter(([, value]) => value !== undefined).map(([name, value]) => `${name}="${escaped(value)}"`).join(" ");
@@ -21,7 +22,7 @@ function fixture() {
   const article = `<article ${attrs}>${title}${content}</article>`;
   const page = body => `<!doctype html><html><head><title>Native article</title></head><body>${body}</body></html>`;
   const built = page(article);
-  capture.build = { file: "C:/synthetic-native/dist/articles/new/index.html", html: built, builtAt: at, sha256: sha(built), dependencyMarkup: [], assets: [] };
+  capture.build = { file: path.resolve("synthetic-native/dist/articles/new/index.html"), html: built, builtAt: at, sha256: sha(built), dependencyMarkup: [], assets: [] };
   validateSourceCapture(capture);
   const verify = async (html = built, type = "text/html; charset=UTF-8", expectedCalls = 1) => {
     const before = structuredClone(capture); let calls = 0;
@@ -40,6 +41,15 @@ test("source proof keeps genuine native content, displayed code and unrelated au
   const f = fixture(), proof = await f.verify();
   assert.equal(proof.url, url); assert.equal(proof.source_revision, f.capture.revision);
   assert.equal(proof.source_content_sha256, f.capture.ownership.preparedSourceSha256);
+});
+
+test("source receipt still rejects relative source and build paths on the current OS", () => {
+  const source = fixture().capture;
+  source.file = "synthetic-native/source.md";
+  assert.throws(() => validateSourceCapture(source), /physical identity/iu);
+  const build = fixture().capture;
+  build.build.file = "synthetic-native/dist/index.html";
+  assert.throws(() => validateSourceCapture(build), /build artifact/iu);
 });
 
 for (const boundary of ["article", "title", "content"]) {
