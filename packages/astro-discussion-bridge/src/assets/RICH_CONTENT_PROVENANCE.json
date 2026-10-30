@@ -779,11 +779,11 @@
   "inputs": {
     "package.json": {
       "bytes": 2402,
-      "sha256": "ae5f20e3a59fd234ecbe008d58f8d5952cf4fd16fe90d99a6edff0a083f8a5fb"
+      "sha256": "8e80319e885d118f85ef358350899da8876d4f1238b5c3e529d842a0cdf9eaa6"
     },
     "package-lock.json": {
-      "bytes": 328283,
-      "sha256": "43908675530f8f1f39ebe344415be14bd0b1604e7ea8a096ed648626910901d0"
+      "bytes": 327741,
+      "sha256": "97bec8b0ef73674adb41b0670d3f166656ac4d34d444016c1d5e5d7c90704e72"
     },
     "src/browser-rich-content.mjs": {
       "bytes": 2583,

@@ -32,8 +32,12 @@ members from the three fixed development fixtures. The browser build stages
 outputs and actual dependency permission notices before writes; unknown or
 edited notice files are preserved. No CDN or new customer build hook is added.
 
-This remains an unqualified development candidate. Native Astro 7.2.4 currently
-aborts on the retained 45,000-quotation-mark package fixture; a separate plain
-Astro page reproduces that native allocation failure without DiscussionBridge.
-The test has not been reduced or skipped. Its cause/fix and final package/CI
-qualification are still open; passing source or browser checks do not close it.
+This remains an unqualified development candidate. The locked native development
+fixture uses Astro 7.3.8 with compatible Markdown dependencies; the adapter's
+Astro peer range is unchanged. On the current Windows test host, a plain Astro
+page with the retained 45,000 quotation marks still reproduces a native allocation
+failure without DiscussionBridge. The ordinary package's original large-content
+case passed on both Linux CI nodes with the preceding native dependency set.
+The test has not been reduced or skipped. Current patched-package/CI qualification
+and the Windows cause/fix remain open; passing source or browser checks do not
+close them.

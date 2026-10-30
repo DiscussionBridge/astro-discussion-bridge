@@ -18,6 +18,7 @@ test("actual static batch settles independent work receipts and fences an unreco
   await mkdir(parent, { recursive: true });
   const root = await ownedTempFixture(t, "discussionbridge-astro-cms-batch-", parent);
   const entries = [], mutations = [];
+  let capabilityCalls = 0;
   function add(index) {
     const cooked = `<p>Complete independent source ${index}.</p>`, topicId = String(53 + index);
     const nativeSource = { ...source, source_id: `topic:${topicId}`, topic_id: topicId, topic_url: `https://forum.example/t/source/${topicId}`, title: `Independent source ${index}`,
@@ -31,6 +32,10 @@ test("actual static batch settles independent work receipts and fences an unreco
     siteUrl: "https://astro.example", serverUrl: "https://forum.example", connectionId, connectionSecret: "s".repeat(32),
     fetchImplementation: async (url, init) => {
       const endpoint = new URL(url), body = init.body && JSON.parse(init.body);
+      if (endpoint.pathname.endsWith("attention-recovery.json")) {
+        capabilityCalls++;
+        return Response.json({ outcome: "rejected", code: "resource_not_found", retryable: false, retry_after_seconds: null, correlation_id: null, core_fallback: false }, { status: 404 });
+      }
       const event = entry => ({ event_type: "publication", event_id: uuid(300 + entries.indexOf(entry)), event_sequence: String(10 + entries.indexOf(entry)), source: entry.source });
       if (endpoint.pathname.endsWith("connection.json")) return Response.json(connection);
       if (endpoint.pathname.endsWith("sources.json")) {
@@ -75,6 +80,8 @@ test("actual static batch settles independent work receipts and fences an unreco
   const journal = JSON.parse(await readFile(options.stateFile, "utf8")); assert.equal(journal.transactions[second.work.work_id].stage, "verified");
   const third = add(2); changes = [third];
   assert.deepEqual((await stageCmsNativePublications(options)).prepared, [third.work.work_id]);
+  assert.equal(capabilityCalls, 2, "an older service has no recovery channel; the failed work is not reclaimed");
+  assert.equal(first.work.state, "attention");
   await buildCmsConsumer(state); await recordCmsNativeBuild(options, path.join(root, "dist"));
   assert.ok(cmsNativeReservation(options, third.source).file);
   await assert.rejects(deployCmsNativeBuild(options, command), /current owned result/);
