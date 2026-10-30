@@ -33,11 +33,12 @@ outputs and actual dependency permission notices before writes; unknown or
 edited notice files are preserved. No CDN or new customer build hook is added.
 
 This remains an unqualified development candidate. The locked native development
-fixture uses Astro 7.3.8 with compatible Markdown dependencies; the adapter's
-Astro peer range is unchanged. On the current Windows test host, a plain Astro
-page with the retained 45,000 quotation marks still reproduces a native allocation
-failure without DiscussionBridge. The ordinary package's original large-content
-case passed on both Linux CI nodes with the preceding native dependency set.
-The test has not been reduced or skipped. Current patched-package/CI qualification
-and the Windows cause/fix remain open; passing source or browser checks do not
-close them.
+fixture uses Astro 7.3.8; the adapter's Astro peer range is unchanged. Phil approved
+a development/test-only Satteri 0.11.6 override after the original 45,000-quotation
+native package case passed with it on Windows. The older parser also fails on a
+plain Astro page without DiscussionBridge; the fixture has not been reduced or
+skipped. The parser and its platform binaries must remain development-only in
+the ordinary lock. This development-project override does not install a parser patch
+in an operator's site or change the adapter's runtime dependencies. Full current
+Windows, CI and exact-package qualification of this successor remain required;
+the isolated diagnostic result is not their acceptance.

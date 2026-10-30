@@ -778,12 +778,12 @@
   ],
   "inputs": {
     "package.json": {
-      "bytes": 2402,
-      "sha256": "8e80319e885d118f85ef358350899da8876d4f1238b5c3e529d842a0cdf9eaa6"
+      "bytes": 2423,
+      "sha256": "3ad2aeee31a7d83f1fff16653cc6e1b49390eab6c39791d67c78a1e464ac16bf"
     },
     "package-lock.json": {
-      "bytes": 327741,
-      "sha256": "97bec8b0ef73674adb41b0670d3f166656ac4d34d444016c1d5e5d7c90704e72"
+      "bytes": 313234,
+      "sha256": "c4fffabaa77eb3447f07e45298f1a2e58b1e65c406d3679ec87ebdf41e241796"
     },
     "src/browser-rich-content.mjs": {
       "bytes": 2583,
