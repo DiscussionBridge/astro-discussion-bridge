@@ -8,6 +8,7 @@ import { withNativeSourceWriter, NativeSourceWriterBusyError } from "./native-lo
 import { writePrivateJournal } from "./native-journal.js";
 import { semanticIdentity } from "../src/private/cms-runtime.mjs";
 import { readPublicationOperationalState } from "./operational-state.js";
+import { sourceCommandChildEnvironment } from "./native-source-command-context.js";
 /** Structured native commands; the OS writer is released for child build hooks.
  * The durable source fence/owner still excludes another command/publication.
  * An uncertain PID/effect requires reconciliation, never a duplicate command.
@@ -121,7 +122,8 @@ export async function runControlledSourceCommand(options, sourceFile, kind, comm
             throw new Error("Native process observation differs."); return value; });
     };
     try {
-        child = spawn(command.executable, command.args, { cwd: command.cwd, shell: false, windowsHide: true, stdio: "ignore", signal: controller.signal });
+        child = spawn(command.executable, command.args, { cwd: command.cwd, shell: false, windowsHide: true, stdio: "ignore", signal: controller.signal,
+            env: sourceCommandChildEnvironment(options.docsDir, options.stateFile, prior, deadline) });
         closed = new Promise(resolve => { child.once("close", (code, signal) => { closedAt = new Date().toISOString(); exitCode = code; exitSignal = signal; resolve(); }); });
         const completion = new Promise((resolve, reject) => { child.once("error", reject); child.once("close", (code, signal) => code === 0 && signal === null ? resolve() : reject(new Error("Native source command did not complete successfully."))); });
         completion.catch(() => undefined);

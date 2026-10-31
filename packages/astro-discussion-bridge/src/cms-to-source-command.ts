@@ -10,6 +10,7 @@ import { withNativeSourceWriter, NativeSourceWriterBusyError } from "./native-lo
 import { writePrivateJournal } from "./native-journal.js";
 import { semanticIdentity } from "../src/private/cms-runtime.mjs";
 import { readPublicationOperationalState } from "./operational-state.js";
+import { sourceCommandChildEnvironment } from "./native-source-command-context.js";
 
 /** Structured native commands; the OS writer is released for child build hooks.
  * The durable source fence/owner still excludes another command/publication.
@@ -82,7 +83,8 @@ export async function runControlledSourceCommand(options: PublishControlledDiscu
     await writePrivateJournal(processReceiptFile, receipt, value => { if (semanticIdentity(value) !== semanticIdentity(receipt)) throw new Error("Native process observation differs."); return value as typeof receipt; });
   };
   try {
-    child = spawn(command.executable, command.args, { cwd: command.cwd, shell: false, windowsHide: true, stdio: "ignore", signal: controller.signal });
+    child = spawn(command.executable, command.args, { cwd: command.cwd, shell: false, windowsHide: true, stdio: "ignore", signal: controller.signal,
+      env: sourceCommandChildEnvironment(options.docsDir, options.stateFile, prior, deadline) });
     closed = new Promise<void>(resolve => { child!.once("close", (code, signal) => { closedAt = new Date().toISOString(); exitCode = code; exitSignal = signal; resolve(); }); });
     const completion = new Promise<void>((resolve, reject) => { child!.once("error", reject); child!.once("close", (code, signal) => code === 0 && signal === null ? resolve() : reject(new Error("Native source command did not complete successfully."))); });
     completion.catch(() => undefined);
