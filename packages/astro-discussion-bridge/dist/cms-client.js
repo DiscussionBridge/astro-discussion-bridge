@@ -4,6 +4,7 @@ import { validateCms } from "../src/private/cms-runtime.mjs";
 import { resolveServerSecret } from "./server-secret.js";
 import { cmsOrigin, nativeUrl, sameCmsOrigin } from "./native-url.js";
 import { cmsFetch } from "./cms-fetch.js";
+import { closeResponse, readBoundedResponseBytes } from "./response-body.js";
 export class CmsRequestError extends Error {
     code;
     retryable;
@@ -55,18 +56,18 @@ export class CmsClient {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15_000);
         let validatedRejection;
+        let response;
         try {
-            const response = await this.fetchImplementation(url.href, {
+            response = await this.fetchImplementation(url.href, {
                 method: route.method, body, redirect: "error", credentials: "omit", signal: controller.signal,
                 headers: { Accept: "application/json", "Accept-Encoding": "identity", ...(body === undefined ? {} : { "Content-Type": "application/json" }),
                     "X-DiscussionBridge-Connection": this.options.connectionId, "X-DiscussionBridge-Secret": credentials.connectionSecret },
             });
             if (response.redirected || response.status >= 300 && response.status < 400 || response.url && !sameCmsOrigin(response.url, this.origin)) {
-                await response.body?.cancel().catch(() => undefined);
                 throw new Error("CMS service response requires origin attention.");
             }
             if (response.status === 204) {
-                const bytes = await readBounded(response, 0, controller.signal);
+                const bytes = await readBoundedResponseBytes(response, 0, controller.signal, { canonicalContentLength: true });
                 if (bytes.length)
                     throw new Error("CMS bodyless response contained bytes.");
                 return codec.validateCmsResponse(id, undefined, response.status);
@@ -74,7 +75,7 @@ export class CmsClient {
             if (!/^application\/json(?:\s*;\s*charset\s*=\s*(?:UTF-8|"UTF-8"))?\s*$/iu.test(response.headers.get("content-type") ?? ""))
                 throw new Error("CMS service response requires JSON media attention.");
             const maximum = route.response === "ContentChunk" ? 65_536 : 262_144;
-            const value = codec.parseCmsJson(await readBounded(response, maximum, controller.signal), { maximumBytes: maximum });
+            const value = codec.parseCmsJson(await readBoundedResponseBytes(response, maximum, controller.signal, { canonicalContentLength: true }), { maximumBytes: maximum });
             codec.validateCmsResponse(id, value, response.status);
             if (!route.success_http.includes(response.status)) {
                 if (id === "V4-02" && value.outcome === "reconciliation_required") {
@@ -99,6 +100,7 @@ export class CmsClient {
             throw new Error("DiscussionBridge CMS transport or typed response requires attention.");
         }
         finally {
+            closeResponse(response, controller);
             clearTimeout(timeout);
         }
     }
@@ -154,41 +156,5 @@ export class CmsClient {
         if (offset !== source.content_bytes || hash.digest("hex") !== source.content_sha256)
             throw new Error("CMS complete source digest requires attention.");
         return new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks, offset));
-    }
-}
-async function readBounded(response, maximum, signal) {
-    const declared = response.headers.get("content-length");
-    if (declared !== null && (!/^(?:0|[1-9]\d*)$/u.test(declared) || Number(declared) > maximum)) {
-        await response.body?.cancel();
-        throw new Error("CMS response exceeds its transport bound.");
-    }
-    if (!response.body)
-        return new Uint8Array();
-    const reader = response.body.getReader();
-    const abort = () => { void reader.cancel().catch(() => undefined); };
-    signal.addEventListener("abort", abort, { once: true });
-    let size = 0;
-    const chunks = [];
-    try {
-        for (;;) {
-            const { value, done } = await reader.read();
-            if (signal.aborted)
-                throw new Error("CMS response timed out.");
-            if (done)
-                break;
-            size += value.length;
-            if (size > maximum)
-                throw new Error("CMS response exceeds its transport bound.");
-            chunks.push(value);
-        }
-        return Buffer.concat(chunks, size);
-    }
-    catch (error) {
-        await reader.cancel().catch(() => undefined);
-        throw error;
-    }
-    finally {
-        signal.removeEventListener("abort", abort);
-        reader.releaseLock();
     }
 }

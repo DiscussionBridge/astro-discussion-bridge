@@ -4,6 +4,7 @@ import { cmsServiceBaseUrl, nativeUrl, sameCmsOrigin, internationalizedAuthority
 import { readPublicForumSettings as coreForumSettings, parsePublicForumSettings, PUBLIC_BOOTSTRAP_USER_AGENT, type PublicForumSettings } from "./forum-name.js";
 import { cmsFetch } from "./cms-fetch.js";
 import { publicHtml } from "./cms-verification.js";
+import { closeResponse } from "./response-body.js";
 export { nativeUrl, type NativeUrl } from "./native-url.js";
 export { cmsFetch } from "./cms-fetch.js";
 
@@ -49,5 +50,5 @@ export async function readPublicForumSettings(value: string, fetchImplementation
       || response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "text/html") throw new Error("Invalid native forum bootstrap.");
     return parsePublicForumSettings(await publicHtml(response, 512 * 1024, controller.signal));
   } catch { throw new Error("Native source forum title requires configuration attention."); }
-  finally { clearTimeout(timeout); await response?.body?.cancel().catch(() => undefined); }
+  finally { closeResponse(response, controller); clearTimeout(timeout); }
 }

@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import https from "node:https";
-import { X509Certificate } from "node:crypto";
+import { randomUUID, X509Certificate } from "node:crypto";
 import { once } from "node:events";
 import test from "node:test";
 import { cmsFetch } from "../dist/cms-fetch.js";
 import { CmsClient } from "../dist/cms-client.js";
+import { readPublicForumSettings } from "../dist/cms-web-url.js";
+import { verifyCmsAbsence } from "../dist/cms-verification.js";
 
 const key = fs.readFileSync(new URL("./fixtures/idna-https-test-key.pem", import.meta.url));
 const cert = fs.readFileSync(new URL("./fixtures/idna-https-test-cert.pem", import.meta.url));
@@ -14,9 +16,13 @@ const template = JSON.parse(fs.readFileSync(new URL("./fixtures/cms-v4/positive-
 const controls = signal => ({ method: "GET", credentials: "omit", redirect: "error", signal, headers: { Accept: "application/json", "Accept-Encoding": "identity" } });
 
 async function localHttps(t, handler) {
-  const requests = [], dns = [], optionsSeen = [], state = { trusted: true };
+  const requests = [], transfers = [], dns = [], optionsSeen = [], state = { trusted: true };
   const server = https.createServer({ key, cert }, async (request, response) => {
     requests.push({ host: request.headers.host, path: request.url, headers: request.headers });
+    const transfer = { responseClosed: false, socketClosed: false };
+    transfers.push(transfer);
+    response.once("close", () => { transfer.responseClosed = true; });
+    request.socket.once("close", () => { transfer.socketClosed = true; });
     await handler(request, response);
   });
   server.on("tlsClientError", () => {});
@@ -41,7 +47,13 @@ async function localHttps(t, handler) {
     }, callback);
   });
   const origin = host => `https://${host}:${server.address().port}`;
-  return { requests, dns, optionsSeen, state, origin };
+  return { requests, transfers, dns, optionsSeen, state, origin };
+}
+
+async function closedTransfers(fixture, label) {
+  const limit = Date.now() + 2000;
+  while (!fixture.transfers.every(item => item.responseClosed && item.socketClosed) && Date.now() < limit) await new Promise(resolve => setTimeout(resolve, 10));
+  assert.ok(fixture.transfers.every(item => item.responseClosed && item.socketClosed), `Unclosed ${label} transport before fixture teardown`);
 }
 
 test("actual client uses verified local HTTPS for all four fixed-policy origins and preserves request identity", async t => {
@@ -132,6 +144,7 @@ test("fixed-domain HTTPS aborts pending headers and an active response stream", 
   await reachedPromise;
   const reader = response.body.getReader(); assert.equal((await reader.read()).done, false);
   controller.abort(); await assert.rejects(reader.read()); reader.releaseLock();
+  await closedTransfers(fixture, "headers/body abort");
 });
 
 test("ordinary fetch remains unchanged and a failed mutation is not retried through HTTPS", async t => {
@@ -149,4 +162,70 @@ test("ordinary fetch remains unchanged and a failed mutation is not retried thro
   ];
   for (const init of invalid) await assert.rejects(cmsFetch("https://xn--7u3d.example/", init));
   assert.equal(fallback, 0);
+});
+
+test("actual default transport releases private/public failures, hidden bodies and successful work past the old deadline", async t => {
+  let mode, destination;
+  const intervals = new Set();
+  t.after(() => { for (const timer of intervals) clearInterval(timer); });
+  const fixture = await localHttps(t, async (request, response) => {
+    const current = mode;
+    if (current === "request-error") { request.socket.destroy(); return; }
+    if (current === "pending-headers") return;
+    if (current === "success") { response.writeHead(200, { "content-type": "application/json" }); response.end(JSON.stringify({ ...template, connection_id: connectionId, destination_origin: destination })); return; }
+    if (current === "bootstrap-success") { response.writeHead(200, { "content-type": "text/html" }); response.end('<script id="data-preloaded">' + JSON.stringify({ siteSettings: JSON.stringify({ title: "Forum" }) }) + '</script>'); return; }
+    const status = current.includes("205") ? 205 : current === "claim-204" ? 204 : current === "redirect" ? 302 : current === "absence-success" ? 404 : 200;
+    const media = current.includes("invalid-media") ? "text/plain" : current.startsWith("public") || current === "absence-success" ? "text/html" : "application/json";
+    response.writeHead(status, { "content-type": media, ...(current === "declared-overflow" ? { "content-length": "262145" } : {}), ...(current === "redirect" ? { location: "https://other.example/no-request" } : {}) });
+    response.flushHeaders();
+    response.write(current === "streamed-overflow" ? " ".repeat(262145) : " ");
+    const timer = setInterval(() => { if (!response.destroyed) response.write(" ".repeat(1024)); }, 25);
+    intervals.add(timer);
+    response.once("close", () => { clearInterval(timer); intervals.delete(timer); });
+  });
+  destination = fixture.origin("xn--7u3d.example");
+  const client = new CmsClient({ serverUrl: destination, connectionId, connectionSecret });
+  const waitForClosure = () => closedTransfers(fixture, mode);
+  for (mode of ["invalid-media", "unsupported-205", "redirect", "declared-overflow", "streamed-overflow", "request-error"]) {
+    await assert.rejects(client.connection(), error => !error.message.includes(connectionSecret));
+    assert.equal(fixture.optionsSeen.at(-1).signal.aborted, true);
+    await waitForClosure();
+  }
+  mode = "success";
+  assert.equal((await client.connection()).destination_origin, destination);
+  assert.equal(fixture.optionsSeen.at(-1).signal.aborted, true); await waitForClosure();
+  mode = "claim-204";
+  assert.equal(await client.claim(randomUUID()), undefined);
+  assert.equal(fixture.optionsSeen.at(-1).signal.aborted, true); await waitForClosure();
+
+  // The transport itself must close a hidden body even without caller cleanup.
+  mode = "direct-205";
+  const direct = new AbortController();
+  assert.equal((await cmsFetch(destination + "/direct", controls(direct.signal))).body, null);
+  assert.equal(direct.signal.aborted, false); await waitForClosure();
+  for (mode of ["public-205", "public-invalid-media"]) {
+    await assert.rejects(readPublicForumSettings(destination, cmsFetch));
+    assert.equal(fixture.optionsSeen.at(-1).signal.aborted, true); await waitForClosure();
+  }
+  mode = "bootstrap-success";
+  assert.equal((await readPublicForumSettings(destination, cmsFetch)).title, "Forum");
+  assert.equal(fixture.optionsSeen.at(-1).signal.aborted, true); await waitForClosure();
+  mode = "public-205";
+  await assert.rejects(verifyCmsAbsence(destination + "/absent", "native-id", "2026-10-01T00:00:00.000Z", { deploymentId: "test-deployment", deployedAt: "2026-10-01T00:00:00.000Z" }));
+  assert.equal(fixture.optionsSeen.at(-1).signal.aborted, true); await waitForClosure();
+  mode = "absence-success";
+  assert.equal((await verifyCmsAbsence(destination + "/absent", "native-id", "2026-10-01T00:00:00.000Z", { deploymentId: "test-deployment", deployedAt: "2026-10-01T00:00:00.000Z" })).http_status, 404);
+  assert.equal(fixture.optionsSeen.at(-1).signal.aborted, true); await waitForClosure();
+
+  // A real pending request also retains the original 15-second deadline. Keep
+  // the listener alive beyond it, so teardown cannot falsely prove closure.
+  mode = "pending-headers";
+  const started = Date.now();
+  await assert.rejects(client.connection(), error => error.code === "transport_timeout");
+  await new Promise(resolve => setTimeout(resolve, 1150));
+  assert.ok(Date.now() - started >= 16000);
+  await waitForClosure();
+  assert.equal(intervals.size, 0);
+  assert.equal(fixture.requests.length, 15, "every operation must reach the peer once, never a replay/redirect target");
+  console.log(JSON.stringify({ observedAfterMs: Date.now() - started, requests: fixture.requests.length, responsesClosed: fixture.transfers.filter(item => item.responseClosed).length, socketsClosed: fixture.transfers.filter(item => item.socketClosed).length, activeIntervals: intervals.size }));
 });

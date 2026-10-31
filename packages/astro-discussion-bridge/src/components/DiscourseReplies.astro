@@ -4,6 +4,7 @@ import discourseWordmark from "../assets/discourse-wordmark.svg?raw";
 import config from "virtual:discussion-bridge/config";
 import { resolveConnectedForumName, resolveForumName } from "../forum-name";
 import { normalizeTopicId, parsePublicTopicJson } from "../topic-identity";
+import { closeResponse, readBoundedResponseBytes } from "../response-body";
 import {
   normalizeServiceBaseUrl,
   parsePublicDiscourseTopicUrl,
@@ -97,22 +98,24 @@ interface TopicPayload {
 }
 
 async function publicTopicJson(url: NativeUrl): Promise<TopicPayload> {
-  const response = await cmsFetch(url.href, {
-    method: "GET", credentials: "omit", headers: { Accept: "application/json", "Accept-Encoding": "identity" },
-    redirect: "error",
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!response.ok) throw new Error(`DiscourseReplies request failed with HTTP ${response.status}.`);
-  if (response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "application/json") {
-    throw new Error("DiscourseReplies requires an application/json response.");
-  }
-  const responseText = await response.text();
-  if (new TextEncoder().encode(responseText).byteLength > MAX_RESPONSE_BYTES) {
-    throw new Error("DiscourseReplies response exceeded the 512 KiB limit.");
-  }
-  const decoded = parsePublicTopicJson(responseText);
-  if (!decoded || typeof decoded !== "object") throw new Error("DiscourseReplies response JSON is invalid.");
-  return decoded as TopicPayload;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  let response: Response | undefined;
+  try {
+    response = await cmsFetch(url.href, {
+      method: "GET", credentials: "omit", headers: { Accept: "application/json", "Accept-Encoding": "identity" },
+      redirect: "error",
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`DiscourseReplies request failed with HTTP ${response.status}.`);
+    if (response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "application/json") {
+      throw new Error("DiscourseReplies requires an application/json response.");
+    }
+    const responseText = new TextDecoder().decode(await readBoundedResponseBytes(response, MAX_RESPONSE_BYTES, controller.signal));
+    const decoded = parsePublicTopicJson(responseText);
+    if (!decoded || typeof decoded !== "object") throw new Error("DiscourseReplies response JSON is invalid.");
+    return decoded as TopicPayload;
+  } finally { closeResponse(response, controller); clearTimeout(timeout); }
 }
 
 function validPublicPost(value: unknown, expectedTopicId: string): value is PublicPost {

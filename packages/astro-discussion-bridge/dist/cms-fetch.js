@@ -72,14 +72,19 @@ export const cmsFetch = async (input, init) => {
                 for (let index = 0; index < incoming.rawHeaders.length; index += 2)
                     responseHeaders.append(incoming.rawHeaders[index], incoming.rawHeaders[index + 1]);
                 const body = status === 204 || status === 205 ? null : Readable.toWeb(incoming);
-                if (body === null)
-                    incoming.resume();
                 const response = new Response(body, { status, headers: responseHeaders });
                 Object.defineProperty(response, "url", { value: address });
+                // A bodyless Response cannot expose the underlying stream to callers.
+                // Do not drain a peer-controlled 205 transfer after returning body:null.
+                if (body === null) {
+                    incoming.destroy();
+                    request.destroy();
+                }
                 resolve(response);
             }
             catch {
                 incoming.destroy();
+                request.destroy();
                 reject(new Error("CMS fixed-domain response requires attention."));
             }
         });

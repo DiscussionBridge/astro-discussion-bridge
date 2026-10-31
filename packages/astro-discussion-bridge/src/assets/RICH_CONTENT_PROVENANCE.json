@@ -778,8 +778,8 @@
   ],
   "inputs": {
     "package.json": {
-      "bytes": 2591,
-      "sha256": "392d221ecbfeee1dddd162fab114ab66e73225788dfc892e9d11a38aa4ac8791"
+      "bytes": 2615,
+      "sha256": "e8e87157c2c7206bcf29e19ad77ba330293fbb1e4eb6a2ec8c16b260ceba0a26"
     },
     "package-lock.json": {
       "bytes": 313234,

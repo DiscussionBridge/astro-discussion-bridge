@@ -1,6 +1,7 @@
 import DOMPurify from "dompurify";
 import { readPublicForumSettings, resolveForumName } from "./forum-name.js";
 import { normalizeTopicId, parsePublicTopicJson } from "./topic-identity.js";
+import { closeResponse, readBoundedResponseBytes } from "./response-body.js";
 const MAX_RESPONSE_BYTES = 512 * 1024;
 const MAX_REPLIES = 50;
 const INITIAL_REPLIES = 5;
@@ -66,29 +67,33 @@ export function startSimpleComments() {
     }
 }
 async function publicJson(url, expectedOrigin) {
-    const response = await fetch(url, {
-        credentials: "omit",
-        headers: { Accept: "application/json" },
-        redirect: "error",
-        signal: AbortSignal.timeout(10_000),
-    });
-    if (response.url && new URL(response.url).origin !== expectedOrigin)
-        throw new Error("Public response changed forum origin.");
-    if (!response.ok)
-        throw new Error(`Public topic request failed (${response.status}).`);
-    if (response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "application/json") {
-        throw new Error("Public topic response is not JSON.");
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    let response;
+    try {
+        response = await fetch(url, {
+            credentials: "omit",
+            headers: { Accept: "application/json" },
+            redirect: "error",
+            signal: controller.signal,
+        });
+        if (response.url && new URL(response.url).origin !== expectedOrigin)
+            throw new Error("Public response changed forum origin.");
+        if (!response.ok)
+            throw new Error(`Public topic request failed (${response.status}).`);
+        if (response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "application/json") {
+            throw new Error("Public topic response is not JSON.");
+        }
+        const text = new TextDecoder().decode(await readBoundedResponseBytes(response, MAX_RESPONSE_BYTES, controller.signal));
+        const value = parsePublicTopicJson(text);
+        if (!value || typeof value !== "object" || Array.isArray(value))
+            throw new Error("Public response JSON is invalid.");
+        return value;
     }
-    const declared = Number(response.headers.get("content-length"));
-    if (Number.isFinite(declared) && declared > MAX_RESPONSE_BYTES)
-        throw new Error("Public response is too large.");
-    const text = await response.text();
-    if (new TextEncoder().encode(text).byteLength > MAX_RESPONSE_BYTES)
-        throw new Error("Public response is too large.");
-    const value = parsePublicTopicJson(text);
-    if (!value || typeof value !== "object" || Array.isArray(value))
-        throw new Error("Public response JSON is invalid.");
-    return value;
+    finally {
+        closeResponse(response, controller);
+        clearTimeout(timeout);
+    }
 }
 function render(root, replies, topicUrl, discourseUrl, truncated, forumName) {
     const attributions = root.querySelector("[data-discussionbridge-attributions]");

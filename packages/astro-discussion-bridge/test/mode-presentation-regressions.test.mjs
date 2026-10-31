@@ -131,3 +131,37 @@ test("consumed live refresh rejects an adjacent large topic in raw numeric publi
   await assert.rejects(refreshSimpleComments(root), /Invalid public reply/u);
   assert.equal(root.children.length, 0);
 });
+
+test("actual SSR replies stream within the existing public cap and cancel overflow", async t => {
+  const previous = globalThis.fetch, maximum = 512 * 1024;
+  t.after(() => { globalThis.fetch = previous; });
+  for (const kind of ["declared", "chunked", "exact"]) await t.test(kind, async child => {
+    const record = { produced: 0, cancelled: false, textCalled: false, signal: undefined };
+    globalThis.fetch = async (address, init) => {
+      if (new URL(address).pathname === "/") return publicFetch([])(address, init);
+      record.signal = init.signal;
+      const text = JSON.stringify({ post_stream: { stream: [1, 2], posts: [{ id: 2, topic_id: "53", post_number: 2, topic_slug: "exact", username: "reader", created_at: "2026-10-24T00:00:00.000Z", cooked: "<p>Exact public reply</p>" }] } });
+      const total = kind === "exact" ? maximum : maximum * 10;
+      const bytes = new TextEncoder().encode(kind === "exact" ? text + " ".repeat(maximum - text.length) : " ".repeat(32768));
+      const response = new Response(new ReadableStream({
+        pull(controller) {
+          if (record.produced === total) { controller.close(); return; }
+          const chunk = kind === "exact" ? bytes.subarray(record.produced, Math.min(record.produced + 32768, total)) : bytes;
+          record.produced += chunk.byteLength; controller.enqueue(chunk);
+        }, cancel() { record.cancelled = true; },
+      }, { highWaterMark: 0 }), { headers: { "content-type": "application/json", ...(kind === "declared" ? { "content-length": String(maximum + 1) } : {}) } });
+      response.text = () => { record.textCalled = true; throw new Error("Unbounded SSR text() called"); };
+      return response;
+    };
+    const pending = render(child, { bounded: { display: "simple", topicId: "53" } });
+    if (kind === "exact") {
+      assert.match((await pending).bounded, /Exact public reply/u);
+      assert.equal(record.produced, maximum);
+    } else {
+      await assert.rejects(pending, /byte limit/u);
+      assert.equal(record.cancelled, true);
+      assert.ok(record.produced <= (kind === "declared" ? 0 : maximum + 32768));
+    }
+    assert.equal(record.textCalled, false); assert.equal(record.signal.aborted, true);
+  });
+});

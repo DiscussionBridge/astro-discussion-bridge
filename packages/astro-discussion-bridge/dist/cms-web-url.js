@@ -3,6 +3,7 @@ import { cmsServiceBaseUrl, nativeUrl, sameCmsOrigin, internationalizedAuthority
 import { readPublicForumSettings as coreForumSettings, parsePublicForumSettings, PUBLIC_BOOTSTRAP_USER_AGENT } from "./forum-name.js";
 import { cmsFetch } from "./cms-fetch.js";
 import { publicHtml } from "./cms-verification.js";
+import { closeResponse } from "./response-body.js";
 export { nativeUrl } from "./native-url.js";
 export { cmsFetch } from "./cms-fetch.js";
 // Server-side presentation only. Keep the existing browser-safe public helper
@@ -62,7 +63,7 @@ export async function readPublicForumSettings(value, fetchImplementation = cmsFe
         throw new Error("Native source forum title requires configuration attention.");
     }
     finally {
+        closeResponse(response, controller);
         clearTimeout(timeout);
-        await response?.body?.cancel().catch(() => undefined);
     }
 }

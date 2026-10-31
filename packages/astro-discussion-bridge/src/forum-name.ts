@@ -1,4 +1,5 @@
 import { assertServiceResponseUrl, parseServiceBaseUrl } from "./web-url.js";
+import { closeResponse, readBoundedResponseBytes } from "./response-body.js";
 export const PUBLIC_BOOTSTRAP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
 export interface PublicForumSettings {
@@ -33,11 +34,14 @@ export async function resolveConnectedForumName(value: unknown): Promise<string>
 
 /** Reuse the existing public core bootstrap; no connection credential is sent. */
 export async function readPublicForumSettings(discourseUrl: string, fetchImplementation: typeof fetch = fetch): Promise<PublicForumSettings> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  let response: Response | undefined;
   try {
     const base = parseServiceBaseUrl(discourseUrl, "Native source forum URL");
     const endpoint = new URL(base.href);
     endpoint.pathname = endpoint.pathname.replace(/\/+$/u, "") + "/";
-    const response = await fetchImplementation(endpoint.href, {
+    response = await fetchImplementation(endpoint.href, {
       credentials: "omit",
       headers: {
         Accept: "text/html",
@@ -47,17 +51,17 @@ export async function readPublicForumSettings(discourseUrl: string, fetchImpleme
         } : {}),
       },
       redirect: "error",
-      signal: AbortSignal.timeout(10_000),
+      signal: controller.signal,
     });
     if (response.url) assertServiceResponseUrl(response.url, base, "Native source forum bootstrap");
     if (!response.ok || response.headers.get("content-type")?.split(";", 1)[0].toLowerCase() !== "text/html") {
       throw new Error("Invalid native forum bootstrap.");
     }
-    const html = await response.text();
+    const html = new TextDecoder().decode(await readBoundedResponseBytes(response, 512 * 1024, controller.signal));
     return parsePublicForumSettings(html);
   } catch {
     throw new Error("Native source forum title requires configuration attention.");
-  }
+  } finally { closeResponse(response, controller); clearTimeout(timeout); }
 }
 
 /** Shared pure bootstrap decoder; browser callers acquire no server transport. */

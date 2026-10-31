@@ -5,6 +5,7 @@ import { type CmsSource } from "./cms-client.js";
 import { validateCms } from "../src/private/cms-runtime.mjs";
 import { sameCmsOrigin } from "./native-url.js";
 import { cmsFetch } from "./cms-fetch.js";
+import { closeResponse, readBoundedResponseBytes } from "./response-body.js";
 
 // Use the parser declared by the existing pinned production sanitizer, not a
 // dev-only hoisted parser or an added installed dependency.
@@ -104,7 +105,7 @@ export async function verifyCmsPublication(expected: CmsRenderedExpectation, dep
     return validateCms("PublishedVerification", { kind: "published" as const, url: expected.url, native_id: expected.nativeId, source_revision: expected.source.source_revision,
       source_content_sha256: expected.source.content_sha256, native_publication_sha256: nativeHash, verification_profile: expected.move ? ASTRO_MOVE_VERIFICATION_PROFILE : ASTRO_VERIFICATION_PROFILE, checked_at: checkedAt,
       representation: { kind: "full" as const, source_content_sha256: expected.source.content_sha256 } });
-  } finally { clearTimeout(request.timeout); await response.body?.cancel().catch(() => undefined); }
+  } finally { closeResponse(response, request.controller); clearTimeout(request.timeout); }
 }
 
 export async function verifyCmsAbsence(url: string, nativeId: string, preparedAt: string, deployment: CmsDeploymentReceipt, fetchImplementation: typeof fetch = cmsFetch) {
@@ -116,37 +117,22 @@ export async function verifyCmsAbsence(url: string, nativeId: string, preparedAt
     const checkedAt = new Date().toISOString();
     if (Date.parse(checkedAt) < Math.max(Date.parse(preparedAt), Date.parse(deployment.deployedAt))) throw new Error("CMS actual absence verification clock precedes preparation/deployment.");
     return validateCms("AbsentVerification", { kind: "absent" as const, url, native_id: nativeId, checked_at: checkedAt, http_status: response.status });
-  } finally { clearTimeout(request.timeout); await response.body?.cancel().catch(() => undefined); }
+  } finally { closeResponse(response, request.controller); clearTimeout(request.timeout); }
 }
 
 export async function publicResponse(url: string, fetchImplementation: typeof fetch) {
   validateCms("Url", url);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
+  let response: Response | undefined;
   try {
-    const response = await fetchImplementation(url, { method: "GET", credentials: "omit", redirect: "error", signal: controller.signal, headers: { Accept: "text/html", "Accept-Encoding": "identity" } });
-    if (response.redirected || response.status >= 300 && response.status < 400 || response.url && response.url !== url) { await response.body?.cancel(); throw new Error("CMS public verification rejects redirects or another canonical URL."); }
+    response = await fetchImplementation(url, { method: "GET", credentials: "omit", redirect: "error", signal: controller.signal, headers: { Accept: "text/html", "Accept-Encoding": "identity" } });
+    if (response.redirected || response.status >= 300 && response.status < 400 || response.url && response.url !== url) throw new Error("CMS public verification rejects redirects or another canonical URL.");
     return { response, controller, timeout };
-  } catch (error) { clearTimeout(timeout); throw error; }
+  } catch (error) { closeResponse(response, controller); clearTimeout(timeout); throw error; }
 }
 
 export async function publicHtml(response: Response, maximum: number, signal: AbortSignal): Promise<string> {
   if (!Number.isSafeInteger(maximum) || maximum < 0 || !response.body) throw new Error("CMS expected native artifact budget is unavailable.");
-  const declared = response.headers.get("content-length");
-  if (declared !== null && (!/^(?:0|[1-9]\d*)$/u.test(declared) || Number(declared) > maximum)) throw new Error("CMS public response exceeds the expected native artifact budget.");
-  const reader = response.body.getReader();
-  const abort = () => { void reader.cancel().catch(() => undefined); };
-  signal.addEventListener("abort", abort, { once: true });
-  const chunks: Uint8Array[] = [];
-  let bytes = 0;
-  try {
-    for (;;) {
-      const chunk = await reader.read(); if (signal.aborted) throw new Error("CMS public verification timed out."); if (chunk.done) break;
-      bytes += chunk.value.length;
-      if (bytes > maximum) throw new Error("CMS public response exceeds the expected native artifact budget.");
-      chunks.push(chunk.value);
-    }
-    return new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks, bytes));
-  } catch (error) { await reader.cancel().catch(() => undefined); throw error; }
-  finally { signal.removeEventListener("abort", abort); reader.releaseLock(); }
+  return new TextDecoder("utf-8", { fatal: true }).decode(await readBoundedResponseBytes(response, maximum, signal, { canonicalContentLength: true }));
 }

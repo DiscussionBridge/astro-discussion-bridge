@@ -4,6 +4,7 @@ import { createMarkdownProcessor } from "@astrojs/markdown-remark";
 import { validateCms } from "../src/private/cms-runtime.mjs";
 import { sameCmsOrigin } from "./native-url.js";
 import { cmsFetch } from "./cms-fetch.js";
+import { closeResponse, readBoundedResponseBytes } from "./response-body.js";
 // Use the parser declared by the existing pinned production sanitizer, not a
 // dev-only hoisted parser or an added installed dependency.
 const sanitizerRequire = createRequire(createRequire(import.meta.url).resolve("sanitize-html"));
@@ -110,8 +111,8 @@ export async function verifyCmsPublication(expected, deployment, fetchImplementa
             representation: { kind: "full", source_content_sha256: expected.source.content_sha256 } });
     }
     finally {
+        closeResponse(response, request.controller);
         clearTimeout(request.timeout);
-        await response.body?.cancel().catch(() => undefined);
     }
 }
 export async function verifyCmsAbsence(url, nativeId, preparedAt, deployment, fetchImplementation = cmsFetch) {
@@ -129,23 +130,23 @@ export async function verifyCmsAbsence(url, nativeId, preparedAt, deployment, fe
         return validateCms("AbsentVerification", { kind: "absent", url, native_id: nativeId, checked_at: checkedAt, http_status: response.status });
     }
     finally {
+        closeResponse(response, request.controller);
         clearTimeout(request.timeout);
-        await response.body?.cancel().catch(() => undefined);
     }
 }
 export async function publicResponse(url, fetchImplementation) {
     validateCms("Url", url);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
+    let response;
     try {
-        const response = await fetchImplementation(url, { method: "GET", credentials: "omit", redirect: "error", signal: controller.signal, headers: { Accept: "text/html", "Accept-Encoding": "identity" } });
-        if (response.redirected || response.status >= 300 && response.status < 400 || response.url && response.url !== url) {
-            await response.body?.cancel();
+        response = await fetchImplementation(url, { method: "GET", credentials: "omit", redirect: "error", signal: controller.signal, headers: { Accept: "text/html", "Accept-Encoding": "identity" } });
+        if (response.redirected || response.status >= 300 && response.status < 400 || response.url && response.url !== url)
             throw new Error("CMS public verification rejects redirects or another canonical URL.");
-        }
         return { response, controller, timeout };
     }
     catch (error) {
+        closeResponse(response, controller);
         clearTimeout(timeout);
         throw error;
     }
@@ -153,34 +154,5 @@ export async function publicResponse(url, fetchImplementation) {
 export async function publicHtml(response, maximum, signal) {
     if (!Number.isSafeInteger(maximum) || maximum < 0 || !response.body)
         throw new Error("CMS expected native artifact budget is unavailable.");
-    const declared = response.headers.get("content-length");
-    if (declared !== null && (!/^(?:0|[1-9]\d*)$/u.test(declared) || Number(declared) > maximum))
-        throw new Error("CMS public response exceeds the expected native artifact budget.");
-    const reader = response.body.getReader();
-    const abort = () => { void reader.cancel().catch(() => undefined); };
-    signal.addEventListener("abort", abort, { once: true });
-    const chunks = [];
-    let bytes = 0;
-    try {
-        for (;;) {
-            const chunk = await reader.read();
-            if (signal.aborted)
-                throw new Error("CMS public verification timed out.");
-            if (chunk.done)
-                break;
-            bytes += chunk.value.length;
-            if (bytes > maximum)
-                throw new Error("CMS public response exceeds the expected native artifact budget.");
-            chunks.push(chunk.value);
-        }
-        return new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks, bytes));
-    }
-    catch (error) {
-        await reader.cancel().catch(() => undefined);
-        throw error;
-    }
-    finally {
-        signal.removeEventListener("abort", abort);
-        reader.releaseLock();
-    }
+    return new TextDecoder("utf-8", { fatal: true }).decode(await readBoundedResponseBytes(response, maximum, signal, { canonicalContentLength: true }));
 }
