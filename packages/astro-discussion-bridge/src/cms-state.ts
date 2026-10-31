@@ -5,6 +5,7 @@ import { withPublicationOperationalStateLock } from "./native-locks.js";
 import { CmsClient, type CmsConnection, type CmsEvent, type CmsFeed, type CmsLease, type CmsMapping } from "./cms-client.js";
 import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { nativePublicationFiles } from "./native-publication.js";
+import { cmsOrigin, sameCmsOrigin } from "./native-url.js";
 import { assertNativeArticleCapture, type NativeArticleCapture } from "./native-preparation.js";
 
 export interface CmsNativeState {
@@ -40,10 +41,8 @@ export interface CmsNativeTransaction {
 }
 
 export function emptyCmsState(client: CmsClient, destinationOrigin: string, connectionId: string): CmsNativeState {
-  validateCms("Url", destinationOrigin);
-  const native = new URL(destinationOrigin);
-  if (native.pathname !== "/" || native.search) throw new Error("CMS native destination requires an HTTPS origin.");
-  return { schemaVersion: 1, wireVersion: "v4", adapterId: "astro-cms-static", connectionId, serviceOrigin: client.origin, destinationOrigin: native.origin,
+  const origin = cmsOrigin(destinationOrigin);
+  return { schemaVersion: 1, wireVersion: "v4", adapterId: "astro-cms-static", connectionId, serviceOrigin: client.origin, destinationOrigin: origin,
     scopeRevision: null, policyRevision: null, stream: "initial", cursor: null, checkpoint: null,
     events: Object.create(null), sources: Object.create(null), mappings: Object.create(null), generations: Object.create(null), transactions: Object.create(null) };
 }
@@ -101,7 +100,7 @@ export async function readCmsState(file: string, expected: CmsNativeState): Prom
       state.nativeLocations = Object.assign(Object.create(null), state.nativeLocations);
       for (const [id, location] of Object.entries(state.nativeLocations!)) {
         validateCms("OpaqueId", id); validateCms("Url", location.canonicalUrl); validateCms("OpaqueId", location.nativeId); validateCms("UUID", location.moveId); validateCms("Revision", location.mappingRevision);
-        if (new URL(location.canonicalUrl).origin !== state.destinationOrigin) throw new Error("CMS native URL ancestry changed origin.");
+        if (!sameCmsOrigin(location.canonicalUrl, state.destinationOrigin)) throw new Error("CMS native URL ancestry changed origin.");
       }
     }
     if (state.nativeCommand !== undefined) {
@@ -144,7 +143,7 @@ export async function writeCmsState(file: string, state: CmsNativeState): Promis
 }
 
 export function assertCmsConnection(connection: CmsConnection, state: CmsNativeState): void {
-  if (connection.connection_id !== state.connectionId || connection.profile !== "astro" || new URL(connection.destination_origin).origin !== state.destinationOrigin
+  if (connection.connection_id !== state.connectionId || connection.profile !== "astro" || !sameCmsOrigin(connection.destination_origin, state.destinationOrigin)
     || !connection.directions.includes("from_discourse") || !connection.policy.enabled || connection.policy.publication_kind !== "static" || connection.native_capabilities.publication_kind !== "static"
     || !connection.native_capabilities.supported_presentations.includes(connection.policy.presentation_mode) || !connection.native_capabilities.complete_content_supported) throw new Error("CMS receiver-authorized Astro static publication is unavailable.");
   if (state.scopeRevision !== null && state.scopeRevision !== connection.scope_revision || state.policyRevision !== null && state.policyRevision !== connection.policy.policy_revision) throw new Error("CMS scope or policy changed; source and prepared work require reconciliation.");

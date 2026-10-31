@@ -7,6 +7,7 @@ import { build } from "astro";
 import test from "node:test";
 import integration from "../dist/index.js";
 import { ownedTempFixture } from "./helpers/owned-temp.mjs";
+import { nativePackageAlias } from "./helpers/package-alias.mjs";
 
 test("actual native Astro renders all three current modes and fresh local rich assets with consumer theme ownership", async t => {
   const packageRoot = fileURLToPath(new URL("../", import.meta.url)), parent = path.join(packageRoot, ".tmp"); await mkdir(parent, { recursive: true });
@@ -34,7 +35,7 @@ import RichContent from ${JSON.stringify(path.join(packageRoot, "src/components/
     integrations: [integration({ discourseUrl: "https://forum.example", comments: { credit: { enabled: false } } })],
     vite: { resolve: { alias: [
       { find: "astro", replacement: "astro", customResolver: source => nativeRuntime.resolve(source) },
-      { find: "astro-discussion-bridge", replacement: "astro-discussion-bridge", customResolver: source => fileURLToPath(import.meta.resolve(source)) },
+      { find: "astro-discussion-bridge", replacement: "astro-discussion-bridge", customResolver: source => nativePackageAlias(source, fileURLToPath(import.meta.resolve(source))) },
       { find: "sanitize-html", replacement: path.join(runtimeRoot, "sanitize-html") },
       { find: "dompurify", replacement: path.join(runtimeRoot, "dompurify") },
     ] } } });

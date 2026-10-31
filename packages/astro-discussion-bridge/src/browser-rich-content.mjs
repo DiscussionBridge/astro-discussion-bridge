@@ -5,6 +5,7 @@ import "katex/dist/katex.min.css";
 const markerSelector = "[data-discussionbridge-rich]";
 const diagramSelector = "pre > code.language-mermaid, pre > code.lang-mermaid";
 const mathSelector = "pre > code.language-math, pre > code.lang-math";
+const maximumDiagramText = 65536;
 
 function unavailable(kind) {
   document.dispatchEvent(new CustomEvent("discussionbridge:rich-content-error", { detail: { kind } }));
@@ -22,14 +23,18 @@ export async function renderSelected(documentRoot = document) {
   for (const root of roots) {
     for (const code of root.querySelectorAll(diagramSelector)) {
       if (!code.parentElement?.isConnected) continue;
+      // Mermaid resolves a limit-placeholder SVG instead of rejecting oversized
+      // input. Keep the original visible before replacing any reader DOM.
+      const text = code.textContent ?? "";
+      if (text.length > maximumDiagramText) { unavailable("mermaid"); continue; }
       if (!initialized) {
-        mermaid.initialize({ startOnLoad: false, securityLevel: "strict", htmlLabels: false, maxTextSize: 65536 });
+        mermaid.initialize({ startOnLoad: false, securityLevel: "strict", htmlLabels: false, maxTextSize: maximumDiagramText });
         initialized = true;
       }
       const original = code.parentElement;
       const container = document.createElement("div");
       container.className = "mermaid discussionbridge-rich-diagram";
-      container.textContent = code.textContent ?? "";
+      container.textContent = text;
       original.replaceWith(container);
       try { await mermaid.run({ nodes: [container], suppressErrors: false }); }
       catch { if (container.isConnected) container.replaceWith(original); unavailable("mermaid"); }

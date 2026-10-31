@@ -1,6 +1,7 @@
 import type { AstroIntegration } from "astro";
 import { normalizeCommentsMode, type CommentsModeInput } from "./comments-mode.js";
 import { normalizePublicHttpUrl, parseServiceBaseUrl } from "./web-url.js";
+import { cmsServiceBaseUrl } from "./native-url.js";
 import { validateForumName } from "./forum-name.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,7 +30,7 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Astr
     || options.comments?.embedViewportMaxHeight !== undefined && options.comments.embedViewportMaxHeight !== "none") throw new Error("Discourse Core owns full-app iframe sizing; height ceilings must be omitted or none.");
   const credit = options.comments?.credit;
   const config = {
-    discourseUrl: parseServiceBaseUrl(options.discourseUrl).href,
+    discourseUrl: (options.publishOnBuild?.enabled || options.fromDiscourse?.enabled ? cmsServiceBaseUrl(options.discourseUrl) : parseServiceBaseUrl(options.discourseUrl)).href,
     forumName: process.env.DISCUSSIONBRIDGE_FORUM_NAME === undefined ? undefined : validateForumName(process.env.DISCUSSIONBRIDGE_FORUM_NAME, "DISCUSSIONBRIDGE_FORUM_NAME"),
     comments: { enabled: options.comments?.enabled ?? true, display, embedHeight: options.comments?.embedHeight ?? "800px",
       dynamicHeight: options.comments?.dynamicHeight ?? false, embedMinHeight: options.comments?.embedMinHeight ?? "360", className: options.comments?.className,
@@ -41,7 +42,7 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Astr
   return { name: "astro-discussion-bridge", hooks: { "astro:config:setup": ({ config: nativeConfig, command, updateConfig, injectScript }) => {
     projectRoot = fileURLToPath(nativeConfig.root);
     nativeBuild = command === "build";
-    updateConfig({ vite: { plugins: [{ name: "astro-discussion-bridge-config", resolveId(id) { return id === "virtual:discussion-bridge/config" ? "\0virtual:discussion-bridge/config" : undefined; },
+    updateConfig({ vite: { ssr: { external: ["astro-discussion-bridge/server-url"] }, plugins: [{ name: "astro-discussion-bridge-config", resolveId(id) { return id === "virtual:discussion-bridge/config" ? "\0virtual:discussion-bridge/config" : undefined; },
       load(id) { return id === "\0virtual:discussion-bridge/config" ? `export default ${JSON.stringify(config)};` : undefined; } }] } });
     injectScript("page", `import { startSimpleComments } from 'astro-discussion-bridge/simple-live'; document.addEventListener('astro:page-load', startSimpleComments); startSimpleComments();`);
   }, "astro:config:done": async ({ config: nativeConfig, logger }) => {

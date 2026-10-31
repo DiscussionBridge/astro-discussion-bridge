@@ -6,6 +6,7 @@ import sanitizeHtml from "sanitize-html";
 import { parse as parseYaml } from "yaml";
 import { isInteractiveCommentsMode } from "./comments-mode.js";
 import { assertPublicationDirectory } from "./native-files.js";
+import { nativeUrl } from "./native-url.js";
 import { assertNativeMediaPreservedByCurrentRenderer, assertNativeMeaningRetained } from "./native-media.js";
 import { assertNativeArticleCapture, captureNativeArticle, completeNativePreparation, copiedReferencePreparation, nativeCodeLanguagePreparation, NativeAssetRenderRequired, NativePreparationLimitation } from "./native-preparation.js";
 const MAX_SOURCE_READ_BATCH = 32;
@@ -67,7 +68,7 @@ export function pageUrlForFile(input) {
         ? validateSlug(input.slug, input.filePath)
         : fileRoute;
     const pathname = [input.routeBase, route].filter(Boolean).join("/");
-    const url = new URL(`${pathname}${pathname ? "/" : ""}`, input.siteBase);
+    const url = nativeUrl(`${pathname}${pathname ? "/" : ""}`, input.siteBase);
     if (url.origin !== input.siteBase.origin || !url.pathname.startsWith(input.siteBase.pathname)) {
         throw new Error(`Canonical page URL left the configured site boundary for ${input.filePath}.`);
     }

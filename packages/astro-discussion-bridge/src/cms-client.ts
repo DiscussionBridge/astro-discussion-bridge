@@ -2,6 +2,8 @@ import * as runtime from "../src/private/cms-runtime.mjs";
 import { createHash } from "node:crypto";
 import { cmsSchema, parseCmsJson, validateCms, validateCmsResponse, validateCmsRoute } from "../src/private/cms-runtime.mjs";
 import { resolveServerSecret } from "./server-secret.js";
+import { cmsOrigin, nativeUrl, sameCmsOrigin } from "./native-url.js";
+import { cmsFetch } from "./cms-fetch.js";
 import type { CmsToRecord, CmsToRecordMetadata, CmsToResult, CmsToWithdrawInput } from "./cms-to.js";
 import type { CmsPublishedProof } from "./cms-verification.js";
 
@@ -75,12 +77,9 @@ export class CmsClient {
   private readonly fetchImplementation: typeof fetch;
   constructor(private readonly options: CmsClientOptions) {
     validateCms("ConnectionId", options.connectionId);
-    validateCms("Url", options.serverUrl);
-    const origin = new URL(options.serverUrl);
-    if (origin.pathname !== "/" || origin.search) throw new Error("CMS service configuration requires an HTTPS origin.");
-    this.origin = origin.origin;
+    this.origin = cmsOrigin(options.serverUrl);
     this.credentials = resolveServerSecret(options);
-    this.fetchImplementation = options.fetchImplementation ?? fetch;
+    this.fetchImplementation = options.fetchImplementation ?? cmsFetch;
   }
 
   async request<T>(id: string, input: { body?: object; query?: Record<string, string | number>; path?: Record<string, string> } = {}): Promise<T> {
@@ -88,7 +87,7 @@ export class CmsClient {
     codec.validateCmsRoute(id, input);
     const route = codec.cmsSchema.routes.find(item => item.id === id)!;
     const pathname = route.path.replace(/\{([^}]+)\}/gu, (_, field: string) => encodeURIComponent(input.path![field]));
-    const url = new URL(pathname, this.origin);
+    const url = nativeUrl(pathname, this.origin);
     for (const [key, value] of Object.entries(input.query ?? {})) url.searchParams.set(key, String(value));
     const body = input.body === undefined ? undefined : codec.semanticIdentity(input.body);
     if (body !== undefined && Buffer.byteLength(body) > 65_536) throw new Error("CMS request exceeds its JSON transport bound.");
@@ -102,7 +101,10 @@ export class CmsClient {
         headers: { Accept: "application/json", "Accept-Encoding": "identity", ...(body === undefined ? {} : { "Content-Type": "application/json" }),
           "X-DiscussionBridge-Connection": this.options.connectionId, "X-DiscussionBridge-Secret": credentials.connectionSecret },
       });
-      if (response.redirected || response.status >= 300 && response.status < 400 || response.url && new URL(response.url).origin !== this.origin) throw new Error("CMS service response requires origin attention.");
+      if (response.redirected || response.status >= 300 && response.status < 400 || response.url && !sameCmsOrigin(response.url, this.origin)) {
+        await response.body?.cancel().catch(() => undefined);
+        throw new Error("CMS service response requires origin attention.");
+      }
       if (response.status === 204) {
         const bytes = await readBounded(response, 0, controller.signal);
         if (bytes.length) throw new Error("CMS bodyless response contained bytes.");

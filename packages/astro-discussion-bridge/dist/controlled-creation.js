@@ -5,7 +5,7 @@ import { parseFrontmatter } from "@astrojs/markdown-remark";
 import { CmsClient, CmsRequestError } from "./cms-client.js";
 import { assertCmsTopicUrl, cmsToFingerprint, resolveCmsToPage } from "./cms-to.js";
 import { validateCms, semanticIdentity } from "../src/private/cms-runtime.mjs";
-import { parseServiceBaseUrl } from "./web-url.js";
+import { cmsServiceBaseUrl as parseServiceBaseUrl, sameCmsOrigin } from "./native-url.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { captureNativeArticle, nativeCaptureId, NativeAssetRenderRequired, NativePreparationLimitation } from "./native-preparation.js";
 import { withNativeSourceWriter } from "./native-locks.js";
@@ -440,7 +440,7 @@ async function withdrawUnderNativeWriter(options, file, reason, state, client, c
 function assertLifecycleScope(options, operation, client, connection) {
     const to = operation.to;
     if (connection.connection_id !== to.scope.connectionId || connection.scope_revision !== to.scope.scopeRevision || client.origin !== to.scope.serverOrigin || connection.profile !== "astro"
-        || !connection.directions.includes("to_discourse") || new URL(options.siteUrl).origin !== to.scope.siteOrigin || new URL(connection.destination_origin).origin !== to.scope.siteOrigin || (options.controlledCreation.lane ?? connection.publication_lane) !== to.scope.lane)
+        || !connection.directions.includes("to_discourse") || !sameCmsOrigin(options.siteUrl, to.scope.siteOrigin) || !sameCmsOrigin(connection.destination_origin, to.scope.siteOrigin) || (options.controlledCreation.lane ?? connection.publication_lane) !== to.scope.lane)
         throw new Error("Current source lifecycle scope requires reconciliation.");
 }
 async function captureLifecycleSource(options, operation, file) {

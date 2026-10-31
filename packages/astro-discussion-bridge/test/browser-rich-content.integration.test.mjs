@@ -31,3 +31,48 @@ test("actual Astro compiled rich assets preserve strict diagrams, math and faile
     console.log(JSON.stringify({ browser: browser.version(), diagrams: actual.diagrams, mathml: actual.mathml, unsafeExecution: actual.xss, networkRequests: requests.length, failedSourcePreserved: true }));
   } finally { await browser.close(); }
 });
+
+test("actual compiled diagrams preserve visible source and report the existing text bound across navigation", async () => {
+  const executablePath = process.env.DISCUSSIONBRIDGE_BROWSER_EXECUTABLE;
+  const browser = await chromium.launch({ headless: true, ...(executablePath ? { executablePath } : { channel: "chrome" }) });
+  try {
+    const context = await browser.newContext({ serviceWorkers: "block" }), requests = [];
+    await context.route("**/*", route => { requests.push(route.request().url()); return route.abort(); });
+    const page = await context.newPage();
+    await page.setContent("<!doctype html><html><head><meta charset='utf-8'></head><body><div data-discussionbridge-rich data-root='article'></div><article></article></body></html>");
+    await page.addStyleTag({ content: css });
+    const sources = await page.evaluate(() => {
+      window.__richErrors = [];
+      document.addEventListener("discussionbridge:rich-content-error", event => window.__richErrors.push(event.detail.kind));
+      const prefix = "flowchart LR\n A[Boundary] --> B[End]\n%% ";
+      const sources = [65536, 65537, 66030].map(size => prefix + "x".repeat(size - prefix.length));
+      sources.push("this is not a valid Mermaid diagram");
+      for (const value of sources) {
+        const pre = document.createElement("pre"), code = document.createElement("code");
+        code.className = "language-mermaid"; code.textContent = value; pre.append(code); document.querySelector("article").append(pre);
+      }
+      return sources;
+    });
+    await page.addScriptTag({ content: js });
+    await page.waitForFunction(() => document.querySelectorAll(".discussionbridge-rich-diagram svg").length === 1 && window.__richErrors.length === 3);
+    const inspect = () => page.evaluate(() => ({
+      sources: [...document.querySelectorAll("article pre code")].map(code => code.textContent),
+      errors: window.__richErrors, diagrams: document.querySelectorAll(".discussionbridge-rich-diagram svg").length,
+      placeholder: document.querySelector("article").textContent.includes("Maximum text size in diagram exceeded"),
+    }));
+    assert.deepEqual((await inspect()).sources, sources.slice(1));
+    assert.deepEqual((await inspect()).errors, ["mermaid", "mermaid", "mermaid"]);
+    assert.equal((await inspect()).placeholder, false);
+    await page.evaluate(() => {
+      const pre = document.createElement("pre"), code = document.createElement("code");
+      code.className = "language-mermaid"; code.textContent = "flowchart LR\n C[Navigation] --> D[Ready]";
+      pre.append(code); document.querySelector("article").append(pre);
+      document.dispatchEvent(new Event("astro:page-load"));
+    });
+    await page.waitForFunction(() => document.querySelectorAll(".discussionbridge-rich-diagram svg").length === 2 && window.__richErrors.length === 6);
+    const final = await inspect();
+    assert.deepEqual(final.sources, sources.slice(1));
+    assert.deepEqual(final.errors, Array(6).fill("mermaid"));
+    assert.equal(final.placeholder, false); assert.deepEqual(requests, []);
+  } finally { await browser.close(); }
+});

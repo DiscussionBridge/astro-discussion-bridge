@@ -5,6 +5,7 @@ import { CmsClient, type CmsClientOptions, type CmsConnection, type CmsMapping, 
 import { assertCmsConnection, emptyCmsState, readCmsState, stageCmsClaim, stageCmsFeedPage, withCmsStateLock, writeCmsState, type CmsNativeState } from "./cms-state.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { validateCms } from "../src/private/cms-runtime.mjs";
+import { cmsOrigin, nativeUrl } from "./native-url.js";
 
 export interface CmsCoordinatorOptions extends CmsClientOptions {
   /** Native publication is configured explicitly; the sole wire is V4. */
@@ -56,8 +57,8 @@ export function cmsNativeReservation(options: CmsCoordinatorOptions, source: Pic
   const slug = `source-${createHash("sha256").update(source.source_id, "utf8").digest("hex")}`;
   const relative = `${routeBase}/${slug}.md`;
   const nativeId = relative;
-  const canonicalUrl = new URL(`/${routeBase}/${slug}/`, options.siteUrl).href;
-  const externalId = `astro-page:${createHash("sha256").update(`${new URL(options.siteUrl).origin}/\n${relative}`).digest("hex")}`;
+  const canonicalUrl = nativeUrl(`/${routeBase}/${slug}/`, options.siteUrl).href;
+  const externalId = `astro-page:${createHash("sha256").update(`${cmsOrigin(options.siteUrl)}/\n${relative}`).digest("hex")}`;
   return { nativeId, canonicalUrl, externalId, file: path.resolve(options.docsDir, relative) };
 }
 

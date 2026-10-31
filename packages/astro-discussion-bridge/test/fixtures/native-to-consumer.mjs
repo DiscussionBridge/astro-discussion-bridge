@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "astro";
 import integration from "../../dist/index.js";
+import { nativePackageAlias } from "../helpers/package-alias.mjs";
 
 export async function buildToConsumer(state, packedRoot, nativeCapture = false, fullSource = false) {
   await mkdir(path.join(state.root, "src/pages/articles"), { recursive: true });
@@ -50,7 +51,7 @@ ${captureCode}
       docsDir: state.docsDir, stateFile: state.options.stateFile, routeBase: state.options.routeBase, ...state.options.controlledCreation } })],
     vite: { plugins: [{name:'test-owned-server-binding',resolveId(id){return id==='test-owned-native-source-binding'?'\0test-owned-native-source-binding':undefined;},load(id){return id==='\0test-owned-native-source-binding'?`export default globalThis[${JSON.stringify(privateKey)}];`:undefined;}}], resolve: { alias: [
       { find: "astro", replacement: "astro", customResolver: value => runtime.resolve(value) },
-      { find: manifest.name, replacement: manifest.name, customResolver: ownResolve },
+      { find: manifest.name, replacement: manifest.name, customResolver: value => nativePackageAlias(value, ownResolve(value)) },
       { find: "sanitize-html", replacement: path.join(runtimeRoot, "sanitize-html") },
       { find: "dompurify", replacement: path.join(runtimeRoot, "dompurify") },
     ] } } }); } finally { delete globalThis[privateKey]; }

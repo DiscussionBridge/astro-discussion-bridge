@@ -2,6 +2,8 @@ import * as runtime from "../src/private/cms-runtime.mjs";
 import { createHash } from "node:crypto";
 import { validateCms } from "../src/private/cms-runtime.mjs";
 import { resolveServerSecret } from "./server-secret.js";
+import { cmsOrigin, nativeUrl, sameCmsOrigin } from "./native-url.js";
+import { cmsFetch } from "./cms-fetch.js";
 export class CmsRequestError extends Error {
     code;
     retryable;
@@ -34,20 +36,16 @@ export class CmsClient {
     constructor(options) {
         this.options = options;
         validateCms("ConnectionId", options.connectionId);
-        validateCms("Url", options.serverUrl);
-        const origin = new URL(options.serverUrl);
-        if (origin.pathname !== "/" || origin.search)
-            throw new Error("CMS service configuration requires an HTTPS origin.");
-        this.origin = origin.origin;
+        this.origin = cmsOrigin(options.serverUrl);
         this.credentials = resolveServerSecret(options);
-        this.fetchImplementation = options.fetchImplementation ?? fetch;
+        this.fetchImplementation = options.fetchImplementation ?? cmsFetch;
     }
     async request(id, input = {}) {
         const codec = runtime;
         codec.validateCmsRoute(id, input);
         const route = codec.cmsSchema.routes.find(item => item.id === id);
         const pathname = route.path.replace(/\{([^}]+)\}/gu, (_, field) => encodeURIComponent(input.path[field]));
-        const url = new URL(pathname, this.origin);
+        const url = nativeUrl(pathname, this.origin);
         for (const [key, value] of Object.entries(input.query ?? {}))
             url.searchParams.set(key, String(value));
         const body = input.body === undefined ? undefined : codec.semanticIdentity(input.body);
@@ -63,8 +61,10 @@ export class CmsClient {
                 headers: { Accept: "application/json", "Accept-Encoding": "identity", ...(body === undefined ? {} : { "Content-Type": "application/json" }),
                     "X-DiscussionBridge-Connection": this.options.connectionId, "X-DiscussionBridge-Secret": credentials.connectionSecret },
             });
-            if (response.redirected || response.status >= 300 && response.status < 400 || response.url && new URL(response.url).origin !== this.origin)
+            if (response.redirected || response.status >= 300 && response.status < 400 || response.url && !sameCmsOrigin(response.url, this.origin)) {
+                await response.body?.cancel().catch(() => undefined);
                 throw new Error("CMS service response requires origin attention.");
+            }
             if (response.status === 204) {
                 const bytes = await readBounded(response, 0, controller.signal);
                 if (bytes.length)

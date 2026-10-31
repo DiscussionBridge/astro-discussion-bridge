@@ -9,6 +9,7 @@ import discussionBridge from "../../dist/index.js";
 import { claimCmsNativeWork, cmsNativeReservation, pollCmsSources, reserveCmsSource } from "../../dist/cms-coordinator.js";
 import { prepareCmsNativeWork } from "../../dist/cms-static.js";
 import { ownedTempFixture } from "../helpers/owned-temp.mjs";
+import { nativePackageAlias } from "../helpers/package-alias.mjs";
 import { connection, connectionId, event, html, lease, mapping, source, uuid } from "./cms-coordinator.mjs";
 
 export async function staticFixture(t, modifications = {}, cooked = html, mode = "full", initialize = true) {
@@ -143,7 +144,7 @@ const { entry } = Astro.props; const { Content } = await render(entry); const re
         connectionId: state.options.connectionId, connectionSecret: state.options.connectionSecret, fetchImplementation: state.options.fetchImplementation } } : {}) })],
     vite: { resolve: { alias: [
       { find: "astro", replacement: "astro", customResolver: value => nativeRuntime.resolve(value) },
-      { find: "astro-discussion-bridge", replacement: "astro-discussion-bridge", customResolver: packageResolve },
+      { find: "astro-discussion-bridge", replacement: "astro-discussion-bridge", customResolver: value => nativePackageAlias(value, packageResolve(value)) },
       { find: "sanitize-html", replacement: path.join(runtimeRoot, "sanitize-html") },
       { find: "dompurify", replacement: path.join(runtimeRoot, "dompurify") },
     ] } } });

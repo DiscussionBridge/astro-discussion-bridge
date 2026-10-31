@@ -1,4 +1,5 @@
 import { assertServiceResponseUrl, parseServiceBaseUrl } from "./web-url.js";
+export const PUBLIC_BOOTSTRAP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
 export interface PublicForumSettings {
   title: unknown;
@@ -41,7 +42,8 @@ export async function readPublicForumSettings(discourseUrl: string, fetchImpleme
       headers: {
         Accept: "text/html",
         ...(typeof window === "undefined" ? {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+          "User-Agent": PUBLIC_BOOTSTRAP_USER_AGENT,
+          "Accept-Encoding": "identity",
         } : {}),
       },
       redirect: "error",
@@ -52,21 +54,23 @@ export async function readPublicForumSettings(discourseUrl: string, fetchImpleme
       throw new Error("Invalid native forum bootstrap.");
     }
     const html = await response.text();
-    if (new TextEncoder().encode(html).byteLength > 512 * 1024) throw new Error("Native forum bootstrap is too large.");
-    const match = /<script[^>]+id=["']data-preloaded["'][^>]*>([\s\S]*?)<\/script>/iu.exec(html);
-    if (!match) throw new Error("Native forum settings are unavailable.");
-    const outer: unknown = JSON.parse(match[1]);
-    const encoded = outer && typeof outer === "object" && !Array.isArray(outer)
-      ? (outer as Record<string, unknown>).siteSettings : undefined;
-    if (typeof encoded !== "string") throw new Error("Native forum settings are invalid.");
-    const settings: unknown = JSON.parse(encoded);
-    if (!settings || typeof settings !== "object" || Array.isArray(settings)) throw new Error("Native forum settings are invalid.");
-    const values = settings as Record<string, unknown>;
-    return {
-      title: values.title,
-      poweredBy: typeof values.enable_powered_by_discourse === "boolean" ? values.enable_powered_by_discourse : undefined,
-    };
+    return parsePublicForumSettings(html);
   } catch {
     throw new Error("Native source forum title requires configuration attention.");
   }
+}
+
+/** Shared pure bootstrap decoder; browser callers acquire no server transport. */
+export function parsePublicForumSettings(html: string): PublicForumSettings {
+  if (new TextEncoder().encode(html).byteLength > 512 * 1024) throw new Error("Native forum bootstrap is too large.");
+  const match = /<script[^>]+id=["']data-preloaded["'][^>]*>([\s\S]*?)<\/script>/iu.exec(html);
+  if (!match) throw new Error("Native forum settings are unavailable.");
+  const outer: unknown = JSON.parse(match[1]);
+  const encoded = outer && typeof outer === "object" && !Array.isArray(outer)
+    ? (outer as Record<string, unknown>).siteSettings : undefined;
+  if (typeof encoded !== "string") throw new Error("Native forum settings are invalid.");
+  const settings: unknown = JSON.parse(encoded);
+  if (!settings || typeof settings !== "object" || Array.isArray(settings)) throw new Error("Native forum settings are invalid.");
+  const values = settings as Record<string, unknown>;
+  return { title: values.title, poweredBy: typeof values.enable_powered_by_discourse === "boolean" ? values.enable_powered_by_discourse : undefined };
 }

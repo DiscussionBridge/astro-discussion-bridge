@@ -12,6 +12,8 @@ import { sourceHash, inspectSourceArticle, parseSourceHtml, sourceNodes, sourceD
 import { publicResponse, publicHtml } from "./cms-verification.js";
 import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import type { CmsSourceUrlVerification } from "./cms-client.js";
+import { cmsUrl, nativeUrl, sameCmsOrigin } from "./native-url.js";
+import { cmsFetch } from "./cms-fetch.js";
 
 type Options = PublishControlledDiscussionsOptions;
 const symbol = Symbol.for("discussionbridge.astro.native-source-build.v4");
@@ -40,12 +42,12 @@ async function actualBuildHtml(file: string, root: string) {
   return html;
 }
 async function captureNativeAssets(html: string, capture: SourceNativeCapture, root: string, base: string, assetsDir: string) {
-  const result: NonNullable<SourceNativeCapture["build"]>["assets"] = [], seen = new Set<string>(), canonical = new URL(capture.canonicalUrl);
+  const result: NonNullable<SourceNativeCapture["build"]>["assets"] = [], seen = new Set<string>(), canonical = cmsUrl(capture.canonicalUrl);
   const generatedPrefix = `${base.replace(/\/$/u, "")}/${assetsDir.replace(/^\/+|\/+$/gu, "")}/`;
   for (const node of sourceNodes(parseSourceHtml(html))) {
     const supplied = node.name === "img" || node.name === "script" ? node.attribs?.src : node.name === "link" && /(?:^|\s)(?:stylesheet|modulepreload)(?:\s|$)/iu.test(node.attribs?.rel ?? "") ? node.attribs?.href : undefined;
     if (!supplied) continue;
-    const url = new URL(supplied, canonical); if (url.origin !== canonical.origin || seen.has(url.href) || !url.pathname.startsWith(base)) continue;
+    const url = nativeUrl(supplied, canonical); if (url.protocol !== "https:" || !sameCmsOrigin(url.href, capture.canonicalUrl) || seen.has(url.href) || !url.pathname.startsWith(base)) continue;
     const local = decodeURIComponent(url.pathname.slice(base.length)).split("/").join(path.sep), file = path.resolve(root, local), relative = path.relative(root, file);
     if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) throw new Error("Actual native dependency left its generated root.");
     await nativePublicationFiles.assertDirectory(path.dirname(file));
@@ -100,7 +102,7 @@ async function verifyNativeAsset(expected: NonNullable<SourceNativeCapture["buil
     if (count !== expected.bytes || hash.digest("hex") !== expected.sha256) throw new Error("Actual native source asset differs from the expected native build.");
   } finally { clearTimeout(request.timeout); await response.body?.cancel().catch(() => undefined); }
 }
-export async function verifyControlledSourcePublic(capture: SourceNativeCapture, preparedAt: string, deployedAt: string, fetchImplementation: typeof fetch = fetch): Promise<CmsSourceUrlVerification> {
+export async function verifyControlledSourcePublic(capture: SourceNativeCapture, preparedAt: string, deployedAt: string, fetchImplementation: typeof fetch = cmsFetch): Promise<CmsSourceUrlVerification> {
   if (!capture.build || !capture.ownership.moveId || !capture.ownership.proofNonce) throw new Error("Actual full native source build/issued challenge is unavailable.");
   validateCms("Instant", preparedAt); validateCms("Instant", deployedAt);
   const expected = inspectSourceArticle(capture.build.html, capture), request = await publicResponse(capture.canonicalUrl, fetchImplementation), response = request.response;

@@ -4,6 +4,7 @@ import path from "node:path";
 import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { parseMarkdown } from "./native-source.js";
 import { NativePreparationLimitation } from "./native-preparation.js";
+import { nativeUrl, sameCmsOrigin } from "./native-url.js";
 export const ASTRO_SOURCE_PROFILE = "discussionbridge-astro-source-html-1";
 export const SOURCE_OWNERSHIP_FIELD = "discussionbridgeSourceOwnershipSha256";
 export const SOURCE_MOVE_FIELD = "discussionbridgeSourceMoveId";
@@ -47,7 +48,7 @@ export function validateSourceCapture(capture) {
         for (const asset of build.assets) {
             validateCms("Url", asset.url);
             validateCms("Sha256", asset.sha256);
-            if (!path.isAbsolute(asset.file) || !Number.isSafeInteger(asset.bytes) || asset.bytes < 0 || new URL(asset.url).origin !== new URL(capture.canonicalUrl).origin || urls.has(asset.url))
+            if (!path.isAbsolute(asset.file) || !Number.isSafeInteger(asset.bytes) || asset.bytes < 0 || !sameCmsOrigin(asset.url, capture.canonicalUrl) || urls.has(asset.url))
                 throw new Error("Native source asset evidence requires reconciliation.");
             urls.add(asset.url);
         }
@@ -121,7 +122,7 @@ export function resolveNativeSourceTargets(html, capturedBase) {
         const value = node.attribs[attribute];
         if (/^[A-Za-z][A-Za-z0-9+.-]*:/u.test(value))
             continue;
-        const target = new URL(value, capturedBase).href;
+        const target = nativeUrl(value, capturedBase).href;
         if (typeof node.startIndex !== "number")
             throw new NativePreparationLimitation("Native source reference position is unavailable.");
         const end = openingEnd(html, node.startIndex), opening = html.slice(node.startIndex, end + 1);

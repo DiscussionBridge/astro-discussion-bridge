@@ -3,6 +3,7 @@ import { validateCms, semanticIdentity, measureToFullEnvelope, createGeneratedEx
 import { CmsRequestError, validatedCmsErrorResponse } from "./cms-client.js";
 import { PRODUCT_VERSION } from "./version.js";
 import { assertNativeArticleCapture, nativeCaptureId, NativePreparationLimitation } from "./native-preparation.js";
+import { cmsUrl, sameCmsOrigin } from "./native-url.js";
 export function cmsToFingerprint(page, lane) {
     return createHash("sha256").update(semanticIdentity([page.externalId, page.pageUrl, page.title, page.contentHtml, page.sourceAuthors ?? [], page.primarySourceAuthorId ?? null, page.createdAt, page.updatedAt, lane, "unlisted"])).digest("hex");
 }
@@ -14,9 +15,9 @@ export async function resolveCmsToPage(input) {
         throw new NativePreparationLimitation("Current source lacks its exact complete prepared article evidence; no source bytes are reconstructed.");
     if (operation.to?.withdrawal)
         throw new Error("Withdrawal intent/binding cannot silently resume through resolve; native administrator reconciliation is required.");
-    const scope = { connectionId: connection.connection_id, serverOrigin: client.origin, siteOrigin: new URL(page.pageUrl).origin, scopeRevision: connection.scope_revision, lane: input.lane ?? connection.publication_lane };
-    const destination = new URL(connection.destination_origin);
-    if (connection.profile !== "astro" || !connection.directions.includes("to_discourse") || destination.origin !== scope.siteOrigin || destination.pathname !== "/" || destination.search)
+    const scope = { connectionId: connection.connection_id, serverOrigin: client.origin, siteOrigin: cmsUrl(page.pageUrl).origin, scopeRevision: connection.scope_revision, lane: input.lane ?? connection.publication_lane };
+    const destination = cmsUrl(connection.destination_origin);
+    if (connection.profile !== "astro" || !connection.directions.includes("to_discourse") || !sameCmsOrigin(destination.href, scope.siteOrigin) || destination.pathname !== "/" || destination.search)
         throw new Error("Current V4 native source/connection scope requires reconciliation.");
     if (operation.to && semanticIdentity(operation.to.scope) !== semanticIdentity(scope))
         throw new Error("Stored native source connection scope requires reconciliation.");
@@ -180,7 +181,7 @@ function hasExactRetrySuccessor(journal, refused) {
 export function assertCmsTopicUrl(value, topicId, origin) {
     validateCms("CoreId", topicId);
     validateCms("Url", value);
-    const url = new URL(value), match = /^\/t\/(?:[^/]+\/)?([1-9]\d*)\/?$/u.exec(url.pathname);
-    if (url.origin !== origin || !match || match[1] !== topicId || /%2f|%5c/iu.test(url.pathname))
+    const url = cmsUrl(value), match = /^\/t\/(?:[^/]+\/)?([1-9]\d*)\/?$/u.exec(url.pathname);
+    if (!sameCmsOrigin(value, origin) || !match || match[1] !== topicId || /%2f|%5c/iu.test(url.pathname))
         throw new Error("Topic URL requires exact decimal native identity/origin.");
 }

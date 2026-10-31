@@ -1,10 +1,44 @@
 # Native Astro V4 development integration
 
-The single packet is wire V4, candidate `discussionbridge-v4-core-20261025-r6`,
-implementation `0.4.0-alpha.1`, release null. The unchanged portable schema/runtime
+The single packet is wire V4, candidate `discussionbridge-v4-core-20261029-r7`,
+implementation `0.4.0-alpha.1`, release null. The pinned portable schema/runtime
 and their CANDIDATE/ARTIFACTS/ROUTES provenance are private package modules.
 Native state format1 is internal storage. There is no earlier development wire
 selector, initialization/adoption workflow or alternate codec.
+
+### Fixed-policy URLs and native transport
+
+V4 configuration, topic/origin checks, source and publication URL operations use
+the pinned R7 domain policy even when Node's native URL parser has older Unicode
+data. Ordinary derived-origin serialization is retained; international derived
+origins use the pinned hostname consistently across runtimes. Original configured
+and wire URLs, stored source URLs, native identities, reservation keys and exact
+receipts are not rewritten. An incompatible retained scope fails closed for
+reconciliation; it is not silently converted or assigned another identity.
+
+Ordinary ASCII URLs still use native fetch. For internationalized authorities,
+the server uses Node HTTPS with the pinned ASCII hostname for DNS, SNI and normal
+certificate verification: native parsers can reject OR map these differently
+across runtimes. This is a local
+transport input, not a replacement wire URL or ownership grant. No failed network
+request or possibly accepted mutation is retried through another transport.
+Credentials remain header-only, cookies and redirects are refused, and the same
+request timeout and streaming response bounds apply. Custom fetch implementations
+remain explicit overrides. No new dependency, runtime floor, trust-root setting,
+receiver field or hosting extension is required.
+
+Server-rendered comments share the existing topic-route checks through the local
+fixed-policy integration. The browser Simple loader and public URL helper do not
+import the server SDK or HTTPS transport. This does not claim that every external
+platform/browser/DNS estate supports every Unicode spelling; native installation
+and live HTTPS qualification remain separate gates.
+
+The `astro-discussion-bridge/server-url` entry is server-only. Native components
+use this normal package entry so Astro retains the SDK's installed schema/data
+boundary instead of bundling its file-backed runtime into a prerender chunk.
+The existing integration declares only this server entry external to Astro's
+SSR bundle. Components and browser enhancement still compile normally; operators
+do not add a build hook, copied schema file or site-specific Vite workaround.
 
 ### Selected-source Retry after a definite To02 refusal
 

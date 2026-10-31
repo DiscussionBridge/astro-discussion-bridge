@@ -5,7 +5,7 @@ import { parseFrontmatter } from "@astrojs/markdown-remark";
 import { CmsClient, CmsRequestError, type CmsClientOptions, type CmsConnection } from "./cms-client.js";
 import { assertCmsTopicUrl, cmsToFingerprint, resolveCmsToPage, type CmsToPage, type CmsToRecordMetadata, type CmsToRevocationReason } from "./cms-to.js";
 import { validateCms, semanticIdentity } from "../src/private/cms-runtime.mjs";
-import { parseServiceBaseUrl } from "./web-url.js";
+import { cmsServiceBaseUrl as parseServiceBaseUrl, sameCmsOrigin, type NativeUrl } from "./native-url.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { captureNativeArticle, nativeCaptureId, NativeAssetRenderRequired, NativePreparationLimitation } from "./native-preparation.js";
 import { withNativeSourceWriter } from "./native-locks.js";
@@ -348,7 +348,7 @@ async function withdrawUnderNativeWriter(options: PublishControlledDiscussionsOp
 function assertLifecycleScope(options: PublishControlledDiscussionsOptions, operation: PublicationOperation, client: CmsClient, connection: CmsConnection) {
   const to = operation.to!;
   if (connection.connection_id !== to.scope.connectionId || connection.scope_revision !== to.scope.scopeRevision || client.origin !== to.scope.serverOrigin || connection.profile !== "astro"
-    || !connection.directions.includes("to_discourse") || new URL(options.siteUrl).origin !== to.scope.siteOrigin || new URL(connection.destination_origin).origin !== to.scope.siteOrigin || (options.controlledCreation.lane ?? connection.publication_lane) !== to.scope.lane) throw new Error("Current source lifecycle scope requires reconciliation.");
+    || !connection.directions.includes("to_discourse") || !sameCmsOrigin(options.siteUrl, to.scope.siteOrigin) || !sameCmsOrigin(connection.destination_origin, to.scope.siteOrigin) || (options.controlledCreation.lane ?? connection.publication_lane) !== to.scope.lane) throw new Error("Current source lifecycle scope requires reconciliation.");
 }
 
 async function captureLifecycleSource(options: PublishControlledDiscussionsOptions, operation: PublicationOperation, file: string) {
@@ -361,7 +361,7 @@ async function captureLifecycleSource(options: PublishControlledDiscussionsOptio
   return actual;
 }
 
-function captureBinding(data: Record<string, unknown>, site: URL, docsDir: string, file: string, forumOrigin: string) {
+function captureBinding(data: Record<string, unknown>, site: NativeUrl, docsDir: string, file: string, forumOrigin: string) {
   const present = ["discussionbridgeExternalId", "discussionbridgeResourceId", "discourseTopicId", "discourseTopicUrl"].map(key => Object.hasOwn(data, key));
   const complete = present.every(Boolean), none = present.every(value => !value), explicit = present[0] && !present[1] && !present[2] && !present[3], nativeCore = !present[0] && !present[1] && present[2] && present[3];
   if (!complete && !none && !explicit && !nativeCore) throw new Error("Native source identity tuple is partial or ambiguous.");

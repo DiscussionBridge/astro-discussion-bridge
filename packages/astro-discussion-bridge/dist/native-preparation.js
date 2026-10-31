@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
+import { nativeUrl } from "./native-url.js";
 const sha256 = (value) => createHash("sha256").update(value, "utf8").digest("hex");
 const sanitizerRequire = createRequire(createRequire(import.meta.url).resolve("sanitize-html"));
 const { parseDocument } = sanitizerRequire("htmlparser2");
@@ -12,7 +13,7 @@ export class NativeAssetRenderRequired extends NativePreparationLimitation {
 export function captureNativeArticle(original, sourceArticleUrl, originalKind) {
     // The existing native/transport owner supplies this article URL. No guessed
     // site/hostname/default base and no new URI admission policy is selected here.
-    new URL(sourceArticleUrl);
+    nativeUrl(sourceArticleUrl);
     const result = { originalKind, sourceArticleUrl, original, originalBytes: Buffer.byteLength(original), originalSha256: sha256(original) };
     assertNativeArticleCapture(result);
     return result;
@@ -27,7 +28,7 @@ export function assertNativeArticleCapture(capture) {
         || capture.originalBytes !== Buffer.byteLength(capture.original) || capture.originalSha256 !== sha256(capture.original)
         || new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(capture.original)) !== capture.original)
         throw new Error("Native original article capture requires reconciliation.");
-    new URL(capture.sourceArticleUrl);
+    nativeUrl(capture.sourceArticleUrl);
     if (capture.preparedHtml !== undefined && (typeof capture.renderedHtml !== "string" || capture.preparedBytes !== Buffer.byteLength(capture.preparedHtml) || capture.preparedSha256 !== sha256(capture.preparedHtml)
         || new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(capture.preparedHtml)) !== capture.preparedHtml))
         throw new Error("Complete native preparation evidence requires reconciliation.");
@@ -120,7 +121,7 @@ export function copiedReferencePreparation(sourceArticleUrl) {
                 let resolved = supplied;
                 if (!/^[A-Za-z][A-Za-z0-9+.-]*:/u.test(supplied)) {
                     try {
-                        resolved = new URL(supplied, sourceArticleUrl).href;
+                        resolved = nativeUrl(supplied, sourceArticleUrl).href;
                     }
                     catch {
                         throw new NativePreparationLimitation("Bridge preparation cannot resolve a copied reference against the captured source article URL; original retained.");

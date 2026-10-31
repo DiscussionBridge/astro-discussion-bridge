@@ -778,16 +778,16 @@
   ],
   "inputs": {
     "package.json": {
-      "bytes": 2423,
-      "sha256": "3ad2aeee31a7d83f1fff16653cc6e1b49390eab6c39791d67c78a1e464ac16bf"
+      "bytes": 2518,
+      "sha256": "d47dcfa1ccd7a2a076dcf71cc6155e620fc7087a31c48c1a8020901b3ec5d36c"
     },
     "package-lock.json": {
       "bytes": 313234,
       "sha256": "c4fffabaa77eb3447f07e45298f1a2e58b1e65c406d3679ec87ebdf41e241796"
     },
     "src/browser-rich-content.mjs": {
-      "bytes": 2583,
-      "sha256": "84a338a14773c129ed6d106e7df7e503995b4c7bf3fe1d6439ba5814dbf9bd5a"
+      "bytes": 2893,
+      "sha256": "51c02d0718d3215762e839a5790be9e192c0668cce701332112dfe910df6fbef"
     },
     "scripts/build-rich-content.mjs": {
       "bytes": 5943,
@@ -804,8 +804,8 @@
   },
   "outputs": {
     "src/assets/discussionbridge-rich-content.js": {
-      "bytes": 3455594,
-      "sha256": "feef8100121008c51c1acf4fa69fbf10571191a446496775313e3aaccfd2009c"
+      "bytes": 3455650,
+      "sha256": "d8618b9ab383d103acef28732fe044525312203254e5d3dd7be23fd52b2cb3a7"
     },
     "src/assets/discussionbridge-rich-content.css": {
       "bytes": 1459688,

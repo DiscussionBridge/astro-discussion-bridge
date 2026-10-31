@@ -8,6 +8,7 @@ import integration from "../dist/index.js";
 import { parsePublicDiscourseTopicUrl } from "../dist/web-url.js";
 import { refreshSimpleComments } from "../dist/simple-live.js";
 import { ownedTempFixture } from "./helpers/owned-temp.mjs";
+import { nativePackageAlias } from "./helpers/package-alias.mjs";
 
 const packageRoot = fileURLToPath(new URL("../", import.meta.url));
 const installed = createRequire(new URL("../package.json", import.meta.url));
@@ -28,7 +29,7 @@ async function render(t, pages, comments = {}) {
     integrations: [integration({ discourseUrl: forum, comments: { credit: { enabled: false }, ...comments } })],
     vite: { resolve: { alias: [
       { find: "astro", replacement: "astro", customResolver: source => installed.resolve(source) },
-      { find: "astro-discussion-bridge", replacement: "astro-discussion-bridge", customResolver: source => fileURLToPath(import.meta.resolve(source)) },
+      { find: "astro-discussion-bridge", replacement: "astro-discussion-bridge", customResolver: source => nativePackageAlias(source, fileURLToPath(import.meta.resolve(source))) },
       { find: "sanitize-html", replacement: path.join(runtimeRoot, "sanitize-html") },
       { find: "dompurify", replacement: path.join(runtimeRoot, "dompurify") },
     ] } } });

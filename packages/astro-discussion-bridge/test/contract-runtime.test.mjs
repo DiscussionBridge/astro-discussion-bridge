@@ -10,6 +10,16 @@ const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 for (const [name, expected] of Object.entries({ "cms-runtime.mjs": "acdfddf574910fb7e6cf2e2fe6837b3d266e8d93f1d96cee5e7699122d779076", "cms-schema.json": "e6a15a6d70f7bc8b8ee82aa22a0b9c2ff1bbf2da6277f7087118be9e026ce5c0", "idna/DEPENDENCIES.json": "2f2a7bce6697e9ed73d2dacd29e244467e3162066d012b7801939032d0847d1e", "idna/LICENSES.txt": "21fed045273e053184af7f129c5eccd3d24529b04540c2494c8eb5254d46f331" })) assert.equal(hash(fs.readFileSync(path.join(base, name))), expected, name);
 const sdk = await import(pathToFileURL(path.join(base, "cms-runtime.mjs")).href);
 const fixtures = Object.fromEntries(Object.entries({ "positive-examples.json": "b3ea942e9fe6b824ab2a0af5f4eecf46b672d544856fea53929d60a359225b30", "url-domain-policy.json": "e6fa88694fe1142f8754c2e50cbee752a9755d63324247aaa9db465450d5672e", "url-contextj.json": "5cf9aee605cd002a75d929da35fe0f6bcb99b2dd83a78a71751dc24b95adadd8" }).map(([name, expected]) => { const bytes = fs.readFileSync(path.join(root, "test/fixtures/cms-v4", name)); assert.equal(hash(bytes), expected); return [name, JSON.parse(bytes)]; }));
+test("native guide header names the actual shipped V4 packet, not attention-capability history", () => {
+  const descriptor = JSON.parse(fs.readFileSync(path.join(root, "src/private/ARTIFACTS.json")));
+  const header = fs.readFileSync(path.join(root, "docs/NATIVE_V4.md"), "utf8").split("###", 1)[0];
+  assert.ok(header.includes(`candidate \`${descriptor.candidate_id}\``));
+  assert.ok(header.includes(`implementation \`${descriptor.implementation_version}\``));
+  assert.match(header, /wire V4/);
+  assert.equal(descriptor.wire_version, "v4");
+  assert.equal(descriptor.release_version, null);
+  assert.match(header, /release null/);
+});
 test("actual Astro SDK applies fixed common URL policy without replacing original bytes", () => {
   assert.equal(sdk.candidateId, "discussionbridge-v4-core-20261029-r7");
   for (const item of fixtures["url-domain-policy.json"].cases) {

@@ -5,6 +5,7 @@ import { CmsClient } from "./cms-client.js";
 import { assertCmsConnection, emptyCmsState, readCmsState, stageCmsClaim, stageCmsFeedPage, withCmsStateLock, writeCmsState } from "./cms-state.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { validateCms } from "../src/private/cms-runtime.mjs";
+import { cmsOrigin, nativeUrl } from "./native-url.js";
 export async function withCmsCoordinator(options, action) {
     const docs = path.resolve(options.docsDir), journal = path.resolve(options.stateFile);
     const relative = path.relative(docs, journal);
@@ -49,8 +50,8 @@ export function cmsNativeReservation(options, source) {
     const slug = `source-${createHash("sha256").update(source.source_id, "utf8").digest("hex")}`;
     const relative = `${routeBase}/${slug}.md`;
     const nativeId = relative;
-    const canonicalUrl = new URL(`/${routeBase}/${slug}/`, options.siteUrl).href;
-    const externalId = `astro-page:${createHash("sha256").update(`${new URL(options.siteUrl).origin}/\n${relative}`).digest("hex")}`;
+    const canonicalUrl = nativeUrl(`/${routeBase}/${slug}/`, options.siteUrl).href;
+    const externalId = `astro-page:${createHash("sha256").update(`${cmsOrigin(options.siteUrl)}/\n${relative}`).digest("hex")}`;
     return { nativeId, canonicalUrl, externalId, file: path.resolve(options.docsDir, relative) };
 }
 export async function reserveCmsSource(options, sourceId) {

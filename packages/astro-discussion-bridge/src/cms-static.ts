@@ -9,6 +9,7 @@ import { nativePublicationFiles } from "./native-publication.js";
 import { verifyCmsAbsence, verifyCmsPublication, type CmsDeploymentReceipt } from "./cms-verification.js";
 import { nativeOwnershipReceiptSha256, validateCms } from "../src/private/cms-runtime.mjs";
 import { NativeMediaUnsupportedError } from "./native-media.js";
+import { cmsUrl, sameCmsOrigin } from "./native-url.js";
 import { assertNativeArticleCapture, captureNativeArticle, NativePreparationLimitation } from "./native-preparation.js";
 
 type NativeResult = { kind: "publish_revision" | "withdraw"; native_id: string; external_id: string; canonical_url: string; native_revision: string | null; ownership_receipt_sha256: string; representation?: { kind: "full"; source_content_sha256: string } };
@@ -92,9 +93,9 @@ export async function prepareCmsNativeWork(options: CmsCoordinatorOptions, workI
       let body: string;
       const fields: Record<string, unknown> = { ...priorFields };
       if (source) {
-        const topicUrl = new URL(source.topic_url);
+        const topicUrl = cmsUrl(source.topic_url);
         const topic = /\/t\/(?:[^/]+\/)?([1-9]\d*)(?:\/1)?\/?$/u.exec(topicUrl.pathname);
-        if (topicUrl.origin !== client.origin || !topic || topic[1] !== source.topic_id || /%2f|%5c/iu.test(topicUrl.pathname)) throw new Error("CMS source discussion origin or topic identity requires attention.");
+        if (!sameCmsOrigin(source.topic_url, client.origin) || !topic || topic[1] !== source.topic_id || /%2f|%5c/iu.test(topicUrl.pathname)) throw new Error("CMS source discussion origin or topic identity requires attention.");
         const completeContent = await client.content(source);
         transaction.articleCapture ??= captureNativeArticle(completeContent, source.topic_url, "cooked_html");
         const originalCapture = transaction.articleCapture as import("./native-preparation.js").NativeArticleCapture;
@@ -200,7 +201,7 @@ async function exactNativePlan(state: CmsNativeState, plan: StagePlan) {
 
 async function builtArtifact(buildDir: string, canonicalUrl: string, notBefore?: string): Promise<string | null> {
   const directory = path.resolve(buildDir);
-  const url = new URL(canonicalUrl);
+  const url = cmsUrl(canonicalUrl);
   if (!/^\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/u.test(url.pathname) || url.search || url.hash) throw new Error("CMS native build route requires explicit reconciliation.");
   const file = path.resolve(directory, `.${url.pathname}`, "index.html");
   if (!file.startsWith(directory + path.sep)) throw new Error("CMS native build path escaped its configured directory.");

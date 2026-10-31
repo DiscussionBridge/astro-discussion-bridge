@@ -9,6 +9,8 @@ import { activeSourceMove } from "./cms-to-source-state.js";
 import { sourceHash, inspectSourceArticle, parseSourceHtml, sourceNodes, sourceDependencyMarkup, assertSourceHtmlContentType } from "./to-source-profile.js";
 import { publicResponse, publicHtml } from "./cms-verification.js";
 import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
+import { cmsUrl, nativeUrl, sameCmsOrigin } from "./native-url.js";
+import { cmsFetch } from "./cms-fetch.js";
 const symbol = Symbol.for("discussionbridge.astro.native-source-build.v4");
 const globalOwner = globalThis;
 const processToken = globalOwner[symbol] ??= randomUUID();
@@ -41,14 +43,14 @@ async function actualBuildHtml(file, root) {
     return html;
 }
 async function captureNativeAssets(html, capture, root, base, assetsDir) {
-    const result = [], seen = new Set(), canonical = new URL(capture.canonicalUrl);
+    const result = [], seen = new Set(), canonical = cmsUrl(capture.canonicalUrl);
     const generatedPrefix = `${base.replace(/\/$/u, "")}/${assetsDir.replace(/^\/+|\/+$/gu, "")}/`;
     for (const node of sourceNodes(parseSourceHtml(html))) {
         const supplied = node.name === "img" || node.name === "script" ? node.attribs?.src : node.name === "link" && /(?:^|\s)(?:stylesheet|modulepreload)(?:\s|$)/iu.test(node.attribs?.rel ?? "") ? node.attribs?.href : undefined;
         if (!supplied)
             continue;
-        const url = new URL(supplied, canonical);
-        if (url.origin !== canonical.origin || seen.has(url.href) || !url.pathname.startsWith(base))
+        const url = nativeUrl(supplied, canonical);
+        if (url.protocol !== "https:" || !sameCmsOrigin(url.href, capture.canonicalUrl) || seen.has(url.href) || !url.pathname.startsWith(base))
             continue;
         const local = decodeURIComponent(url.pathname.slice(base.length)).split("/").join(path.sep), file = path.resolve(root, local), relative = path.relative(root, file);
         if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))
@@ -151,7 +153,7 @@ async function verifyNativeAsset(expected, fetchImplementation) {
         await response.body?.cancel().catch(() => undefined);
     }
 }
-export async function verifyControlledSourcePublic(capture, preparedAt, deployedAt, fetchImplementation = fetch) {
+export async function verifyControlledSourcePublic(capture, preparedAt, deployedAt, fetchImplementation = cmsFetch) {
     if (!capture.build || !capture.ownership.moveId || !capture.ownership.proofNonce)
         throw new Error("Actual full native source build/issued challenge is unavailable.");
     validateCms("Instant", preparedAt);

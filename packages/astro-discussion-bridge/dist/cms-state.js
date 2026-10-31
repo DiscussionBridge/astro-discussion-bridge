@@ -4,13 +4,11 @@ import path from "node:path";
 import { withPublicationOperationalStateLock } from "./native-locks.js";
 import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { nativePublicationFiles } from "./native-publication.js";
+import { cmsOrigin, sameCmsOrigin } from "./native-url.js";
 import { assertNativeArticleCapture } from "./native-preparation.js";
 export function emptyCmsState(client, destinationOrigin, connectionId) {
-    validateCms("Url", destinationOrigin);
-    const native = new URL(destinationOrigin);
-    if (native.pathname !== "/" || native.search)
-        throw new Error("CMS native destination requires an HTTPS origin.");
-    return { schemaVersion: 1, wireVersion: "v4", adapterId: "astro-cms-static", connectionId, serviceOrigin: client.origin, destinationOrigin: native.origin,
+    const origin = cmsOrigin(destinationOrigin);
+    return { schemaVersion: 1, wireVersion: "v4", adapterId: "astro-cms-static", connectionId, serviceOrigin: client.origin, destinationOrigin: origin,
         scopeRevision: null, policyRevision: null, stream: "initial", cursor: null, checkpoint: null,
         events: Object.create(null), sources: Object.create(null), mappings: Object.create(null), generations: Object.create(null), transactions: Object.create(null) };
 }
@@ -104,7 +102,7 @@ export async function readCmsState(file, expected) {
                 validateCms("OpaqueId", location.nativeId);
                 validateCms("UUID", location.moveId);
                 validateCms("Revision", location.mappingRevision);
-                if (new URL(location.canonicalUrl).origin !== state.destinationOrigin)
+                if (!sameCmsOrigin(location.canonicalUrl, state.destinationOrigin))
                     throw new Error("CMS native URL ancestry changed origin.");
             }
         }
@@ -176,7 +174,7 @@ export async function writeCmsState(file, state) {
     }
 }
 export function assertCmsConnection(connection, state) {
-    if (connection.connection_id !== state.connectionId || connection.profile !== "astro" || new URL(connection.destination_origin).origin !== state.destinationOrigin
+    if (connection.connection_id !== state.connectionId || connection.profile !== "astro" || !sameCmsOrigin(connection.destination_origin, state.destinationOrigin)
         || !connection.directions.includes("from_discourse") || !connection.policy.enabled || connection.policy.publication_kind !== "static" || connection.native_capabilities.publication_kind !== "static"
         || !connection.native_capabilities.supported_presentations.includes(connection.policy.presentation_mode) || !connection.native_capabilities.complete_content_supported)
         throw new Error("CMS receiver-authorized Astro static publication is unavailable.");

@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { createMarkdownProcessor } from "@astrojs/markdown-remark";
 import { validateCms } from "../src/private/cms-runtime.mjs";
+import { sameCmsOrigin } from "./native-url.js";
+import { cmsFetch } from "./cms-fetch.js";
 // Use the parser declared by the existing pinned production sanitizer, not a
 // dev-only hoisted parser or an added installed dependency.
 const sanitizerRequire = createRequire(createRequire(import.meta.url).resolve("sanitize-html"));
@@ -65,10 +67,10 @@ function ownedArticle(html, expected) {
             const value = new RegExp(`\\bconst\\s+${name}\\s*=\\s*("(?:\\\\.|[^"\\\\])*"|[0-9]+|true|false)\\s*;`, "u").exec(textOf(scripts[0]))?.[1];
             return value === undefined ? undefined : JSON.parse(value);
         };
-        if (presentation.attribs?.["data-discussionbridge-topic-id"] !== expected.source.topic_id || new URL(presentation.attribs?.["data-discussionbridge-discourse-url"] ?? "").origin !== new URL(expected.source.topic_url).origin
+        if (presentation.attribs?.["data-discussionbridge-topic-id"] !== expected.source.topic_id || !sameCmsOrigin(presentation.attribs?.["data-discussionbridge-discourse-url"] ?? "", expected.source.topic_url)
             || !nodes(presentation).some(node => node.name === "div" && node.attribs?.id === "discourse-comments")
             || String(variable("resolvedTopicId")) !== expected.source.topic_id || variable("fullApp") !== (expected.mode === "interactive")
-            || typeof variable("discourseUrl") !== "string" || new URL(variable("discourseUrl")).origin !== new URL(expected.source.topic_url).origin)
+            || typeof variable("discourseUrl") !== "string" || !sameCmsOrigin(variable("discourseUrl"), expected.source.topic_url))
             throw new Error("CMS actual embed/composer presentation requires attention.");
     }
     const bytes = fragment(html, owner);
@@ -76,7 +78,7 @@ function ownedArticle(html, expected) {
         throw new Error("CMS owned rendered fragment is incomplete.");
     return { publication: bytes, content: fragment(html, content[0]) };
 }
-export async function verifyCmsPublication(expected, deployment, fetchImplementation = fetch) {
+export async function verifyCmsPublication(expected, deployment, fetchImplementation = cmsFetch) {
     validateCms("Source", expected.source);
     validateCms("Instant", expected.preparedAt);
     validateCms("Instant", deployment.deployedAt);
@@ -112,7 +114,7 @@ export async function verifyCmsPublication(expected, deployment, fetchImplementa
         await response.body?.cancel().catch(() => undefined);
     }
 }
-export async function verifyCmsAbsence(url, nativeId, preparedAt, deployment, fetchImplementation = fetch) {
+export async function verifyCmsAbsence(url, nativeId, preparedAt, deployment, fetchImplementation = cmsFetch) {
     validateCms("Instant", preparedAt);
     validateCms("Instant", deployment.deployedAt);
     validateCms("OpaqueId", deployment.deploymentId);

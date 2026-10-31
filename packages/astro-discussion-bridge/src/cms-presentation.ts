@@ -10,6 +10,7 @@ import { hasRelativeCopiedReferences } from "./native-preparation.js";
 import { findMarkdownFiles } from "./native-source.js";
 import { verifyCmsPublication, type CmsDeploymentReceipt } from "./cms-verification.js";
 import { nativeOwnershipReceiptSha256, validateCms } from "../src/private/cms-runtime.mjs";
+import { cmsUrl, sameCmsOrigin } from "./native-url.js";
 
 export interface CmsNativePresentationMove {
   phase: "intent" | "applied" | "committed" | "aborted" | "attention";
@@ -73,9 +74,9 @@ export async function prepareCmsNativeUrlMove(options: CmsCoordinatorOptions, wo
     let move = presentationOf(transaction);
     if (!move) {
       const current = await client.query(workId); native.assertCurrent(state, transaction, current);
-      const reservation = cmsNativeLocation(options, state, current.work.source_id), target = new URL(newUrl), old = new URL(current.mapping.canonical_url);
+      const reservation = cmsNativeLocation(options, state, current.work.source_id), target = cmsUrl(newUrl), old = cmsUrl(current.mapping.canonical_url);
       const base = options.routeBase ?? "comments";
-      if (target.href !== newUrl || target.origin !== state.destinationOrigin || target.search || target.hash || target.pathname === old.pathname
+      if (target.href !== newUrl || !sameCmsOrigin(newUrl, state.destinationOrigin) || target.search || target.hash || target.pathname === old.pathname
         || !new RegExp(`^/${base}/[a-z0-9]+(?:-[a-z0-9]+)*/$`, "u").test(target.pathname)) throw new Error("CMS URL move needs an explicit supported same-collection native route.");
       if (current.work.state !== "leased" || current.mapping.destination_native_id !== reservation.nativeId || current.mapping.canonical_url !== reservation.canonicalUrl
         || current.mapping.external_id !== reservation.externalId || current.mapping.synchronized_source_revision !== current.work.source_revision) throw new Error("CMS URL move requires the actual unchanged synchronized native source and mapping.");
@@ -120,7 +121,7 @@ export async function prepareCmsNativeUrlMove(options: CmsCoordinatorOptions, wo
       await save();
       const fields = nativePublicationFiles.metadata(move.oldOutput)!;
       const receipt = { ...(fields.discussionbridgeCmsOwnership as object), canonical_url: newUrl, move_id: move.receipt.move_id, proof_nonce: move.receipt.proof_nonce };
-      move.output ??= encode({ ...fields, slug: new URL(newUrl).pathname.slice(1, -1), discussionbridgeCmsOwnership: receipt, discussionbridgeCmsOwnershipSha256: nativeOwnershipReceiptSha256(receipt) }, native.publicationBody(move.oldOutput));
+      move.output ??= encode({ ...fields, slug: cmsUrl(newUrl).pathname.slice(1, -1), discussionbridgeCmsOwnership: receipt, discussionbridgeCmsOwnershipSha256: nativeOwnershipReceiptSha256(receipt) }, native.publicationBody(move.oldOutput));
       await save();
       actual = await nativePublicationFiles.readExisting(move.file);
       if (actual?.contents !== move.output) {

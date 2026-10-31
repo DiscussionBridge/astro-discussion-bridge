@@ -1,4 +1,5 @@
 import { type MarkdownRenderer } from "@astrojs/markdown-remark";
+import { type NativeUrl } from "./native-url.js";
 import { type NativeArticleCapture } from "./native-preparation.js";
 export declare function findMarkdownFiles(root: string): Promise<string[]>;
 export declare function parseMarkdown(source: string): {
@@ -9,12 +10,12 @@ export declare function updateFrontmatter(source: string, values: Record<string,
 export declare function pageUrlForFile(input: {
     docsDir: string;
     filePath: string;
-    siteBase: URL;
+    siteBase: NativeUrl;
     routeBase: string;
     slug: unknown;
     hasSlug: boolean;
 }): string;
-export declare function stableExternalId(siteBase: URL, docsDir: string, filePath: string): string;
+export declare function stableExternalId(siteBase: NativeUrl, docsDir: string, filePath: string): string;
 export declare function validateRouteBase(value: string | undefined): string;
 export declare function validateSlug(value: unknown, filePath: string): string;
 export declare function validateRelativeRouteSegments(segments: string[], label: string): string;

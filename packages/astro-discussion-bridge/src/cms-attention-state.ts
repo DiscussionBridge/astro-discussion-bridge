@@ -3,6 +3,7 @@ import { validateCms } from "../src/private/cms-runtime.mjs";
 import type { CmsCoordinatorOptions } from "./cms-coordinator.js";
 import type { AttentionState } from "./cms-attention-types.js";
 import path from "node:path";
+import { cmsOrigin } from "./native-url.js";
 export const attentionFile = (options: CmsCoordinatorOptions) => `${options.stateFile}.attention.json`;
 function validate(value: unknown): AttentionState {
   const state = value as AttentionState;
@@ -42,7 +43,7 @@ function validate(value: unknown): AttentionState {
   return state;
 }
 export async function readAttentionState(options: CmsCoordinatorOptions): Promise<AttentionState> {
-  const expected = { format: "astro-attention-1" as const, connectionId: options.connectionId, serviceOrigin: new URL(options.serverUrl).origin, destinationOrigin: new URL(options.siteUrl).origin };
+  const expected = { format: "astro-attention-1" as const, connectionId: options.connectionId, serviceOrigin: cmsOrigin(options.serverUrl), destinationOrigin: cmsOrigin(options.siteUrl) };
   const state = await readPrivateJournal(attentionFile(options), validate) ?? { ...expected, inspectionsAfter: 0, recoveriesAfter: 0, inspections: Object.create(null), recoveries: Object.create(null), restorations: Object.create(null) };
   if (state.connectionId !== expected.connectionId || state.serviceOrigin !== expected.serviceOrigin || state.destinationOrigin !== expected.destinationOrigin) throw new Error("Astro recovery scope changed; retained evidence requires reconciliation.");
   return state;

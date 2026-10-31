@@ -9,7 +9,7 @@ import { withNativeSourceWriter } from "./native-locks.js";
 import { readPublicationOperationalState, writePublicationOperationalState } from "./operational-state.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { parseMarkdown, pageUrlForFile, validateRouteBase, validateSlug, findMarkdownFiles, updateFrontmatter, prepareNativeRenderedArticle, nativeLifecycle } from "./native-source.js";
-import { parseServiceBaseUrl } from "./web-url.js";
+import { cmsServiceBaseUrl as parseServiceBaseUrl, cmsUrl, nativeUrl as parseNativeUrl, sameCmsOrigin } from "./native-url.js";
 import { NativePreparationLimitation } from "./native-preparation.js";
 import { makeSourceOwnership, sourceHash, sourceOriginalKey, resolveNativeSourceTargets, SOURCE_MOVE_FIELD, SOURCE_NONCE_FIELD, SOURCE_OWNERSHIP_FIELD } from "./to-source-profile.js";
 import { projectGeneratedReadMoreMove, semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
@@ -23,7 +23,7 @@ export function sourcePreparationBase(operation, contents, canonicalUrl) {
 export function assertSourceConnection(options, operation, client, connection) {
     const to = operation.to, scope = to?.scope;
     if (!scope || connection.connection_id !== scope.connectionId || connection.scope_revision !== scope.scopeRevision || client.origin !== scope.serverOrigin
-        || connection.profile !== "astro" || !connection.directions.includes("to_discourse") || new URL(options.siteUrl).origin !== scope.siteOrigin || new URL(connection.destination_origin).origin !== scope.siteOrigin
+        || connection.profile !== "astro" || !connection.directions.includes("to_discourse") || !sameCmsOrigin(options.siteUrl, scope.siteOrigin) || !sameCmsOrigin(connection.destination_origin, scope.siteOrigin)
         || (options.controlledCreation.lane ?? connection.publication_lane) !== scope.lane)
         throw new Error("Native source move current connection/To scope requires reconciliation.");
 }
@@ -178,8 +178,8 @@ export async function beginControlledSourceUrlMove(options, sourceFile, newUrl) 
             const current = await client.record(operation.resourceId);
             assertRecord(operation, current, to.acceptedRevision, operation.canonicalUrl);
             validateCms("Url", newUrl);
-            const target = new URL(newUrl), site = parseServiceBaseUrl(options.siteUrl), prefix = new URL(`${validateRouteBase(options.routeBase)}/`.replace(/^\/$/u, ""), site).pathname;
-            if (target.href !== newUrl || target.origin !== new URL(operation.canonicalUrl).origin || target.search || target.hash || newUrl === operation.canonicalUrl || !target.pathname.startsWith(prefix) || !target.pathname.endsWith("/"))
+            const target = cmsUrl(newUrl), site = parseServiceBaseUrl(options.siteUrl), prefix = parseNativeUrl(`${validateRouteBase(options.routeBase)}/`.replace(/^\/$/u, ""), site).pathname;
+            if (target.href !== newUrl || !sameCmsOrigin(newUrl, operation.canonicalUrl) || target.search || target.hash || newUrl === operation.canonicalUrl || !target.pathname.startsWith(prefix) || !target.pathname.endsWith("/"))
                 throw new Error("Source move needs an exact supported same-origin native permalink.");
             const slug = validateSlug(target.pathname.slice(prefix.length, -1), file);
             if (pageUrlForFile({ docsDir: path.resolve(options.docsDir), filePath: file, siteBase: site, routeBase: validateRouteBase(options.routeBase), slug, hasSlug: true }) !== newUrl)

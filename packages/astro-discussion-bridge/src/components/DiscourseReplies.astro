@@ -2,12 +2,14 @@
 import sanitizeHtml from "sanitize-html";
 import discourseWordmark from "../assets/discourse-wordmark.svg?raw";
 import config from "virtual:discussion-bridge/config";
-import { readPublicForumSettings, resolveConnectedForumName, resolveForumName } from "../forum-name";
+import { resolveConnectedForumName, resolveForumName } from "../forum-name";
 import { normalizeTopicId, parsePublicTopicJson } from "../topic-identity";
 import {
   normalizeServiceBaseUrl,
   parsePublicDiscourseTopicUrl,
-} from "astro-discussion-bridge/web-url";
+  readPublicForumSettings,
+  nativeUrl, cmsFetch, type NativeUrl,
+} from "astro-discussion-bridge/server-url";
 
 interface Props {
   class?: string;
@@ -55,7 +57,7 @@ if (topicReference && String(topicReference.topicId) !== topicId) {
 }
 
 const topicUrl = topicReference?.href ?? `${discourseUrl}/t/${topicId}`;
-const endpoint = new URL(`/t/${topicId}.json`, `${discourseUrl}/`);
+const endpoint = nativeUrl(`/t/${topicId}.json`, `${discourseUrl}/`);
 const payload = await publicTopicJson(endpoint);
 const stream = payload.post_stream?.stream;
 if (!Array.isArray(stream)) throw new Error("DiscourseReplies requires a topic post stream.");
@@ -67,7 +69,7 @@ for (const post of payload.post_stream?.posts ?? []) {
 const missingIds = replyIds.filter((id) => !postsById.has(id));
 for (let offset = 0; offset < missingIds.length; offset += FETCH_BATCH_SIZE) {
   const batch = missingIds.slice(offset, offset + FETCH_BATCH_SIZE);
-  const postsEndpoint = new URL(`/t/${topicId}/posts.json`, `${discourseUrl}/`);
+  const postsEndpoint = nativeUrl(`/t/${topicId}/posts.json`, `${discourseUrl}/`);
   for (const id of batch) postsEndpoint.searchParams.append("post_ids[]", String(id));
   const additional = await publicTopicJson(postsEndpoint);
   for (const post of additional.post_stream?.posts ?? []) {
@@ -84,7 +86,7 @@ const initialReplies = replies.slice(0, INITIAL_REPLIES);
 const remainingReplies = replies.slice(INITIAL_REPLIES);
 const exceedsBound = stream.length - 1 > MAX_REPLIES;
 const heading = Astro.props.heading ?? "Comments";
-const settings = await readPublicForumSettings(discourseUrl).catch(() => undefined);
+const settings = await readPublicForumSettings(discourseUrl, cmsFetch).catch(() => undefined);
 const forumName = Astro.props.connectedSource
   ? await resolveConnectedForumName(Astro.props.forumName)
   : resolveForumName(config.forumName, settings?.title);
@@ -94,9 +96,9 @@ interface TopicPayload {
   post_stream?: { posts?: unknown[]; stream?: unknown[] };
 }
 
-async function publicTopicJson(url: URL): Promise<TopicPayload> {
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" },
+async function publicTopicJson(url: NativeUrl): Promise<TopicPayload> {
+  const response = await cmsFetch(url.href, {
+    method: "GET", credentials: "omit", headers: { Accept: "application/json", "Accept-Encoding": "identity" },
     redirect: "error",
     signal: AbortSignal.timeout(10_000),
   });
@@ -146,7 +148,7 @@ function postUrl(post: PublicPost): string {
 function avatarUrl(post: PublicPost): string | undefined {
   const template = post.avatar_template?.replace("{size}", "48");
   if (!template) return undefined;
-  return new URL(template, `${discourseUrl}/`).href;
+  return nativeUrl(template, `${discourseUrl}/`).href;
 }
 
 function cookedHtml(post: PublicPost): string {

@@ -10,6 +10,7 @@
   "exports": {
     ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
     "./web-url": { "types": "./dist/web-url.d.ts", "import": "./dist/web-url.js" },
+    "./server-url": { "types": "./dist/cms-web-url.d.ts", "import": "./dist/cms-web-url.js" },
     "./simple-live": { "types": "./dist/simple-live.d.ts", "import": "./dist/simple-live.js" },
     "./controlled-creation": { "types": "./dist/controlled-creation.d.ts", "import": "./dist/controlled-creation.js" },
     "./operational-state": { "types": "./dist/operational-state.d.ts", "import": "./dist/operational-state.js" },

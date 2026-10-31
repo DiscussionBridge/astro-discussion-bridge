@@ -6,6 +6,7 @@ import sanitizeHtml from "sanitize-html";
 import { parse as parseYaml } from "yaml";
 import { isInteractiveCommentsMode } from "./comments-mode.js";
 import { assertPublicationDirectory } from "./native-files.js";
+import { nativeUrl, type NativeUrl } from "./native-url.js";
 import { assertNativeMediaPreservedByCurrentRenderer, assertNativeMeaningRetained } from "./native-media.js";
 import { assertNativeArticleCapture, captureNativeArticle, completeNativePreparation, copiedReferencePreparation, nativeCodeLanguagePreparation, NativeAssetRenderRequired, NativePreparationLimitation, type NativeArticleCapture } from "./native-preparation.js";
 const MAX_SOURCE_READ_BATCH = 32;
@@ -59,7 +60,7 @@ export function updateFrontmatter(source: string, values: Record<string, string>
 export function pageUrlForFile(input: {
   docsDir: string;
   filePath: string;
-  siteBase: URL;
+  siteBase: NativeUrl;
   routeBase: string;
   slug: unknown;
   hasSlug: boolean;
@@ -73,14 +74,14 @@ export function pageUrlForFile(input: {
     ? validateSlug(input.slug, input.filePath)
     : fileRoute;
   const pathname = [input.routeBase, route].filter(Boolean).join("/");
-  const url = new URL(`${pathname}${pathname ? "/" : ""}`, input.siteBase);
+  const url = nativeUrl(`${pathname}${pathname ? "/" : ""}`, input.siteBase);
   if (url.origin !== input.siteBase.origin || !url.pathname.startsWith(input.siteBase.pathname)) {
     throw new Error(`Canonical page URL left the configured site boundary for ${input.filePath}.`);
   }
   return url.href;
 }
 
-export function stableExternalId(siteBase: URL, docsDir: string, filePath: string): string {
+export function stableExternalId(siteBase: NativeUrl, docsDir: string, filePath: string): string {
   const relative = path.relative(docsDir, filePath).split(path.sep).join("/");
   if (!relative || relative.startsWith("../") || relative.includes("/../")) {
     throw new Error(`Markdown path is outside the configured corpus: ${filePath}.`);
