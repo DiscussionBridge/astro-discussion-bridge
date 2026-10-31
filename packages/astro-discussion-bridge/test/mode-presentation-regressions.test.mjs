@@ -158,7 +158,7 @@ test("actual SSR replies stream within the existing public cap and cancel overfl
       assert.match((await pending).bounded, /Exact public reply/u);
       assert.equal(record.produced, maximum);
     } else {
-      await assert.rejects(pending, /byte limit/u);
+      await assert.rejects(pending, /512 KiB limit/u);
       assert.equal(record.cancelled, true);
       assert.ok(record.produced <= (kind === "declared" ? 0 : maximum + 32768));
     }

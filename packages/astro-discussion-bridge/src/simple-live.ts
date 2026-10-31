@@ -1,7 +1,7 @@
 import DOMPurify from "dompurify";
 import { readPublicForumSettings, resolveForumName, type PublicForumSettings } from "./forum-name.js";
 import { normalizeTopicId, parsePublicTopicJson } from "./topic-identity.js";
-import { closeResponse, readBoundedResponseBytes } from "./response-body.js";
+import { closeResponse, readBoundedResponseBytes, ResponseBodyLimitError } from "./response-body.js";
 
 const MAX_RESPONSE_BYTES = 512 * 1024;
 const MAX_REPLIES = 50;
@@ -94,6 +94,9 @@ async function publicJson(url: URL, expectedOrigin: string): Promise<TopicPayloa
     const value = parsePublicTopicJson(text);
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Public response JSON is invalid.");
     return value as TopicPayload;
+  } catch (error) {
+    if (error instanceof ResponseBodyLimitError) throw new Error("Public response is too large.");
+    throw error;
   } finally { closeResponse(response, controller); clearTimeout(timeout); }
 }
 

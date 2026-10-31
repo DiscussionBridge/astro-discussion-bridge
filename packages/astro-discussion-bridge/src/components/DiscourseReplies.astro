@@ -4,7 +4,7 @@ import discourseWordmark from "../assets/discourse-wordmark.svg?raw";
 import config from "virtual:discussion-bridge/config";
 import { resolveConnectedForumName, resolveForumName } from "../forum-name";
 import { normalizeTopicId, parsePublicTopicJson } from "../topic-identity";
-import { closeResponse, readBoundedResponseBytes } from "../response-body";
+import { closeResponse, readBoundedResponseBytes, ResponseBodyLimitError } from "../response-body";
 import {
   normalizeServiceBaseUrl,
   parsePublicDiscourseTopicUrl,
@@ -115,6 +115,9 @@ async function publicTopicJson(url: NativeUrl): Promise<TopicPayload> {
     const decoded = parsePublicTopicJson(responseText);
     if (!decoded || typeof decoded !== "object") throw new Error("DiscourseReplies response JSON is invalid.");
     return decoded as TopicPayload;
+  } catch (error) {
+    if (error instanceof ResponseBodyLimitError) throw new Error("DiscourseReplies response exceeded the 512 KiB limit.");
+    throw error;
   } finally { closeResponse(response, controller); clearTimeout(timeout); }
 }
 

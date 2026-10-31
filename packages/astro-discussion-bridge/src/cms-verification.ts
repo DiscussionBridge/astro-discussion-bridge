@@ -5,7 +5,7 @@ import { type CmsSource } from "./cms-client.js";
 import { validateCms } from "../src/private/cms-runtime.mjs";
 import { sameCmsOrigin } from "./native-url.js";
 import { cmsFetch } from "./cms-fetch.js";
-import { closeResponse, readBoundedResponseBytes } from "./response-body.js";
+import { closeResponse, readBoundedResponseBytes, ResponseBodyLimitError } from "./response-body.js";
 
 // Use the parser declared by the existing pinned production sanitizer, not a
 // dev-only hoisted parser or an added installed dependency.
@@ -134,5 +134,10 @@ export async function publicResponse(url: string, fetchImplementation: typeof fe
 
 export async function publicHtml(response: Response, maximum: number, signal: AbortSignal): Promise<string> {
   if (!Number.isSafeInteger(maximum) || maximum < 0 || !response.body) throw new Error("CMS expected native artifact budget is unavailable.");
-  return new TextDecoder("utf-8", { fatal: true }).decode(await readBoundedResponseBytes(response, maximum, signal, { canonicalContentLength: true }));
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(await readBoundedResponseBytes(response, maximum, signal, { canonicalContentLength: true })); }
+  catch (error) {
+    if (error instanceof ResponseBodyLimitError) throw new Error("CMS public response exceeds the expected native artifact budget.");
+    if (signal.aborted) throw new Error("CMS public verification timed out.");
+    throw error;
+  }
 }

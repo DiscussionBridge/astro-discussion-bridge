@@ -1,3 +1,6 @@
+export declare class ResponseBodyLimitError extends Error {
+    constructor();
+}
 /** Shared bounded consumption; this module also runs in the public browser graph. */
 export declare function consumeBoundedResponseBody(response: Response, maximum: number, signal: AbortSignal, consume: (bytes: Uint8Array) => void, options?: {
     canonicalContentLength?: boolean;

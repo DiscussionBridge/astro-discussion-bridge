@@ -1,3 +1,6 @@
+export class ResponseBodyLimitError extends Error {
+    constructor() { super("Response exceeds its byte limit."); this.name = "ResponseBodyLimitError"; }
+}
 /** Shared bounded consumption; this module also runs in the public browser graph. */
 export async function consumeBoundedResponseBody(response, maximum, signal, consume, options = {}) {
     let reader;
@@ -18,7 +21,7 @@ export async function consumeBoundedResponseBody(response, maximum, signal, cons
         // zeroes. Only callers that already required canonical length keep that rule.
         const lengthSyntax = options.canonicalContentLength ? /^(?:0|[1-9]\d*)$/u : /^[0-9]+$/u;
         if (declared !== null && (!lengthSyntax.test(declared) || Number(declared) > maximum))
-            throw new Error("Response exceeds its byte limit.");
+            throw new ResponseBodyLimitError();
         if (!response.body)
             return 0;
         reader = response.body.getReader();
@@ -34,7 +37,7 @@ export async function consumeBoundedResponseBody(response, maximum, signal, cons
                 throw new Error("Response contains a non-byte chunk.");
             size += value.byteLength;
             if (size > maximum)
-                throw new Error("Response exceeds its byte limit.");
+                throw new ResponseBodyLimitError();
             if (value.byteLength)
                 consume(value);
         }

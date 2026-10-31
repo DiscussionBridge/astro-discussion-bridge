@@ -1,3 +1,7 @@
+export class ResponseBodyLimitError extends Error {
+  constructor() { super("Response exceeds its byte limit."); this.name = "ResponseBodyLimitError"; }
+}
+
 /** Shared bounded consumption; this module also runs in the public browser graph. */
 export async function consumeBoundedResponseBody(response: Response, maximum: number, signal: AbortSignal, consume: (bytes: Uint8Array) => void, options: { canonicalContentLength?: boolean } = {}): Promise<number> {
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
@@ -13,7 +17,7 @@ export async function consumeBoundedResponseBody(response: Response, maximum: nu
     // Public Core responses retain normal HTTP digit syntax, including leading
     // zeroes. Only callers that already required canonical length keep that rule.
     const lengthSyntax = options.canonicalContentLength ? /^(?:0|[1-9]\d*)$/u : /^[0-9]+$/u;
-    if (declared !== null && (!lengthSyntax.test(declared) || Number(declared) > maximum)) throw new Error("Response exceeds its byte limit.");
+    if (declared !== null && (!lengthSyntax.test(declared) || Number(declared) > maximum)) throw new ResponseBodyLimitError();
     if (!response.body) return 0;
     reader = response.body.getReader();
     signal.addEventListener("abort", cancel, { once: true });
@@ -25,7 +29,7 @@ export async function consumeBoundedResponseBody(response: Response, maximum: nu
       if (done) break;
       if (!(value instanceof Uint8Array)) throw new Error("Response contains a non-byte chunk.");
       size += value.byteLength;
-      if (size > maximum) throw new Error("Response exceeds its byte limit.");
+      if (size > maximum) throw new ResponseBodyLimitError();
       if (value.byteLength) consume(value);
     }
     return size;
