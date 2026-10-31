@@ -39,9 +39,17 @@ and live HTTPS qualification remain separate gates.
 The `astro-discussion-bridge/server-url` entry is server-only. Native components
 use this normal package entry so Astro retains the SDK's installed schema/data
 boundary instead of bundling its file-backed runtime into a prerender chunk.
-The existing integration declares only this server entry external to Astro's
-SSR bundle. Components and browser enhancement still compile normally; operators
+The existing integration explicitly preserves only this server entry as a
+normal external package import in Astro's SSR bundle; a browser import is
+refused. The integration does not rely solely on an SSR external list, which
+framework-package crawling can override, and does not embed a build-host absolute
+module path. Components and browser enhancement still compile normally; operators
 do not add a build hook, copied schema file or site-specific Vite workaround.
+
+Maintainer CI also runs `npm run test:normal-consumer`: an ordinary production
+installation of the saved archive and native two-page Astro build, without the
+no-install fixtures' resolution aliases, parser overrides or custom Vite options.
+This is local installation/build coverage, not external forum or deployment proof.
 
 ### Selected-source Retry after a definite To02 refusal
 

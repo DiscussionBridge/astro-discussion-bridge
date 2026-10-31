@@ -42,7 +42,18 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Astr
   return { name: "astro-discussion-bridge", hooks: { "astro:config:setup": ({ config: nativeConfig, command, updateConfig, injectScript }) => {
     projectRoot = fileURLToPath(nativeConfig.root);
     nativeBuild = command === "build";
-    updateConfig({ vite: { ssr: { external: ["astro-discussion-bridge/server-url"] }, plugins: [{ name: "astro-discussion-bridge-config", resolveId(id) { return id === "virtual:discussion-bridge/config" ? "\0virtual:discussion-bridge/config" : undefined; },
+    updateConfig({ vite: { ssr: { external: ["astro-discussion-bridge/server-url"] }, plugins: [{ name: "astro-discussion-bridge-config", enforce: "pre", resolveId(id, _importer, context) {
+      if (id === "astro-discussion-bridge/server-url") {
+        if (!context?.ssr) throw new Error("DiscussionBridge server-url is a server-only package entry.");
+        // Explicitly preserve this one installed module and its adjacent SDK
+        // data. Framework-package noExternal crawling can override the SSR
+        // external list in native builds; components/browser code still bundle.
+        // Keep a normal package import, not a build-host absolute path, so a
+        // server output can still resolve its installed dependency after deploy.
+        return { id, external: true };
+      }
+      return id === "virtual:discussion-bridge/config" ? "\0virtual:discussion-bridge/config" : undefined;
+    },
       load(id) { return id === "\0virtual:discussion-bridge/config" ? `export default ${JSON.stringify(config)};` : undefined; } }] } });
     injectScript("page", `import { startSimpleComments } from 'astro-discussion-bridge/simple-live'; document.addEventListener('astro:page-load', startSimpleComments); startSimpleComments();`);
   }, "astro:config:done": async ({ config: nativeConfig, logger }) => {

@@ -12,6 +12,7 @@ import { validateCms, cmsUrlAuthority } from "../src/private/cms-runtime.mjs";
 import { cmsUrl, nativeUrl, cmsOrigin, sameCmsOrigin } from "../dist/native-url.js";
 import * as presentation from "../dist/cms-web-url.js";
 import { nativePackageAlias } from "./helpers/package-alias.mjs";
+import discussionBridge from "../dist/index.js";
 
 const connectionId = "dbc_0123456789abcdef01234567", connectionSecret = "s".repeat(32);
 const fixtures = JSON.parse(fs.readFileSync(new URL("./fixtures/cms-v4/url-domain-policy.json", import.meta.url)));
@@ -28,6 +29,18 @@ test("no-install native fixtures preserve only the real server entry as external
   for (const specifier of ["astro-discussion-bridge", "astro-discussion-bridge/Discussion.astro", "astro-discussion-bridge/simple-live", "astro-discussion-bridge/web-url"]) {
     assert.equal(nativePackageAlias(specifier, file), file);
   }
+});
+
+test("the shipped integration preserves the exact installed server entry and refuses browser imports", () => {
+  const integration = discussionBridge({ discourseUrl: "https://forum.example" });
+  let config;
+  integration.hooks["astro:config:setup"]({ config: { root: new URL("../.tmp/", import.meta.url) }, command: "build", updateConfig(value) { config = value; }, injectScript() {} });
+  const plugin = config.vite.plugins.find(item => item.name === "astro-discussion-bridge-config");
+  assert.equal(plugin.enforce, "pre");
+  assert.deepEqual(plugin.resolveId("astro-discussion-bridge/server-url", undefined, { ssr: true }), { id: "astro-discussion-bridge/server-url", external: true });
+  assert.throws(() => plugin.resolveId("astro-discussion-bridge/server-url", undefined, { ssr: false }), /server-only/);
+  assert.throws(() => plugin.resolveId("astro-discussion-bridge/server-url"), /server-only/);
+  for (const id of ["astro-discussion-bridge", "astro-discussion-bridge/simple-live", "astro-discussion-bridge/Discussion.astro"]) assert.equal(plugin.resolveId(id, undefined, { ssr: true }), undefined);
 });
 
 for (const [index, host] of hosts.entries()) test(`actual V4 client/state/topic/reservation callers admit fixed-policy origin ${host}`, async () => {

@@ -38,6 +38,8 @@ jobs:
           git diff --exit-code -- src/assets
       - name: Run all existing tests against an actual ordinary saved archive
         run: npm test
+      - name: Verify normal production installation and native Astro build without fixture aliases
+        run: npm run test:normal-consumer
       - name: Require reproducible committed TypeScript output
         run: git diff --exit-code -- dist
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
