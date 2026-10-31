@@ -1,4 +1,5 @@
 import https from "node:https";
+import { X509Certificate } from "node:crypto";
 import { Readable } from "node:stream";
 import { cmsUrlAuthority, validateCms } from "../src/private/cms-runtime.mjs";
 import { cmsUrl, internationalizedAuthority } from "./native-url.js";
@@ -43,6 +44,21 @@ export const cmsFetch = async (input, init) => {
             // ASCII is a local DNS/SNI/certificate input, NEVER a serialized replacement
             // URL, stored identity, reservation key, request body or ownership receipt.
             servername: hostname, rejectUnauthorized: true,
+            // Node's default hostname checker can re-run its own ICU domain policy
+            // even for this already-pinned ASCII name. Match the peer certificate
+            // with Node/OpenSSL's X509 checker instead; chain/time verification above
+            // stays mandatory. No SAN parsing, alternate hostname or trust override.
+            checkServerIdentity(name, certificate) {
+                try {
+                    if (name === hostname && new X509Certificate(certificate.raw).checkHost(hostname, {
+                        subject: "default", wildcards: true, partialWildcards: false,
+                        multiLabelWildcards: false, singleLabelSubdomains: false,
+                    }) !== undefined)
+                        return;
+                }
+                catch { /* Missing/malformed peer certificates fail closed. */ }
+                return new Error("CMS fixed-domain certificate hostname does not match.");
+            },
         }, incoming => {
             const status = incoming.statusCode ?? 0;
             if (status < 200 || status >= 300 && status < 400) {

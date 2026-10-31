@@ -16,5 +16,11 @@ openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes \
   -addext 'subjectAltName=DNS:xn--7u3d.example,DNS:xn--x-b-bla93z87e2z2c.example'
 ```
 
-Only the existing Node HTTPS/TLS modules are required to run the tests. OpenSSL
+Only the existing Node HTTPS/TLS/crypto modules are required to run the tests. OpenSSL
 is not invoked by the tests and is not a new development or hosting prerequisite.
+
+The product's request-scoped hostname callback uses Node's X509Certificate
+checker on the original peer certificate and the pinned ASCII hostname. It does
+not disable certificate checking or supply a CA. The fixture asserts that this
+callback and `rejectUnauthorized: true` are present before adding its local CA;
+untrusted certificates, mismatched names and malformed peer data are rejected.

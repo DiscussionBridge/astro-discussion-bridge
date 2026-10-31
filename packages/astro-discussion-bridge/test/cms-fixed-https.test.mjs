@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import https from "node:https";
+import { X509Certificate } from "node:crypto";
 import { once } from "node:events";
 import test from "node:test";
 import { cmsFetch } from "../dist/cms-fetch.js";
@@ -28,6 +29,7 @@ async function localHttps(t, handler) {
     optionsSeen.push(options);
     assert.equal(options.rejectUnauthorized, true);
     assert.equal(options.servername, options.hostname);
+    assert.equal(typeof options.checkServerIdentity, "function");
     assert.equal(options.headers["accept-encoding"], "identity");
     assert.equal(options.headers.cookie, undefined);
     return original({ ...options, agent: false, ca: state.trusted ? cert : undefined,
@@ -82,6 +84,22 @@ test("fixed-domain HTTPS refuses untrusted and wrong-host certificates before HT
   assert.equal(fixture.requests.length, 0);
   await assert.rejects(cmsFetch(fixture.origin("xn--7u3d.example") + "/", controls(AbortSignal.timeout(5000))));
   assert.equal(fixture.requests.length, 1, "redirect target must not receive a second request");
+});
+
+test("pinned-domain certificate matching rejects a different name, malformed peers and ICU remapping", async t => {
+  const fixture = await localHttps(t, async (_request, response) => { response.end("verified"); });
+  const response = await cmsFetch(fixture.origin("xn--7u3d.example") + "/", controls(AbortSignal.timeout(5000)));
+  assert.equal(await response.text(), "verified");
+  const { checkServerIdentity, hostname } = fixture.optionsSeen[0];
+  assert.equal(checkServerIdentity(hostname, { raw: new X509Certificate(cert).raw }), undefined);
+  assert.ok(checkServerIdentity("other.example", { raw: cert }) instanceof Error);
+  assert.ok(checkServerIdentity(hostname, { raw: Buffer.from("not a certificate") }) instanceof Error);
+  assert.ok(checkServerIdentity(hostname, {}) instanceof Error);
+  await assert.rejects(cmsFetch(fixture.origin("xn--bcher-kva.example") + "/", controls(AbortSignal.timeout(5000))));
+  assert.equal(fixture.optionsSeen.length, 2, "the different pinned name reaches actual TLS verification");
+  await assert.rejects(cmsFetch(fixture.origin("xn--x-b-bla93z87e3z2c.example") + "/", controls(AbortSignal.timeout(5000))));
+  assert.equal(fixture.optionsSeen.length, 2, "the noncanonical ACE spelling is refused before transport");
+  assert.equal(fixture.requests.length, 1, "a differently normalized peer must not receive HTTP");
 });
 
 test("actual fixed-domain client retains declared and streaming response bounds", async t => {

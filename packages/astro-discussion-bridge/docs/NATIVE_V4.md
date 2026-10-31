@@ -17,9 +17,12 @@ receipts are not rewritten. An incompatible retained scope fails closed for
 reconciliation; it is not silently converted or assigned another identity.
 
 Ordinary ASCII URLs still use native fetch. For internationalized authorities,
-the server uses Node HTTPS with the pinned ASCII hostname for DNS, SNI and normal
-certificate verification: native parsers can reject OR map these differently
-across runtimes. This is a local
+the server uses Node HTTPS with the pinned ASCII hostname for DNS and SNI,
+mandatory certificate chain/time verification, and Node/OpenSSL's X509 hostname
+matching. Its hostname checker compares the certificate to that same pinned
+ASCII name, without reapplying Node's potentially different ICU domain policy.
+Partial-label and multi-label wildcards are not accepted. Native parsers can
+reject OR map these differently across runtimes. This is a local
 transport input, not a replacement wire URL or ownership grant. No failed network
 request or possibly accepted mutation is retried through another transport.
 Credentials remain header-only, cookies and redirects are refused, and the same
