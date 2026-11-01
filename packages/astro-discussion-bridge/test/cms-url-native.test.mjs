@@ -22,25 +22,35 @@ const hosts = ["x-a\u0315\u0300\u05ae\u{1acf}b", "xn--x-b-bla93z87e2z2c", "\u{11
 const scratch = fileURLToPath(new URL("../.tmp/", import.meta.url));
 fs.mkdirSync(scratch, { recursive: true });
 
-test("no-install native fixtures preserve only the real server entry as external", () => {
-  const file = fileURLToPath(new URL("../dist/cms-web-url.js", import.meta.url));
-  const resolved = nativePackageAlias("astro-discussion-bridge/server-url", file);
-  assert.deepEqual(resolved, { id: new URL("../dist/cms-web-url.js", import.meta.url).href, external: true });
-  for (const specifier of ["astro-discussion-bridge", "astro-discussion-bridge/Discussion.astro", "astro-discussion-bridge/simple-live", "astro-discussion-bridge/web-url"]) {
+const serverExports = [["astro-discussion-bridge", "index.js"], ["astro-discussion-bridge/server-url", "cms-web-url.js"], ["astro-discussion-bridge/controlled-creation", "controlled-creation.js"], ["astro-discussion-bridge/operational-state", "operational-state.js"]];
+
+test("no-install native fixtures preserve exactly the documented server entries as external", () => {
+  for (const [specifier, filename] of serverExports) {
+    const url = new URL(`../dist/${filename}`, import.meta.url);
+    assert.deepEqual(nativePackageAlias(specifier, fileURLToPath(url)), { id: url.href, external: true });
+  }
+  const file = fileURLToPath(new URL("../src/components/Discussion.astro", import.meta.url));
+  for (const specifier of ["astro-discussion-bridge/Discussion.astro", "astro-discussion-bridge/simple-live", "astro-discussion-bridge/web-url"]) {
     assert.equal(nativePackageAlias(specifier, file), file);
   }
 });
 
-test("the shipped integration preserves the exact installed server entry and refuses browser imports", () => {
+test("the shipped integration preserves exact installed server APIs and refuses browser imports without externalizing components", () => {
   const integration = discussionBridge({ discourseUrl: "https://forum.example" });
   let config;
   integration.hooks["astro:config:setup"]({ config: { root: new URL("../.tmp/", import.meta.url) }, command: "build", updateConfig(value) { config = value; }, injectScript() {} });
   const plugin = config.vite.plugins.find(item => item.name === "astro-discussion-bridge-config");
   assert.equal(plugin.enforce, "pre");
-  assert.deepEqual(plugin.resolveId("astro-discussion-bridge/server-url", undefined, { ssr: true }), { id: "astro-discussion-bridge/server-url", external: true });
-  assert.throws(() => plugin.resolveId("astro-discussion-bridge/server-url", undefined, { ssr: false }), /server-only/);
-  assert.throws(() => plugin.resolveId("astro-discussion-bridge/server-url"), /server-only/);
-  for (const id of ["astro-discussion-bridge", "astro-discussion-bridge/simple-live", "astro-discussion-bridge/Discussion.astro"]) assert.equal(plugin.resolveId(id, undefined, { ssr: true }), undefined);
+  assert.deepEqual(config.vite.ssr.external, serverExports.map(([specifier]) => specifier).filter(id => id !== "astro-discussion-bridge"));
+  for (const [id] of serverExports) {
+    assert.deepEqual(plugin.resolveId(id, undefined, { ssr: true }), { id, external: true });
+    assert.throws(() => plugin.resolveId(id, undefined, { ssr: false }), /server-only/);
+    assert.throws(() => plugin.resolveId(id), /server-only/);
+  }
+  for (const id of ["astro-discussion-bridge/simple-live", "astro-discussion-bridge/web-url", "astro-discussion-bridge/Discussion.astro"]) {
+    assert.equal(plugin.resolveId(id, undefined, { ssr: true }), undefined);
+    assert.equal(plugin.resolveId(id, undefined, { ssr: false }), undefined);
+  }
 });
 
 for (const [index, host] of hosts.entries()) test(`actual V4 client/state/topic/reservation callers admit fixed-policy origin ${host}`, async () => {

@@ -40,9 +40,13 @@ export default defineConfig({ site: 'https://site.example', integrations: [discu
 `, { flag: "wx" });
 for (const international of [false, true]) await writeFile(path.join(consumer, "src/pages", international ? "international.astro" : "index.astro"), `---
 import Discussion from 'astro-discussion-bridge/DiscourseDiscussion.astro';
+import { sourceArticleAttributes } from 'astro-discussion-bridge';
+import { captureControlledSourceNative } from 'astro-discussion-bridge/controlled-creation';
+import { readPublicationOperationalState } from 'astro-discussion-bridge/operational-state';
 const receiver = ${JSON.stringify(international ? "https://\u{11db0}.example" : "https://forum.example")};
+if ([sourceArticleAttributes, captureControlledSourceNative, readPublicationOperationalState].some(value => typeof value !== 'function')) throw new Error('Documented native server API is unavailable.');
 ---
-<html lang="en"><head><title>Ordinary installed Astro consumer</title></head><body><main><h1>Real native build</h1><p>Installed ordinary package without a fixture alias, parser override or custom Vite configuration.</p></main><Discussion discourseUrl={receiver} topicId="53" topicUrl={receiver + '/t/native/53'} /></body></html>
+<html lang="en"><head><title>Ordinary installed Astro consumer</title></head><body><main><h1>Real native build</h1><p>Installed ordinary package without a fixture alias, parser override or custom Vite configuration.</p><p data-native-server-api>Documented server APIs loaded during native prerender.</p></main><Discussion discourseUrl={receiver} topicId="53" topicUrl={receiver + '/t/native/53'} /></body></html>
 `, { flag: "wx" });
 
 // Resolve these imports FROM the new consumer, not from this maintainer script.
@@ -69,9 +73,10 @@ assert.equal(lock.packages['node_modules/astro-discussion-bridge'].integrity, 's
 const parsers = Object.entries(lock.packages).filter(([key]) => /(?:^|\\/)node_modules\\/satteri$/u.test(key)).map(([key, value]) => ({ path: key, version: value.version }));
 const home = fs.readFileSync(new URL('./dist/index.html', import.meta.url), 'utf8'), international = fs.readFileSync(new URL('./dist/international/index.html', import.meta.url), 'utf8');
 assert.match(home, /data-discussionbridge-topic-id="53"/); assert.ok(home.includes('https://forum.example/t/native/53')); assert.ok(international.includes('https://xn--7u3d.example/'));
+assert.match(home, /data-native-server-api/); assert.match(international, /data-native-server-api/);
 const files = []; function walk(dir) { for (const entry of fs.readdirSync(dir, { withFileTypes: true })) { const file = path.join(dir, entry.name); if (entry.isDirectory()) walk(file); else files.push(file); } } walk(path.join(root, 'dist'));
 for (const file of files.filter(file => /\\.(?:html|js|mjs)$/u.test(file))) assert.doesNotMatch(fs.readFileSync(file, 'utf8'), /cms-runtime\\.mjs|cms-schema\\.json|CMS fixed-domain|node:crypto|file:\\/\\/|X-DiscussionBridge-Secret/iu, file);
-const result = { node: process.version, archiveSha256: receipt.sha256, payloadMembersMatched: ledger.members.length, bareImports: names, lockSha256: sha(lockBytes), installedIntegrityMatched: true, nativeAstroVersion: manifest.dependencies.astro, nativePages: 2, fixtureAliases: false, rootOverrides: false, customViteConfig: false, parsers, publicOutputScan: true, output: { homeSha256: sha(home), internationalSha256: sha(international) }, limits: 'Ordinary local install/import/native build only; no external receiver, DNS, browser session, public deployment or release acceptance.' };
+const result = { node: process.version, archiveSha256: receipt.sha256, payloadMembersMatched: ledger.members.length, bareImports: names, nativeServerApiImports: ['sourceArticleAttributes', 'captureControlledSourceNative', 'readPublicationOperationalState'], serverApisLoadedDuringPrerender: true, lockSha256: sha(lockBytes), installedIntegrityMatched: true, nativeAstroVersion: manifest.dependencies.astro, nativePages: 2, fixtureAliases: false, rootOverrides: false, customViteConfig: false, parsers, publicOutputScan: true, output: { homeSha256: sha(home), internationalSha256: sha(international) }, limits: 'Ordinary local install/import/native build only; no external receiver, DNS, browser session, public deployment or release acceptance.' };
 result.inputs = ['package.json', 'astro.config.mjs', 'src/pages/index.astro', 'src/pages/international.astro', 'verify.mjs', 'user.npmrc', 'global.npmrc'].map(name => { const bytes = fs.readFileSync(path.join(root, name)); return { path: name, bytes: bytes.length, sha256: sha(bytes) }; });
 const evidence = path.dirname(process.argv[3]);
 fs.writeFileSync(path.join(evidence, 'normal-consumer-package-lock.json'), lockBytes, { flag: 'wx' });

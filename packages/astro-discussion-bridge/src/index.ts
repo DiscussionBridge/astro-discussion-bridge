@@ -10,6 +10,10 @@ import { startControlledSourceBuild, recordControlledSourceBuild } from "./cms-t
 import { stageCmsNativePublications, recordCmsNativeBuild, deployCmsNativeBuild, renewCmsNativeBuild, type CmsNativeCommand } from "./cms-pipeline.js";
 import type { CmsPipelineOptions } from "./cms-pipeline.js";
 
+// These documented APIs read private package data or native filesystem state.
+// Preserve their installed Node boundary, never a prerender-chunk-relative copy.
+const serverOnlyEntries = ["astro-discussion-bridge", "astro-discussion-bridge/server-url", "astro-discussion-bridge/controlled-creation", "astro-discussion-bridge/operational-state"];
+
 export interface DiscussionBridgeOptions {
   discourseUrl: string;
   siteUrl?: string;
@@ -42,14 +46,15 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Astr
   return { name: "astro-discussion-bridge", hooks: { "astro:config:setup": ({ config: nativeConfig, command, updateConfig, injectScript }) => {
     projectRoot = fileURLToPath(nativeConfig.root);
     nativeBuild = command === "build";
-    updateConfig({ vite: { ssr: { external: ["astro-discussion-bridge/server-url"] }, plugins: [{ name: "astro-discussion-bridge-config", enforce: "pre", resolveId(id, _importer, context) {
-      if (id === "astro-discussion-bridge/server-url") {
-        if (!context?.ssr) throw new Error("DiscussionBridge server-url is a server-only package entry.");
-        // Explicitly preserve this one installed module and its adjacent SDK
-        // data. Framework-package noExternal crawling can override the SSR
-        // external list in native builds; components/browser code still bundle.
-        // Keep a normal package import, not a build-host absolute path, so a
-        // server output can still resolve its installed dependency after deploy.
+    // Vite treats a root ssr.external name as covering every package subpath.
+    // Do NOT put our root name there: .astro and browser exports must compile.
+    // Its exact server import is preserved only by the pre-resolver below.
+    updateConfig({ vite: { ssr: { external: serverOnlyEntries.filter(id => id !== "astro-discussion-bridge") }, plugins: [{ name: "astro-discussion-bridge-config", enforce: "pre", resolveId(id, _importer, context) {
+      if (serverOnlyEntries.includes(id)) {
+        if (!context?.ssr) throw new Error(`DiscussionBridge ${id} is a server-only package entry.`);
+        // Framework-package noExternal crawling can override the external
+        // list. Preserve the exact normal package import and adjacent SDK
+        // data, without an absolute build-host path or copied schema.
         return { id, external: true };
       }
       return id === "virtual:discussion-bridge/config" ? "\0virtual:discussion-bridge/config" : undefined;
