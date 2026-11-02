@@ -17,7 +17,7 @@ import { captureSourceNativeUnderWriter, sourcePreparationBase } from "./cms-to-
 import { sourceHash, sourceOriginalKey, resolveNativeSourceTargets } from "./to-source-profile.js";
 import { assertActualSourceBuild } from "./cms-to-source-build.js";
 import { assertNativeRenderSource, type NativeRenderedContent } from "./native-render.js";
-import { assertToScope, qualifyCurrentToAuthority } from "./cms-to-authority.js";
+import { assertToScope, qualifyCurrentToAuthority, qualifyCurrentToAuthorities } from "./cms-to-authority.js";
 
 export interface ControlledCreationOptions extends Omit<CmsClientOptions, "serverUrl"> { lane?: string }
 export interface PublishControlledDiscussionsOptions { docsDir: string; stateFile: string; siteUrl: string; discourseUrl: string; routeBase?: string; controlledCreation: ControlledCreationOptions }
@@ -111,7 +111,7 @@ export async function publishControlledDiscussions(options: PublishControlledDis
       for (const operation of Object.values(state.operations)) if (operation.to?.nativeSource) await captureLifecycleSource(options, operation, path.resolve(docsDir, operation.to.nativeSource.relativePath));
       state.nativeCensus = scope; await writePublicationOperationalState(stateFile, state);
     }
-    for (const operation of Object.values(state.operations)) if (operation.to) await qualifyCurrentToAuthority(options, state, operation, client, connection, () => writePublicationOperationalState(stateFile, state));
+    await qualifyCurrentToAuthorities(options, state, Object.values(state.operations), client, connection, () => writePublicationOperationalState(stateFile, state));
     delete state.sourceBuildOwner; state.sourceBuildId = randomUUID(); await writePublicationOperationalState(stateFile, state);
     const results: ControlledDiscussionResult[] = [];
     for (const closure of closures) {

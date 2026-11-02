@@ -69,10 +69,48 @@ export function assertToScope(to: CmsToState, client: CmsClient, connection: Cms
   if (semanticIdentity(effectiveToScope(to)) !== semanticIdentity(currentToScope(client, connection, siteUrl, lane))) throw new Error("Current source lifecycle scope requires reconciliation.");
 }
 
-/** Caller holds the actual native source writer. This grants current authority,
- * never continuity, acceptance, a new source edition, or a replay replacement. */
-export async function qualifyCurrentToAuthority(options: PublishControlledDiscussionsOptions, state: PublicationOperationalState, operation: PublicationOperation,
-  client: CmsClient, connection: CmsConnection, persist: () => Promise<void>) {
+interface NativeAuthorityFacts {
+  dev: string; ino: string; contentSha256: string; data: Record<string, unknown>; hasSlug: boolean;
+  moveBefore: boolean; moveOutput: boolean;
+}
+interface NativeAuthorityObservation {
+  filesSha256: string; identitiesSha256: string;
+  targets: Map<string, NativeAuthorityFacts | null>; claimants: Map<string, Set<string>>;
+}
+const nativeOwner = (to: CmsToState | undefined) => to?.nativeSource ?? (to?.pending?.native && { docsDir: to.pending.native.census.docsDir, relativePath: to.pending.native.relativePath });
+const ownerKey = (owner: { docsDir: string; relativePath: string }) => semanticIdentity([owner.docsDir, owner.relativePath]);
+
+/** One complete, writer-bound observation per proof phase, never cached across
+ * calls. Retain compact identity/target facts, not the entire corpus bodies. */
+async function observeNativeAuthority(options: PublishControlledDiscussionsOptions, state: PublicationOperationalState, operations: PublicationOperation[]): Promise<NativeAuthorityObservation> {
+  const docsDir = path.resolve(options.docsDir), census = state.nativeCensus, root = await lstat(docsDir, { bigint: true });
+  if (!root.isDirectory() || root.isSymbolicLink() || semanticIdentity(census) !== semanticIdentity({ docsDir, siteBase: cmsServiceBaseUrl(options.siteUrl).href,
+    routeBase: validateRouteBase(options.routeBase), rootDev: String(root.dev), rootIno: String(root.ino) })) throw new Error("Native authority requires the unchanged completed census/root.");
+  const targets = new Map(operations.map(operation => [path.resolve(docsDir, nativeOwner(operation.to)!.relativePath), operation]));
+  const facts = new Map<string, NativeAuthorityFacts | null>(), claimants = new Map<string, Set<string>>();
+  const files = await findMarkdownFiles(docsDir), fileSet = new Set(files);
+  for (const file of new Set([...files, ...targets.keys()])) {
+    const actual = await nativePublicationFiles.readExisting(file);
+    if (!actual) { if (fileSet.has(file)) throw new Error("Native authority census changed while checking ownership."); facts.set(file, null); continue; }
+    const data = parseMarkdown(actual.contents).frontmatter;
+    const claims = [["external", data.discussionbridgeExternalId], ["resource", data.discussionbridgeResourceId], ["topic", data.discourseTopicId === undefined ? undefined : String(data.discourseTopicId)]];
+    for (const [kind, value] of claims) if (typeof value === "string") {
+      const key = semanticIdentity([kind, value]); if (!claimants.has(key)) claimants.set(key, new Set()); claimants.get(key)!.add(file);
+    }
+    if (targets.has(file)) {
+      const move = targets.get(file)!.to?.sourceMove;
+      facts.set(file, { dev: String(actual.dev), ino: String(actual.ino), contentSha256: sourceHash(actual.contents), hasSlug: Object.hasOwn(data, "slug"),
+        data: Object.fromEntries(["discussionbridgeExternalId", "discussionbridgeResourceId", "discourseTopicId", "discourseTopicUrl", "discussionbridgeSourcePublicationRevision", "slug"].map(key => [key, data[key]])),
+        moveBefore: !!move && actual.contents === move.before, moveOutput: !!move && actual.contents === move.output });
+    }
+  }
+  const checkedRoot = await lstat(docsDir, { bigint: true });
+  if (checkedRoot.dev !== root.dev || checkedRoot.ino !== root.ino || semanticIdentity(await findMarkdownFiles(docsDir)) !== semanticIdentity(files)) throw new Error("Native authority corpus/root changed during observation.");
+  return { filesSha256: sourceHash(semanticIdentity(files)), identitiesSha256: sourceHash(semanticIdentity([...claimants].map(([key, values]) => [key, [...values]]))), targets: facts, claimants };
+}
+
+function qualificationContext(options: PublishControlledDiscussionsOptions, state: PublicationOperationalState, operation: PublicationOperation,
+  client: CmsClient, connection: CmsConnection, owners: Map<string, number>) {
   const to = operation.to;
   if (!to) return;
   const prior = effectiveToScope(to), scope = currentToScope(client, connection, options.siteUrl, options.controlledCreation.lane);
@@ -83,43 +121,33 @@ export async function qualifyCurrentToAuthority(options: PublishControlledDiscus
   if (!census || !owner || owner.docsDir !== docsDir || !to.nativeSource && !intent) throw new Error("Native authority qualification lacks durable original native ownership; no historical intent is reconstructed.");
   const file = path.resolve(docsDir, owner.relativePath), relativePath = path.relative(docsDir, file);
   if (!relativePath || relativePath !== owner.relativePath || path.isAbsolute(relativePath) || relativePath.split(/[\\/]/u).includes("..")) throw new Error("Native authority owner path requires reconciliation.");
-  if (Object.values(state.operations).filter(value => value.to?.nativeSource?.docsDir === docsDir && value.to.nativeSource.relativePath === relativePath
-    || !value.to?.nativeSource && value.to?.pending?.native?.census.docsDir === docsDir && value.to.pending.native.relativePath === relativePath).length !== 1) throw new Error("Native authority requires exactly one durable source owner.");
-  const readNative = async () => {
-    const root = await lstat(docsDir, { bigint: true });
-    if (!root.isDirectory() || root.isSymbolicLink() || semanticIdentity(census) !== semanticIdentity({ docsDir, siteBase: cmsServiceBaseUrl(options.siteUrl).href,
-      routeBase: validateRouteBase(options.routeBase), rootDev: String(root.dev), rootIno: String(root.ino) })) throw new Error("Native authority requires the unchanged completed census/root.");
-    const actual = await nativePublicationFiles.readExisting(file), files = await findMarkdownFiles(docsDir);
-    // A duplicate/copied identity is not ownership, including targeted actions.
-    for (const other of files) if (other !== file) {
-      const value = await nativePublicationFiles.readExisting(other);
-      if (!value) throw new Error("Native authority census changed while checking ownership.");
-      const data = parseMarkdown(value.contents).frontmatter;
-      if (data.discussionbridgeExternalId === operation.externalId || operation.resourceId && data.discussionbridgeResourceId === operation.resourceId
-        || operation.topicId && String(data.discourseTopicId) === operation.topicId) throw new Error("Native authority census contains another claimant for the retained identity.");
-    }
+  if (owners.get(ownerKey(owner)) !== 1) throw new Error("Native authority requires exactly one durable source owner.");
+  const readNative = (observation: NativeAuthorityObservation) => {
+    const actual = observation.targets.get(file);
+    for (const [kind, value] of [["external", operation.externalId], ["resource", operation.resourceId], ["topic", operation.topicId]]) if (value !== undefined
+      && [...(observation.claimants.get(semanticIdentity([kind, value])) ?? [])].some(other => other !== file)) throw new Error("Native authority census contains another claimant for the retained identity.");
     const move = to.sourceMove, moving = move && !["committed", "aborted"].includes(move.phase);
     if (moving) {
-      if (!actual || move.fence !== to.sourceFence || actual.contents !== move.before && actual.contents !== move.output
-        || !["intent", "reserved", "abort_pending", "attention"].includes(move.phase) && actual.contents !== move.output) throw new Error("Native authority cannot requalify a changed or unfenced URL move.");
+      if (!actual || move.fence !== to.sourceFence || !actual.moveBefore && !actual.moveOutput
+        || !["intent", "reserved", "abort_pending", "attention"].includes(move.phase) && !actual.moveOutput) throw new Error("Native authority cannot requalify a changed or unfenced URL move.");
     } else if (!actual) {
       if (!to.nativeSource || !to.acceptedResult || !to.acceptedRevision || to.withdrawal && to.withdrawal.body.reason !== "source_deleted") throw new Error("Native absence has no retained accepted deletion owner.");
     } else if (!to.nativeSource) {
       if (!intent || semanticIdentity(intent.census) !== semanticIdentity(census) || intent.dev !== String(actual.dev) || intent.ino !== String(actual.ino)
-        || intent.contentSha256 !== sourceHash(actual.contents)) throw new Error("Uncertain native intent changed; exact original provenance is required.");
+        || intent.contentSha256 !== actual.contentSha256) throw new Error("Uncertain native intent changed; exact original provenance is required.");
     } else {
-      const data = parseMarkdown(actual.contents).frontmatter;
-      const url = pageUrlForFile({ docsDir, filePath: file, siteBase: cmsServiceBaseUrl(options.siteUrl), routeBase: census.routeBase, slug: data.slug, hasSlug: Object.hasOwn(data, "slug") });
+      const data = actual.data;
+      const url = pageUrlForFile({ docsDir, filePath: file, siteBase: cmsServiceBaseUrl(options.siteUrl), routeBase: census.routeBase, slug: data.slug, hasSlug: actual.hasSlug });
       // An accepted02 may have been saved before the native CAS failed. Its
       // original pending-native intent is evidence, not guessed new frontmatter.
       const pendingCommit = intent && to.pending && to.acceptedBody?.mutation_id === to.pending.body.mutation_id
         && semanticIdentity(intent.census) === semanticIdentity(census) && intent.dev === String(actual.dev) && intent.ino === String(actual.ino)
-        && intent.contentSha256 === sourceHash(actual.contents);
+        && intent.contentSha256 === actual.contentSha256;
       if (!pendingCommit && (data.discussionbridgeExternalId !== operation.externalId || data.discussionbridgeResourceId !== operation.resourceId || String(data.discourseTopicId) !== operation.topicId
         || data.discourseTopicUrl !== operation.topicUrl || data.discussionbridgeSourcePublicationRevision !== to.acceptedRevision || url !== operation.canonicalUrl)) throw new Error("Native authority metadata no longer owns its accepted binding.");
     }
     return { census: structuredClone(census), relativePath, dev: actual ? String(actual.dev) : null, ino: actual ? String(actual.ino) : null,
-      contentSha256: actual ? sourceHash(actual.contents) : null, censusSha256: sourceHash(semanticIdentity(files)) };
+      contentSha256: actual ? actual.contentSha256 : null, censusSha256: observation.filesSha256 };
   };
   const readRecord = async () => {
     if (!operation.resourceId) {
@@ -136,17 +164,46 @@ export async function qualifyCurrentToAuthority(options: PublishControlledDiscus
       || record.source_revision !== revision && !(record.state === "active" && !moving && !to.withdrawal && !to.pending?.rejection && record.source_revision === to.pending?.body.bridge_record.source_revision)) throw new Error("Current scoped receiver binding differs from the exact retained source/intent.");
     return record;
   };
-  const native = await readNative(), record = await readRecord();
-  const checkedConnection = await client.connection();
-  if (semanticIdentity(currentToScope(client, checkedConnection, options.siteUrl, options.controlledCreation.lane)) !== semanticIdentity(scope)
-    || semanticIdentity(await readRecord()) !== semanticIdentity(record) || semanticIdentity(await readNative()) !== semanticIdentity(native)) throw new Error("Current native/receiver authority changed during qualification; no proof was installed.");
-  const proof: CmsToQualification = { version: 1, parent: to.qualifications?.at(-1)?.sha256 ?? anchor(to.scope), priorScope: structuredClone(prior), scope,
-    checkedAt: new Date().toISOString(), native, identity: { externalId: operation.externalId, resourceId: operation.resourceId ?? null, topicId: operation.topicId ?? null, canonicalUrl: operation.canonicalUrl },
-    record: structuredClone(record), pending: structuredClone(to.pending?.body ?? null), nativeCapture: structuredClone(to.nativeCapture ?? null), sha256: "" };
-  proof.sha256 = qualificationHash(proof);
-  (to.qualifications ??= []).push(proof);
+  return { operation, to, prior, scope, readNative, readRecord };
+}
+
+/** The complete pre-build batch shares only fresh writer-bound observations,
+ * never saved authority. Targeted entry points use this same engine for one. */
+export async function qualifyCurrentToAuthorities(options: PublishControlledDiscussionsOptions, state: PublicationOperationalState, operations: PublicationOperation[],
+  client: CmsClient, connection: CmsConnection, persist: () => Promise<void>) {
+  const candidates = operations.filter(operation => operation.to && semanticIdentity(effectiveToScope(operation.to)) !== semanticIdentity(currentToScope(client, connection, options.siteUrl, options.controlledCreation.lane)));
+  if (!candidates.length) return;
+  const owners = new Map<string, number>();
+  for (const operation of Object.values(state.operations)) { const owner = nativeOwner(operation.to); if (owner) { const key = ownerKey(owner); owners.set(key, (owners.get(key) ?? 0) + 1); } }
+  const contexts = candidates.map(operation => qualificationContext(options, state, operation, client, connection, owners)).filter(value => value !== undefined);
+  if (!contexts.length) return;
+  const initial = await observeNativeAuthority(options, state, contexts.map(value => value.operation));
+  const captured = [];
+  for (const context of contexts) captured.push({ context, native: context.readNative(initial), record: await context.readRecord() });
+  for (const { context, record } of captured) {
+    if (semanticIdentity(currentToScope(client, await client.connection(), options.siteUrl, options.controlledCreation.lane)) !== semanticIdentity(context.scope)
+      || semanticIdentity(await context.readRecord()) !== semanticIdentity(record)) throw new Error("Current native/receiver authority changed during qualification; no proof was installed.");
+  }
+  const checked = await observeNativeAuthority(options, state, contexts.map(value => value.operation));
+  if (checked.identitiesSha256 !== initial.identitiesSha256) throw new Error("Native authority census identity changed during qualification.");
+  for (const { context, native } of captured) if (semanticIdentity(context.readNative(checked)) !== semanticIdentity(native)) throw new Error("Current native/receiver authority changed during qualification; no proof was installed.");
+  for (const { context: { operation, to, prior, scope }, native, record } of captured) {
+    const proof: CmsToQualification = { version: 1, parent: to.qualifications?.at(-1)?.sha256 ?? anchor(to.scope), priorScope: structuredClone(prior), scope,
+      checkedAt: new Date().toISOString(), native, identity: { externalId: operation.externalId, resourceId: operation.resourceId ?? null, topicId: operation.topicId ?? null, canonicalUrl: operation.canonicalUrl },
+      record: structuredClone(record), pending: structuredClone(to.pending?.body ?? null), nativeCapture: structuredClone(to.nativeCapture ?? null), sha256: "" };
+    proof.sha256 = qualificationHash(proof); (to.qualifications ??= []).push(proof);
+  }
   await persist(); // A failed save stops use; never rewrite or guess its durable outcome.
-  // Qualification is durable before use; a post-save race must still stop use.
-  assertToScope(to, client, await client.connection(), options.siteUrl, options.controlledCreation.lane);
-  if (semanticIdentity(await readRecord()) !== semanticIdentity(record) || semanticIdentity(await readNative()) !== semanticIdentity(native)) throw new Error("Native/receiver ownership changed after durable qualification; current use is refused.");
+  for (const { context, record } of captured) {
+    assertToScope(context.to, client, await client.connection(), options.siteUrl, options.controlledCreation.lane);
+    if (semanticIdentity(await context.readRecord()) !== semanticIdentity(record)) throw new Error("Native/receiver ownership changed after durable qualification; current use is refused.");
+  }
+  const committed = await observeNativeAuthority(options, state, contexts.map(value => value.operation));
+  if (committed.identitiesSha256 !== initial.identitiesSha256) throw new Error("Native authority census identity changed after durable qualification; current use is refused.");
+  for (const { context, native } of captured) if (semanticIdentity(context.readNative(committed)) !== semanticIdentity(native)) throw new Error("Native/receiver ownership changed after durable qualification; current use is refused.");
+}
+
+export async function qualifyCurrentToAuthority(options: PublishControlledDiscussionsOptions, state: PublicationOperationalState, operation: PublicationOperation,
+  client: CmsClient, connection: CmsConnection, persist: () => Promise<void>) {
+  return qualifyCurrentToAuthorities(options, state, [operation], client, connection, persist);
 }

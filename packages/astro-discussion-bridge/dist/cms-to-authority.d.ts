@@ -49,7 +49,8 @@ export declare function validateToNativeIntent(intent: CmsToNativeIntent): void;
 export declare function validateToQualifications(to: CmsToState): void;
 export declare function currentToScope(client: CmsClient, connection: CmsConnection, siteUrl: string, lane?: string): CmsToScope;
 export declare function assertToScope(to: CmsToState, client: CmsClient, connection: CmsConnection, siteUrl: string, lane?: string): void;
-/** Caller holds the actual native source writer. This grants current authority,
- * never continuity, acceptance, a new source edition, or a replay replacement. */
+/** The complete pre-build batch shares only fresh writer-bound observations,
+ * never saved authority. Targeted entry points use this same engine for one. */
+export declare function qualifyCurrentToAuthorities(options: PublishControlledDiscussionsOptions, state: PublicationOperationalState, operations: PublicationOperation[], client: CmsClient, connection: CmsConnection, persist: () => Promise<void>): Promise<void>;
 export declare function qualifyCurrentToAuthority(options: PublishControlledDiscussionsOptions, state: PublicationOperationalState, operation: PublicationOperation, client: CmsClient, connection: CmsConnection, persist: () => Promise<void>): Promise<void>;
 //# sourceMappingURL=cms-to-authority.d.ts.map

@@ -114,6 +114,15 @@ marker. A later real edition or URL move can issue its own current-scope proof.
 The qualification history remains valid across those later editions; it is not
 a claim of uninterrupted permission, nor a substitute for current checks.
 
+When several retained sources need qualification in one build, the native
+writer observes the complete corpus once at each of the three proof phases,
+with complete-list/root checks and a shared duplicate-identity index. Each owner
+still gets fresh authenticated Record/descriptor checks and exact target facts.
+The observations are local to that writer call; they are not a cache for later
+builds or targeted actions. No corpus limit or permission check is removed.
+The multi-owner regressions count actual filesystem operations; they do not
+claim large-estate latency or throughput qualification.
+
 Disabled connections, rotated/invalid credentials, lost direction/origin/lane,
 conflicting ownership, changed native evidence or a racing descriptor/Record
 stop continuation. A regrant requires fresh current evidence, not matching an

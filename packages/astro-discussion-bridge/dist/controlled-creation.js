@@ -16,7 +16,7 @@ import { captureSourceNativeUnderWriter, sourcePreparationBase } from "./cms-to-
 import { sourceHash, sourceOriginalKey, resolveNativeSourceTargets } from "./to-source-profile.js";
 import { assertActualSourceBuild } from "./cms-to-source-build.js";
 import { assertNativeRenderSource } from "./native-render.js";
-import { assertToScope, qualifyCurrentToAuthority } from "./cms-to-authority.js";
+import { assertToScope, qualifyCurrentToAuthority, qualifyCurrentToAuthorities } from "./cms-to-authority.js";
 /** One current native publisher, with complete identity census before dispatch. */
 export async function publishControlledDiscussions(options) {
     const docsDir = path.resolve(options.docsDir), stateFile = path.resolve(options.stateFile);
@@ -130,9 +130,7 @@ export async function publishControlledDiscussions(options) {
             state.nativeCensus = scope;
             await writePublicationOperationalState(stateFile, state);
         }
-        for (const operation of Object.values(state.operations))
-            if (operation.to)
-                await qualifyCurrentToAuthority(options, state, operation, client, connection, () => writePublicationOperationalState(stateFile, state));
+        await qualifyCurrentToAuthorities(options, state, Object.values(state.operations), client, connection, () => writePublicationOperationalState(stateFile, state));
         delete state.sourceBuildOwner;
         state.sourceBuildId = randomUUID();
         await writePublicationOperationalState(stateFile, state);
