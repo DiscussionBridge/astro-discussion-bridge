@@ -22,7 +22,7 @@ const hosts = ["x-a\u0315\u0300\u05ae\u{1acf}b", "xn--x-b-bla93z87e2z2c", "\u{11
 const scratch = fileURLToPath(new URL("../.tmp/", import.meta.url));
 fs.mkdirSync(scratch, { recursive: true });
 
-const serverExports = [["astro-discussion-bridge", "index.js"], ["astro-discussion-bridge/server-url", "cms-web-url.js"], ["astro-discussion-bridge/controlled-creation", "controlled-creation.js"], ["astro-discussion-bridge/operational-state", "operational-state.js"]];
+const serverExports = [["astro-discussion-bridge", "index.js"], ["astro-discussion-bridge/server-url", "cms-web-url.js"], ["astro-discussion-bridge/controlled-creation", "controlled-creation.js"], ["astro-discussion-bridge/operational-state", "operational-state.js"], ["astro-discussion-bridge/starlight", "starlight.js"]];
 
 test("no-install native fixtures preserve exactly the documented server entries as external", () => {
   for (const [specifier, filename] of serverExports) {

@@ -36,7 +36,9 @@ import DefaultContent from '@astrojs/starlight/components/MarkdownContent.astro'
 import {captureProbeRender} from '../../render.mjs';
 const entry=Astro.locals.starlightRoute.entry;
 let result;
-if (Astro.url.pathname === '/' && typeof entry?.filePath === 'string') {
+const relative=typeof entry?.filePath === 'string' ? path.relative(path.resolve('src/content/docs'),path.resolve(entry.filePath)) : undefined;
+const eligibleRoutes=new Set(['/','/multiple/','/zero/']);
+if (eligibleRoutes.has(Astro.url.pathname) && relative && !relative.startsWith('..') && !path.isAbsolute(relative)) {
   const {Content}=await render(entry);
   const container=await Container.create();
   const markedHtml=await container.renderToString(Content,{request:Astro.request});
@@ -48,6 +50,8 @@ if (Astro.url.pathname === '/' && typeof entry?.filePath === 'string') {
 const markdown = '---\ntitle: Native producer feasibility\n---\n\n## Generated heading\n\nNative article text remains intact.\n\n| Owner | Content |\n| --- | --- |\n| Starlight | Native page |\n';
 const source = path.join(consumer, 'src/content/docs/index.md');
 await writeFile(source, markdown);
+await writeFile(path.join(consumer, 'src/content/docs/multiple.md'), '---\ntitle: Multiple native headings\n---\n\n## First native heading\n\nFirst body.\n\n## Second native heading\n\nSecond body.\n');
+await writeFile(path.join(consumer, 'src/content/docs/zero.md'), '---\ntitle: Native article without headings\n---\n\nA complete paragraph-only native article.\n');
 console.log(json({ feasibilityOnly: true, consumer, evidence, phase: 'ordinary-install', productDependenciesUnchanged: true }));
 await run([npmCli, 'install', '--ignore-scripts', '--no-audit', '--no-fund', '--fetch-retries=0',
   '--userconfig', path.join(consumer, 'user.npmrc'), '--globalconfig', path.join(consumer, 'global.npmrc')]);
@@ -71,11 +75,31 @@ const { associateNativeRender } = await import(pathToFileURL(path.join(consumer,
 const binding = JSON.parse(await readFile(path.join(evidence, 'bindings-authored.json')));
 const input = { markedHtml: authored.markedHtml, body: authored.body, filePath: source, bindings: binding };
 assert.throws(() => associateNativeRender({ ...input, bindings: { ...binding, records: [] } }), /unknown marker/);
-assert.throws(() => associateNativeRender({ ...input, markedHtml: input.markedHtml + input.markedHtml }), /duplicated control/);
+const markedControl = input.markedHtml.match(/<a\b[^>]*data-native-heading-proof="([^"]+)"[^>]*>[\s\S]*?<\/a>/u);
+assert.ok(markedControl);
+const beforeClose = input.markedHtml.lastIndexOf('</div>');
+assert.throws(() => associateNativeRender({ ...input, markedHtml: input.markedHtml.slice(0, beforeClose) + markedControl[0] + input.markedHtml.slice(beforeClose) }), /duplicated control/);
 assert.throws(() => associateNativeRender({ ...input, body: input.body + '\nChanged source.' }), /actual compiler input/);
+const attribute = ` data-native-heading-proof="${markedControl[1]}"`;
+const moved = input.markedHtml.replace(attribute, '').replace('<div data-authored-copy>' + authoredCopy,
+  '<div data-authored-copy>' + authoredCopy.replace('<a ', '<a' + attribute + ' '));
+assert.notEqual(moved, input.markedHtml);
+assert.throws(() => associateNativeRender({ ...input, markedHtml: moved }), /cannot move to an authored control/);
+const renderedFiles = (await import('node:fs/promises')).readdir;
+const files = await renderedFiles(evidence);
+const other = await Promise.all(files.filter(name => /^rendered-observed-.*\.json$/u.test(name)).map(async name => JSON.parse(await readFile(path.join(evidence, name)))));
+const multiple = other.find(value => value.filePath.endsWith('multiple.md'));
+const zero = other.find(value => value.filePath.endsWith('zero.md'));
+assert.equal(multiple?.boundControls, 2); assert.equal(zero?.boundControls, 0);
+assert.ok(zero.portableHtml.includes('A complete paragraph-only native article.'));
+await run(['producer.mjs', 'cached', evidence]);
+const cached = JSON.parse(await readFile(path.join(evidence, 'rendered-cached.json')));
+assert.equal(cached.fullNativeHtml, authored.fullNativeHtml, 'Normal restarted non-force build must retain native markup');
 const result = { feasibilityOnly: true, node: process.version, astro: '7.3.8', starlight: '0.42.0', nativeButtonsUnchanged: true,
-  actualProducerBound: true, authoredIdenticalControlUnexempt: true, authoredSvgRetained: true, missingDuplicateStaleBindingRefused: true,
+  actualProducerBound: true, authoredIdenticalControlUnexempt: true, authoredSvgRetained: true,
+  missingDuplicateAndChangedBodyArgumentRefused: true, relocatedMarkerRefused: true,
+  completeMultiAndZeroControlDocuments: true, normalNonForceRestartedBuild: true,
   localReceiverOrCredentialsUsed: false, publicDeployment: false, productRecipeImplemented: false,
-  limitations: 'Native producer/render feasibility only. No sanitizer exemption, publication, cached/restart/move proof, installed profile, independent review or release acceptance.' };
+  limitations: 'Native producer/render feasibility only, including a normal restarted non-force native build. No production private authority, sanitizer exemption, publication/source-move/history, installed profile, independent review or release acceptance.' };
 await writeFile(path.join(evidence, 'FEASIBILITY.json'), json(result));
 console.log(json(result));

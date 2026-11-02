@@ -6,6 +6,49 @@ and their CANDIDATE/ARTIFACTS/ROUTES provenance are private package modules.
 Native state format1 is internal storage. There is no earlier development wire
 selector, initialization/adoption workflow or alternate codec.
 
+### Native Starlight heading controls
+
+The optional server-only `astro-discussion-bridge/starlight` entry provides
+`createNativeStarlightPublication({ source, native })`. `source` is the same
+full-source publication configuration used by `captureControlledSourceNative`;
+`native` is the operator's unchanged Starlight integration configuration. Use the
+returned `integration` in Astro's integrations array, in place of calling the
+Starlight constructor separately. Keep the normal DiscussionBridge integration.
+
+In the native article component, render the actual `astro:content` `Content`
+component first. Its existing capture callback returns
+`binding.render({ filePath, nativeBody, sourceArticleUrl, html })`, where `html`
+is that complete native rendering. The returned opaque handle is accepted by the
+same source writer; plain Astro's ordinary string callback remains unchanged.
+No caller-supplied class, SVG pattern, JSON record or claimed theme name can
+create a heading-control exemption.
+
+This recipe is qualified for the actual Starlight0.42.0 public producer used with
+Astro7.3.8/Satteri. It checks that native setup adds exactly the expected factory
+and observes that factory creating a new control beside the unchanged original
+heading. Unsupported or changed producer/configuration evidence stops locally;
+this is not a claim that every version in the presentation peer range has the
+same native compiler recipe. Native options containing extension functions also
+require an explicit `configurationVersion` that the operator changes with those
+extensions. This does not change the Adapter Protocol or its version/profile.
+
+The generated heading buttons remain on the public page, including their SVGs,
+local fragment targets and accessible labels. Only actual witnessed controls are
+excluded from the portable article sent to Discourse. Original Markdown, complete
+native HTML and immutable per-document/control/render evidence remain private.
+The existing media, code, reference, meaning and sanitizer checks still inspect
+all authored content; authored SVGs, even a copy of the theme's own control, are
+not silently discarded or exempted. Initial publication, settled rebuild and
+source-URL handling use the same preparation path. Existing FULL article, native
+body, ownership, dependency and asset verification remains in force.
+
+Evidence lives beside the configured private source state file, in its
+`.starlight-native` directory, outside the content corpus and public input/output.
+Retain it with that state and native build cache when restarting or backing up.
+Missing, stale, duplicated, relocated or ambiguous evidence refuses association;
+it does not invent a new source identity, alter historical receipts or infer
+publication success. There is no automatic evidence pruning or legacy conversion.
+
 ### Fixed-policy URLs and native transport
 
 V4 configuration, topic/origin checks, source and publication URL operations use

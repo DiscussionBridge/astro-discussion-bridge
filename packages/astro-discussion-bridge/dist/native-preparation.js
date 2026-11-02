@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { nativeUrl } from "./native-url.js";
+import { validateNativePresentation } from "./native-render.js";
 const sha256 = (value) => createHash("sha256").update(value, "utf8").digest("hex");
 const sanitizerRequire = createRequire(createRequire(import.meta.url).resolve("sanitize-html"));
 const { parseDocument } = sanitizerRequire("htmlparser2");
@@ -18,8 +19,10 @@ export function captureNativeArticle(original, sourceArticleUrl, originalKind) {
     assertNativeArticleCapture(result);
     return result;
 }
-export function completeNativePreparation(capture, renderedHtml, preparedHtml) {
-    const result = { ...capture, renderedHtml, preparedHtml, preparedBytes: Buffer.byteLength(preparedHtml), preparedSha256: sha256(preparedHtml) };
+export function completeNativePreparation(capture, renderedHtml, preparedHtml, presentation) {
+    const { nativePresentation: _priorPresentation, ...original } = capture;
+    const result = { ...original, renderedHtml, preparedHtml, preparedBytes: Buffer.byteLength(preparedHtml), preparedSha256: sha256(preparedHtml),
+        ...(presentation ? { nativePresentation: structuredClone(presentation) } : {}) };
     assertNativeArticleCapture(result);
     return result;
 }
@@ -29,6 +32,11 @@ export function assertNativeArticleCapture(capture) {
         || new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(capture.original)) !== capture.original)
         throw new Error("Native original article capture requires reconciliation.");
     nativeUrl(capture.sourceArticleUrl);
+    if (capture.nativePresentation) {
+        if (typeof capture.renderedHtml !== "string" || capture.nativePresentation.originalMarkdownSha256 !== capture.originalSha256)
+            throw new Error("Native presentation evidence belongs to another original article.");
+        validateNativePresentation(capture.nativePresentation, capture.renderedHtml);
+    }
     if (capture.preparedHtml !== undefined && (typeof capture.renderedHtml !== "string" || capture.preparedBytes !== Buffer.byteLength(capture.preparedHtml) || capture.preparedSha256 !== sha256(capture.preparedHtml)
         || new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(capture.preparedHtml)) !== capture.preparedHtml))
         throw new Error("Complete native preparation evidence requires reconciliation.");

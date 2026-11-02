@@ -1,5 +1,6 @@
 import { type CmsClientOptions } from "./cms-client.js";
 import { type CmsToRecordMetadata, type CmsToRevocationReason } from "./cms-to.js";
+import { type NativeRenderedContent } from "./native-render.js";
 export interface ControlledCreationOptions extends Omit<CmsClientOptions, "serverUrl"> {
     lane?: string;
 }
@@ -26,7 +27,7 @@ export interface NativeRenderedSourceInput {
     filePath: string;
     sourceArticleUrl: string;
     nativeBody: string;
-    render: () => Promise<string>;
+    render: () => Promise<NativeRenderedContent>;
 }
 /** Native collection caller; no new route, renderer or publication engine. */
 export declare function captureNativeRenderedSource(options: PublishControlledDiscussionsOptions, input: NativeRenderedSourceInput): Promise<{

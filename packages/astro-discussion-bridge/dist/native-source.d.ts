@@ -25,7 +25,7 @@ export declare function readMarkdownSources(files: string[]): AsyncGenerator<{
 }, void, unknown>;
 export declare function renderedPublishedContent(body: string, filePath: string, renderer: MarkdownRenderer, sourceArticleUrl: string): Promise<NativeArticleCapture>;
 /** Same existing portable cleaner for pre-build and actual native Content output. */
-export declare function prepareNativeRenderedArticle(capture: NativeArticleCapture, rendered: string): NativeArticleCapture;
+export declare function prepareNativeRenderedArticle(capture: NativeArticleCapture, native: import("./native-render.js").NativeRenderedContent): NativeArticleCapture;
 export declare function sourceDate(value: unknown): string | null;
 export declare function excerptArticle(completeHtml: string, maximum: number): string;
 export declare function lifecycleBoolean(frontmatter: Record<string, unknown>, key: string): boolean | undefined;

@@ -8,7 +8,7 @@ import { build } from 'astro';
 import starlight from '@astrojs/starlight';
 
 const phase = process.argv[2], evidence = process.argv[3], root = process.cwd();
-assert.ok(['baseline', 'observed', 'authored'].includes(phase));
+assert.ok(['baseline', 'observed', 'authored', 'cached'].includes(phase));
 assert.ok(path.isAbsolute(evidence));
 process.env.DB_HEADING_PROBE_PHASE = phase;
 process.env.DB_HEADING_PROBE_EVIDENCE = evidence;
@@ -21,9 +21,14 @@ const native = starlight({ title: 'Native producer feasibility', pagefind: false
 const setup = native.hooks['astro:config:setup'];
 const bindings = { feasibilityOnly: true, phase, node: process.version, astro: '7.3.8', starlight: '0.42.0',
   publicEntrySha256: hash(fs.readFileSync(fileURLToPath(import.meta.resolve('@astrojs/starlight')))),
-  setupSha256: hash(String(setup)), nativeFactoryCount: 0, records: [] };
+  setupSha256: hash(String(setup)), nativeFactoryCount: 0, records: [], documents: [] };
 const proofFile = path.join(evidence, `bindings-${phase}.json`);
-const save = () => fs.writeFileSync(proofFile, JSON.stringify(bindings, null, 2) + '\n');
+const registryFile = path.join(evidence, 'native-producer-registry.json');
+const registry = fs.existsSync(registryFile) ? JSON.parse(fs.readFileSync(registryFile)) : { records: [], documents: [] };
+const save = () => {
+  fs.writeFileSync(proofFile, JSON.stringify(bindings, null, 2) + '\n');
+  fs.writeFileSync(registryFile, JSON.stringify(registry, null, 2) + '\n');
+};
 save();
 if (phase !== 'baseline') native.hooks['astro:config:setup'] = async function (context) {
   const processor = context.config.markdown.processor;
@@ -31,16 +36,17 @@ if (phase !== 'baseline') native.hooks['astro:config:setup'] = async function (c
   const before = [...processor.options.hastPlugins];
   await setup.call(this, context);
   assert.equal(context.config.markdown.processor, processor, 'Do not substitute another native renderer');
-  const added = processor.options.hastPlugins.filter(value => !before.includes(value));
-  assert.equal(added.length, 1, 'Bind exactly the factory added by the actual Starlight setup operation');
-  const factory = added[0];
+  const after = processor.options.hastPlugins;
+  assert.equal(after.length, before.length + 1, 'Native setup must append exactly one factory');
+  for (let index = 0; index < before.length; index++) assert.equal(after[index], before[index], 'Native setup must retain the exact ordered prefix');
+  const factory = after[before.length];
   assert.equal(typeof factory, 'function');
-  bindings.nativeFactoryCount = added.length;
+  bindings.nativeFactoryCount = 1;
   bindings.processor = processor.name;
   bindings.factorySha256 = hash(String(factory));
-  function observe(value, input) {
-    if (Array.isArray(value)) return value.map(member => observe(member, input));
-    if (typeof value === 'function') return context => observe(value(context), context);
+  function observe(value, input, document) {
+    if (Array.isArray(value)) return value.map(member => observe(member, input, document));
+    if (typeof value === 'function') return context => observe(value(context), context, document);
     if (!value?.element || typeof value.element.visit !== 'function') return value;
     const visit = value.element.visit;
     return { ...value, element: { ...value.element, visit(node, context) {
@@ -61,9 +67,12 @@ if (phase !== 'baseline') native.hooks['astro:config:setup'] = async function (c
       const record = { nonce, fileURL: input.fileURL.href, sourceFormat: input.sourceFormat,
         source: input.source, sourceSha256: hash(input.source),
         physicalSourceSha256: hash(fs.readFileSync(fileURLToPath(input.fileURL))),
-        headingId: node.properties.id, originalHeadingUnchanged: true,
+        documentNonce: document.nonce, headingId: node.properties.id, originalHeadingUnchanged: true,
+        generatedWrapper: JSON.parse(JSON.stringify(result)),
         generatedControl: structuredClone(control) };
       bindings.records.push(record);
+      registry.records.push(record);
+      document.controls.push(nonce);
       // Probe-only metadata goes on the newly constructed control, never the
       // original heading. The actual Content render binds/removes this metadata.
       control.properties['data-native-heading-proof'] = nonce;
@@ -71,17 +80,30 @@ if (phase !== 'baseline') native.hooks['astro:config:setup'] = async function (c
       return result;
     } } };
   }
-  processor.options.hastPlugins = processor.options.hastPlugins.map(value => value === factory
-    ? input => observe(factory(input), input) : value);
+  processor.options.hastPlugins = processor.options.hastPlugins.map(value => value === factory ? input => {
+    const nativeResult = factory(input);
+    if (!(input.fileURL instanceof URL)) return nativeResult;
+    const file = fileURLToPath(input.fileURL), relative = path.relative(path.join(root, 'src/content/docs'), file);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return nativeResult;
+    const document = { nonce: 'db-document-' + randomUUID(), fileURL: input.fileURL.href,
+      source: input.source, sourceSha256: hash(input.source), physicalSourceSha256: hash(fs.readFileSync(file)),
+      controls: [], complete: false };
+    return [observe(nativeResult, input, document), { name: 'native-probe-document-completion', after(tree, context) {
+      document.complete = true;
+      bindings.documents.push(document); registry.documents.push(document); save();
+      context.replaceNode(tree, { type: 'root', children: [{ type: 'element', tagName: 'div',
+        properties: { 'data-native-document-proof': document.nonce }, children: [...tree.children] }] });
+    } }];
+  } : value);
   save();
 };
 await build({ root: pathToFileURL(root + path.sep), configFile: false, site: 'https://starlight-probe.invalid',
-  output: 'static', trailingSlash: 'always', force: true, logLevel: 'warn', integrations: [native] });
+  output: 'static', trailingSlash: 'always', force: phase !== 'cached', logLevel: 'warn', integrations: [native] });
 save();
 const rendered = JSON.parse(fs.readFileSync(path.join(evidence, `rendered-${phase}.json`)));
 assert.ok(rendered.fullNativeHtml.includes('sl-anchor-link'));
 if (phase !== 'baseline') {
-  assert.ok(bindings.records.length >= 1);
+  if (phase !== 'cached') assert.ok(bindings.records.length >= 1);
   assert.equal(rendered.boundControls, 1, 'Exactly the one generated Markdown heading control is bound');
 }
 fs.copyFileSync(path.join(root, 'dist/index.html'), path.join(evidence, `page-${phase}.html`));

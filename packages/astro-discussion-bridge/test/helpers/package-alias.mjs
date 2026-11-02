@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
  * use normal bare imports and do not install this fixture helper.
  */
 export function nativePackageAlias(specifier, resolvedFile) {
-  return ["astro-discussion-bridge", "astro-discussion-bridge/server-url", "astro-discussion-bridge/controlled-creation", "astro-discussion-bridge/operational-state"].includes(specifier)
+  return ["astro-discussion-bridge", "astro-discussion-bridge/server-url", "astro-discussion-bridge/controlled-creation", "astro-discussion-bridge/operational-state", "astro-discussion-bridge/starlight"].includes(specifier)
     ? { id: pathToFileURL(resolvedFile).href, external: true }
     : resolvedFile;
 }

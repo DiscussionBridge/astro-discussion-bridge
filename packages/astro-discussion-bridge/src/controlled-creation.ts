@@ -16,6 +16,7 @@ import { activeSourceMove } from "./cms-to-source-state.js";
 import { captureSourceNativeUnderWriter, sourcePreparationBase } from "./cms-to-source-move.js";
 import { sourceHash, sourceOriginalKey, resolveNativeSourceTargets } from "./to-source-profile.js";
 import { assertActualSourceBuild } from "./cms-to-source-build.js";
+import { assertNativeRenderSource, type NativeRenderedContent } from "./native-render.js";
 
 export interface ControlledCreationOptions extends Omit<CmsClientOptions, "serverUrl"> { lane?: string }
 export interface PublishControlledDiscussionsOptions { docsDir: string; stateFile: string; siteUrl: string; discourseUrl: string; routeBase?: string; controlledCreation: ControlledCreationOptions }
@@ -181,7 +182,7 @@ async function publishPreparedUnderWriter(options: PublishControlledDiscussionsO
   }
 }
 
-export interface NativeRenderedSourceInput { filePath: string; sourceArticleUrl: string; nativeBody: string; render: () => Promise<string> }
+export interface NativeRenderedSourceInput { filePath: string; sourceArticleUrl: string; nativeBody: string; render: () => Promise<NativeRenderedContent> }
 /** Native collection caller; no new route, renderer or publication engine. */
 export function captureNativeRenderedSource(options: PublishControlledDiscussionsOptions, input: NativeRenderedSourceInput) { return captureNativeRenderedSourceInner(options, input, false); }
 /** Explicit full-source native profile binding; same writer/publication engine. */
@@ -222,6 +223,7 @@ async function captureNativeRenderedSourceInner(options: PublishControlledDiscus
       if (!capture || capture.original !== body || capture.sourceArticleUrl !== sourcePreparationBase(operation, actual.contents, pageUrl)) throw new Error("Native original differs from its settled captured article; no accepted snapshot is inferred from frontmatter alone.");
       if (fullSource) {
         const html = await input.render(), checked = await nativePublicationFiles.readExisting(file);
+        assertNativeRenderSource(html, file, body);
         if (!checked || checked.dev !== actual.dev || checked.ino !== actual.ino || checked.contents !== actual.contents) throw new Error("Native full-source preparation changed during rendering.");
         const prepared = prepareNativeRenderedArticle(capture, resolveNativeSourceTargets(html, capture.sourceArticleUrl));
         if (prepared.preparedSha256 !== capture.preparedSha256 || prepared.preparedBytes !== capture.preparedBytes) {
@@ -236,6 +238,7 @@ async function captureNativeRenderedSourceInner(options: PublishControlledDiscus
     }
     if (intent.source !== actual.contents || intent.originalCapture.original !== body) throw new Error("Native source differs from the staged render handoff; no intent is replaced.");
       const html = await input.render();
+      assertNativeRenderSource(html, file, body);
       const current = await nativePublicationFiles.readExisting(file);
       if (!current || current.dev !== actual.dev || current.ino !== actual.ino || current.contents !== actual.contents) throw new Error("Native source changed during Content rendering; no resolve was sent.");
       const preparation = prepareNativeRenderedArticle(intent.originalCapture, html);

@@ -43,8 +43,9 @@ import Discussion from 'astro-discussion-bridge/DiscourseDiscussion.astro';
 import { sourceArticleAttributes } from 'astro-discussion-bridge';
 import { captureControlledSourceNative } from 'astro-discussion-bridge/controlled-creation';
 import { readPublicationOperationalState } from 'astro-discussion-bridge/operational-state';
+import { createNativeStarlightPublication } from 'astro-discussion-bridge/starlight';
 const receiver = ${JSON.stringify(international ? "https://\u{11db0}.example" : "https://forum.example")};
-if ([sourceArticleAttributes, captureControlledSourceNative, readPublicationOperationalState].some(value => typeof value !== 'function')) throw new Error('Documented native server API is unavailable.');
+if ([sourceArticleAttributes, captureControlledSourceNative, readPublicationOperationalState, createNativeStarlightPublication].some(value => typeof value !== 'function')) throw new Error('Documented native server API is unavailable.');
 ---
 <html lang="en"><head><title>Ordinary installed Astro consumer</title></head><body><main><h1>Real native build</h1><p>Installed ordinary package without a fixture alias, parser override or custom Vite configuration.</p><p data-native-server-api>Documented server APIs loaded during native prerender.</p></main><Discussion discourseUrl={receiver} topicId="53" topicUrl={receiver + '/t/native/53'} /></body></html>
 `, { flag: "wx" });
@@ -65,7 +66,7 @@ assert.equal(ledger.members.length, receipt.memberCount);
 for (const member of ledger.members) { const file = path.join(root, 'node_modules/astro-discussion-bridge', member.path), stat = fs.lstatSync(file), bytes = fs.readFileSync(file); assert.ok(stat.isFile() && !stat.isSymbolicLink()); assert.equal(bytes.length, member.size, member.path); assert.equal(sha(bytes), member.sha256, member.path); }
 const payload = []; function listPayload(dir, prefix = '') { for (const entry of fs.readdirSync(dir, { withFileTypes: true })) { if (entry.name === 'node_modules') continue; const file = path.join(dir, entry.name), relative = prefix + entry.name; assert.ok(!entry.isSymbolicLink()); if (entry.isDirectory()) listPayload(file, relative + '/'); else { assert.ok(entry.isFile()); payload.push(relative); } } } listPayload(path.join(root, 'node_modules/astro-discussion-bridge'));
 assert.deepEqual(payload.sort(), ledger.members.map(member => member.path).sort());
-const names = ['astro-discussion-bridge', 'astro-discussion-bridge/web-url', 'astro-discussion-bridge/server-url', 'astro-discussion-bridge/simple-live', 'astro-discussion-bridge/controlled-creation', 'astro-discussion-bridge/operational-state'];
+const names = ['astro-discussion-bridge', 'astro-discussion-bridge/web-url', 'astro-discussion-bridge/server-url', 'astro-discussion-bridge/simple-live', 'astro-discussion-bridge/controlled-creation', 'astro-discussion-bridge/operational-state', 'astro-discussion-bridge/starlight'];
 for (const name of names) assert.ok(Object.keys(await import(name)).length > 0, name);
 const manifest = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url))); assert.equal(manifest.overrides, undefined);
 const lockBytes = fs.readFileSync(new URL('./package-lock.json', import.meta.url)), lock = JSON.parse(lockBytes);

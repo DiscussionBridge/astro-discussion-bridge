@@ -8,6 +8,7 @@ import { isInteractiveCommentsMode } from "./comments-mode.js";
 import { assertPublicationDirectory } from "./native-files.js";
 import { nativeUrl, type NativeUrl } from "./native-url.js";
 import { assertNativeMediaPreservedByCurrentRenderer, assertNativeMeaningRetained } from "./native-media.js";
+import { fullNativeHtml, portableNativeHtml, nativePresentation } from "./native-render.js";
 import { assertNativeArticleCapture, captureNativeArticle, completeNativePreparation, copiedReferencePreparation, nativeCodeLanguagePreparation, NativeAssetRenderRequired, NativePreparationLimitation, type NativeArticleCapture } from "./native-preparation.js";
 const MAX_SOURCE_READ_BATCH = 32;
 const markdownExtensions = new Set([".md", ".mdx"]);
@@ -158,13 +159,15 @@ export async function renderedPublishedContent(
 }
 
 /** Same existing portable cleaner for pre-build and actual native Content output. */
-export function prepareNativeRenderedArticle(capture: NativeArticleCapture, rendered: string): NativeArticleCapture {
+export function prepareNativeRenderedArticle(capture: NativeArticleCapture, native: import("./native-render.js").NativeRenderedContent): NativeArticleCapture {
   assertNativeArticleCapture(capture);
+  const rendered = fullNativeHtml(native), projection = portableNativeHtml(native), presentation = nativePresentation(native);
   try {
-  assertNativeMediaPreservedByCurrentRenderer(rendered);
+  if (presentation?.originalMarkdownSha256 !== undefined && presentation.originalMarkdownSha256 !== capture.originalSha256) throw new NativePreparationLimitation("Native presentation belongs to another original Markdown article.");
+  assertNativeMediaPreservedByCurrentRenderer(projection);
   const references = copiedReferencePreparation(capture.sourceArticleUrl);
-  const codeLanguages = nativeCodeLanguagePreparation(rendered);
-  const sanitized = sanitizeHtml(rendered, {
+  const codeLanguages = nativeCodeLanguagePreparation(projection);
+  const sanitized = sanitizeHtml(projection, {
     transformTags: { "*": (tagName, attribs) => {
       const code = codeLanguages.transform(tagName, attribs);
       return references.transform(code.tagName, code.attribs);
@@ -188,12 +191,14 @@ export function prepareNativeRenderedArticle(capture: NativeArticleCapture, rend
   codeLanguages.assertRetained(sanitized);
   // The immediately preceding check binds exact decoded native code/language;
   // only that established recipe may normalize its known Shiki decoration.
-  assertNativeMeaningRetained(rendered, sanitized, true);
+  assertNativeMeaningRetained(projection, sanitized, true);
   if (!sanitized.trim() || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(sanitized)) throw new NativePreparationLimitation("Current Bridge preparation cannot emit a complete safe article; source retained, no content-validity or true-absence decision made.");
-  return completeNativePreparation(capture, rendered, sanitized);
+  return completeNativePreparation(capture, rendered, sanitized, presentation);
   } catch (error) {
     const limitation = error instanceof NativePreparationLimitation ? error : new NativePreparationLimitation("Bridge could not prepare the native article; this does not invalidate its content or format.");
-    limitation.capture = { ...capture, renderedHtml: rendered }; throw limitation;
+    limitation.capture = { originalKind: capture.originalKind, sourceArticleUrl: capture.sourceArticleUrl, original: capture.original,
+      originalBytes: capture.originalBytes, originalSha256: capture.originalSha256, renderedHtml: rendered,
+      ...(presentation ? { nativePresentation: presentation } : {}) }; throw limitation;
   }
 }
 

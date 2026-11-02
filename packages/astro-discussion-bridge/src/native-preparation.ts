@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { nativeUrl } from "./native-url.js";
+import { validateNativePresentation, type NativePresentationEvidence } from "./native-render.js";
 
 const sha256 = (value: string) => createHash("sha256").update(value, "utf8").digest("hex");
 const sanitizerRequire = createRequire(createRequire(import.meta.url).resolve("sanitize-html"));
@@ -18,6 +19,7 @@ export interface NativeArticleCapture {
   preparedHtml?: string;
   preparedBytes?: number;
   preparedSha256?: string;
+  nativePresentation?: NativePresentationEvidence;
 }
 export class NativePreparationLimitation extends Error {
   capture?: NativeArticleCapture;
@@ -31,8 +33,10 @@ export function captureNativeArticle(original: string, sourceArticleUrl: string,
   const result = { originalKind, sourceArticleUrl, original, originalBytes: Buffer.byteLength(original), originalSha256: sha256(original) };
   assertNativeArticleCapture(result); return result;
 }
-export function completeNativePreparation(capture: NativeArticleCapture, renderedHtml: string, preparedHtml: string): NativeArticleCapture {
-  const result = { ...capture, renderedHtml, preparedHtml, preparedBytes: Buffer.byteLength(preparedHtml), preparedSha256: sha256(preparedHtml) };
+export function completeNativePreparation(capture: NativeArticleCapture, renderedHtml: string, preparedHtml: string, presentation?: NativePresentationEvidence): NativeArticleCapture {
+  const { nativePresentation: _priorPresentation, ...original } = capture;
+  const result = { ...original, renderedHtml, preparedHtml, preparedBytes: Buffer.byteLength(preparedHtml), preparedSha256: sha256(preparedHtml),
+    ...(presentation ? { nativePresentation: structuredClone(presentation) } : {}) };
   assertNativeArticleCapture(result); return result;
 }
 export function assertNativeArticleCapture(capture: NativeArticleCapture) {
@@ -40,6 +44,10 @@ export function assertNativeArticleCapture(capture: NativeArticleCapture) {
     || capture.originalBytes !== Buffer.byteLength(capture.original) || capture.originalSha256 !== sha256(capture.original)
     || new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(capture.original)) !== capture.original) throw new Error("Native original article capture requires reconciliation.");
   nativeUrl(capture.sourceArticleUrl);
+  if (capture.nativePresentation) {
+    if (typeof capture.renderedHtml !== "string" || capture.nativePresentation.originalMarkdownSha256 !== capture.originalSha256) throw new Error("Native presentation evidence belongs to another original article.");
+    validateNativePresentation(capture.nativePresentation, capture.renderedHtml);
+  }
   if (capture.preparedHtml !== undefined && (typeof capture.renderedHtml !== "string" || capture.preparedBytes !== Buffer.byteLength(capture.preparedHtml) || capture.preparedSha256 !== sha256(capture.preparedHtml)
     || new TextDecoder("utf-8", { fatal: true }).decode(Buffer.from(capture.preparedHtml)) !== capture.preparedHtml)) throw new Error("Complete native preparation evidence requires reconciliation.");
 }

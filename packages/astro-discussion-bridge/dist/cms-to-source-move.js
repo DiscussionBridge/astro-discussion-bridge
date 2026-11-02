@@ -14,6 +14,7 @@ import { NativePreparationLimitation } from "./native-preparation.js";
 import { makeSourceOwnership, sourceHash, sourceOriginalKey, resolveNativeSourceTargets, SOURCE_MOVE_FIELD, SOURCE_NONCE_FIELD, SOURCE_OWNERSHIP_FIELD } from "./to-source-profile.js";
 import { projectGeneratedReadMoreMove, semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { assertActualSourceBuild, verifyControlledSourcePublic } from "./cms-to-source-build.js";
+import { assertNativeRenderSource, fullNativeHtml, nativePresentation } from "./native-render.js";
 const saveState = (options, state) => writePublicationOperationalState(path.resolve(options.stateFile), state);
 export const currentSourceRecord = (operation) => operation.to?.effectiveEdition?.record ?? operation.to?.acceptedBody?.bridge_record;
 export function sourcePreparationBase(operation, contents, canonicalUrl) {
@@ -264,10 +265,11 @@ export async function captureSourceNativeUnderWriter(options, state, operation, 
         throw new Error("Full source capture lost its actual move/native owner.");
     assertRecord(operation, await client.record(operation.resourceId), move?.prepareBody.expected_source_revision ?? to.acceptedRevision, move?.prepareBody.old_url ?? operation.canonicalUrl);
     const rendered = await input.render();
+    assertNativeRenderSource(rendered, file, article.original);
     const checked = await nativePublicationFiles.readExisting(file);
     if (!checked || checked.dev !== actual.dev || checked.ino !== actual.ino || checked.contents !== actual.contents)
         throw new Error("Actual full native source changed during rendering.");
-    const nativeHtml = resolveNativeSourceTargets(rendered, article.sourceArticleUrl), prepared = prepareNativeRenderedArticle(article, nativeHtml);
+    const nativeRender = resolveNativeSourceTargets(rendered, article.sourceArticleUrl), nativeHtml = fullNativeHtml(nativeRender), prepared = prepareNativeRenderedArticle(article, nativeRender);
     if (prepared.preparedSha256 !== article.preparedSha256 || prepared.preparedBytes !== article.preparedBytes || move && nativeHtml !== move.beforeCapture.nativeHtml)
         throw new NativePreparationLimitation("Canonical source move/full native rendering cannot preserve the exact accepted complete article; no replacement recipe or29 proof was invented.");
     const data = parseMarkdown(actual.contents).frontmatter;
@@ -282,7 +284,8 @@ export async function captureSourceNativeUnderWriter(options, state, operation, 
     if (output !== actual.contents)
         await nativePublicationFiles.write(file, output, actual);
     const nativeCapture = { buildId: state.sourceBuildId, file, fileSha256: sourceHash(output), originalKey: sourceOriginalKey(output), canonicalUrl: record.canonical_url, revision: record.source_revision,
-        birthBase: article.sourceArticleUrl, nativeHtml, ownership: owned.receipt, ownershipSha256: owned.sha256, title: record.title, authors: structuredClone(record.source_authors ?? []) };
+        birthBase: article.sourceArticleUrl, nativeHtml, ownership: owned.receipt, ownershipSha256: owned.sha256, title: record.title, authors: structuredClone(record.source_authors ?? []),
+        ...(nativePresentation(nativeRender) ? { nativePresentation: nativePresentation(nativeRender) } : {}) };
     if (move)
         move.nativeCapture = nativeCapture;
     else

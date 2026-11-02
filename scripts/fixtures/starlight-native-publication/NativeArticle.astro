@@ -1,0 +1,40 @@
+---
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
+import { render } from 'astro:content';
+import { experimental_AstroContainer as Container } from 'astro/container';
+import DefaultContent from '@astrojs/starlight/components/MarkdownContent.astro';
+import Discussion from 'astro-discussion-bridge/Discussion.astro';
+import { sourceArticleAttributes } from 'astro-discussion-bridge';
+import { captureControlledSourceNative } from 'astro-discussion-bridge/controlled-creation';
+import { createNativeStarlightPublication } from 'astro-discussion-bridge/starlight';
+import { options, publication, nativeOptions } from '../../server.mjs';
+const entry = Astro.locals.starlightRoute.entry;
+let captured;
+if (Astro.url.pathname === '/source/' && path.resolve(entry.filePath) === path.join(options.docsDir, 'source.md')) {
+  const { Content } = await render(entry);
+  const container = await Container.create();
+  const html = await container.renderToString(Content, { request: Astro.request });
+  if (process.argv[2] === 'initial') {
+    const input = { filePath: path.resolve(entry.filePath), nativeBody: entry.body, sourceArticleUrl: Astro.url.href, html };
+    const marker = / data-discussionbridge-native-heading="([^"]+)"/u.exec(html);
+    const anchor = /<a\b[^>]*data-discussionbridge-native-heading="[^"]+"[^>]*>[\s\S]*?<\/a>/u.exec(html);
+    assert.ok(marker && anchor);
+    await assert.rejects(publication.render({ ...input, nativeBody: entry.body + '\nChanged argument.' }), /actual source/);
+    await assert.rejects(publication.render({ ...input, html: html.replace(/data-discussionbridge-native-document="[^"]+"/u, `data-discussionbridge-native-document="${randomUUID()}"`) }), /evidence is missing/);
+    await assert.rejects(publication.render({ ...input, html: html.replace(marker[0], '') }), /incomplete/);
+    const closing = html.lastIndexOf('</div>');
+    await assert.rejects(publication.render({ ...input, html: html.slice(0, closing) + anchor[0] + html.slice(closing) }), /incomplete|duplicated/);
+    const moved = html.replace(marker[0], '');
+    const beforeClose = moved.lastIndexOf('</div>');
+    await assert.rejects(publication.render({ ...input, html: moved.slice(0, beforeClose) + '<div data-authored-copy>' + anchor[0] + '</div>' + moved.slice(beforeClose) }), /moved or ambiguous/);
+    const changed = await createNativeStarlightPublication({ source: options, native: { ...nativeOptions, title: 'Changed native configuration' } });
+    await assert.rejects(changed.render(input), /source\/configuration\/producer evidence differs/);
+    console.log(JSON.stringify({ actualProductOriginNegatives: 6, phase: 'initial' }));
+  }
+  captured = await captureControlledSourceNative(options, { filePath: path.resolve(entry.filePath), nativeBody: entry.body,
+    sourceArticleUrl: Astro.url.href, render: () => publication.render({ filePath: path.resolve(entry.filePath), nativeBody: entry.body, sourceArticleUrl: Astro.url.href, html }) });
+}
+---
+<DefaultContent>{captured ? <article {...sourceArticleAttributes(captured.source)}><h1 data-discussionbridge-source-title>{entry.data.title}</h1><div data-discussionbridge-source-content={captured.frontmatter.discussionbridgeExternalId} set:html={captured.source.nativeHtml}/><Discussion frontmatter={captured.frontmatter}/></article> : <slot/>}</DefaultContent>

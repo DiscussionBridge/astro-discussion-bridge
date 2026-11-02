@@ -5,6 +5,7 @@ import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { parseMarkdown } from "./native-source.js";
 import { NativePreparationLimitation } from "./native-preparation.js";
 import { nativeUrl, sameCmsOrigin } from "./native-url.js";
+import { fullNativeHtml, nativeControlStarts, editNativeRenderedArticle, validateNativePresentation } from "./native-render.js";
 export const ASTRO_SOURCE_PROFILE = "discussionbridge-astro-source-html-1";
 export const SOURCE_OWNERSHIP_FIELD = "discussionbridgeSourceOwnershipSha256";
 export const SOURCE_MOVE_FIELD = "discussionbridgeSourceMoveId";
@@ -39,6 +40,12 @@ export function validateSourceCapture(capture) {
     validateCms("Url", capture.canonicalUrl);
     validateCms("SourceAuthors", capture.authors);
     validateCms("Title", capture.title);
+    if (capture.nativePresentation) {
+        validateNativePresentation(capture.nativePresentation, capture.nativeHtml);
+        if (path.resolve(capture.nativePresentation.nativeFile) !== path.resolve(capture.file)
+            || capture.nativePresentation.originalMarkdownSha256 !== receipt.originalArticleSha256 || capture.nativePresentation.originalKey !== capture.originalKey)
+            throw new Error("Full native render provenance belongs to another source.");
+    }
     if (capture.build) {
         const build = capture.build;
         validateCms("Instant", build.builtAt);
@@ -112,10 +119,14 @@ function openingEnd(html, start) {
     }
     throw new NativePreparationLimitation("Complete native source markup boundary is unavailable.");
 }
-/** Only approved target resolution on ACTUAL native rendered output; no cleaner. */
-export function resolveNativeSourceTargets(html, capturedBase) {
+export function resolveNativeSourceTargets(input, capturedBase) {
+    const html = fullNativeHtml(input), controls = nativeControlStarts(input);
     const edits = [];
     for (const node of sourceNodes(parseSourceHtml(html))) {
+        // Only an issued native-render handle proves these local UI anchors. Every
+        // authored fragment/link keeps the existing captured-base resolution.
+        if (typeof node.startIndex === "number" && controls.has(node.startIndex))
+            continue;
         const attribute = node.name === "a" ? "href" : node.name === "img" ? "src" : undefined;
         if (!attribute || !node.attribs || !Object.hasOwn(node.attribs, attribute))
             continue;
@@ -133,10 +144,7 @@ export function resolveNativeSourceTargets(html, capturedBase) {
         const match = matches[0], start = node.startIndex + match.index;
         edits.push({ start, end: start + match[0].length, value: `${match[1]}"${encodeAttribute(target)}"` });
     }
-    let result = html;
-    for (const edit of edits.sort((a, b) => b.start - a.start))
-        result = result.slice(0, edit.start) + edit.value + result.slice(edit.end);
-    return result;
+    return editNativeRenderedArticle(input, edits);
 }
 export function sourceArticleAttributes(capture) {
     const receipt = capture.ownership;

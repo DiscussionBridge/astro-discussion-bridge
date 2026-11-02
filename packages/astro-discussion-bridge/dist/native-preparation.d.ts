@@ -1,3 +1,4 @@
+import { type NativePresentationEvidence } from "./native-render.js";
 /** Private native evidence, never an additional wire field or HTML policy. */
 export interface NativeArticleCapture {
     originalKind: "markdown" | "cooked_html";
@@ -9,6 +10,7 @@ export interface NativeArticleCapture {
     preparedHtml?: string;
     preparedBytes?: number;
     preparedSha256?: string;
+    nativePresentation?: NativePresentationEvidence;
 }
 export declare class NativePreparationLimitation extends Error {
     capture?: NativeArticleCapture;
@@ -17,7 +19,7 @@ export declare class NativePreparationLimitation extends Error {
 export declare class NativeAssetRenderRequired extends NativePreparationLimitation {
 }
 export declare function captureNativeArticle(original: string, sourceArticleUrl: string, originalKind: NativeArticleCapture["originalKind"]): NativeArticleCapture;
-export declare function completeNativePreparation(capture: NativeArticleCapture, renderedHtml: string, preparedHtml: string): NativeArticleCapture;
+export declare function completeNativePreparation(capture: NativeArticleCapture, renderedHtml: string, preparedHtml: string, presentation?: NativePresentationEvidence): NativeArticleCapture;
 export declare function assertNativeArticleCapture(capture: NativeArticleCapture): void;
 export declare const nativeCaptureId: (capture: NativeArticleCapture) => string;
 /** Carry actual native renderer metadata into the existing portable code marker. */

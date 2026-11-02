@@ -42,6 +42,8 @@ jobs:
         run: npm run test:normal-consumer
       - name: Check actual native Starlight heading producer and authored lookalikes
         run: npm run test:starlight-heading-origin
+      - name: Check packaged native Starlight publication and restarted updates
+        run: npm run test:starlight-publication
       - name: Require reproducible committed TypeScript output
         run: git diff --exit-code -- dist
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f

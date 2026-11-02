@@ -1,4 +1,5 @@
 import { type NativeArticleCapture } from "./native-preparation.js";
+import { type NativeRenderedContent, type NativePresentationEvidence } from "./native-render.js";
 export declare const ASTRO_SOURCE_PROFILE = "discussionbridge-astro-source-html-1";
 export declare const SOURCE_OWNERSHIP_FIELD = "discussionbridgeSourceOwnershipSha256";
 export declare const SOURCE_MOVE_FIELD = "discussionbridgeSourceMoveId";
@@ -44,6 +45,7 @@ export interface SourceNativeCapture {
         id: string;
         name: string;
     }[];
+    nativePresentation?: NativePresentationEvidence;
     build?: {
         file: string;
         html: string;
@@ -77,7 +79,8 @@ export interface SourceHtmlNode {
 export declare const sourceNodes: (root: SourceHtmlNode) => SourceHtmlNode[];
 export declare const parseSourceHtml: (html: string) => SourceHtmlNode;
 /** Only approved target resolution on ACTUAL native rendered output; no cleaner. */
-export declare function resolveNativeSourceTargets(html: string, capturedBase: string): string;
+export declare function resolveNativeSourceTargets(input: string, capturedBase: string): string;
+export declare function resolveNativeSourceTargets(input: NativeRenderedContent, capturedBase: string): NativeRenderedContent;
 export declare function sourceArticleAttributes(capture: SourceNativeCapture): {
     "data-discussionbridge-source-native": string;
     "data-discussionbridge-source-external": string;

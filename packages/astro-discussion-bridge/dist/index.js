@@ -9,7 +9,7 @@ import { startControlledSourceBuild, recordControlledSourceBuild } from "./cms-t
 import { stageCmsNativePublications, recordCmsNativeBuild, deployCmsNativeBuildIfNeeded, renewCmsNativeBuild } from "./cms-pipeline.js";
 // These documented APIs read private package data or native filesystem state.
 // Preserve their installed Node boundary, never a prerender-chunk-relative copy.
-const serverOnlyEntries = ["astro-discussion-bridge", "astro-discussion-bridge/server-url", "astro-discussion-bridge/controlled-creation", "astro-discussion-bridge/operational-state"];
+const serverOnlyEntries = ["astro-discussion-bridge", "astro-discussion-bridge/server-url", "astro-discussion-bridge/controlled-creation", "astro-discussion-bridge/operational-state", "astro-discussion-bridge/starlight"];
 /** Native/Core presentation remains independent of configured V4 publication. */
 export default function discussionBridge(options) {
     const display = normalizeCommentsMode(options.comments?.display === undefined ? "full" : options.comments.display);

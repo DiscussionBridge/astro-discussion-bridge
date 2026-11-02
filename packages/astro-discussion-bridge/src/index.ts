@@ -12,7 +12,7 @@ import type { CmsPipelineOptions } from "./cms-pipeline.js";
 
 // These documented APIs read private package data or native filesystem state.
 // Preserve their installed Node boundary, never a prerender-chunk-relative copy.
-const serverOnlyEntries = ["astro-discussion-bridge", "astro-discussion-bridge/server-url", "astro-discussion-bridge/controlled-creation", "astro-discussion-bridge/operational-state"];
+const serverOnlyEntries = ["astro-discussion-bridge", "astro-discussion-bridge/server-url", "astro-discussion-bridge/controlled-creation", "astro-discussion-bridge/operational-state", "astro-discussion-bridge/starlight"];
 
 export interface DiscussionBridgeOptions {
   discourseUrl: string;

@@ -5,6 +5,7 @@ import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { parseMarkdown } from "./native-source.js";
 import { NativePreparationLimitation, type NativeArticleCapture } from "./native-preparation.js";
 import { nativeUrl, sameCmsOrigin } from "./native-url.js";
+import { fullNativeHtml, nativeControlStarts, editNativeRenderedArticle, validateNativePresentation, type NativeRenderedContent, type NativePresentationEvidence } from "./native-render.js";
 
 export const ASTRO_SOURCE_PROFILE = "discussionbridge-astro-source-html-1";
 export const SOURCE_OWNERSHIP_FIELD = "discussionbridgeSourceOwnershipSha256";
@@ -27,6 +28,7 @@ export interface SourceNativeCapture {
   file: string; fileSha256: string; originalKey: string; canonicalUrl: string; revision: string; birthBase: string;
   nativeHtml: string; ownership: AstroSourceOwnershipV1; ownershipSha256: string;
   title: string; authors: { id: string; name: string }[];
+  nativePresentation?: NativePresentationEvidence;
   build?: { file: string; html: string; builtAt: string; sha256: string; dependencyMarkup: string[]; assets: { url: string; file: string; bytes: number; sha256: string }[] };
 }
 export function validateSourceCapture(capture: SourceNativeCapture) {
@@ -41,6 +43,11 @@ export function validateSourceCapture(capture: SourceNativeCapture) {
   if (receipt.moveId !== null) { validateCms("UUID", receipt.moveId); validateCms("PublicNonce", receipt.proofNonce); }
   validateCms("UUID", capture.buildId); validateCms("Revision", capture.revision); validateCms("Url", capture.birthBase); validateCms("Url", capture.canonicalUrl);
   validateCms("SourceAuthors", capture.authors); validateCms("Title", capture.title);
+  if (capture.nativePresentation) {
+    validateNativePresentation(capture.nativePresentation, capture.nativeHtml);
+    if (path.resolve(capture.nativePresentation.nativeFile) !== path.resolve(capture.file)
+      || capture.nativePresentation.originalMarkdownSha256 !== receipt.originalArticleSha256 || capture.nativePresentation.originalKey !== capture.originalKey) throw new Error("Full native render provenance belongs to another source.");
+  }
   if (capture.build) {
     const build = capture.build; validateCms("Instant", build.builtAt);
     if (!path.isAbsolute(build.file) || sourceHash(build.html) !== build.sha256 || !Array.isArray(build.dependencyMarkup) || build.dependencyMarkup.some(value => typeof value !== "string") || !Array.isArray(build.assets)) throw new Error("Native source build artifact/dependencies differ.");
@@ -84,9 +91,15 @@ function openingEnd(html: string, start: number) {
 }
 
 /** Only approved target resolution on ACTUAL native rendered output; no cleaner. */
-export function resolveNativeSourceTargets(html: string, capturedBase: string) {
+export function resolveNativeSourceTargets(input: string, capturedBase: string): string;
+export function resolveNativeSourceTargets(input: NativeRenderedContent, capturedBase: string): NativeRenderedContent;
+export function resolveNativeSourceTargets(input: NativeRenderedContent, capturedBase: string): NativeRenderedContent {
+  const html = fullNativeHtml(input), controls = nativeControlStarts(input);
   const edits: { start: number; end: number; value: string }[] = [];
   for (const node of sourceNodes(parseSourceHtml(html))) {
+    // Only an issued native-render handle proves these local UI anchors. Every
+    // authored fragment/link keeps the existing captured-base resolution.
+    if (typeof node.startIndex === "number" && controls.has(node.startIndex)) continue;
     const attribute = node.name === "a" ? "href" : node.name === "img" ? "src" : undefined;
     if (!attribute || !node.attribs || !Object.hasOwn(node.attribs, attribute)) continue;
     const value = node.attribs[attribute];
@@ -100,9 +113,7 @@ export function resolveNativeSourceTargets(html: string, capturedBase: string) {
     const match = matches[0], start = node.startIndex + match.index!;
     edits.push({ start, end: start + match[0].length, value: `${match[1]}"${encodeAttribute(target)}"` });
   }
-  let result = html;
-  for (const edit of edits.sort((a, b) => b.start - a.start)) result = result.slice(0, edit.start) + edit.value + result.slice(edit.end);
-  return result;
+  return editNativeRenderedArticle(input, edits);
 }
 export function sourceArticleAttributes(capture: SourceNativeCapture) {
   const receipt = capture.ownership;

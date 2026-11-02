@@ -15,6 +15,7 @@ import { activeSourceMove } from "./cms-to-source-state.js";
 import { captureSourceNativeUnderWriter, sourcePreparationBase } from "./cms-to-source-move.js";
 import { sourceHash, sourceOriginalKey, resolveNativeSourceTargets } from "./to-source-profile.js";
 import { assertActualSourceBuild } from "./cms-to-source-build.js";
+import { assertNativeRenderSource } from "./native-render.js";
 /** One current native publisher, with complete identity census before dispatch. */
 export async function publishControlledDiscussions(options) {
     const docsDir = path.resolve(options.docsDir), stateFile = path.resolve(options.stateFile);
@@ -274,6 +275,7 @@ async function captureNativeRenderedSourceInner(options, input, fullSource) {
                     throw new Error("Native original differs from its settled captured article; no accepted snapshot is inferred from frontmatter alone.");
                 if (fullSource) {
                     const html = await input.render(), checked = await nativePublicationFiles.readExisting(file);
+                    assertNativeRenderSource(html, file, body);
                     if (!checked || checked.dev !== actual.dev || checked.ino !== actual.ino || checked.contents !== actual.contents)
                         throw new Error("Native full-source preparation changed during rendering.");
                     const prepared = prepareNativeRenderedArticle(capture, resolveNativeSourceTargets(html, capture.sourceArticleUrl));
@@ -290,6 +292,7 @@ async function captureNativeRenderedSourceInner(options, input, fullSource) {
             if (intent.source !== actual.contents || intent.originalCapture.original !== body)
                 throw new Error("Native source differs from the staged render handoff; no intent is replaced.");
             const html = await input.render();
+            assertNativeRenderSource(html, file, body);
             const current = await nativePublicationFiles.readExisting(file);
             if (!current || current.dev !== actual.dev || current.ino !== actual.ino || current.contents !== actual.contents)
                 throw new Error("Native source changed during Content rendering; no resolve was sent.");
