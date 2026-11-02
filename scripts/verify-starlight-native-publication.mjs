@@ -101,6 +101,13 @@ try {
   await execute('unchanged-restarted');
   assert.equal(state.state.creations, 1); assert.equal(state.state.record.source_revision, record.source_revision);
   const beforeQualification = await operation(), retainedNative = await readFile(state.file, 'utf8');
+  const commentReferences = [];
+  for (const mode of ['simple', 'full']) {
+    const file = path.join(state.docsDir, `${mode}-comments.md`);
+    const source = nativeSource(`Read-only ${mode} presentation of the existing discussion.`, `discourseTopicId: "${beforeQualification.topicId}"\ndiscourseTopicUrl: ${beforeQualification.topicUrl}\n`)
+      .replace('discussionSync: true', 'discussionSync: false').replace('discussionCommentsDisplay: interactive', `discussionCommentsDisplay: ${mode}`);
+    await writeFile(file, source, { flag: 'wx' }); commentReferences.push({ file, source, mode });
+  }
   state.connection.scope_revision = 'c'.repeat(64);
   await execute('current-authority-restarted');
   const qualified = await operation();
@@ -111,6 +118,11 @@ try {
   assert.equal(await readFile(state.file, 'utf8'), retainedNative);
   assert.equal(qualified.to.acceptedRevision, beforeQualification.to.acceptedRevision);
   for (const [id, value] of Object.entries(beforeQualification.to.receipts)) assert.deepEqual(qualified.to.receipts[id], value);
+  for (const reference of commentReferences) {
+    assert.equal(await readFile(reference.file, 'utf8'), reference.source);
+    assert.ok((await readFile(path.join(root, `dist/${reference.mode}-comments/index.html`), 'utf8')).includes(`Read-only ${reference.mode} presentation`));
+  }
+  assert.equal(Object.keys((await state.journal()).operations).length, 1, 'Topic references do not create or adopt another source owner.');
   const currentSource = await readFile(state.file, 'utf8');
   await writeFile(state.file, currentSource + '\nNative update after publication.\n');
   await execute('updated', true);
@@ -145,7 +157,7 @@ try {
   const result = { node: process.version, archiveSha256: receipt.sha256, packageMembersMatched: members.length,
     nativeVersions: { astro: '7.3.8', starlight: '0.42.0' }, ordinaryInstalledPackage: true, fixtureAliases: false, rootOverrides: false,
     actualFullSourceWriter: true, initialPublication: true, restartedCachedRetry: true, sourceUpdateSameIdentity: true,
-    historicalReceiptsAndCapturesRetained: true, nativeButtonsPreserved: true, authoredSvgRefused: true,
+    historicalReceiptsAndCapturesRetained: true, mixedModeScopeQualification: true, commentReferenceSourcesRetained: true, nativeButtonsPreserved: true, authoredSvgRefused: true,
     actualOriginNegatives: 6, multipleAndZeroNativeControls: true, publicOutputScan: true, installedIntegrityMatched: true,
     realReceiverOrCredentials: false, publicDeployment: false,
     limits: 'Ordinary package/native compiler/FULL source writer against local simulated R7 receiver. Not a live profile, browser, deployed URL move or release gate.',

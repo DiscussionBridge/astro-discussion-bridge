@@ -123,6 +123,13 @@ builds or targeted actions. No corpus limit or permission check is removed.
 The multi-owner regressions count actual filesystem operations; they do not
 claim large-estate latency or throughput qualification.
 
+Comments-only pages may reference the same topic without owning its To
+publication. A bare topic reference without publication opt-in or ownership
+markers is not a competing owner. Copied external/resource/edition markers or
+publication opt-in still claim ownership even when disabled, draft or incomplete.
+All files remain in the observed corpus; a reference becoming an owner during
+qualification still stops continuation. No comments page is adopted or rewritten.
+
 Disabled connections, rotated/invalid credentials, lost direction/origin/lane,
 conflicting ownership, changed native evidence or a racing descriptor/Record
 stop continuation. A regrant requires fresh current evidence, not matching an

@@ -93,7 +93,11 @@ async function observeNativeAuthority(options: PublishControlledDiscussionsOptio
     const actual = await nativePublicationFiles.readExisting(file);
     if (!actual) { if (fileSet.has(file)) throw new Error("Native authority census changed while checking ownership."); facts.set(file, null); continue; }
     const data = parseMarkdown(actual.contents).frontmatter;
-    const claims = [["external", data.discussionbridgeExternalId], ["resource", data.discussionbridgeResourceId], ["topic", data.discourseTopicId === undefined ? undefined : String(data.discourseTopicId)]];
+    // A bare topic reference can display the same discussion on many pages.
+    // Publication opt-in or any ownership marker still claims that topic even
+    // when disabled, unpublished or incomplete; lifecycle flags cannot hide a copy.
+    const claimsTopic = data.discussionSync === true || ["discussionbridgeExternalId", "discussionbridgeResourceId", "discussionbridgeSourcePublicationRevision"].some(key => Object.hasOwn(data, key));
+    const claims = [["external", data.discussionbridgeExternalId], ["resource", data.discussionbridgeResourceId], ["topic", claimsTopic && data.discourseTopicId !== undefined ? String(data.discourseTopicId) : undefined]];
     for (const [kind, value] of claims) if (typeof value === "string") {
       const key = semanticIdentity([kind, value]); if (!claimants.has(key)) claimants.set(key, new Set()); claimants.get(key)!.add(file);
     }

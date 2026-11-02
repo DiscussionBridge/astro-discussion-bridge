@@ -5,7 +5,7 @@ import { syncBuiltinESMExports } from "node:module";
 import path from "node:path";
 import { CmsClient } from "../dist/cms-client.js";
 import { publishControlledDiscussions } from "../dist/controlled-creation.js";
-import { qualifyCurrentToAuthorities } from "../dist/cms-to-authority.js";
+import { qualifyCurrentToAuthorities, qualifyCurrentToAuthority } from "../dist/cms-to-authority.js";
 import { readPublicationOperationalState, writePublicationOperationalState } from "../dist/operational-state.js";
 import { withNativeSourceWriter } from "../dist/native-locks.js";
 import { validateCmsRoute } from "../src/private/cms-runtime.mjs";
@@ -44,11 +44,12 @@ async function batchFixture(t, owners = 8, files = 12) {
   fixture.connection.scope_revision = "b".repeat(64);
   return { ...fixture, records, calls, owners, files };
 }
-async function qualify(s, afterSave) {
+async function qualify(s, afterSave, targeted = false) {
   return withNativeSourceWriter(s.docsDir, s.options.stateFile, async () => {
     const state = await readPublicationOperationalState(s.options.stateFile), client = new CmsClient({ serverUrl: s.options.discourseUrl, ...s.options.controlledCreation });
     const connection = await client.connection();
-    await qualifyCurrentToAuthorities(s.options, state, Object.values(state.operations), client, connection, async () => {
+    const operations = Object.values(state.operations);
+    await (targeted ? qualifyCurrentToAuthority : qualifyCurrentToAuthorities)(s.options, state, targeted ? operations[0] : operations, client, connection, async () => {
       await writePublicationOperationalState(s.options.stateFile, state); await afterSave?.();
     });
   });
@@ -83,6 +84,73 @@ test("ordinary multi-owner publisher uses the batch, not a per-owner corpus obse
   assert.equal(counts.corpusEnumerations, 8, "ordinary census checks plus three shared proof phases");
   assert.equal(s.records.size, 12); assert.equal(s.calls.resolves, 12);
   for (const operation of Object.values((await s.journal()).operations)) assert.equal(operation.to.qualifications.length, 1);
+});
+
+test("read-only topic references do not become duplicate To publication owners", async t => {
+  for (const mode of ["simple", "full", "interactive"]) for (const optIn of [false, undefined]) await t.test(`${mode} / opt-in ${optIn}`, async child => {
+    const s = await batchFixture(child, 1, 1), before = await s.journal(), first = Object.values(before.operations)[0];
+    let reference = nativeSource("Another presentation of the same discussion.", `discourseTopicId: "${first.topicId}"\ndiscourseTopicUrl: ${first.topicUrl}\n`)
+      .replace("discussionCommentsDisplay: interactive", `discussionCommentsDisplay: ${mode}`);
+    reference = optIn === false ? reference.replace("discussionSync: true", "discussionSync: false") : reference.replace("discussionSync: true\n", "");
+    const file = path.join(s.docsDir, "comments-reference.md"); await fs.writeFile(file, reference);
+    const source = await fs.readFile(s.file, "utf8");
+    await qualify(s);
+    const after = await s.journal(), current = after.operations[first.externalId];
+    assert.equal(current.to.qualifications.length, 1); assert.deepEqual(current.to.scope, first.to.scope);
+    assert.deepEqual(current.to.receipts, first.to.receipts); assert.equal(current.to.acceptedRevision, first.to.acceptedRevision);
+    assert.equal(current.resourceId, first.resourceId); assert.equal(current.topicId, first.topicId); assert.equal(s.calls.resolves, 0);
+    assert.equal(await fs.readFile(file, "utf8"), reference); assert.equal(await fs.readFile(s.file, "utf8"), source);
+    await publishControlledDiscussions(s.options);
+    assert.equal(s.records.size, 1); assert.equal(Object.keys((await s.journal()).operations).length, 1);
+    assert.equal((await s.journal()).operations[first.externalId].to.qualifications.length, 1);
+  });
+});
+
+test("batch, targeted wrapper and ordinary publisher retain mixed-mode references and three corpus observations", async t => {
+  for (const entry of ["batch", "targeted", "publisher"]) await t.test(entry, async child => {
+    const targeted = entry === "targeted";
+    const s = await batchFixture(child, targeted ? 1 : 3, 7), before = await s.journal(), first = Object.values(before.operations)[0];
+    for (const mode of ["simple", "full"]) await fs.writeFile(path.join(s.docsDir, `${mode}.md`), nativeSource("Read-only shared comments.", `discourseTopicId: ${first.topicId}\n`)
+      .replace("discussionSync: true", "discussionSync: false").replace("discussionCommentsDisplay: interactive", `discussionCommentsDisplay: ${mode}`));
+    const counts = await measure(s, () => entry === "publisher" ? publishControlledDiscussions(s.options) : qualify(s, undefined, targeted));
+    if (entry !== "publisher") assert.equal(counts.markdownReads, 27, "one complete nine-file observation per proof phase, including both references");
+    assert.equal(counts.corpusEnumerations, entry === "publisher" ? 8 : 6, "ordinary publication adds its normal census, not per-owner whole-corpus observations");
+    const current = (await s.journal()).operations[first.externalId];
+    assert.equal(current.to.qualifications.length, 1); assert.deepEqual(current.to.scope, first.to.scope);
+    for (const [id, receipt] of Object.entries(first.to.receipts)) assert.deepEqual(current.to.receipts[id], receipt);
+    assert.equal(current.resourceId, first.resourceId); assert.equal(current.topicId, first.topicId); assert.equal(current.to.acceptedRevision, first.to.acceptedRevision);
+    assert.equal(s.records.size, targeted ? 1 : 3);
+  });
+});
+
+test("disabled or incomplete publishing-owner metadata still claims its topic identity", async t => {
+  for (const kind of ["enabled", "draft-enabled", "external", "resource", "revision", "malformed-owner", "full-copy-disabled"]) await t.test(kind, async child => {
+    const s = await batchFixture(child, 1, 1), first = Object.values((await s.journal()).operations)[0];
+    let reference = nativeSource("Not a plain comments reference.", `discourseTopicId: "${first.topicId}"\ndiscourseTopicUrl: ${first.topicUrl}\n`);
+    if (kind !== "enabled" && kind !== "draft-enabled") reference = reference.replace("discussionSync: true", "discussionSync: false");
+    const extra = { "draft-enabled": "draft: true", external: `discussionbridgeExternalId: ${first.externalId}`, resource: `discussionbridgeResourceId: ${first.resourceId}`,
+      revision: `discussionbridgeSourcePublicationRevision: ${first.to.acceptedRevision}`, "malformed-owner": "discussionbridgeExternalId: null" }[kind];
+    if (extra) reference = reference.replace("---\nNot a plain", `${extra}\n---\nNot a plain`);
+    if (kind === "full-copy-disabled") reference = (await fs.readFile(s.file, "utf8")).replace("discussionSync: true", "discussionSync: false");
+    await fs.writeFile(path.join(s.docsDir, "second-owner.md"), reference);
+    const retained = await fs.readFile(s.options.stateFile, "utf8");
+    await assert.rejects(qualify(s), /another claimant/);
+    assert.equal(await fs.readFile(s.options.stateFile, "utf8"), retained); assert.equal(s.calls.resolves, 0);
+  });
+});
+
+test("a comments reference becoming a publishing owner during qualification is rejected", async t => {
+  for (const phase of ["before-save", "after-save"]) await t.test(phase, async child => {
+    const s = await batchFixture(child, 1, 1), first = Object.values((await s.journal()).operations)[0];
+    const file = path.join(s.docsDir, "comments-reference.md"), reference = nativeSource("Shared topic reference.", `discourseTopicId: "${first.topicId}"\ndiscourseTopicUrl: ${first.topicUrl}\n`).replace("discussionSync: true", "discussionSync: false");
+    await fs.writeFile(file, reference);
+    const change = () => fs.writeFile(file, reference.replace("discussionSync: false", "discussionSync: true"));
+    if (phase === "before-save") s.calls.onRecord = async (_resource, count) => { if (count === 1) await change(); };
+    await assert.rejects(qualify(s, phase === "after-save" ? change : undefined), /census identity changed|another claimant/);
+    const current = (await s.journal()).operations[first.externalId];
+    assert.equal(current.to.qualifications?.length ?? 0, phase === "after-save" ? 1 : 0);
+    assert.deepEqual(current.to.receipts, first.to.receipts); assert.equal(s.calls.resolves, 0);
+  });
 });
 
 test("multi-owner batch preserves duplicate, target, descriptor and Record race checks without partial publication", async t => {
