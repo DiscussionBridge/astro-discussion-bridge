@@ -7,6 +7,8 @@ export function validateToSourceState(to) {
     if (to.nativeCapture)
         validateSourceCapture(to.nativeCapture);
     for (const move of [...Object.values(to.sourceMoveHistory ?? {}), ...(to.sourceMove ? [to.sourceMove] : [])]) {
+        if (move.issuingScope && ![to.scope, ...(to.qualifications ?? []).map(proof => proof.scope)].some(scope => semanticIdentity(scope) === semanticIdentity(move.issuingScope)))
+            throw new Error("Native source move issuing scope lacks its retained authorization provenance.");
         if (!["intent", "reserved", "native_applied", "built", "deployed", "finalize_pending", "committed", "abort_pending", "aborted", "attention", "known_rejected"].includes(move.phase)
             || !Number.isSafeInteger(move.fence) || move.fence < 1 || typeof move.before !== "string" || sourceOriginalKey(move.before) !== move.originalKey)
             throw new Error("Native source move journal phase/before state requires reconciliation.");

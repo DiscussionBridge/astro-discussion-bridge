@@ -6,6 +6,7 @@ import { readPrivateJournal, writePrivateJournal } from "./native-journal.js";
 import type { CmsToPage, CmsToState } from "./cms-to.js";
 import { assertNativeArticleCapture, nativeCaptureId, type NativeArticleCapture } from "./native-preparation.js";
 import { validateToSourceState } from "./cms-to-source-state.js";
+import { validateToQualifications, validateToNativeIntent } from "./cms-to-authority.js";
 export interface PublicationOperation {
   externalId: string; canonicalUrl: string; correlationId: string; attempts: number; outcome: "pending" | "created" | "resolved" | "updated" | "withdrawn" | "attention";
   resourceId?: string; topicId?: string; topicUrl?: string; to?: CmsToState; lastError?: string;
@@ -29,6 +30,7 @@ function validateState(value: unknown): PublicationOperationalState {
     if (operation.resourceId) validateCms("UUID", operation.resourceId); if (operation.topicId) validateCms("CoreId", operation.topicId);
     const to = operation.to; if (!to) continue;
     validateToSourceState(to);
+    validateToQualifications(to);
     if (to.sourceFence !== undefined && (!Number.isSafeInteger(to.sourceFence) || to.sourceFence < 1)) throw new Error("Native source fence requires reconciliation.");
     if (to.effectiveEdition) { validateCms("ToRecord", to.effectiveEdition.record); validateCms("UUID", to.effectiveEdition.moveId); if (to.effectiveEdition.record.source_revision !== to.acceptedRevision || !to.articleCaptures?.[to.effectiveEdition.captureId]) throw new Error("Native moved current edition ancestry differs."); }
     validateCms("ConnectionId", to.scope.connectionId); validateCms("Revision", to.scope.scopeRevision); validateCms("Lane", to.scope.lane);
@@ -39,6 +41,7 @@ function validateState(value: unknown): PublicationOperationalState {
     }
     for (const receipt of Object.values(to.receipts)) { validateCms("ToResolve", receipt.body); validateCms("ResolveResult", receipt.result); if (receipt.body.bridge_record.source_revision !== receipt.result.source_revision) throw new Error("Native source receipt revision disagrees."); }
     if (to.pending) { validateCms("ToResolve", to.pending.body); validateCms("Sha256", to.pending.fingerprint); }
+    for (const entry of [...Object.values(to.rejectedRequests ?? {}), ...(to.pending ? [to.pending] : [])]) if (entry.native) validateToNativeIntent(entry.native);
     for (const entry of [...Object.values(to.rejectedRequests ?? {}), ...(to.pending?.rejection ? [to.pending] : [])]) {
       validateCms("ToResolve", entry.body); validateCms("Sha256", entry.fingerprint);
       const rejection = entry.rejection;

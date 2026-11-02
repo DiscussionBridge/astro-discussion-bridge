@@ -5,11 +5,13 @@ import { validateSourceCapture, sourceOriginalKey, sourceHash } from "./to-sourc
 import path from "node:path";
 import { parseMarkdown } from "./native-source.js";
 import { validateCms, semanticIdentity, projectGeneratedReadMoreMove } from "../src/private/cms-runtime.mjs";
+import { type CmsToScope } from "./cms-to-authority.js";
 
 export interface SourceNativeCommand { executable: string; args: string[]; cwd: string; timeoutMs?: number }
 export interface SourceCommandReceipt { commandId: string; kind: "build" | "deploy"; phase: "starting" | "running" | "succeeded" | "failed" | "uncertain";
   executable: string; args: string[]; cwd: string; fence: number; startedAt: string; pid?: number; completedAt?: string; childClosedAt?: string; terminationConfirmed?: boolean; deploymentId: string; processReceiptFile?: string; writerBusyDeferrals?: number }
 export interface CmsToSourceMove {
+  issuingScope?: CmsToScope;
   phase: "intent" | "reserved" | "native_applied" | "built" | "deployed" | "finalize_pending" | "committed" | "abort_pending" | "aborted" | "attention" | "known_rejected";
   file: string; nativeId: string; fence: number; before: string; beforeRecord: CmsToRecordMetadata; beforeCapture: SourceNativeCapture;
   captureId: string; beforeToRecord: CmsToRecord; originalKey: string; newSlug: string;
@@ -26,6 +28,7 @@ export const activeSourceMove = (move: CmsToSourceMove | undefined) => move !== 
 export function validateToSourceState(to: CmsToState) {
   if (to.nativeCapture) validateSourceCapture(to.nativeCapture);
   for (const move of [...Object.values(to.sourceMoveHistory ?? {}), ...(to.sourceMove ? [to.sourceMove] : [])]) {
+    if (move.issuingScope && ![to.scope, ...(to.qualifications ?? []).map(proof => proof.scope)].some(scope => semanticIdentity(scope) === semanticIdentity(move.issuingScope))) throw new Error("Native source move issuing scope lacks its retained authorization provenance.");
     if (!["intent", "reserved", "native_applied", "built", "deployed", "finalize_pending", "committed", "abort_pending", "aborted", "attention", "known_rejected"].includes(move.phase)
       || !Number.isSafeInteger(move.fence) || move.fence < 1 || typeof move.before !== "string" || sourceOriginalKey(move.before) !== move.originalKey) throw new Error("Native source move journal phase/before state requires reconciliation.");
     validateCms("SourceUrlMovePrepare", move.prepareBody); validateCms("Record", move.beforeRecord); validateCms("ToRecord", move.beforeToRecord); validateSourceCapture(move.beforeCapture);

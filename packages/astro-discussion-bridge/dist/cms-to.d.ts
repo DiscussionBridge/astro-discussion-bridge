@@ -3,6 +3,7 @@ import type { PublicationOperation } from "./operational-state.js";
 import { type NativeArticleCapture } from "./native-preparation.js";
 import type { SourceNativeCapture } from "./to-source-profile.js";
 import type { CmsToSourceMove, CmsToEffectiveEdition } from "./cms-to-source-state.js";
+import { type CmsToScope, type CmsToQualification, type CmsToNativeIntent } from "./cms-to-authority.js";
 export interface CmsToRecord {
     direction: "to_discourse";
     external_id: string;
@@ -101,6 +102,7 @@ export interface CmsToPending {
     captureId?: string;
     rejection?: CmsToRejection;
     retryOf?: string;
+    native?: CmsToNativeIntent;
 }
 export interface CmsToRetryIntent {
     refusedMutationId: string;
@@ -126,13 +128,8 @@ export interface CmsToState {
         articleSha256: string;
         captureId: string;
     };
-    scope: {
-        connectionId: string;
-        serverOrigin: string;
-        siteOrigin: string;
-        scopeRevision: string;
-        lane: string;
-    };
+    scope: CmsToScope;
+    qualifications?: CmsToQualification[];
     nativeSource?: {
         docsDir: string;
         relativePath: string;
@@ -192,6 +189,7 @@ export declare function resolveCmsToPage(input: {
     operation: PublicationOperation;
     page: CmsToPage;
     lane?: string;
+    nativeIntent?: CmsToNativeIntent;
     excerptArticle: (html: string, maximum: number) => string;
     persist: () => Promise<void>;
     assertCurrentNative: () => Promise<void>;

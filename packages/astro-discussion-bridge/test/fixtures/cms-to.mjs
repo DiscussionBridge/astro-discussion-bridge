@@ -44,5 +44,5 @@ export async function toFixture(t, source = nativeSource(), topicId = "922337203
       mutations.set(body.mutation_id, { body: structuredClone(body), result }); await state.onResolve?.();
       if (state.lostResponse) { state.lostResponse = false; throw new Error("Synthetic lost accepted source response."); } return response(result, outcome === "created" ? 201 : 200);
     } } };
-  return { root, docsDir, file, options, state, received, rawBodies, withdrawals, mutations, withdrawalMutations, digest: value => createHash("sha256").update(value).digest("hex"), journal: async () => JSON.parse(await readFile(options.stateFile, "utf8")) };
+  return { root, docsDir, file, options, state, connection, received, rawBodies, withdrawals, mutations, withdrawalMutations, digest: value => createHash("sha256").update(value).digest("hex"), journal: async () => JSON.parse(await readFile(options.stateFile, "utf8")) };
 }

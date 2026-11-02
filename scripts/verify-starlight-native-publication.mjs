@@ -100,6 +100,17 @@ try {
   assert.ok(firstCapture.preparedHtml.includes('Meaningful native article.') && firstCapture.preparedHtml.includes('<table'));
   await execute('unchanged-restarted');
   assert.equal(state.state.creations, 1); assert.equal(state.state.record.source_revision, record.source_revision);
+  const beforeQualification = await operation(), retainedNative = await readFile(state.file, 'utf8');
+  state.connection.scope_revision = 'c'.repeat(64);
+  await execute('current-authority-restarted');
+  const qualified = await operation();
+  assert.equal(qualified.to.qualifications.length, 1);
+  assert.deepEqual(qualified.to.scope, beforeQualification.to.scope);
+  assert.deepEqual(qualified.to.qualifications[0].nativeCapture, beforeQualification.to.nativeCapture);
+  assert.equal(qualified.to.nativeCapture.ownershipSha256, beforeQualification.to.nativeCapture.ownershipSha256);
+  assert.equal(await readFile(state.file, 'utf8'), retainedNative);
+  assert.equal(qualified.to.acceptedRevision, beforeQualification.to.acceptedRevision);
+  for (const [id, value] of Object.entries(beforeQualification.to.receipts)) assert.deepEqual(qualified.to.receipts[id], value);
   const currentSource = await readFile(state.file, 'utf8');
   await writeFile(state.file, currentSource + '\nNative update after publication.\n');
   await execute('updated', true);

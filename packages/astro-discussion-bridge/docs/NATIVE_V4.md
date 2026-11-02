@@ -96,6 +96,34 @@ documented native server API imports inside actual prerendered pages, without
 the no-install fixtures' resolution aliases, parser overrides or custom Vite options.
 This is local installation/build coverage, not external forum or deployment proof.
 
+### Current authorization after connection settings change
+
+A normal From Discourse policy change can change the connection descriptor's
+scope revision without changing its To Discourse grant. The native publisher,
+Content capture and protected lifecycle/URL actions automatically check a new
+current grant against the authenticated connection and scoped Bridge Record,
+plus the actual completed native census, root, source ownership and exact
+pending/move state. Connection, server, site, direction and lane must still agree.
+From publication does not need to be enabled to authorize To publishing.
+
+The private journal appends a hash-linked qualification record before using
+that current scope. Original scope provenance, requests, receipts, native
+captures, discussion identity and source dates stay historical. A scope-only
+change does not issue a new source revision or rewrite the public ownership
+marker. A later real edition or URL move can issue its own current-scope proof.
+The qualification history remains valid across those later editions; it is not
+a claim of uninterrupted permission, nor a substitute for current checks.
+
+Disabled connections, rotated/invalid credentials, lost direction/origin/lane,
+conflicting ownership, changed native evidence or a racing descriptor/Record
+stop continuation. A regrant requires fresh current evidence, not matching an
+old hash. Uncertain requests and commands retain their exact original identity
+and recovery; definite refusals still need their existing explicit Retry, and
+withdrawn content never resumes implicitly. New native request intents record
+their actual root/file evidence before dispatch. An old unbound uncertain
+intent without that evidence is retained unresolved, not retroactively adopted.
+Shared From feed/cursor invalidation and expired-work recovery are unchanged.
+
 ### Selected-source Retry after a definite To02 refusal
 
 An authenticated, codec-validated To02 `invalid_field`/HTTP422 refusal is retained

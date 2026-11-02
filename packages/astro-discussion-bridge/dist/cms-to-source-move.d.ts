@@ -21,7 +21,7 @@ export declare function controlledSourceUrlHistory(options: Options, sourceFile:
 /** Protected same-file native action; never creates a topic or initializes one. */
 export declare function beginControlledSourceUrlMove(options: Options, sourceFile: string, newUrl: string): Promise<{
     moveId: string;
-    phase: "intent" | "reserved" | "native_applied" | "built" | "deployed" | "finalize_pending" | "committed" | "abort_pending" | "aborted" | "attention" | "known_rejected";
+    phase: "committed" | "aborted" | "intent" | "reserved" | "native_applied" | "built" | "deployed" | "finalize_pending" | "abort_pending" | "attention" | "known_rejected";
     nativeId: string;
     newUrl: string;
     sourceRevision: string | undefined;

@@ -15,6 +15,7 @@ import { makeSourceOwnership, sourceHash, sourceOriginalKey, resolveNativeSource
 import { projectGeneratedReadMoreMove, semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { assertActualSourceBuild, verifyControlledSourcePublic } from "./cms-to-source-build.js";
 import { assertNativeRenderSource, fullNativeHtml, nativePresentation } from "./native-render.js";
+import { assertToScope, effectiveToScope, qualifyCurrentToAuthority } from "./cms-to-authority.js";
 const saveState = (options, state) => writePublicationOperationalState(path.resolve(options.stateFile), state);
 export const currentSourceRecord = (operation) => operation.to?.effectiveEdition?.record ?? operation.to?.acceptedBody?.bridge_record;
 export function sourcePreparationBase(operation, contents, canonicalUrl) {
@@ -22,11 +23,9 @@ export function sourcePreparationBase(operation, contents, canonicalUrl) {
     return retained && retained.articleSha256 === sourceHash(parseMarkdown(contents).body) ? operation.to.articleCaptures?.[retained.captureId]?.sourceArticleUrl ?? canonicalUrl : canonicalUrl;
 }
 export function assertSourceConnection(options, operation, client, connection) {
-    const to = operation.to, scope = to?.scope;
-    if (!scope || connection.connection_id !== scope.connectionId || connection.scope_revision !== scope.scopeRevision || client.origin !== scope.serverOrigin
-        || connection.profile !== "astro" || !connection.directions.includes("to_discourse") || !sameCmsOrigin(options.siteUrl, scope.siteOrigin) || !sameCmsOrigin(connection.destination_origin, scope.siteOrigin)
-        || (options.controlledCreation.lane ?? connection.publication_lane) !== scope.lane)
-        throw new Error("Native source move current connection/To scope requires reconciliation.");
+    if (!operation.to)
+        throw new Error("Native source move lacks its retained To owner.");
+    assertToScope(operation.to, client, connection, options.siteUrl, options.controlledCreation.lane);
 }
 function assertRecord(operation, actual, revision, url) {
     if (actual.direction !== "to_discourse" || actual.state !== "active" || actual.external_id !== operation.externalId || actual.resource_id !== operation.resourceId || actual.topic_id !== operation.topicId
@@ -59,7 +58,8 @@ async function withSource(options, file, action) {
     return withNativeSourceWriter(options.docsDir, options.stateFile, async () => {
         const state = await readPublicationOperationalState(path.resolve(options.stateFile)), operation = await sourceOwner(options, state, file);
         const client = new CmsClient({ serverUrl: options.discourseUrl, ...options.controlledCreation }), connection = await client.connection();
-        assertSourceConnection(options, operation, client, connection);
+        await qualifyCurrentToAuthority(options, state, operation, client, connection, () => saveState(options, state));
+        assertSourceConnection(options, operation, client, await client.connection());
         return action(state, operation, client, connection);
     });
 }
@@ -99,6 +99,7 @@ export async function finalizeControlledSourceUrlMove(options, sourceFile, verif
             move.phase = "finalize_pending";
             await saveState(options, state);
         }
+        assertSourceConnection(options, operation, client, await client.connection());
         try {
             move.result = await client.finalizeSourceUrlMove(operation.resourceId, move.receipt.move_id, move.finalizeBody);
         }
@@ -151,6 +152,7 @@ export async function abortControlledSourceUrlMove(options, sourceFile, restoreE
             move.phase = "abort_pending";
             await saveState(options, state);
         }
+        assertSourceConnection(options, operation, client, await client.connection());
         move.abortResult = await client.abortSourceUrlMove(operation.resourceId, move.receipt.move_id, move.abortBody);
         if (move.abortResult.move_id !== move.receipt.move_id || move.abortResult.resource_id !== operation.resourceId || move.abortResult.state !== (move.abortBody.native_change_applied ? "attention" : "aborted"))
             throw new Error("Source abort receipt differs from the exact actual native outcome.");
@@ -207,7 +209,7 @@ export async function beginControlledSourceUrlMove(options, sourceFile, newUrl) 
             if (!Number.isSafeInteger(fence))
                 throw new Error("Native source owner fence is exhausted.");
             to.sourceFence = fence;
-            move = { phase: "intent", file, nativeId: before.ownership.nativeId, fence, before: actual.contents, beforeRecord: current, beforeCapture: structuredClone(before), captureId,
+            move = { phase: "intent", issuingScope: structuredClone(effectiveToScope(to)), file, nativeId: before.ownership.nativeId, fence, before: actual.contents, beforeRecord: current, beforeCapture: structuredClone(before), captureId,
                 beforeToRecord: structuredClone(record), originalKey: sourceOriginalKey(actual.contents), newSlug: slug, newRevision, projected,
                 prepareBody: { mutation_id: randomUUID(), expected_source_revision: current.source_revision, old_url: current.canonical_url, new_url: newUrl, external_id: operation.externalId } };
             to.sourceMove = move;
@@ -223,6 +225,7 @@ export async function beginControlledSourceUrlMove(options, sourceFile, newUrl) 
         if (!actual || actual.contents !== move.before && actual.contents !== move.output || !["intent", "reserved"].includes(move.phase) && actual?.contents !== move.output)
             throw new Error("Source move native file changed before exact continuation.");
         if (!move.receipt) {
+            assertSourceConnection(options, operation, client, await client.connection());
             move.receipt = await client.prepareSourceUrlMove(operation.resourceId, move.prepareBody);
             const receipt = move.receipt;
             if (receipt.resource_id !== operation.resourceId || receipt.expected_source_revision !== move.prepareBody.expected_source_revision || receipt.old_url !== move.prepareBody.old_url || receipt.new_url !== newUrl || receipt.state !== "prepared")
@@ -233,7 +236,8 @@ export async function beginControlledSourceUrlMove(options, sourceFile, newUrl) 
         if (!move.output) {
             const capture = to.articleCaptures[move.captureId], root = await sourceRoot(options, state);
             const provisional = updateFrontmatter(move.before, { slug: move.newSlug, discussionbridgeSourcePublicationRevision: move.newRevision, [SOURCE_MOVE_FIELD]: move.receipt.move_id, [SOURCE_NONCE_FIELD]: move.receipt.proof_nonce });
-            const owned = makeSourceOwnership({ connectionId: to.scope.connectionId, scopeRevision: to.scope.scopeRevision, serverOrigin: client.origin, siteOrigin: to.scope.siteOrigin,
+            const issuing = move.issuingScope ?? to.scope;
+            const owned = makeSourceOwnership({ connectionId: issuing.connectionId, scopeRevision: issuing.scopeRevision, serverOrigin: client.origin, siteOrigin: issuing.siteOrigin,
                 rootDev: root.rootDev, rootIno: root.rootIno, nativeId: move.nativeId, externalId: operation.externalId, resourceId: operation.resourceId, topicId: operation.topicId, canonicalUrl: newUrl,
                 sourceRevision: move.newRevision, fence: move.fence, moveId: move.receipt.move_id, proofNonce: move.receipt.proof_nonce }, provisional, capture);
             move.output = updateFrontmatter(provisional, { [SOURCE_OWNERSHIP_FIELD]: owned.sha256 });
@@ -254,6 +258,7 @@ export async function beginControlledSourceUrlMove(options, sourceFile, newUrl) 
 /** Called ONLY inside the existing source writer by a bound native SSR helper. */
 export async function captureSourceNativeUnderWriter(options, state, operation, input, client, connection) {
     assertActualSourceBuild(state);
+    await qualifyCurrentToAuthority(options, state, operation, client, connection, () => saveState(options, state));
     assertSourceConnection(options, operation, client, connection);
     const root = await sourceRoot(options, state), to = operation.to, move = activeSourceMove(to.sourceMove) ? to.sourceMove : undefined, file = path.resolve(input.filePath);
     const actual = await nativePublicationFiles.readExisting(file), record = move?.projected ?? currentSourceRecord(operation), captureId = move?.captureId ?? to.acceptedCaptureId;
@@ -273,9 +278,16 @@ export async function captureSourceNativeUnderWriter(options, state, operation, 
     if (prepared.preparedSha256 !== article.preparedSha256 || prepared.preparedBytes !== article.preparedBytes || move && nativeHtml !== move.beforeCapture.nativeHtml)
         throw new NativePreparationLimitation("Canonical source move/full native rendering cannot preserve the exact accepted complete article; no replacement recipe or29 proof was invented.");
     const data = parseMarkdown(actual.contents).frontmatter;
+    assertSourceConnection(options, operation, client, await client.connection());
     to.sourceFence ??= 1;
     await saveState(options, state);
-    const owned = makeSourceOwnership({ connectionId: to.scope.connectionId, scopeRevision: to.scope.scopeRevision, serverOrigin: client.origin, siteOrigin: to.scope.siteOrigin, rootDev: root.rootDev, rootIno: root.rootIno,
+    // A current authorization check does not re-issue the historical native
+    // ownership marker. Only an actual new content edition/move uses new scope.
+    const previous = to.nativeCapture;
+    const reuse = !move && previous?.revision === record.source_revision && previous.canonicalUrl === record.canonical_url
+        && previous.originalKey === sourceOriginalKey(actual.contents) && previous.ownershipSha256 === data[SOURCE_OWNERSHIP_FIELD];
+    const issuing = move ? move.issuingScope ?? to.scope : reuse ? { ...effectiveToScope(to), scopeRevision: previous.ownership.scopeRevision } : effectiveToScope(to);
+    const owned = makeSourceOwnership({ connectionId: issuing.connectionId, scopeRevision: issuing.scopeRevision, serverOrigin: client.origin, siteOrigin: issuing.siteOrigin, rootDev: root.rootDev, rootIno: root.rootIno,
         nativeId: path.relative(path.resolve(options.docsDir), file).split(path.sep).join("/"), externalId: operation.externalId, resourceId: operation.resourceId, topicId: operation.topicId, canonicalUrl: record.canonical_url,
         sourceRevision: record.source_revision, fence: to.sourceFence, moveId: data[SOURCE_MOVE_FIELD] ?? null, proofNonce: data[SOURCE_NONCE_FIELD] ?? null }, actual.contents, article);
     const output = updateFrontmatter(actual.contents, { [SOURCE_OWNERSHIP_FIELD]: owned.sha256 });

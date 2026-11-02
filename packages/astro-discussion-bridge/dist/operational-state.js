@@ -5,6 +5,7 @@ import { validateCms, semanticIdentity } from "../src/private/cms-runtime.mjs";
 import { readPrivateJournal, writePrivateJournal } from "./native-journal.js";
 import { assertNativeArticleCapture, nativeCaptureId } from "./native-preparation.js";
 import { validateToSourceState } from "./cms-to-source-state.js";
+import { validateToQualifications, validateToNativeIntent } from "./cms-to-authority.js";
 const empty = () => ({ format: 1, wireVersion: "v4", adapterId: "astro-discussion-bridge", operations: Object.create(null) });
 function validateState(value) {
     const state = value;
@@ -46,6 +47,7 @@ function validateState(value) {
         if (!to)
             continue;
         validateToSourceState(to);
+        validateToQualifications(to);
         if (to.sourceFence !== undefined && (!Number.isSafeInteger(to.sourceFence) || to.sourceFence < 1))
             throw new Error("Native source fence requires reconciliation.");
         if (to.effectiveEdition) {
@@ -78,6 +80,9 @@ function validateState(value) {
             validateCms("ToResolve", to.pending.body);
             validateCms("Sha256", to.pending.fingerprint);
         }
+        for (const entry of [...Object.values(to.rejectedRequests ?? {}), ...(to.pending ? [to.pending] : [])])
+            if (entry.native)
+                validateToNativeIntent(entry.native);
         for (const entry of [...Object.values(to.rejectedRequests ?? {}), ...(to.pending?.rejection ? [to.pending] : [])]) {
             validateCms("ToResolve", entry.body);
             validateCms("Sha256", entry.fingerprint);

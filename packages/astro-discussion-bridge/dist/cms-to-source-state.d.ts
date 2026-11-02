@@ -1,6 +1,7 @@
 import type { CmsSourceUrlMovePrepare, CmsSourceUrlMove, CmsSourceUrlMoveFinalize, CmsSourceUrlMoveAbort, CmsValidatedErrorResponse } from "./cms-client.js";
 import type { CmsToRecord, CmsToRecordMetadata, CmsToState } from "./cms-to.js";
 import type { SourceNativeCapture } from "./to-source-profile.js";
+import { type CmsToScope } from "./cms-to-authority.js";
 export interface SourceNativeCommand {
     executable: string;
     args: string[];
@@ -25,6 +26,7 @@ export interface SourceCommandReceipt {
     writerBusyDeferrals?: number;
 }
 export interface CmsToSourceMove {
+    issuingScope?: CmsToScope;
     phase: "intent" | "reserved" | "native_applied" | "built" | "deployed" | "finalize_pending" | "committed" | "abort_pending" | "aborted" | "attention" | "known_rejected";
     file: string;
     nativeId: string;

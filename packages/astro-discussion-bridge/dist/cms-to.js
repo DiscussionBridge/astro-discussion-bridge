@@ -4,6 +4,7 @@ import { CmsRequestError, validatedCmsErrorResponse } from "./cms-client.js";
 import { PRODUCT_VERSION } from "./version.js";
 import { assertNativeArticleCapture, nativeCaptureId, NativePreparationLimitation } from "./native-preparation.js";
 import { cmsUrl, sameCmsOrigin } from "./native-url.js";
+import { effectiveToScope } from "./cms-to-authority.js";
 export function cmsToFingerprint(page, lane) {
     return createHash("sha256").update(semanticIdentity([page.externalId, page.pageUrl, page.title, page.contentHtml, page.sourceAuthors ?? [], page.primarySourceAuthorId ?? null, page.createdAt, page.updatedAt, lane, "unlisted"])).digest("hex");
 }
@@ -19,7 +20,7 @@ export async function resolveCmsToPage(input) {
     const destination = cmsUrl(connection.destination_origin);
     if (connection.profile !== "astro" || !connection.directions.includes("to_discourse") || !sameCmsOrigin(destination.href, scope.siteOrigin) || destination.pathname !== "/" || destination.search)
         throw new Error("Current V4 native source/connection scope requires reconciliation.");
-    if (operation.to && semanticIdentity(operation.to.scope) !== semanticIdentity(scope))
+    if (operation.to && semanticIdentity(effectiveToScope(operation.to)) !== semanticIdentity(scope))
         throw new Error("Stored native source connection scope requires reconciliation.");
     const resourceId = page.existingResourceId ?? operation.resourceId, topicId = page.existingTopicId ?? operation.topicId;
     if (resourceId) {
@@ -67,7 +68,7 @@ export async function resolveCmsToPage(input) {
         validateCms("ToResolve", body);
         retry.freshMutationId = body.mutation_id;
         retry.phase = "pending";
-        journal.pending = { body, fingerprint, captureId, retryOf: refused.body.mutation_id };
+        journal.pending = { body, fingerprint, captureId, retryOf: refused.body.mutation_id, ...(input.nativeIntent ? { native: structuredClone(input.nativeIntent) } : {}) };
         await input.persist(); // Exact refusal/successor linkage is durable before dispatch.
     }
     else if (journal.pending?.rejection) {
@@ -116,7 +117,7 @@ export async function resolveCmsToPage(input) {
         validateCms("ToResolve", body);
         if (Buffer.byteLength(semanticIdentity(body)) > 65536)
             throw new Error("Actual native source request exceeds the unchanged V4 envelope.");
-        journal.pending = { body, fingerprint, captureId };
+        journal.pending = { body, fingerprint, captureId, ...(input.nativeIntent ? { native: structuredClone(input.nativeIntent) } : {}) };
         await input.persist();
     }
     await input.assertCurrentNative();

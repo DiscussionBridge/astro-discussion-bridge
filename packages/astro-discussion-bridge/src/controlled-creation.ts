@@ -17,6 +17,7 @@ import { captureSourceNativeUnderWriter, sourcePreparationBase } from "./cms-to-
 import { sourceHash, sourceOriginalKey, resolveNativeSourceTargets } from "./to-source-profile.js";
 import { assertActualSourceBuild } from "./cms-to-source-build.js";
 import { assertNativeRenderSource, type NativeRenderedContent } from "./native-render.js";
+import { assertToScope, qualifyCurrentToAuthority } from "./cms-to-authority.js";
 
 export interface ControlledCreationOptions extends Omit<CmsClientOptions, "serverUrl"> { lane?: string }
 export interface PublishControlledDiscussionsOptions { docsDir: string; stateFile: string; siteUrl: string; discourseUrl: string; routeBase?: string; controlledCreation: ControlledCreationOptions }
@@ -33,7 +34,6 @@ export async function publishControlledDiscussions(options: PublishControlledDis
     if (!root.isDirectory() || root.isSymbolicLink() || root.ino <= 0n) throw new Error("Native source census requires its actual unlinked root identity.");
     const scope = { docsDir, siteBase: siteBase.href, routeBase, rootDev: String(root.dev), rootIno: String(root.ino) };
     if (state.nativeCensus && semanticIdentity(state.nativeCensus) !== semanticIdentity(scope)) throw new Error("Native source census scope/root changed; no disappearance may be inferred.");
-    for (const operation of Object.values(state.operations)) if (operation.to) assertLifecycleScope(options, operation, client, connection);
     const census: (PreparedPage | NativeRenderIntent | ControlledDiscussionResult)[] = [], externalIds = new Set<string>(), resourceIds = new Set<string>(), topicIds = new Set<string>(), canonicalUrls = new Set<string>();
     const native = new Map<string, { source: string; lifecycle: ReturnType<typeof nativeLifecycle> }>();
     const files = await findMarkdownFiles(docsDir);
@@ -111,6 +111,7 @@ export async function publishControlledDiscussions(options: PublishControlledDis
       for (const operation of Object.values(state.operations)) if (operation.to?.nativeSource) await captureLifecycleSource(options, operation, path.resolve(docsDir, operation.to.nativeSource.relativePath));
       state.nativeCensus = scope; await writePublicationOperationalState(stateFile, state);
     }
+    for (const operation of Object.values(state.operations)) if (operation.to) await qualifyCurrentToAuthority(options, state, operation, client, connection, () => writePublicationOperationalState(stateFile, state));
     delete state.sourceBuildOwner; state.sourceBuildId = randomUUID(); await writePublicationOperationalState(stateFile, state);
     const results: ControlledDiscussionResult[] = [];
     for (const closure of closures) {
@@ -152,16 +153,26 @@ const renderIdentity = (entry: NativeRenderIntent) => [entry.externalId, entry.p
 /** Shared by the original pre-build path and the actual native-render handoff. */
 async function publishPreparedUnderWriter(options: PublishControlledDiscussionsOptions, state: PublicationOperationalState, operation: PublicationOperation, entry: PreparedPage, client: CmsClient, connection: CmsConnection, nativeRendered = false): Promise<ControlledDiscussionResult> {
   const stateFile = path.resolve(options.stateFile), docsDir = path.resolve(options.docsDir), source = await nativePublicationFiles.readExisting(entry.filePath);
+  let currentConnection = connection;
   const assertCurrentNative = async () => {
-    const current = await nativePublicationFiles.readExisting(entry.filePath);
-    if (!source || !current || current.dev !== source.dev || current.ino !== source.ino || current.contents !== entry.source) throw new Error("Native source changed since capture; source publication requires reconciliation.");
+    const assertFile = async () => {
+      const current = await nativePublicationFiles.readExisting(entry.filePath);
+      if (!source || !current || current.dev !== source.dev || current.ino !== source.ino || current.contents !== entry.source) throw new Error("Native source changed since capture; source publication requires reconciliation.");
+    };
+    await assertFile(); currentConnection = await client.connection();
+    if (operation.to) {
+      await qualifyCurrentToAuthority(options, state, operation, client, currentConnection, () => writePublicationOperationalState(stateFile, state));
+      assertToScope(operation.to, client, currentConnection, options.siteUrl, options.controlledCreation.lane);
+    }
+    await assertFile();
   };
   try {
     const retry = Object.values(operation.to?.retryIntents ?? {}).find(intent => intent.phase === "armed");
     if (retry && retry.fingerprint === cmsToFingerprint(entry, options.controlledCreation.lane ?? connection.publication_lane)
       && (retry.native.docsDir !== docsDir || retry.native.relativePath !== path.relative(docsDir, entry.filePath) || retry.native.contentSha256 !== sourceHash(entry.source))) throw new Error("Selected source Retry native file changed after the explicit action; exact intent is retained for reconciliation.");
     await assertCurrentNative(); await writePublicationOperationalState(stateFile, state);
-    const result = await resolveCmsToPage({ client, connection, operation, page: entry, lane: options.controlledCreation.lane, excerptArticle,
+    const result = await resolveCmsToPage({ client, connection: currentConnection, operation, page: entry, lane: options.controlledCreation.lane, excerptArticle,
+      nativeIntent: { census: structuredClone(state.nativeCensus!), relativePath: path.relative(docsDir, entry.filePath), dev: String(source!.dev), ino: String(source!.ino), contentSha256: sourceHash(entry.source) },
       persist: () => writePublicationOperationalState(stateFile, state), assertCurrentNative });
     await assertCurrentNative();
     const output = updateFrontmatter(entry.source, bindingFields(entry.externalId, result));
@@ -205,7 +216,7 @@ async function captureNativeRenderedSourceInner(options: PublishControlledDiscus
     const operation = owners[0];
     try {
     const client = new CmsClient({ serverUrl: options.discourseUrl, ...options.controlledCreation }), connection = await client.connection();
-    if (operation.to) assertLifecycleScope(options, operation, client, connection);
+    if (operation.to) await qualifyCurrentToAuthority(options, state, operation, client, connection, () => writePublicationOperationalState(stateFile, state));
     if (activeSourceMove(operation.to?.sourceMove)) {
       if (!fullSource) throw new NativePreparationLimitation("Active source URL move requires its bound FULL native source profile; ordinary capture cannot dispatch02 or rebase the article.");
       return captureSourceNativeUnderWriter(options, state, operation, input, client, connection);
@@ -283,7 +294,7 @@ export async function stageControlledSourceRetry(options: PublishControlledDiscu
     if (record.expected_source_revision !== (to.acceptedRevision ?? null) || identity.existingResourceId !== operation.resourceId || identity.existingTopicId !== operation.topicId
       || operation.resourceId && data.discussionbridgeSourcePublicationRevision !== to.acceptedRevision || !operation.resourceId && to.acceptedRevision) throw new Error("Selected Retry native ownership/current predecessor requires reconciliation.");
     const client = new CmsClient({ serverUrl: options.discourseUrl, ...options.controlledCreation }), connection = await client.connection();
-    assertLifecycleScope(options, operation, client, connection);
+    await qualifyCurrentToAuthority(options, state, operation, client, connection, () => writePublicationOperationalState(stateFile, state));
     if (operation.resourceId) {
       const current = await client.record(operation.resourceId);
       if (current.direction !== "to_discourse" || current.state !== "active" || current.resource_id !== operation.resourceId || current.topic_id !== operation.topicId
@@ -329,7 +340,7 @@ async function withdrawUnderNativeWriter(options: PublishControlledDiscussionsOp
     };
     const captured = await capture(), native = { docsDir, relativePath, contentSha256: captured === null ? null : createHash("sha256").update(captured).digest("hex") };
     if (to.withdrawal && (semanticIdentity(to.withdrawal.native) !== semanticIdentity(native) || to.withdrawal.body.reason !== reason)) throw new Error("Pending lifecycle intent retains its original native capture/reason.");
-    assertLifecycleScope(options, operation, client, connection);
+    await qualifyCurrentToAuthority(options, state, operation, client, connection, () => writePublicationOperationalState(stateFile, state));
     const assertRecord = (record: CmsToRecordMetadata, withdrawn: boolean) => {
       validateCms("Record", record);
       if (record.state !== (withdrawn ? "withdrawn" : "active") || record.direction !== "to_discourse" || record.resource_id !== operation.resourceId || record.topic_id !== operation.topicId
@@ -341,6 +352,7 @@ async function withdrawUnderNativeWriter(options: PublishControlledDiscussionsOp
     else assertRecord(current, current.state === "withdrawn");
     if (!to.withdrawal.result) {
       if (await capture() !== captured) throw new Error("Native source changed after lifecycle capture.");
+      assertLifecycleScope(options, operation, client, await client.connection());
       const result = await client.withdrawRecord(operation.resourceId, to.withdrawal.body); assertRecord(result, true);
       to.withdrawal.result = structuredClone(result); await writePublicationOperationalState(stateFile, state);
     }
@@ -349,9 +361,7 @@ async function withdrawUnderNativeWriter(options: PublishControlledDiscussionsOp
 }
 
 function assertLifecycleScope(options: PublishControlledDiscussionsOptions, operation: PublicationOperation, client: CmsClient, connection: CmsConnection) {
-  const to = operation.to!;
-  if (connection.connection_id !== to.scope.connectionId || connection.scope_revision !== to.scope.scopeRevision || client.origin !== to.scope.serverOrigin || connection.profile !== "astro"
-    || !connection.directions.includes("to_discourse") || !sameCmsOrigin(options.siteUrl, to.scope.siteOrigin) || !sameCmsOrigin(connection.destination_origin, to.scope.siteOrigin) || (options.controlledCreation.lane ?? connection.publication_lane) !== to.scope.lane) throw new Error("Current source lifecycle scope requires reconciliation.");
+  assertToScope(operation.to!, client, connection, options.siteUrl, options.controlledCreation.lane);
 }
 
 async function captureLifecycleSource(options: PublishControlledDiscussionsOptions, operation: PublicationOperation, file: string) {

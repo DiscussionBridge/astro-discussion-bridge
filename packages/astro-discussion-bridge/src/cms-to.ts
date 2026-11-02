@@ -7,6 +7,7 @@ import { assertNativeArticleCapture, nativeCaptureId, NativePreparationLimitatio
 import type { SourceNativeCapture } from "./to-source-profile.js";
 import type { CmsToSourceMove, CmsToEffectiveEdition } from "./cms-to-source-state.js";
 import { cmsUrl, sameCmsOrigin } from "./native-url.js";
+import { effectiveToScope, type CmsToScope, type CmsToQualification, type CmsToNativeIntent } from "./cms-to-authority.js";
 
 export interface CmsToRecord {
   direction: "to_discourse"; external_id: string; canonical_url: string; title: string; content_html: string; published: true;
@@ -37,7 +38,7 @@ export interface CmsToInvalidFieldRejection extends Omit<CmsToPreservationReject
   };
 }
 export type CmsToRejection = CmsToPreservationRejection | CmsToInvalidFieldRejection;
-export interface CmsToPending { body: CmsToBody; fingerprint: string; captureId?: string; rejection?: CmsToRejection; retryOf?: string }
+export interface CmsToPending { body: CmsToBody; fingerprint: string; captureId?: string; rejection?: CmsToRejection; retryOf?: string; native?: CmsToNativeIntent }
 export interface CmsToRetryIntent {
   refusedMutationId: string; refusedRequestSha256: string; fingerprint: string; requestedAt: string; expectedAcceptedRevision: string | null;
   native: { docsDir: string; relativePath: string; contentSha256: string };
@@ -46,7 +47,8 @@ export interface CmsToRetryIntent {
 export interface CmsToState {
   sourceFence?: number; nativeCapture?: SourceNativeCapture; sourceMove?: CmsToSourceMove; sourceMoveHistory?: Record<string, CmsToSourceMove>;
   effectiveEdition?: CmsToEffectiveEdition; retainedSource?: { articleSha256: string; captureId: string };
-  scope: { connectionId: string; serverOrigin: string; siteOrigin: string; scopeRevision: string; lane: string };
+  scope: CmsToScope;
+  qualifications?: CmsToQualification[];
   nativeSource?: { docsDir: string; relativePath: string };
   acceptedRevision?: string; acceptedFingerprint?: string; acceptedResult?: CmsToResult; acceptedBody?: CmsToBody;
   receipts: Record<string, { body: CmsToBody; result: CmsToResult; captureId?: string; retryOf?: string }>;
@@ -69,7 +71,7 @@ export function cmsToFingerprint(page: CmsToPage, lane: string) {
 
 /** Exact current V4 transport inside the one native source publisher. */
 export async function resolveCmsToPage(input: { client: CmsClient; connection: CmsConnection; operation: PublicationOperation; page: CmsToPage;
-  lane?: string; excerptArticle: (html: string, maximum: number) => string; persist: () => Promise<void>; assertCurrentNative: () => Promise<void> }) {
+  lane?: string; nativeIntent?: CmsToNativeIntent; excerptArticle: (html: string, maximum: number) => string; persist: () => Promise<void>; assertCurrentNative: () => Promise<void> }) {
   const { client, connection, operation, page } = input;
   assertNativeArticleCapture(page.preparation);
   if (page.preparation.preparedHtml !== page.contentHtml) throw new NativePreparationLimitation("Current source lacks its exact complete prepared article evidence; no source bytes are reconstructed.");
@@ -77,7 +79,7 @@ export async function resolveCmsToPage(input: { client: CmsClient; connection: C
   const scope = { connectionId: connection.connection_id, serverOrigin: client.origin, siteOrigin: cmsUrl(page.pageUrl).origin, scopeRevision: connection.scope_revision, lane: input.lane ?? connection.publication_lane };
   const destination = cmsUrl(connection.destination_origin);
   if (connection.profile !== "astro" || !connection.directions.includes("to_discourse") || !sameCmsOrigin(destination.href, scope.siteOrigin) || destination.pathname !== "/" || destination.search) throw new Error("Current V4 native source/connection scope requires reconciliation.");
-  if (operation.to && semanticIdentity(operation.to.scope) !== semanticIdentity(scope)) throw new Error("Stored native source connection scope requires reconciliation.");
+  if (operation.to && semanticIdentity(effectiveToScope(operation.to)) !== semanticIdentity(scope)) throw new Error("Stored native source connection scope requires reconciliation.");
   const resourceId = page.existingResourceId ?? operation.resourceId, topicId = page.existingTopicId ?? operation.topicId;
   if (resourceId) {
     const current = await client.record(resourceId);
@@ -113,7 +115,7 @@ export async function resolveCmsToPage(input: { client: CmsClient; connection: C
     // Explicit Retry changes the request identity only, never the refused edition.
     const body = { mutation_id: randomUUID(), bridge_record: structuredClone(refused.body.bridge_record) }; validateCms("ToResolve", body);
     retry.freshMutationId = body.mutation_id; retry.phase = "pending";
-    journal.pending = { body, fingerprint, captureId, retryOf: refused.body.mutation_id };
+    journal.pending = { body, fingerprint, captureId, retryOf: refused.body.mutation_id, ...(input.nativeIntent ? { native: structuredClone(input.nativeIntent) } : {}) };
     await input.persist(); // Exact refusal/successor linkage is durable before dispatch.
   } else if (journal.pending?.rejection) {
     const retained = journal.rejectedRequests?.[journal.pending.body.mutation_id];
@@ -147,7 +149,7 @@ export async function resolveCmsToPage(input: { client: CmsClient; connection: C
     }
     const body = { mutation_id: randomUUID(), bridge_record: record }; validateCms("ToResolve", body);
     if (Buffer.byteLength(semanticIdentity(body)) > 65536) throw new Error("Actual native source request exceeds the unchanged V4 envelope.");
-    journal.pending = { body, fingerprint, captureId }; await input.persist();
+    journal.pending = { body, fingerprint, captureId, ...(input.nativeIntent ? { native: structuredClone(input.nativeIntent) } : {}) }; await input.persist();
   }
   await input.assertCurrentNative();
   let result: CmsToResult;
