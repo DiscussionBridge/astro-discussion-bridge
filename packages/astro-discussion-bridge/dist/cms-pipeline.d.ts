@@ -31,7 +31,7 @@ export interface CmsCommandOptions extends CmsFinalizeOptions {
     /** Isolated process seam; normal native execution uses node:child_process. */
     spawnImplementation?: typeof spawn;
 }
-/** Caller-configured native deploy argv under the same native writer locks. */
+/** Caller-selected deployment still requires actual built, pending CMS work. */
 export declare function deployCmsNativeBuild(options: CmsCommandOptions, command: CmsNativeCommand): Promise<{
     deploymentId: string;
     deployedAt: string;
@@ -47,4 +47,20 @@ export declare function deployCmsNativeBuild(options: CmsCommandOptions, command
     })[];
     requiresFreshBuild: boolean;
 }>;
+/** The ordinary build hook may be idle, but never bypass unresolved work/owners. */
+export declare function deployCmsNativeBuildIfNeeded(options: CmsCommandOptions, command: CmsNativeCommand): Promise<{
+    deploymentId: string;
+    deployedAt: string;
+    results: ({
+        workId: string;
+        transactionId: string;
+        stage: "verified";
+        publiclyVerifiedAt: string;
+    } | {
+        workId: string;
+        phase: string;
+        requiresFreshBuild: boolean;
+    })[];
+    requiresFreshBuild: boolean;
+} | null>;
 //# sourceMappingURL=cms-pipeline.d.ts.map

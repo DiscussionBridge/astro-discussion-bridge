@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { publishControlledDiscussions } from "./controlled-creation.js";
 import { startControlledSourceBuild, recordControlledSourceBuild } from "./cms-to-source-build.js";
-import { stageCmsNativePublications, recordCmsNativeBuild, deployCmsNativeBuild, renewCmsNativeBuild } from "./cms-pipeline.js";
+import { stageCmsNativePublications, recordCmsNativeBuild, deployCmsNativeBuildIfNeeded, renewCmsNativeBuild } from "./cms-pipeline.js";
 // These documented APIs read private package data or native filesystem state.
 // Preserve their installed Node boundary, never a prerender-chunk-relative copy.
 const serverOnlyEntries = ["astro-discussion-bridge", "astro-discussion-bridge/server-url", "astro-discussion-bridge/controlled-creation", "astro-discussion-bridge/operational-state"];
@@ -90,7 +90,7 @@ export default function discussionBridge(options) {
                 if (from) {
                     await recordCmsNativeBuild(from, buildDir);
                     if (options.fromDiscourse?.deployment)
-                        await deployCmsNativeBuild(from, options.fromDiscourse.deployment);
+                        await deployCmsNativeBuildIfNeeded(from, options.fromDiscourse.deployment);
                 }
             } } };
 }

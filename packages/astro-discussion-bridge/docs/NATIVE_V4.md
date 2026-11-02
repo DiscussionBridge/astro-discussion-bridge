@@ -234,6 +234,15 @@ process owner blocks another execution. Real command supervision establishes
 the direct child boundary; service descendants and provider rollback require
 the actual deployment owner.
 
+The configured From build hook does not execute that CMS deployment command on
+a clean empty or fully verified build. It retains the existing command receipt
+unchanged and creates no deployment ID, verification time or success receipt.
+This does not deploy unrelated native-site edits: those still use the site's
+ordinary provider deployment. Unclaimed/unbuilt work, pending mutations, URL
+moves, local limitations, attention and uncertain command owners are not idle;
+their existing guarded execution/reconciliation paths remain required. An
+explicit `cms-deploy` still requires an actual prepared native build.
+
 `cms-finalize` verifies the actual anonymous canonical rendered fragment against
 the prepared content/identity/revision/mode, then sends the exact durable
 transaction. Publicly verified time comes from that successful fetch. It does

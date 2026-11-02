@@ -126,8 +126,19 @@ export async function renewCmsNativeBuild(options) {
         await save();
     });
 }
-/** Caller-configured native deploy argv under the same native writer locks. */
+/** Caller-selected deployment still requires actual built, pending CMS work. */
 export async function deployCmsNativeBuild(options, command) {
+    const result = await executeCmsNativeBuild(options, command, false);
+    if (result === null)
+        throw new Error("Explicit CMS deployment cannot be idle.");
+    return result;
+}
+/** The ordinary build hook may be idle, but never bypass unresolved work/owners. */
+export function deployCmsNativeBuildIfNeeded(options, command) {
+    return executeCmsNativeBuild(options, command, true);
+}
+/** Caller-configured native deploy argv under the same native writer locks. */
+async function executeCmsNativeBuild(options, command, allowIdle) {
     if (!path.isAbsolute(command.executable) || !path.isAbsolute(command.cwd) || !Array.isArray(command.args) || command.args.some(value => typeof value !== "string" || value.includes("\0"))
         || typeof command.executable !== "string" || command.executable.includes("\0") || command.timeoutMs !== undefined && (!Number.isSafeInteger(command.timeoutMs) || command.timeoutMs < 1))
         throw new Error("CMS deployment requires explicit native executable, structured argv, working directory and valid timeout.");
@@ -162,8 +173,22 @@ export async function deployCmsNativeBuild(options, command) {
         }
         const workIds = Object.keys(state.transactions).filter(id => presentationOf(state.transactions[id])?.phase === "applied" && presentationOf(state.transactions[id])?.build
             || state.transactions[id].stage === "prepared" && state.transactions[id].buildArtifact && !state.transactions[id].finalizeBody && !state.transactions[id].abortBody && !state.transactions[id].failureBody);
-        if (!workIds.length)
+        if (!workIds.length) {
+            // This is only a no-op for an empty or fully verified native publication
+            // history. Claimed/unbuilt work, moves, local limitations, attention and
+            // interrupted mutations must retain their existing reconciliation path.
+            // Do not manufacture a command owner, deployment receipt or checked time.
+            const idle = allowIdle && (!prior || prior.phase === "succeeded")
+                && !state.pendingClaim && !Object.keys(state.reservations ?? {}).length
+                && Object.values(state.transactions).every(transaction => transaction.stage === "verified"
+                    && (!presentationOf(transaction) || presentationOf(transaction)?.phase === "committed"))
+                && Object.values(state.mappings).every(mapping => mapping.desired_source_revision === mapping.publicly_verified_source_revision)
+                && Object.entries(state.sources).every(([id, event]) => state.mappings[id]
+                    && (event.event_type !== "publication" || state.mappings[id].desired_source_revision === event.source.source_revision));
+            if (idle)
+                return null;
             throw new Error("CMS deployment has no observed prepared native build.");
+        }
         const phases = Object.fromEntries(workIds.map(id => [id, presentationOf(state.transactions[id])?.phase === "applied" ? "move" : "publication"]));
         async function renew() {
             for (const id of workIds) {
@@ -249,6 +274,8 @@ export async function deployCmsNativeBuild(options, command) {
             throw new Error("Native deployment command failed or its effect is uncertain; reconcile actual native state before any rerun.");
         }
     });
+    if (receipt === null)
+        return null;
     const results = [];
     const pending = [];
     for (const id of receipt.workIds) {

@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { publishControlledDiscussions, type ControlledCreationOptions, type PublishControlledDiscussionsOptions } from "./controlled-creation.js";
 import { startControlledSourceBuild, recordControlledSourceBuild } from "./cms-to-source-build.js";
-import { stageCmsNativePublications, recordCmsNativeBuild, deployCmsNativeBuild, renewCmsNativeBuild, type CmsNativeCommand } from "./cms-pipeline.js";
+import { stageCmsNativePublications, recordCmsNativeBuild, deployCmsNativeBuildIfNeeded, renewCmsNativeBuild, type CmsNativeCommand } from "./cms-pipeline.js";
 import type { CmsPipelineOptions } from "./cms-pipeline.js";
 
 // These documented APIs read private package data or native filesystem state.
@@ -86,7 +86,7 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Astr
   }, "astro:build:done": async ({ dir, assets }) => {
     stopRenewal(); if (renewalError) throw renewalError;
     if (source && nativeBuild) await recordControlledSourceBuild(source, fileURLToPath(dir), assets, nativeBase, nativeAssets);
-    if (from) { await recordCmsNativeBuild(from, buildDir); if (options.fromDiscourse?.deployment) await deployCmsNativeBuild(from, options.fromDiscourse.deployment); }
+    if (from) { await recordCmsNativeBuild(from, buildDir); if (options.fromDiscourse?.deployment) await deployCmsNativeBuildIfNeeded(from, options.fromDiscourse.deployment); }
   } } };
 }
 export { normalizeCommentsMode } from "./comments-mode.js";

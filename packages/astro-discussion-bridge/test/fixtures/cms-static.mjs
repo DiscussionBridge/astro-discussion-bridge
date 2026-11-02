@@ -114,7 +114,7 @@ export async function staticFixture(t, modifications = {}, cooked = html, mode =
   };
 }
 
-export async function buildCmsConsumer(state, fromEnabled = false, packedRoot, canonicalUrl) {
+export async function buildCmsConsumer(state, fromEnabled = false, packedRoot, canonicalUrl, fromOptions = {}) {
   const directory = async relative => { const target = path.join(state.root, relative); await mkdir(target, { recursive: true }); return target; };
   await directory("src/pages/comments");
   await writeFile(path.join(state.root, "package.json"), JSON.stringify({ name: "synthetic-cms-consumer", private: true, type: "module" }));
@@ -141,7 +141,7 @@ const { entry } = Astro.props; const { Content } = await render(entry); const re
   await build({ root: pathToFileURL(state.root + path.sep), configFile: false, site: state.options.siteUrl, trailingSlash: "always", logLevel: "silent", force: true,
     integrations: [integration({ discourseUrl: state.options.serverUrl, siteUrl: state.options.siteUrl,
       ...(fromEnabled ? { fromDiscourse: { enabled: true, docsDir: state.options.docsDir, stateFile: state.options.stateFile,
-        connectionId: state.options.connectionId, connectionSecret: state.options.connectionSecret, fetchImplementation: state.options.fetchImplementation } } : {}) })],
+        connectionId: state.options.connectionId, connectionSecret: state.options.connectionSecret, fetchImplementation: state.options.fetchImplementation, ...fromOptions } } : {}) })],
     vite: { resolve: { alias: [
       { find: "astro", replacement: "astro", customResolver: value => nativeRuntime.resolve(value) },
       { find: "astro-discussion-bridge", replacement: "astro-discussion-bridge", customResolver: value => nativePackageAlias(value, packageResolve(value)) },
