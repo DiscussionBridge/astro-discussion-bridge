@@ -21,7 +21,7 @@
     "./RichContent.astro": "./src/components/RichContent.astro"
   },
   "files": ["dist", "src/components", "src/assets", "src/private", "src/comments-mode.ts", "src/forum-name.ts", "src/web-url.ts", "src/topic-identity.ts", "src/response-body.ts", "docs", "scripts/verify-thousand-pages.mjs", "scripts/qualification-lib.mjs"],
-  "scripts": { "build": "tsc -p tsconfig.json", "build:browser": "node scripts/build-rich-content.mjs", "test": "node scripts/run-tests.mjs", "test:package": "node scripts/run-tests.mjs cms-package.test.mjs", "test:normal-consumer": "node ../../scripts/verify-normal-consumer.mjs", "verify:thousand-pages": "node scripts/verify-thousand-pages.mjs" },
+  "scripts": { "build": "tsc -p tsconfig.json", "build:browser": "node scripts/build-rich-content.mjs", "test": "node scripts/run-tests.mjs", "test:package": "node scripts/run-tests.mjs cms-package.test.mjs", "test:normal-consumer": "node ../../scripts/verify-normal-consumer.mjs", "test:starlight-heading-origin": "node ../../scripts/verify-starlight-heading-origin.mjs", "verify:thousand-pages": "node scripts/verify-thousand-pages.mjs" },
   "dependencies": { "@astrojs/markdown-remark": "7.3.2", "dompurify": "3.4.17", "proper-lockfile": "^4.1.2", "sanitize-html": "2.18.1", "yaml": "^2.9.0" },
   "peerDependencies": { "astro": "^6.0.0 || ^7.0.0", "@astrojs/starlight": ">=0.35.0" },
   "peerDependenciesMeta": { "@astrojs/starlight": { "optional": true } },
