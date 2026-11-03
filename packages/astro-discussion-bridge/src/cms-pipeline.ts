@@ -37,7 +37,7 @@ export async function stageCmsNativePublications(options: CmsPipelineOptions) {
   const observe = () => withCmsCoordinator(options, async ({ state }) => ({
     sources: Object.entries(state.sources).filter(([id, event]) => event.event_type === "publication" && state.mappings[id]?.desired_source_revision !== event.source.source_revision).map(([id]) => id),
     transactions: Object.entries(state.transactions).map(([id, transaction]) => ({ id, stage: transaction.stage, finalizeBody: transaction.finalizeBody as { deployment_id: string; deployed_at: string } | undefined,
-      abortBody: transaction.abortBody, failureBody: transaction.failureBody, localLimitation: transaction.localLimitation, mappingId: transaction.lease.work.mapping_id, move: presentationOf(transaction) })),
+      abortBody: transaction.abortBody, failureBody: transaction.failureBody, localLimitation: transaction.localLimitation, mappingId: transaction.lease.work.mapping_id, move: presentationOf(transaction), attentionRecovery: Boolean(transaction.attentionRecovery) })),
     mappings: Object.values(state.mappings).map(mapping => mapping.mapping_id),
     pendingClaim: state.pendingClaim,
     command: state.nativeCommand as CommandReceipt | undefined,
@@ -65,6 +65,13 @@ export async function stageCmsNativePublications(options: CmsPipelineOptions) {
     if (transaction.failureBody) { await finalizeCmsNativeWork(options, transaction.id, { deploymentId: "failure-receipt-replay", deployedAt: new Date().toISOString() }); continue; }
     if (snapshot.command?.workIds.includes(transaction.id)) {
       if (snapshot.command.phase !== "succeeded" || !snapshot.command.deployedAt) throw new Error("CMS native command must reconcile its original outcome before ordinary staging.");
+      if (snapshot.command.phases?.[transaction.id] === "move" && transaction.move?.phase === "committed") {
+        // The move's command proved URL22, not publication19. Its exact receipt
+        // remains in the move history; publication18 still needs a NEW build
+        // and command after preparation. Never settle it with the earlier time.
+        const prepared = await prepareCmsNativeWork(options, transaction.id, snapshot.command);
+        ready.set(transaction.id, prepared.leaseGeneration); continue;
+      }
       await finalizeCmsNativeWork(options, transaction.id, { deploymentId: snapshot.command.deploymentId, deployedAt: snapshot.command.deployedAt }); continue;
     }
     const held = await reconcileCmsNativeWork(options, transaction.id);
@@ -72,16 +79,21 @@ export async function stageCmsNativePublications(options: CmsPipelineOptions) {
     ready.set(transaction.id, prepared.leaseGeneration);
   }
   const localLimitations = snapshot.transactions.filter(transaction => transaction.localLimitation);
-  const heldMappings = new Set(localLimitations.map(transaction => transaction.mappingId));
+  // Move owners and positive attention successors use their own authority
+  // paths. Normal intake may select other mappings, never reclaim these.
+  const heldMappings = new Set([...localLimitations.map(transaction => transaction.mappingId),
+    ...snapshot.transactions.filter(transaction => ["claimed", "staged", "prepared"].includes(transaction.stage)
+      && (transaction.attentionRecovery || transaction.move)).map(transaction => transaction.mappingId)]);
+  const positiveOnly = heldMappings.size > 0;
   const otherMappings = [...new Set(snapshot.mappings)].filter(mappingId => !heldMappings.has(mappingId));
   const maximumClaims = maximum <= Number.MAX_SAFE_INTEGER / 2 ? maximum * 2 : Number.MAX_SAFE_INTEGER;
   for (let claims = 0; ready.size < maximum; claims++) {
     if (claims >= maximumClaims) throw new Error("CMS Claim repeated without bounded native batch progress.");
     // Current Claim has only a positive mapping selector; never invent an
     // exclusion field or reselect known unusable work through an unfiltered claim.
-    const mappingId = localLimitations.length ? otherMappings.shift() : undefined;
-    if (localLimitations.length && mappingId === undefined) break;
-    const claimed = await claimCmsNativeWork(options, mappingId); if (!claimed) { if (localLimitations.length) continue; break; }
+    const mappingId = positiveOnly ? otherMappings.shift() : undefined;
+    if (positiveOnly && mappingId === undefined) break;
+    const claimed = await claimCmsNativeWork(options, mappingId); if (!claimed) { if (positiveOnly) continue; break; }
     if (ready.has(claimed.workId)) {
       if (claimed.leaseGeneration <= ready.get(claimed.workId)!) throw new Error("CMS Claim repeated an already-current native owner.");
       await reconcileCmsNativeWork(options, claimed.workId);

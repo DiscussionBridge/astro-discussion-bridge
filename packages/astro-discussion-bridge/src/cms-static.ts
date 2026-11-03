@@ -156,10 +156,19 @@ function validateNativeOwnership(contents: string, mapping: CmsMapping, nativeId
   return fields;
 }
 
-export async function prepareCmsNativeWork(options: CmsCoordinatorOptions, workId: string) {
+export async function prepareCmsNativeWork(options: CmsCoordinatorOptions, workId: string, completedMoveCommand?: unknown) {
   return withCmsCoordinator(options, async ({ client, state, connection, save }) => {
     const transaction = state.transactions[workId] as Transaction | undefined;
     if (!transaction || ["verified", "aborted", "attention"].includes(transaction.stage)) throw new Error("CMS work has no resumable held native transaction.");
+    if (completedMoveCommand !== undefined) {
+      const command = state.nativeCommand as { phase?: string; workIds?: string[]; phases?: Record<string, string> } | undefined;
+      const move = transaction.presentationMove as { phase?: string; commandReceipt?: unknown } | undefined;
+      if (!command || command.phase !== "succeeded" || !command.workIds?.includes(workId) || command.phases?.[workId] !== "move"
+        || move?.phase !== "committed" || transaction.finalizeBody || transaction.abortBody || transaction.failureBody
+        || JSON.stringify(command) !== JSON.stringify(completedMoveCommand) || JSON.stringify(move.commandReceipt) !== JSON.stringify(completedMoveCommand)) {
+        throw new Error("CMS completed move command changed before publication preparation; original settlement requires reconciliation.");
+      }
+    }
     if (transaction.localLimitation) throw new Error(transaction.localLimitation.detail);
     if (transaction.presentationMove && (transaction.presentationMove as { phase: string }).phase !== "committed") throw new Error("CMS URL move must commit before static publication prepare.");
     const current = await client.query(workId);

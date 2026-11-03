@@ -30,6 +30,22 @@ test("still-current prepared work renews with a fresh mutation, without Claim, n
   assert.equal(after.lease.lease_generation, before.lease.lease_generation); assert.deepEqual(after.prepareBody, before.prepareBody);
 });
 
+test("a positive same-mapping Claim cannot accept a different mapping or replace retained authority", async t => {
+  const s = await resumeFixture(t); await s.prepare(); const before = await tx(s); s.expire();
+  const transport = s.options.fetchImplementation;
+  const options = { ...s.options, fetchImplementation: async (url, init) => {
+    const result = await transport(url, init);
+    if (!new URL(url).pathname.endsWith("claim.json") || result.status !== 200) return result;
+    const body = await result.json(); body.work.mapping_id = uuid(999); return Response.json(body);
+  } };
+  await assert.rejects(stageCmsNativePublications(options), /positively selected mapping/);
+  const state = await s.journal(), after = state.transactions[s.workId];
+  assert.deepEqual(after.lease, before.lease); assert.deepEqual(after.plan, before.plan);
+  assert.deepEqual(after.prepareBody, before.prepareBody); assert.equal(Object.keys(state.transactions).length, 1);
+  assert.equal(state.pendingClaim.body.mapping_id, before.lease.work.mapping_id);
+  assert.equal(state.claimReceipts[state.pendingClaim.body.mutation_id], undefined);
+});
+
 test("expired claimed and uncertain staged work recover through the normal pipeline without a second create", async t => {
   for (const phase of ["claimed", "staged"]) await t.test(phase, async child => {
     const s = await resumeFixture(child);

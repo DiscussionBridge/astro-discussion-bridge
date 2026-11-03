@@ -77,7 +77,7 @@ export declare function reconcileCmsNativeWork(options: CmsCoordinatorOptions, w
     leaseGeneration: number;
 }>;
 declare function validateNativeOwnership(contents: string, mapping: CmsMapping, nativeId: string, state: CmsNativeState): Record<string, unknown>;
-export declare function prepareCmsNativeWork(options: CmsCoordinatorOptions, workId: string): Promise<{
+export declare function prepareCmsNativeWork(options: CmsCoordinatorOptions, workId: string, completedMoveCommand?: unknown): Promise<{
     workId: string;
     transactionId: string;
     nativeId: string;

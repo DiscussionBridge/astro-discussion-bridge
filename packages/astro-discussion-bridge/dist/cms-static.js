@@ -184,11 +184,20 @@ function validateNativeOwnership(contents, mapping, nativeId, state) {
         throw new Error("CMS managed native fields were edited locally.");
     return fields;
 }
-export async function prepareCmsNativeWork(options, workId) {
+export async function prepareCmsNativeWork(options, workId, completedMoveCommand) {
     return withCmsCoordinator(options, async ({ client, state, connection, save }) => {
         const transaction = state.transactions[workId];
         if (!transaction || ["verified", "aborted", "attention"].includes(transaction.stage))
             throw new Error("CMS work has no resumable held native transaction.");
+        if (completedMoveCommand !== undefined) {
+            const command = state.nativeCommand;
+            const move = transaction.presentationMove;
+            if (!command || command.phase !== "succeeded" || !command.workIds?.includes(workId) || command.phases?.[workId] !== "move"
+                || move?.phase !== "committed" || transaction.finalizeBody || transaction.abortBody || transaction.failureBody
+                || JSON.stringify(command) !== JSON.stringify(completedMoveCommand) || JSON.stringify(move.commandReceipt) !== JSON.stringify(completedMoveCommand)) {
+                throw new Error("CMS completed move command changed before publication preparation; original settlement requires reconciliation.");
+            }
+        }
         if (transaction.localLimitation)
             throw new Error(transaction.localLimitation.detail);
         if (transaction.presentationMove && transaction.presentationMove.phase !== "committed")

@@ -126,6 +126,7 @@ export async function claimCmsNativeWorkInContext({ client, state, connection, s
     if (prior && semanticIdentity(prior.body) !== semanticIdentity(body)) throw new Error("CMS Claim mutation history changed.");
     await save();
     const lease = await client.claim(body.mutation_id, body.mapping_id);
+    if (lease && body.mapping_id !== undefined && lease.work.mapping_id !== body.mapping_id) throw new Error("CMS Claim response changed its positively selected mapping; original intent retained.");
     if (prior?.response !== undefined && semanticIdentity(prior.response) !== semanticIdentity(lease ?? null)) throw new Error("CMS Claim receipt changed on exact replay.");
     // Completed bodyless polls transfer no authority; do not grow history on
     // every idle build. Positive lease receipts remain exact and retained.

@@ -92,6 +92,31 @@ test("actual public nonce mismatch never commits; applied abort restores bytes a
   await assert.rejects(deployCmsNativeBuild(options, command), /settlements|reconciliation/);
 });
 
+test("restart after committed URL move resolves uncertain publication Prepare without borrowing its earlier command receipt", async t => {
+  const fixture = await nativeFixture(t), { state, options, command, journal, witness } = fixture;
+  const claimed = await state.nextAction("publish_revision"), target = "https://astro.example/comments/restarted-publication/";
+  await beginCmsNativeUrlMove(options, state.nativeMapping.mapping_id, target);
+  await buildCmsConsumer(state, true, undefined, target);
+  state.loseNext("prepare"); await assert.rejects(deployCmsNativeBuild(options, command), /settlements/);
+  const before = await journal(), held = before.transactions[claimed.workId], moveCommand = held.presentationMove.commandReceipt;
+  assert.equal(held.presentationMove.phase, "committed"); assert.equal(held.stage, "staged");
+  assert.equal(held.buildArtifact, undefined); assert.deepEqual(before.nativeCommand, moveCommand);
+  const nativeBytes = await readFile(held.plan.file);
+  await assert.rejects(prepareCmsNativeWork(options, claimed.workId, { ...moveCommand, commandId: "not-the-retained-command" }), /completed move command changed/);
+  assert.deepEqual(await journal(), before, "stale command observation cannot alter the retained transaction");
+  await buildCmsConsumer(state, true, undefined, target);
+  const prepared = (await journal()).transactions[claimed.workId];
+  assert.deepEqual(prepared.prepareBody, held.prepareBody); assert.equal(prepared.transactionId, held.transactionId);
+  assert.deepEqual(prepared.presentationMove, held.presentationMove); assert.deepEqual(await readFile(held.plan.file), nativeBytes);
+  assert.ok(prepared.buildArtifact); assert.equal(prepared.finalizeBody, undefined);
+  await deployCmsNativeBuild(options, command);
+  const final = await journal(); assert.equal(final.transactions[claimed.workId].stage, "verified");
+  assert.deepEqual(final.transactions[claimed.workId].presentationMove.commandReceipt, moveCommand);
+  assert.notEqual(final.nativeCommand.commandId, moveCommand.commandId);
+  assert.equal(final.nativeCommand.phases[claimed.workId], "publication");
+  assert.equal((await readFile(witness, "utf8")).trim().split("\n").length, 3);
+});
+
 test("new captured relative targets survive a native canonical move without rewriting article; stale authority still stops", async t => {
   const fixture = await nativeFixture(t, '<p><a href="relative-target">Native article link</a></p>');
   const { state, options, journal } = fixture, before = structuredClone(state.nativeMapping), claimed = await state.nextAction("publish_revision");
