@@ -8,7 +8,7 @@ import { prepareCmsNativeWork } from "../../dist/cms-static.js";
 
 /** Actual native writer and typed simulated receiver with persistent mutation
  * receipts. No timers/clock shortcuts, live credentials or external transport. */
-export async function resumeFixture(t) {
+export async function resumeFixture(t, { initialClaim = true } = {}) {
   const base = await staticFixture(t, {}, html, "full", false), options = base.options, original = options.fetchImplementation;
   base.nativeWork.state = "pending"; base.nativeWork.attempt = 0; base.nativeWork.lease_generation = 0;
   let expires = null, token, loss, faultRenewal, faultPreparation, queryFaultAfterClaim = false;
@@ -39,7 +39,7 @@ export async function resumeFixture(t) {
     if (loss?.kind === kind && loss.before) { loss = undefined; throw new Error("Synthetic mutation did not reach receiver."); }
     let result, status = 200;
     if (kind === "claim") {
-      if (base.nativeWork.state !== "pending") { result = undefined; status = 204; }
+      if (base.nativeWork.state !== "pending" || body.mapping_id !== undefined && body.mapping_id !== base.nativeMapping.mapping_id) { result = undefined; status = 204; }
       else {
         effects.claim++; base.nativeWork.state = "leased"; base.nativeWork.lease_generation++; base.nativeWork.attempt++;
         token = Buffer.alloc(32, base.nativeWork.lease_generation + 6).toString("base64url"); expires = new Date(Date.now() + 300000).toISOString(); result = currentLease();
@@ -60,8 +60,8 @@ export async function resumeFixture(t) {
     return response(result, status);
   };
   await pollCmsSources(options); await reserveCmsSource(options, base.sourceRecord.source_id);
-  const claimed = await claimCmsNativeWork(options); assert.ok(claimed);
-  const workId = claimed.workId;
+  const claimed = initialClaim ? await claimCmsNativeWork(options) : undefined; if (initialClaim) assert.ok(claimed);
+  const workId = claimed?.workId ?? base.nativeWork.work_id;
   return { base, options, workId, requests, receipts, effects, http,
     journal: async () => JSON.parse(await readFile(options.stateFile, "utf8")),
     prepare: () => prepareCmsNativeWork(options, workId),

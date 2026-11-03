@@ -323,6 +323,13 @@ checks can permit a replacement authority. New-generation Prepare uses a new
 mutation ID while retaining earlier requests/receipts and lease history in the
 protected journal. Known Prepare output is not rewritten or re-created.
 
+When held mappings require positive-only intake, bounded builds continue from
+a private durable scan position rather than restarting the same empty prefix.
+Only a resolved exact Claim advances that position, including a confirmed empty
+204 result; an unknown request keeps its original intent and replay path. Finite
+selector exhaustion is normal, and empty polls do not accumulate Claim receipts.
+This position controls ordering only, never authorization or publication state.
+
 Foreign work/fences, policy/source changes, native edits or missing owned pages
 stop this ordinary resume. Chosen settlements and active URL moves retain their
 original paths. Running/uncertain/failed command owners are not inferred away;

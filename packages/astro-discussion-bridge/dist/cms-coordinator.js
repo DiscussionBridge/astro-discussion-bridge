@@ -91,11 +91,13 @@ export function cmsNativeLocation(options, state, sourceId) {
         throw new Error("CMS native URL ancestry changed object identity.");
     return { ...reservation, canonicalUrl: location.canonicalUrl };
 }
-export async function claimCmsNativeWork(options, mappingId) {
-    return withCmsCoordinator(options, context => claimCmsNativeWorkInContext(context, mappingId));
+export async function claimCmsNativeWork(options, mappingId, intake = false) {
+    return withCmsCoordinator(options, context => claimCmsNativeWorkInContext(context, mappingId, undefined, intake));
 }
 /** Caller already holds this native coordinator's writer; no nested lock. */
-export async function claimCmsNativeWorkInContext({ client, state, connection, save }, mappingId, expectedWorkId) {
+export async function claimCmsNativeWorkInContext({ client, state, connection, save }, mappingId, expectedWorkId, intake = false) {
+    if (typeof intake !== "boolean" || intake && mappingId === undefined)
+        throw new Error("CMS native intake requires a positive mapping selector.");
     if (connection.policy.author_ids.length || connection.policy.taxonomy_ids.length)
         throw new Error("CMS selected native author/taxonomy IDs require the actual consumer availability and assignment resolver.");
     const limitations = Object.values(state.transactions).filter(transaction => transaction.localLimitation);
@@ -123,8 +125,9 @@ export async function claimCmsNativeWorkInContext({ client, state, connection, s
                 throw new Error("CMS unresolved Prepare or renewal must resolve its exact request before another Claim.");
         }
     }
-    state.pendingClaim ??= { body: { mutation_id: randomUUID(), ...(mappingId === undefined ? {} : { mapping_id: mappingId }) } };
-    const body = state.pendingClaim.body;
+    // Do not retag a retained/legacy uncertain request with a new local intent.
+    state.pendingClaim ??= { body: { mutation_id: randomUUID(), ...(mappingId === undefined ? {} : { mapping_id: mappingId }) }, ...(intake ? { intake: true } : {}) };
+    const pending = state.pendingClaim, body = pending.body;
     const prior = state.claimReceipts?.[body.mutation_id];
     if (prior && semanticIdentity(prior.body) !== semanticIdentity(body))
         throw new Error("CMS Claim mutation history changed.");
@@ -137,6 +140,8 @@ export async function claimCmsNativeWorkInContext({ client, state, connection, s
     // Completed bodyless polls transfer no authority; do not grow history on
     // every idle build. Positive lease receipts remain exact and retained.
     if (!lease) {
+        if (pending.intake)
+            state.intakeAfterMappingId = body.mapping_id;
         delete state.pendingClaim;
         await save();
         return undefined;
@@ -144,6 +149,8 @@ export async function claimCmsNativeWorkInContext({ client, state, connection, s
     (state.claimReceipts ??= Object.create(null))[body.mutation_id] = prior ?? { body: structuredClone(body), response: structuredClone(lease) };
     await save();
     const transaction = stageCmsClaim(state, lease);
+    if (pending.intake)
+        state.intakeAfterMappingId = body.mapping_id;
     delete state.pendingClaim;
     await save();
     if (expectedWorkId !== undefined && lease.work.work_id !== expectedWorkId)

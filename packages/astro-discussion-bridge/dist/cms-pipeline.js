@@ -38,6 +38,7 @@ export async function stageCmsNativePublications(options) {
         transactions: Object.entries(state.transactions).map(([id, transaction]) => ({ id, stage: transaction.stage, finalizeBody: transaction.finalizeBody,
             abortBody: transaction.abortBody, failureBody: transaction.failureBody, localLimitation: transaction.localLimitation, mappingId: transaction.lease.work.mapping_id, move: presentationOf(transaction), attentionRecovery: Boolean(transaction.attentionRecovery) })),
         mappings: Object.values(state.mappings).map(mapping => mapping.mapping_id),
+        intakeAfterMappingId: state.intakeAfterMappingId,
         pendingClaim: state.pendingClaim,
         command: state.nativeCommand,
     }));
@@ -101,17 +102,27 @@ export async function stageCmsNativePublications(options) {
         ...snapshot.transactions.filter(transaction => ["claimed", "staged", "prepared"].includes(transaction.stage)
             && (transaction.attentionRecovery || transaction.move)).map(transaction => transaction.mappingId)]);
     const positiveOnly = heldMappings.size > 0;
-    const otherMappings = [...new Set(snapshot.mappings)].filter(mappingId => !heldMappings.has(mappingId));
+    const mappings = [...new Set(snapshot.mappings)];
+    const after = snapshot.intakeAfterMappingId === undefined ? -1 : mappings.indexOf(snapshot.intakeAfterMappingId);
+    const orderedMappings = after < 0 ? mappings : [...mappings.slice(after + 1), ...mappings.slice(0, after + 1)];
+    const otherMappings = orderedMappings.filter(mappingId => !heldMappings.has(mappingId));
     const maximumClaims = maximum <= Number.MAX_SAFE_INTEGER / 2 ? maximum * 2 : Number.MAX_SAFE_INTEGER;
     for (let claims = 0; ready.size < maximum; claims++) {
-        if (claims >= maximumClaims)
+        // Exhaustion is normal. A resolved positive selection advances the durable
+        // local position, so the next bounded invocation never restarts its prefix.
+        if (positiveOnly && otherMappings.length === 0)
+            break;
+        if (claims >= maximumClaims) {
+            if (positiveOnly)
+                break;
             throw new Error("CMS Claim repeated without bounded native batch progress.");
+        }
         // Current Claim has only a positive mapping selector; never invent an
         // exclusion field or reselect known unusable work through an unfiltered claim.
         const mappingId = positiveOnly ? otherMappings.shift() : undefined;
         if (positiveOnly && mappingId === undefined)
             break;
-        const claimed = await claimCmsNativeWork(options, mappingId);
+        const claimed = await claimCmsNativeWork(options, mappingId, positiveOnly);
         if (!claimed) {
             if (positiveOnly)
                 continue;

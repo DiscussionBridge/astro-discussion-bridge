@@ -36,7 +36,7 @@ export declare function cmsNativeLocation(options: CmsCoordinatorOptions, state:
     externalId: string;
     file: string;
 };
-export declare function claimCmsNativeWork(options: CmsCoordinatorOptions, mappingId?: string): Promise<{
+export declare function claimCmsNativeWork(options: CmsCoordinatorOptions, mappingId?: string, intake?: boolean): Promise<{
     workId: string;
     mappingId: string;
     transactionId: string;
@@ -44,7 +44,7 @@ export declare function claimCmsNativeWork(options: CmsCoordinatorOptions, mappi
     leaseGeneration: number;
 } | undefined>;
 /** Caller already holds this native coordinator's writer; no nested lock. */
-export declare function claimCmsNativeWorkInContext({ client, state, connection, save }: CmsCoordinatorContext, mappingId?: string, expectedWorkId?: string): Promise<{
+export declare function claimCmsNativeWorkInContext({ client, state, connection, save }: CmsCoordinatorContext, mappingId?: string, expectedWorkId?: string, intake?: boolean): Promise<{
     workId: string;
     mappingId: string;
     transactionId: string;

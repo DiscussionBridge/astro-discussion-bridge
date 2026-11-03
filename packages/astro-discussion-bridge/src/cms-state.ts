@@ -27,7 +27,9 @@ export interface CmsNativeState {
   generations: Record<string, number>;
   transactions: Record<string, CmsNativeTransaction>;
   reservations?: Record<string, { body: { mutation_id: string; source_id: string; source_revision: string; policy_revision: string; external_id: string; canonical_url: string } }>;
-  pendingClaim?: { body: { mutation_id: string; mapping_id?: string } };
+  pendingClaim?: { body: { mutation_id: string; mapping_id?: string }; intake?: true };
+  /** Local positive-selector progress only; never a wire cursor or authority. */
+  intakeAfterMappingId?: string;
   nativeCommand?: unknown;
   claimReceipts?: Record<string, { body: { mutation_id: string; mapping_id?: string }; response?: CmsLease | null }>;
   /** Accepted V4 URL ancestry, separate from immutable prior verified transactions. */
@@ -100,7 +102,11 @@ export async function readCmsState(file: string, expected: CmsNativeState): Prom
         if (id !== operation.body.source_id) throw new Error("CMS reservation source identity is inconsistent.");
       }
     }
-    if (state.pendingClaim !== undefined) validateCms("Claim", state.pendingClaim.body);
+    if (state.intakeAfterMappingId !== undefined) validateCms("UUID", state.intakeAfterMappingId);
+    if (state.pendingClaim !== undefined) {
+      validateCms("Claim", state.pendingClaim.body);
+      if (state.pendingClaim.intake !== undefined && (state.pendingClaim.intake !== true || state.pendingClaim.body.mapping_id === undefined)) throw new Error("CMS intake Claim lost its positive selector intent.");
+    }
     if (state.claimReceipts !== undefined) {
       if (!state.claimReceipts || typeof state.claimReceipts !== "object" || Array.isArray(state.claimReceipts)) throw new Error("CMS Claim receipt history is invalid.");
       for (const [id, receipt] of Object.entries(state.claimReceipts)) {

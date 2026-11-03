@@ -34,7 +34,10 @@ export interface CmsNativeState {
             mutation_id: string;
             mapping_id?: string;
         };
+        intake?: true;
     };
+    /** Local positive-selector progress only; never a wire cursor or authority. */
+    intakeAfterMappingId?: string;
     nativeCommand?: unknown;
     claimReceipts?: Record<string, {
         body: {

@@ -92,8 +92,13 @@ export async function readCmsState(file, expected) {
                     throw new Error("CMS reservation source identity is inconsistent.");
             }
         }
-        if (state.pendingClaim !== undefined)
+        if (state.intakeAfterMappingId !== undefined)
+            validateCms("UUID", state.intakeAfterMappingId);
+        if (state.pendingClaim !== undefined) {
             validateCms("Claim", state.pendingClaim.body);
+            if (state.pendingClaim.intake !== undefined && (state.pendingClaim.intake !== true || state.pendingClaim.body.mapping_id === undefined))
+                throw new Error("CMS intake Claim lost its positive selector intent.");
+        }
         if (state.claimReceipts !== undefined) {
             if (!state.claimReceipts || typeof state.claimReceipts !== "object" || Array.isArray(state.claimReceipts))
                 throw new Error("CMS Claim receipt history is invalid.");
