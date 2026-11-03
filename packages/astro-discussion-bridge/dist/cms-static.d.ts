@@ -68,6 +68,14 @@ export declare const cmsAuthority: (transaction: CmsNativeTransaction) => CmsAut
 declare function assertRenewed(transaction: Transaction, lease: Transaction["lease"]): void;
 declare function assertCurrent(state: CmsNativeState, transaction: Transaction, current: CmsWorkQuery): void;
 declare function sourceFor(state: CmsNativeState, transaction: Transaction): CmsSource;
+/** Reconcile held ordinary work before batch capacity or a new native build.
+ * Historical mutation receipts never stand in for current fencing authority. */
+export declare function reconcileCmsNativeWork(options: CmsCoordinatorOptions, workId: string): Promise<{
+    workId: string;
+    reclaimed: boolean;
+    prepared: boolean;
+    leaseGeneration: number;
+}>;
 declare function validateNativeOwnership(contents: string, mapping: CmsMapping, nativeId: string, state: CmsNativeState): Record<string, unknown>;
 export declare function prepareCmsNativeWork(options: CmsCoordinatorOptions, workId: string): Promise<{
     workId: string;
@@ -75,6 +83,7 @@ export declare function prepareCmsNativeWork(options: CmsCoordinatorOptions, wor
     nativeId: string;
     canonicalUrl: string;
     stage: "prepared";
+    leaseGeneration: number;
 }>;
 declare function builtArtifact(buildDir: string, canonicalUrl: string, notBefore?: string): Promise<string | null>;
 /** Native post-build hook captures the actual complete artifact before deployment. */

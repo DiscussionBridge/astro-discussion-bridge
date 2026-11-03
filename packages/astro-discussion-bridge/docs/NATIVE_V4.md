@@ -312,6 +312,25 @@ unmanaged frontmatter survives updates. Nonempty selected native metadata needs
 the actual consumer's repository-ID availability/assignment resolver; without
 one it stops before claiming. Source authors are provenance, not that resolver.
 
+Retained ordinary work is reconciled before new-work capacity is counted. An
+expired held item may receive a fresh same-work Claim through its existing
+mapping, then the normal native-CAS Prepare; it remains one batch member and
+keeps its transaction, captured source and native identity. Current valid leases
+are freshly renewed, not reclaimed. Exact unresolved Prepare, Claim and renewal
+requests are replayed first. A cached renewal or Prepare receipt is history,
+not current authority; only codec-proved refusal plus fresh scoped work/native
+checks can permit a replacement authority. New-generation Prepare uses a new
+mutation ID while retaining earlier requests/receipts and lease history in the
+protected journal. Known Prepare output is not rewritten or re-created.
+
+Foreign work/fences, policy/source changes, native edits or missing owned pages
+stop this ordinary resume. Chosen settlements and active URL moves retain their
+original paths. Running/uncertain/failed command owners are not inferred away;
+a succeeded command settles its actual saved deployment receipt without another
+execution. Attention successors still require their existing positive recovery
+channel, not a generic Claim. Reprepare alone is not generation, deployment or
+public verification, and no old artifact is restamped as a new result.
+
 The normal build hook captures the actual rendered output. Deployment remains
 explicit: configure an absolute executable, structured argv and actual cwd, or
 use `cms-record-build`/`cms-deploy` with the protected private state. Native

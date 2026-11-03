@@ -1,6 +1,7 @@
 import { withPublicationOperationalStateLock } from "./native-locks.js";
 import { CmsClient, type CmsConnection, type CmsEvent, type CmsFeed, type CmsLease, type CmsMapping } from "./cms-client.js";
 import { type NativeArticleCapture } from "./native-preparation.js";
+import { type CmsWorkRequest, type CmsRenewalIntent } from "./cms-work-requests.js";
 export interface CmsNativeState {
     schemaVersion: 1;
     wireVersion: "v4";
@@ -35,6 +36,13 @@ export interface CmsNativeState {
         };
     };
     nativeCommand?: unknown;
+    claimReceipts?: Record<string, {
+        body: {
+            mutation_id: string;
+            mapping_id?: string;
+        };
+        response?: CmsLease | null;
+    }>;
     /** Accepted V4 URL ancestry, separate from immutable prior verified transactions. */
     nativeLocations?: Record<string, {
         canonicalUrl: string;
@@ -48,6 +56,9 @@ export interface CmsNativeTransaction {
     transactionId: string;
     stage: "claimed" | "staged" | "prepared" | "verified" | "aborted" | "attention";
     articleCapture?: NativeArticleCapture;
+    workRequestHistory?: Record<string, CmsWorkRequest>;
+    pendingRenewal?: CmsRenewalIntent;
+    leaseHistory?: CmsLease[];
     localLimitation?: {
         kind: "media_preservation" | "native_preparation";
         detail: string;

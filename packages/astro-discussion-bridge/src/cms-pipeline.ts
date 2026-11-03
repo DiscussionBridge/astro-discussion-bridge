@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import { claimCmsNativeWork, cmsNativeLocation, cmsNativeReservation, pollCmsSources, reserveCmsSource, withCmsCoordinator, type CmsCoordinatorOptions } from "./cms-coordinator.js";
-import { abortCmsNativeWork, cmsAuthority, finalizeCmsNativeWork, prepareCmsNativeWork, recordCmsNativeBuild as recordStaticBuild, type CmsFinalizeOptions } from "./cms-static.js";
+import { abortCmsNativeWork, cmsAuthority, finalizeCmsNativeWork, prepareCmsNativeWork, reconcileCmsNativeWork, recordCmsNativeBuild as recordStaticBuild, type CmsFinalizeOptions } from "./cms-static.js";
 import { assertCmsPresentationCurrent, finalizeCmsNativeUrlMove, prepareCmsNativeUrlMove, presentationOf, recordCmsNativeMoveBuild } from "./cms-presentation.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { validateCms } from "../src/private/cms-runtime.mjs";
@@ -34,42 +34,61 @@ export async function stageCmsNativePublications(options: CmsPipelineOptions) {
     if (cursors.has(page.continuation)) throw new Error("CMS native source continuation repeated without completing its staged page.");
     cursors.add(page.continuation);
   }
-  const snapshot = await withCmsCoordinator(options, async ({ state }) => ({
+  const observe = () => withCmsCoordinator(options, async ({ state }) => ({
     sources: Object.entries(state.sources).filter(([id, event]) => event.event_type === "publication" && state.mappings[id]?.desired_source_revision !== event.source.source_revision).map(([id]) => id),
     transactions: Object.entries(state.transactions).map(([id, transaction]) => ({ id, stage: transaction.stage, finalizeBody: transaction.finalizeBody as { deployment_id: string; deployed_at: string } | undefined,
       abortBody: transaction.abortBody, failureBody: transaction.failureBody, localLimitation: transaction.localLimitation, mappingId: transaction.lease.work.mapping_id, move: presentationOf(transaction) })),
     mappings: Object.values(state.mappings).map(mapping => mapping.mapping_id),
+    pendingClaim: state.pendingClaim,
+    command: state.nativeCommand as CommandReceipt | undefined,
   }));
+  let snapshot = await observe();
+  // Resolve a durably selected Claim, not a replacement request or another scope.
+  if (snapshot.pendingClaim) {
+    await claimCmsNativeWork(options, snapshot.pendingClaim.body.mapping_id);
+    snapshot = await observe();
+  }
   for (const id of snapshot.sources) snapshot.mappings.push((await reserveCmsSource(options, id)).mapping_id);
-  const prepared: string[] = [];
+  const ready = new Map<string, number>();
   for (const transaction of snapshot.transactions) {
     if (transaction.localLimitation) continue;
     if (["verified", "aborted", "attention"].includes(transaction.stage)) continue;
     if (transaction.move && transaction.move.phase !== "committed") {
       if (["attention", "aborted"].includes(transaction.move.phase)) throw new Error("CMS native URL move requires explicit current reconciliation.");
       await prepareCmsNativeUrlMove(options, transaction.id, transaction.move.prepare.new_url);
-      prepared.push(transaction.id); continue;
+      ready.set(transaction.id, -1); continue;
     }
     // Replay only an already durably chosen settlement; no new deployment,
     // restoration, public verification or administrator retry is inferred.
     if (transaction.finalizeBody) { await finalizeCmsNativeWork(options, transaction.id, { deploymentId: transaction.finalizeBody.deployment_id, deployedAt: transaction.finalizeBody.deployed_at }); continue; }
     if (transaction.abortBody) { await abortCmsNativeWork(options, transaction.id); continue; }
-    if (transaction.failureBody) { await finalizeCmsNativeWork(options, transaction.id, { deploymentId: "failure-receipt-replay", deployedAt: new Date().toISOString() }); }
-    if (["claimed", "staged"].includes(transaction.stage)) await prepareCmsNativeWork(options, transaction.id);
-    if (["claimed", "staged", "prepared"].includes(transaction.stage)) prepared.push(transaction.id);
+    if (transaction.failureBody) { await finalizeCmsNativeWork(options, transaction.id, { deploymentId: "failure-receipt-replay", deployedAt: new Date().toISOString() }); continue; }
+    if (snapshot.command?.workIds.includes(transaction.id)) {
+      if (snapshot.command.phase !== "succeeded" || !snapshot.command.deployedAt) throw new Error("CMS native command must reconcile its original outcome before ordinary staging.");
+      await finalizeCmsNativeWork(options, transaction.id, { deploymentId: snapshot.command.deploymentId, deployedAt: snapshot.command.deployedAt }); continue;
+    }
+    const held = await reconcileCmsNativeWork(options, transaction.id);
+    const prepared = held.prepared ? held : await prepareCmsNativeWork(options, transaction.id);
+    ready.set(transaction.id, prepared.leaseGeneration);
   }
   const localLimitations = snapshot.transactions.filter(transaction => transaction.localLimitation);
   const heldMappings = new Set(localLimitations.map(transaction => transaction.mappingId));
   const otherMappings = [...new Set(snapshot.mappings)].filter(mappingId => !heldMappings.has(mappingId));
-  for (let count = prepared.length; count < maximum; count++) {
+  const maximumClaims = maximum <= Number.MAX_SAFE_INTEGER / 2 ? maximum * 2 : Number.MAX_SAFE_INTEGER;
+  for (let claims = 0; ready.size < maximum; claims++) {
+    if (claims >= maximumClaims) throw new Error("CMS Claim repeated without bounded native batch progress.");
     // Current Claim has only a positive mapping selector; never invent an
     // exclusion field or reselect known unusable work through an unfiltered claim.
     const mappingId = localLimitations.length ? otherMappings.shift() : undefined;
     if (localLimitations.length && mappingId === undefined) break;
     const claimed = await claimCmsNativeWork(options, mappingId); if (!claimed) { if (localLimitations.length) continue; break; }
-    if (prepared.includes(claimed.workId)) throw new Error("CMS claim returned a work item already held by this native batch.");
-    await prepareCmsNativeWork(options, claimed.workId); prepared.push(claimed.workId);
+    if (ready.has(claimed.workId)) {
+      if (claimed.leaseGeneration <= ready.get(claimed.workId)!) throw new Error("CMS Claim repeated an already-current native owner.");
+      await reconcileCmsNativeWork(options, claimed.workId);
+    }
+    const prepared = await prepareCmsNativeWork(options, claimed.workId); ready.set(claimed.workId, prepared.leaseGeneration);
   }
+  const prepared = [...ready.keys()];
   return { stagedEvents: events, prepared, pendingDeployment: prepared.length,
     localLimitations: localLimitations.map(transaction => ({ workId: transaction.id, mappingId: transaction.mappingId, detail: transaction.localLimitation!.detail })) };
 }

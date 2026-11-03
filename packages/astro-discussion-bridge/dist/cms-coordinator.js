@@ -4,8 +4,9 @@ import { lock } from "proper-lockfile";
 import { CmsClient } from "./cms-client.js";
 import { assertCmsConnection, emptyCmsState, readCmsState, stageCmsClaim, stageCmsFeedPage, withCmsStateLock, writeCmsState } from "./cms-state.js";
 import { nativePublicationFiles } from "./native-publication.js";
-import { validateCms } from "../src/private/cms-runtime.mjs";
+import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { cmsOrigin, nativeUrl } from "./native-url.js";
+import { assertWorkReclaimAllowed, expiryRefusal, workRequest } from "./cms-work-requests.js";
 export async function withCmsCoordinator(options, action) {
     const docs = path.resolve(options.docsDir), journal = path.resolve(options.stateFile);
     const relative = path.relative(docs, journal);
@@ -91,27 +92,59 @@ export function cmsNativeLocation(options, state, sourceId) {
     return { ...reservation, canonicalUrl: location.canonicalUrl };
 }
 export async function claimCmsNativeWork(options, mappingId) {
-    return withCmsCoordinator(options, async ({ client, state, connection, save }) => {
-        if (connection.policy.author_ids.length || connection.policy.taxonomy_ids.length)
-            throw new Error("CMS selected native author/taxonomy IDs require the actual consumer availability and assignment resolver.");
-        const limitations = Object.values(state.transactions).filter(transaction => transaction.localLimitation);
-        if (limitations.length && mappingId === undefined)
-            throw new Error("CMS local media limitation requires a positive claim of another owned mapping; an unfiltered claim may reselect held work.");
-        if (limitations.some(transaction => transaction.lease.work.mapping_id === mappingId))
-            throw new Error("CMS local media limitation requires current work/source/native reconciliation for this mapping.");
-        if (state.pendingClaim && state.pendingClaim.body.mapping_id !== mappingId)
-            throw new Error("Uncertain CMS claim scope requires reconciliation.");
-        state.pendingClaim ??= { body: { mutation_id: randomUUID(), ...(mappingId === undefined ? {} : { mapping_id: mappingId }) } };
-        await save();
-        const lease = await client.claim(state.pendingClaim.body.mutation_id, state.pendingClaim.body.mapping_id);
-        if (!lease) {
-            delete state.pendingClaim;
-            await save();
-            return undefined;
+    return withCmsCoordinator(options, context => claimCmsNativeWorkInContext(context, mappingId));
+}
+/** Caller already holds this native coordinator's writer; no nested lock. */
+export async function claimCmsNativeWorkInContext({ client, state, connection, save }, mappingId, expectedWorkId) {
+    if (connection.policy.author_ids.length || connection.policy.taxonomy_ids.length)
+        throw new Error("CMS selected native author/taxonomy IDs require the actual consumer availability and assignment resolver.");
+    const limitations = Object.values(state.transactions).filter(transaction => transaction.localLimitation);
+    if (limitations.length && mappingId === undefined)
+        throw new Error("CMS local media limitation requires a positive claim of another owned mapping; an unfiltered claim may reselect held work.");
+    if (limitations.some(transaction => transaction.lease.work.mapping_id === mappingId))
+        throw new Error("CMS local media limitation requires current work/source/native reconciliation for this mapping.");
+    if (state.pendingClaim && state.pendingClaim.body.mapping_id !== mappingId)
+        throw new Error("Uncertain CMS claim scope requires reconciliation.");
+    const command = state.nativeCommand;
+    if (command && ["starting", "running", "uncertain"].includes(command.phase ?? ""))
+        throw new Error("CMS uncertain native command prevents another ordinary Claim.");
+    for (const transaction of Object.values(state.transactions)) {
+        if (!["claimed", "staged", "prepared"].includes(transaction.stage) || mappingId !== undefined && transaction.lease.work.mapping_id !== mappingId)
+            continue;
+        assertWorkReclaimAllowed(state, transaction);
+        if (transaction.attentionRecovery)
+            throw new Error("CMS attention successor requires its positive recovery Claim, not ordinary Claim.");
+        if (!state.pendingClaim) {
+            const body = transaction.prepareBody;
+            const preparation = body && workRequest(transaction, "V4-18", body);
+            if (transaction.stage === "prepared" && preparation)
+                preparation.observedPrepared = true;
+            if (transaction.pendingRenewal || preparation && preparation.response === undefined && !preparation.observedPrepared && !expiryRefusal(preparation))
+                throw new Error("CMS unresolved Prepare or renewal must resolve its exact request before another Claim.");
         }
-        const transaction = stageCmsClaim(state, lease);
+    }
+    state.pendingClaim ??= { body: { mutation_id: randomUUID(), ...(mappingId === undefined ? {} : { mapping_id: mappingId }) } };
+    const body = state.pendingClaim.body;
+    const prior = state.claimReceipts?.[body.mutation_id];
+    if (prior && semanticIdentity(prior.body) !== semanticIdentity(body))
+        throw new Error("CMS Claim mutation history changed.");
+    await save();
+    const lease = await client.claim(body.mutation_id, body.mapping_id);
+    if (prior?.response !== undefined && semanticIdentity(prior.response) !== semanticIdentity(lease ?? null))
+        throw new Error("CMS Claim receipt changed on exact replay.");
+    // Completed bodyless polls transfer no authority; do not grow history on
+    // every idle build. Positive lease receipts remain exact and retained.
+    if (!lease) {
         delete state.pendingClaim;
         await save();
-        return { workId: lease.work.work_id, mappingId: lease.work.mapping_id, transactionId: transaction.transactionId, stage: transaction.stage };
-    });
+        return undefined;
+    }
+    (state.claimReceipts ??= Object.create(null))[body.mutation_id] = prior ?? { body: structuredClone(body), response: structuredClone(lease) };
+    await save();
+    const transaction = stageCmsClaim(state, lease);
+    delete state.pendingClaim;
+    await save();
+    if (expectedWorkId !== undefined && lease.work.work_id !== expectedWorkId)
+        throw new Error("CMS positive mapping Claim returned different work; its actual lease is retained without adopting the prior native plan.");
+    return { workId: lease.work.work_id, mappingId: lease.work.mapping_id, transactionId: transaction.transactionId, stage: transaction.stage, leaseGeneration: lease.lease_generation };
 }

@@ -2,13 +2,15 @@ import { createHash, randomUUID } from "node:crypto";
 import { lstat, open } from "node:fs/promises";
 import path from "node:path";
 import { stringify as stringifyYaml } from "yaml";
-import { cmsNativeLocation, cmsNativeReservation, withCmsCoordinator } from "./cms-coordinator.js";
+import { claimCmsNativeWorkInContext, cmsNativeLocation, cmsNativeReservation, withCmsCoordinator } from "./cms-coordinator.js";
+import { validatedCmsErrorResponse } from "./cms-client.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { verifyCmsAbsence, verifyCmsPublication } from "./cms-verification.js";
 import { nativeOwnershipReceiptSha256, validateCms } from "../src/private/cms-runtime.mjs";
 import { NativeMediaUnsupportedError } from "./native-media.js";
 import { cmsUrl, sameCmsOrigin } from "./native-url.js";
 import { assertNativeArticleCapture, captureNativeArticle, NativePreparationLimitation } from "./native-preparation.js";
+import { assertWorkReclaimAllowed, expiryRefusal, workRequest, workRequestRefusal, workRequestResponse } from "./cms-work-requests.js";
 const hash = (value) => createHash("sha256").update(value, "utf8").digest("hex");
 const publicationBody = (contents) => contents.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/u, "");
 const nativeRevisionFor = (body, fields) => hash(JSON.stringify([body, fields.discussionbridgeNativeManagedFields, fields.discussionbridgeSourceStatus]));
@@ -19,7 +21,8 @@ export const cmsAuthority = (transaction) => ({
 });
 function assertRenewed(transaction, lease) {
     const old = transaction.lease;
-    if (lease.lease_token !== old.lease_token || lease.lease_generation !== old.lease_generation || ["work_id", "mapping_id", "source_id", "source_revision", "policy_revision", "action", "lease_generation"].some(key => lease.work[key] !== old.work[key]))
+    if (lease.lease_token !== old.lease_token || lease.lease_generation !== old.lease_generation || ["work_id", "mapping_id", "source_id", "source_revision", "policy_revision", "action", "lease_generation", "attempt", "attempt_cycle"].some(key => lease.work[key] !== old.work[key])
+        || Date.parse(lease.expires_at) <= Date.parse(lease.server_time))
         throw new Error("CMS renewal changed native authority bindings.");
 }
 function assertCurrent(state, transaction, current) {
@@ -41,6 +44,128 @@ function sourceFor(state, transaction) {
         if (event.event_type === "publication" && event.source.source_id === work.source_id && event.source.source_revision === work.source_revision)
             return event.source;
     throw new Error("CMS exact desired source metadata has not been durably staged.");
+}
+/** Reconcile held ordinary work before batch capacity or a new native build.
+ * Historical mutation receipts never stand in for current fencing authority. */
+export async function reconcileCmsNativeWork(options, workId) {
+    return withCmsCoordinator(options, async (context) => {
+        const { client, state, connection, save } = context;
+        const transaction = state.transactions[workId];
+        if (!transaction)
+            throw new Error("CMS retained native work is missing.");
+        assertWorkReclaimAllowed(state, transaction);
+        const old = transaction.lease.work;
+        const current = async () => {
+            const value = await client.query(workId);
+            if (!["pending", "retry_wait", "leased", "synchronized", "deployed"].includes(value.work.state))
+                throw new Error("CMS terminal work requires its existing explicit recovery, not ordinary reclaim.");
+            if (["work_id", "mapping_id", "source_id", "source_revision", "policy_revision", "action", "attempt_cycle", "lease_generation"].some(key => value.work[key] !== transaction.lease.work[key])
+                || value.mapping.connection_id !== state.connectionId || value.mapping.mapping_id !== old.mapping_id || value.mapping.source_id !== old.source_id
+                || value.mapping.desired_source_revision !== old.source_revision || value.mapping.presentation_mode !== connection.policy.presentation_mode
+                || state.generations[old.mapping_id] !== transaction.lease.lease_generation)
+                throw new Error("CMS held work/source/policy/fence changed; same-work recovery is not authorized.");
+            const location = cmsNativeLocation(options, state, old.source_id), plan = transaction.plan;
+            if (value.mapping.canonical_url !== location.canonicalUrl || value.mapping.external_id !== location.externalId
+                || value.mapping.destination_native_id !== null && value.mapping.destination_native_id !== location.nativeId)
+                throw new Error("CMS recovery mapping no longer owns its native destination.");
+            if (plan) {
+                const actual = await nativePublicationFiles.readExisting(plan.file);
+                const confirmed = transaction.stage === "prepared" || Object.values(transaction.workRequestHistory ?? {}).some(entry => entry.route === "V4-18" && (entry.response !== undefined || entry.observedPrepared));
+                if (plan.file !== location.file || plan.nativeResult.native_id !== location.nativeId || plan.nativeResult.canonical_url !== location.canonicalUrl
+                    || actual?.contents !== plan.output && (actual?.contents ?? null) !== plan.previous)
+                    throw new Error("CMS recovery native CAS or ownership changed.");
+                if (confirmed && (actual?.contents !== plan.output || value.mapping.destination_native_id !== location.nativeId || value.mapping.destination_native_revision !== plan.nativeResult.native_revision))
+                    throw new Error("CMS confirmed preparation lost its exact owned native output.");
+                if (actual?.contents === plan.output)
+                    validateNativeOwnership(actual.contents, plan.mapping, location.nativeId, state);
+                // An accepted old Prepare cannot authorize a second create after deletion.
+                if (!actual && value.mapping.destination_native_id !== null)
+                    throw new Error("CMS recovery expected its existing owned native object.");
+            }
+            return value;
+        };
+        await current();
+        if (transaction.prepareBody) {
+            const entry = workRequest(transaction, "V4-18", transaction.prepareBody);
+            if (transaction.stage === "prepared")
+                entry.observedPrepared = true;
+            await save();
+            if (entry.response === undefined && !entry.refusal && !entry.observedPrepared) {
+                try {
+                    workRequestResponse(transaction, entry, await client.request("V4-18", { path: { work_id: workId }, body: transaction.prepareBody }));
+                    await save();
+                }
+                catch (error) {
+                    const proof = validatedCmsErrorResponse(error, client, "V4-18", transaction.prepareBody);
+                    if (!proof)
+                        throw error;
+                    workRequestRefusal(entry, proof);
+                    await save();
+                    if (!expiryRefusal(entry))
+                        throw error;
+                }
+            }
+            if (entry.refusal && !expiryRefusal(entry))
+                throw new Error("CMS original Prepare refusal requires its original reconciliation.");
+        }
+        const renew = async (body) => {
+            const entry = workRequest(transaction, "V4-15", body);
+            transaction.pendingRenewal = { body };
+            await save();
+            try {
+                const response = await client.request("V4-15", { path: { work_id: workId }, body });
+                workRequestResponse(transaction, entry, response);
+                await save();
+                assertRenewed(transaction, response);
+                transaction.lease = response;
+                delete transaction.pendingRenewal;
+                await save();
+                return true;
+            }
+            catch (error) {
+                const proof = validatedCmsErrorResponse(error, client, "V4-15", body);
+                if (!proof)
+                    throw error;
+                workRequestRefusal(entry, proof);
+                delete transaction.pendingRenewal;
+                await save();
+                if (!expiryRefusal(entry))
+                    throw error;
+                return false;
+            }
+        };
+        // A cached renewal is history, so resolve it first, then use a NEW mutation
+        // to establish liveness. Neither local clocks nor Work GET grants a lease.
+        if (transaction.pendingRenewal)
+            await renew(transaction.pendingRenewal.body);
+        if (await renew({ mutation_id: randomUUID(), authority: cmsAuthority(transaction) })) {
+            const held = await current();
+            assertCurrent(state, transaction, held);
+            const body = transaction.prepareBody, entry = body && transaction.workRequestHistory?.[body.mutation_id];
+            const prepared = held.work.state === "synchronized" && body?.authority.lease_generation === transaction.lease.lease_generation
+                && body.authority.lease_token === transaction.lease.lease_token && (entry?.response !== undefined || entry?.observedPrepared)
+                && body.transaction_id === transaction.transactionId && transaction.plan && JSON.stringify(body.native_result) === JSON.stringify(transaction.plan.nativeResult);
+            if (prepared) {
+                transaction.stage = "prepared";
+                state.mappings[old.source_id] = held.mapping;
+                await save();
+            }
+            if (held.work.state === "deployed")
+                throw new Error("CMS deployed work requires its original public-settlement receipt.");
+            return { workId, reclaimed: false, prepared: Boolean(prepared), leaseGeneration: transaction.lease.lease_generation };
+        }
+        const pending = await current();
+        if (pending.work.state !== "pending" || pending.lease_expires_at !== null)
+            throw new Error("CMS expired work is not currently pending for same-work reclaim.");
+        if (transaction.attentionRecovery)
+            throw new Error("CMS attention successor needs its original positive recovery Claim.");
+        assertWorkReclaimAllowed(state, transaction);
+        const claimed = await claimCmsNativeWorkInContext(context, old.mapping_id, workId);
+        if (!claimed)
+            throw new Error("CMS same-work Claim is not yet available; retained native work is unchanged.");
+        await current();
+        return { workId, reclaimed: true, prepared: false, leaseGeneration: transaction.lease.lease_generation };
+    });
 }
 function validateNativeOwnership(contents, mapping, nativeId, state) {
     const fields = nativePublicationFiles.metadata(contents);
@@ -185,19 +310,28 @@ export async function prepareCmsNativeWork(options, workId) {
             validateNativeOwnership(existing.contents, plan.mapping, plan.nativeResult.native_id, state);
         transaction.stage = "staged";
         transaction.preparedAt ??= new Date().toISOString();
+        if (transaction.prepareBody)
+            workRequest(transaction, "V4-18", transaction.prepareBody);
         transaction.prepareBody ??= { mutation_id: randomUUID(), authority: cmsAuthority(transaction), transaction_id: transaction.transactionId, native_result: plan.nativeResult, prepared_at: transaction.preparedAt };
         if (transaction.prepareBody.authority.lease_generation !== transaction.lease.lease_generation) {
             transaction.prepareBody = { ...transaction.prepareBody, mutation_id: randomUUID(), authority: cmsAuthority(transaction) };
         }
+        const request = workRequest(transaction, "V4-18", transaction.prepareBody);
         await save();
         const response = await client.request("V4-18", { path: { work_id: workId }, body: transaction.prepareBody });
+        workRequestResponse(transaction, request, response);
+        await save();
         assertCurrent(state, transaction, response);
         if (response.work.state !== "synchronized" || response.mapping.destination_native_id !== plan.nativeResult.native_id || response.mapping.destination_native_revision !== plan.nativeResult.native_revision)
             throw new Error("CMS static prepare did not confirm the exact staged native result.");
+        const fresh = await client.query(workId);
+        assertCurrent(state, transaction, fresh);
+        if (fresh.work.state !== "synchronized" || fresh.mapping.destination_native_id !== plan.nativeResult.native_id || fresh.mapping.destination_native_revision !== plan.nativeResult.native_revision)
+            throw new Error("CMS current Prepare outcome no longer owns its native result.");
         transaction.stage = "prepared";
         state.mappings[work.source_id] = response.mapping;
         await save();
-        return { workId, transactionId: transaction.transactionId, nativeId: plan.nativeResult.native_id, canonicalUrl: plan.nativeResult.canonical_url, stage: transaction.stage };
+        return { workId, transactionId: transaction.transactionId, nativeId: plan.nativeResult.native_id, canonicalUrl: plan.nativeResult.canonical_url, stage: transaction.stage, leaseGeneration: transaction.lease.lease_generation };
     });
 }
 function checkedPlan(options, state, transaction) {

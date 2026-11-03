@@ -6,6 +6,7 @@ import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { nativePublicationFiles } from "./native-publication.js";
 import { cmsOrigin, sameCmsOrigin } from "./native-url.js";
 import { assertNativeArticleCapture } from "./native-preparation.js";
+import { validateWorkRequestHistory, workRequest, assertWorkReclaimAllowed } from "./cms-work-requests.js";
 export function emptyCmsState(client, destinationOrigin, connectionId) {
     const origin = cmsOrigin(destinationOrigin);
     return { schemaVersion: 1, wireVersion: "v4", adapterId: "astro-cms-static", connectionId, serviceOrigin: client.origin, destinationOrigin: origin,
@@ -64,6 +65,7 @@ export async function readCmsState(file, expected) {
                 throw new Error("CMS transaction journal is inconsistent.");
             if (transaction.articleCapture)
                 assertNativeArticleCapture(transaction.articleCapture);
+            validateWorkRequestHistory(transaction);
             if (transaction.attentionRecovery !== undefined) {
                 validateCms("AttentionRecovery", transaction.attentionRecovery);
                 const recovery = transaction.attentionRecovery;
@@ -92,6 +94,20 @@ export async function readCmsState(file, expected) {
         }
         if (state.pendingClaim !== undefined)
             validateCms("Claim", state.pendingClaim.body);
+        if (state.claimReceipts !== undefined) {
+            if (!state.claimReceipts || typeof state.claimReceipts !== "object" || Array.isArray(state.claimReceipts))
+                throw new Error("CMS Claim receipt history is invalid.");
+            for (const [id, receipt] of Object.entries(state.claimReceipts)) {
+                validateCms("Claim", receipt.body);
+                if (receipt.body.mutation_id !== id)
+                    throw new Error("CMS Claim history lost its exact intent.");
+                if (receipt.response !== undefined && receipt.response !== null) {
+                    validateCms("Lease", receipt.response);
+                    if (receipt.body.mapping_id !== undefined && receipt.response.work.mapping_id !== receipt.body.mapping_id)
+                        throw new Error("CMS Claim receipt changed its selected mapping.");
+                }
+            }
+        }
         if (state.nativeLocations !== undefined) {
             if (!state.nativeLocations || typeof state.nativeLocations !== "object" || Array.isArray(state.nativeLocations))
                 throw new Error("CMS native URL ancestry is invalid.");
@@ -229,8 +245,19 @@ export function stageCmsClaim(state, lease) {
         throw new Error("CMS native generation is stale.");
     if (lease.lease_generation === priorGeneration && (!existing || existing.lease.lease_token !== lease.lease_token))
         throw new Error("CMS native generation cannot be reassigned.");
-    if (existing && (existing.lease.work.source_revision !== lease.work.source_revision || existing.lease.work.policy_revision !== lease.work.policy_revision || existing.lease.work.mapping_id !== lease.work.mapping_id))
+    if (existing && ["source_revision", "policy_revision", "mapping_id", "source_id", "action", "attempt_cycle"].some(key => existing.lease.work[key] !== lease.work[key]))
         throw new Error("CMS prepared work identity changed.");
+    if (existing && lease.lease_generation > existing.lease.lease_generation) {
+        assertWorkReclaimAllowed(state, existing);
+        if (existing.prepareBody) {
+            const previous = workRequest(existing, "V4-18", existing.prepareBody);
+            if (existing.stage === "prepared")
+                previous.observedPrepared = true;
+        }
+        (existing.leaseHistory ??= []).push(structuredClone(existing.lease));
+        // The old prepared outcome is historical, not a Prepare for this new fence.
+        existing.stage = existing.plan ? "staged" : "claimed";
+    }
     state.generations[lease.work.mapping_id] = lease.lease_generation;
     const transaction = existing ?? { lease, transactionId: randomUUID(), stage: "claimed" };
     transaction.lease = lease;

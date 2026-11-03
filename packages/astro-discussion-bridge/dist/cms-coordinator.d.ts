@@ -7,12 +7,13 @@ export interface CmsCoordinatorOptions extends CmsClientOptions {
     stateFile: string;
     routeBase?: string;
 }
-export declare function withCmsCoordinator<T>(options: CmsCoordinatorOptions, action: (context: {
+export interface CmsCoordinatorContext {
     client: CmsClient;
     connection: CmsConnection;
     state: CmsNativeState;
     save: () => Promise<void>;
-}) => Promise<T>): Promise<T>;
+}
+export declare function withCmsCoordinator<T>(options: CmsCoordinatorOptions, action: (context: CmsCoordinatorContext) => Promise<T>): Promise<T>;
 /** One bounded page per call; persist complete staged events before its cursor. */
 export declare function pollCmsSources(options: CmsCoordinatorOptions): Promise<{
     staged: number;
@@ -40,5 +41,14 @@ export declare function claimCmsNativeWork(options: CmsCoordinatorOptions, mappi
     mappingId: string;
     transactionId: string;
     stage: "aborted" | "attention" | "prepared" | "claimed" | "staged" | "verified";
+    leaseGeneration: number;
+} | undefined>;
+/** Caller already holds this native coordinator's writer; no nested lock. */
+export declare function claimCmsNativeWorkInContext({ client, state, connection, save }: CmsCoordinatorContext, mappingId?: string, expectedWorkId?: string): Promise<{
+    workId: string;
+    mappingId: string;
+    transactionId: string;
+    stage: "aborted" | "attention" | "prepared" | "claimed" | "staged" | "verified";
+    leaseGeneration: number;
 } | undefined>;
 //# sourceMappingURL=cms-coordinator.d.ts.map

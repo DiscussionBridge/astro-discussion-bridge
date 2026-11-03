@@ -7,6 +7,7 @@ import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
 import { nativePublicationFiles } from "./native-publication.js";
 import { cmsOrigin, sameCmsOrigin } from "./native-url.js";
 import { assertNativeArticleCapture, type NativeArticleCapture } from "./native-preparation.js";
+import { validateWorkRequestHistory, workRequest, type CmsWorkRequest, type CmsRenewalIntent, assertWorkReclaimAllowed } from "./cms-work-requests.js";
 
 export interface CmsNativeState {
   schemaVersion: 1;
@@ -28,6 +29,7 @@ export interface CmsNativeState {
   reservations?: Record<string, { body: { mutation_id: string; source_id: string; source_revision: string; policy_revision: string; external_id: string; canonical_url: string } }>;
   pendingClaim?: { body: { mutation_id: string; mapping_id?: string } };
   nativeCommand?: unknown;
+  claimReceipts?: Record<string, { body: { mutation_id: string; mapping_id?: string }; response?: CmsLease | null }>;
   /** Accepted V4 URL ancestry, separate from immutable prior verified transactions. */
   nativeLocations?: Record<string, { canonicalUrl: string; nativeId: string; moveId: string; mappingRevision: string }>;
 }
@@ -36,6 +38,9 @@ export interface CmsNativeTransaction {
   transactionId: string;
   stage: "claimed" | "staged" | "prepared" | "verified" | "aborted" | "attention";
   articleCapture?: NativeArticleCapture;
+  workRequestHistory?: Record<string, CmsWorkRequest>;
+  pendingRenewal?: CmsRenewalIntent;
+  leaseHistory?: CmsLease[];
   localLimitation?: { kind: "media_preservation" | "native_preparation"; detail: string; source: import("./cms-client.js").CmsSource; content: string; recordedAt: string };
   [key: string]: unknown;
 }
@@ -73,6 +78,7 @@ export async function readCmsState(file: string, expected: CmsNativeState): Prom
       validateCms("Lease", transaction.lease); validateCms("UUID", transaction.transactionId);
       if (id !== transaction.lease.work.work_id || !["claimed", "staged", "prepared", "verified", "aborted", "attention"].includes(transaction.stage) || transaction.lease.lease_generation > (state.generations[transaction.lease.work.mapping_id] ?? 0)) throw new Error("CMS transaction journal is inconsistent.");
       if (transaction.articleCapture) assertNativeArticleCapture(transaction.articleCapture);
+      validateWorkRequestHistory(transaction);
       if (transaction.attentionRecovery !== undefined) {
         validateCms("AttentionRecovery", transaction.attentionRecovery);
         const recovery = transaction.attentionRecovery as import("./cms-attention-types.js").AttentionRecovery;
@@ -95,6 +101,16 @@ export async function readCmsState(file: string, expected: CmsNativeState): Prom
       }
     }
     if (state.pendingClaim !== undefined) validateCms("Claim", state.pendingClaim.body);
+    if (state.claimReceipts !== undefined) {
+      if (!state.claimReceipts || typeof state.claimReceipts !== "object" || Array.isArray(state.claimReceipts)) throw new Error("CMS Claim receipt history is invalid.");
+      for (const [id, receipt] of Object.entries(state.claimReceipts)) {
+        validateCms("Claim", receipt.body); if (receipt.body.mutation_id !== id) throw new Error("CMS Claim history lost its exact intent.");
+        if (receipt.response !== undefined && receipt.response !== null) {
+          validateCms("Lease", receipt.response);
+          if (receipt.body.mapping_id !== undefined && receipt.response.work.mapping_id !== receipt.body.mapping_id) throw new Error("CMS Claim receipt changed its selected mapping.");
+        }
+      }
+    }
     if (state.nativeLocations !== undefined) {
       if (!state.nativeLocations || typeof state.nativeLocations !== "object" || Array.isArray(state.nativeLocations)) throw new Error("CMS native URL ancestry is invalid.");
       state.nativeLocations = Object.assign(Object.create(null), state.nativeLocations);
@@ -188,7 +204,17 @@ export function stageCmsClaim(state: CmsNativeState, lease: CmsLease): CmsNative
   const existing = state.transactions[lease.work.work_id];
   if (lease.lease_generation < priorGeneration || lease.work.lease_generation !== lease.lease_generation) throw new Error("CMS native generation is stale.");
   if (lease.lease_generation === priorGeneration && (!existing || existing.lease.lease_token !== lease.lease_token)) throw new Error("CMS native generation cannot be reassigned.");
-  if (existing && (existing.lease.work.source_revision !== lease.work.source_revision || existing.lease.work.policy_revision !== lease.work.policy_revision || existing.lease.work.mapping_id !== lease.work.mapping_id)) throw new Error("CMS prepared work identity changed.");
+  if (existing && ["source_revision", "policy_revision", "mapping_id", "source_id", "action", "attempt_cycle"].some(key => existing.lease.work[key as keyof typeof lease.work] !== lease.work[key as keyof typeof lease.work])) throw new Error("CMS prepared work identity changed.");
+  if (existing && lease.lease_generation > existing.lease.lease_generation) {
+    assertWorkReclaimAllowed(state, existing);
+    if (existing.prepareBody) {
+      const previous = workRequest(existing, "V4-18", existing.prepareBody as object);
+      if (existing.stage === "prepared") previous.observedPrepared = true;
+    }
+    (existing.leaseHistory ??= []).push(structuredClone(existing.lease));
+    // The old prepared outcome is historical, not a Prepare for this new fence.
+    existing.stage = existing.plan ? "staged" : "claimed";
+  }
   state.generations[lease.work.mapping_id] = lease.lease_generation;
   const transaction = existing ?? { lease, transactionId: randomUUID(), stage: "claimed" as const };
   transaction.lease = lease;
