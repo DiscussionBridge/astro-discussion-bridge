@@ -10,6 +10,7 @@ import { buildCmsConsumer, staticFixture } from "./fixtures/cms-static.mjs";
 import { nativeSource, toFixture } from "./fixtures/cms-to.mjs";
 import { buildToConsumer } from "./fixtures/native-to-consumer.mjs";
 import { ownedPng } from "./helpers/native-png.mjs";
+import { resumeFixture } from "./fixtures/cms-resume.mjs";
 
 const packageRoot = fileURLToPath(new URL("../", import.meta.url));
 async function run(executable, args, cwd) {
@@ -38,7 +39,7 @@ test("actual current V4 archive contains one pinned pair and compiles native To/
     assert.equal(receipt.archive, savedArchive); assert.equal(receipt.sha256, archiveSha256); assert.equal(receipt.bytes, archiveBytes.length); assert.equal(receipt.memberCount, result.entryCount);
   }
   const members = result.files.map(member => member.path);
-  for (const required of ["dist/index.js", "dist/cli.js", "dist/cms-to.js", "dist/controlled-creation.js", "dist/cms-pipeline.js", "dist/cms-static.js", "dist/cms-verification.js", "src/web-url.ts", "src/private/cms-schema.json", "src/private/cms-runtime.mjs", "src/private/CANDIDATE.json", "src/private/ARTIFACTS.json", "src/private/ROUTES.md", "docs/NATIVE_V4.md", "src/assets/discussionbridge-rich-content.js"]) assert.ok(members.includes(required), required);
+  for (const required of ["dist/index.js", "dist/cli.js", "dist/cms-to.js", "dist/controlled-creation.js", "dist/cms-pipeline.js", "dist/cms-static.js", "dist/cms-work-requests.js", "dist/cms-verification.js", "src/web-url.ts", "src/private/cms-schema.json", "src/private/cms-runtime.mjs", "src/private/CANDIDATE.json", "src/private/ARTIFACTS.json", "src/private/ROUTES.md", "docs/NATIVE_V4.md", "src/assets/discussionbridge-rich-content.js"]) assert.ok(members.includes(required), required);
   assert.equal(members.filter(member => member.endsWith("cms-schema.json")).length, 1);
   assert.equal(members.filter(member => member.endsWith("cms-runtime.mjs")).length, 1);
   assert.equal(members.some(member => /(?:^|\/)(?:test|fixtures|\.tools|\.tmp|\.artifacts|\.git|\.discussionbridge|node_modules)(?:\/|$)|generated-excerpt-20261014|cms-to-profile|legacy|initializer/iu.test(member)), false);
@@ -56,6 +57,20 @@ test("actual current V4 archive contains one pinned pair and compiles native To/
   const fromJournal = JSON.parse(await readFile(from.options.stateFile, "utf8"));
   assert.equal(fromJournal.transactions[from.expectedWorkId].stage, "prepared"); assert.equal(fromJournal.transactions[from.expectedWorkId].buildArtifact.html, fromOutput);
   const nativePackage = await import(pathToFileURL(path.join(packed, "dist/index.js")).href);
+  trace("packaged expired From recovery and actual native build starting");
+  const resumed = await resumeFixture(t); await resumed.prepare();
+  const originalResume = (await resumed.journal()).transactions[resumed.workId], retainedBytes = await readFile(originalResume.plan.file), contentCalls = resumed.base.contentCalls;
+  resumed.expire();
+  const resumedBatch = await nativePackage.stageCmsNativePublications({ ...resumed.options, maximumWorkPerBuild: 1 });
+  assert.deepEqual(resumedBatch.prepared, [resumed.workId]);
+  const resumedOutput = await buildCmsConsumer(resumed.base, true, packed), resumedJournal = await resumed.journal(), currentResume = resumedJournal.transactions[resumed.workId];
+  assert.equal(currentResume.lease.lease_generation, 2); assert.equal(currentResume.transactionId, originalResume.transactionId);
+  assert.deepEqual(currentResume.plan, originalResume.plan); assert.deepEqual(await readFile(originalResume.plan.file), retainedBytes);
+  assert.deepEqual(currentResume.workRequestHistory[originalResume.prepareBody.mutation_id].body, originalResume.prepareBody);
+  assert.equal(currentResume.buildArtifact.html, resumedOutput); assert.match(resumedOutput, /Complete native source/);
+  assert.equal(resumed.base.contentCalls, contentCalls); assert.equal(resumed.effects.claim, 2); assert.equal(resumed.effects.prepare, 2);
+  assert.equal(resumedJournal.nativeCommand, undefined); assert.doesNotMatch(resumedOutput, /lease_token|connectionSecret|synthetic-secret|cms-runtime/);
+  trace("packaged recovery retained identity/old request/native bytes and captured actual output");
   await nativePackage.finalizeCmsNativeWork({ ...from.options, publicFetchImplementation: async () => new Response(fromOutput, { headers: { "Content-Type": "text/html" } }) }, from.expectedWorkId, { deploymentId: "packaged-consumer-response-seam", deployedAt: new Date().toISOString() });
   const movedWork = await from.nextAction("publish_revision"), movedUrl = "https://astro.example/comments/packaged-native-move/";
   await nativePackage.beginCmsNativeUrlMove(from.options, from.nativeMapping.mapping_id, movedUrl);
