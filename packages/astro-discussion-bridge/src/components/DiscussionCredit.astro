@@ -32,16 +32,17 @@ const credit = config.comments.credit;
 
   .discussion-bridge-credit__brand {
     position: relative;
+    padding-inline: 0.2em;
+    border-radius: 0.2em;
     color: inherit;
     text-decoration: none;
-    transition: color 160ms ease;
+    transition: color 160ms ease, background-color 160ms ease;
   }
 
   .discussion-bridge-credit__brand::after {
     position: absolute;
-    right: 0;
+    inset-inline: 0.2em;
     bottom: -0.12em;
-    left: 0;
     height: 1px;
     background: currentColor;
     content: "";
@@ -50,9 +51,9 @@ const credit = config.comments.credit;
     transition: transform 180ms ease;
   }
 
-  .discussion-bridge-credit__brand:hover,
-  .discussion-bridge-credit__brand:focus-visible {
+  .discussion-bridge-credit__brand:is(:hover, :focus-visible) {
     color: var(--sl-color-accent-high, #3451b2);
+    background-color: color-mix(in srgb, var(--sl-color-accent-high, #3451b2) 10%, transparent);
   }
 
   .discussion-bridge-credit__brand:hover::after,
@@ -61,7 +62,6 @@ const credit = config.comments.credit;
   }
 
   .discussion-bridge-credit__brand:focus-visible {
-    border-radius: 0.15rem;
     outline: 2px solid var(--sl-color-accent-high, #3451b2);
     outline-offset: 0.2rem;
   }

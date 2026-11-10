@@ -33,11 +33,12 @@ export default function discussionBridge(options: DiscussionBridgeOptions): Astr
   if (options.comments?.embedMaxHeight !== undefined && options.comments.embedMaxHeight !== "none"
     || options.comments?.embedViewportMaxHeight !== undefined && options.comments.embedViewportMaxHeight !== "none") throw new Error("Discourse Core owns full-app iframe sizing; height ceilings must be omitted or none.");
   const credit = options.comments?.credit;
+  const dynamicHeight = options.comments?.dynamicHeight ?? true;
   const config = {
     discourseUrl: (options.publishOnBuild?.enabled || options.fromDiscourse?.enabled ? cmsServiceBaseUrl(options.discourseUrl) : parseServiceBaseUrl(options.discourseUrl)).href,
     forumName: process.env.DISCUSSIONBRIDGE_FORUM_NAME === undefined ? undefined : validateForumName(process.env.DISCUSSIONBRIDGE_FORUM_NAME, "DISCUSSIONBRIDGE_FORUM_NAME"),
-    comments: { enabled: options.comments?.enabled ?? true, display, embedHeight: options.comments?.embedHeight ?? "800px",
-      dynamicHeight: options.comments?.dynamicHeight ?? false, embedMinHeight: options.comments?.embedMinHeight ?? "360", className: options.comments?.className,
+    comments: { enabled: options.comments?.enabled ?? true, display, embedHeight: options.comments?.embedHeight ?? (dynamicHeight ? "360px" : "800px"),
+      dynamicHeight, embedMinHeight: options.comments?.embedMinHeight ?? "360", className: options.comments?.className,
       credit: { enabled: credit?.enabled ?? true, prefix: credit?.prefix?.trim() || "Connected by", label: credit?.label?.trim() || "DiscussionBridge",
         href: normalizePublicHttpUrl(credit?.href?.trim() || "https://discussionbridge.dev/", "comments.credit.href", { allowQuery: true, allowFragment: true }) } },
   };
