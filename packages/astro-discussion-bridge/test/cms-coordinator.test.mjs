@@ -36,6 +36,61 @@ test("actual coordinator drains initial continuation then starts changes from it
   assert.equal(Object.keys((await journal(options)).sources).length, 1);
 });
 
+test("expired feed checkpoints refresh source discovery without dropping retained ownership or work", async t => {
+  const calls = [];
+  const expire = () => Response.json({
+    outcome: "rejected", code: "cursor_expired", retryable: false,
+    retry_after_seconds: null, correlation_id: null, core_fallback: false,
+  }, { status: 410 });
+  let expired = false;
+  let inventory = [];
+  const options = await fixture(t, async (url, init) => {
+    const endpoint = new URL(url);
+    if (endpoint.pathname.endsWith("connection.json")) return Response.json(connection);
+    calls.push(endpoint.pathname + endpoint.search);
+    if (endpoint.pathname.endsWith("work/claim.json")) return Response.json(lease);
+    if (endpoint.pathname.endsWith("mappings/prepare.json")) {
+      inventory = [mapping(JSON.parse(init.body))];
+      return Response.json(inventory[0], { status: 201 });
+    }
+    if (endpoint.pathname.endsWith("mappings.json")) {
+      if (!endpoint.search) return Response.json({ items: [], next_cursor: "bW9yZQ" });
+      return Response.json({ items: inventory, next_cursor: null });
+    }
+    assert.match(endpoint.pathname, /sources\.json$/);
+    if (endpoint.searchParams.get("stream") === "changes") return expire();
+    if (!expired) {
+      return Response.json({ stream: "initial", items: [event], next_cursor: null, checkpoint_cursor: "b2xk" });
+    }
+    if (!endpoint.searchParams.has("cursor")) {
+      return Response.json({ stream: "initial", items: [], next_cursor: "bmV4dA", checkpoint_cursor: null });
+    }
+    return Response.json({ stream: "initial", items: [], next_cursor: null, checkpoint_cursor: "ZnJlc2g" });
+  });
+  await pollCmsSources(options);
+  await reserveCmsSource(options, source.source_id);
+  await claimCmsNativeWork(options);
+  const before = await journal(options);
+  expired = true;
+  calls.length = 0;
+  const retained = inventory.pop();
+  await assert.rejects(pollCmsSources(options), /missing a retained mapping/);
+  assert.deepEqual(await journal(options), before);
+  inventory.push(retained);
+  calls.length = 0;
+  assert.deepEqual(await pollCmsSources(options), {
+    staged: 0, continuation: null, checkpoint: "ZnJlc2g", stream: "changes",
+  });
+  assert.deepEqual(calls, [
+    "/discussion-bridge/v4/sources.json?stream=changes&cursor=b2xk",
+    "/discussion-bridge/v4/sources.json?stream=initial",
+    "/discussion-bridge/v4/sources.json?stream=initial&cursor=bmV4dA",
+    "/discussion-bridge/v4/mappings.json",
+    "/discussion-bridge/v4/mappings.json?cursor=bW9yZQ",
+  ]);
+  assert.deepEqual(await journal(options), { ...before, checkpoint: "ZnJlc2g", sources: {} });
+});
+
 test("uncertain native reservation replays the exact durable mutation and stable file identity", async t => {
   const bodies = [];
   const options = await fixture(t, async (url, init) => {

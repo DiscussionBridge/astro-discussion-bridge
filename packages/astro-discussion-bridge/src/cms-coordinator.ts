@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import path from "node:path";
 import { lock } from "proper-lockfile";
-import { CmsClient, type CmsClientOptions, type CmsConnection, type CmsMapping, type CmsSource } from "./cms-client.js";
+import { CmsClient, CmsRequestError, type CmsClientOptions, type CmsConnection, type CmsMapping, type CmsSource } from "./cms-client.js";
 import { assertCmsConnection, emptyCmsState, readCmsState, stageCmsClaim, stageCmsFeedPage, withCmsStateLock, writeCmsState, type CmsNativeState } from "./cms-state.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
@@ -44,11 +44,72 @@ export async function withCmsCoordinator<T>(options: CmsCoordinatorOptions, acti
 export async function pollCmsSources(options: CmsCoordinatorOptions) {
   return withCmsCoordinator(options, async ({ client, state, save }) => {
     const cursor = state.cursor ?? (state.stream === "changes" ? state.checkpoint! : undefined);
-    const feed = await client.sources(state.stream, cursor);
+    let feed;
+    try {
+      feed = await client.sources(state.stream, cursor);
+    } catch (error) {
+      if (!cursor || !(error instanceof CmsRequestError) || error.code !== "cursor_expired"
+        || error.routeId !== "V4-06" || error.httpStatus !== 410) throw error;
+      const staged = await recoverCmsSources(client, state);
+      await save();
+      return { staged, continuation: state.cursor, checkpoint: state.checkpoint, stream: state.stream };
+    }
     stageCmsFeedPage(state, feed);
     await save();
     return { staged: feed.items.length, continuation: state.cursor, checkpoint: state.checkpoint, stream: state.stream };
   });
+}
+
+async function recoverCmsSources(client: CmsClient, state: CmsNativeState): Promise<number> {
+  // Refresh the positive projection only. Keep event and ownership history, and
+  // leave revocations and withdrawals to their existing authority paths.
+  state.stream = "initial";
+  state.cursor = null;
+  state.checkpoint = null;
+  state.sources = Object.assign(Object.create(null), Object.fromEntries(
+    Object.entries(state.sources).filter(([, event]) => event.event_type === "revocation"),
+  ));
+  const sourceCursors = new Set<string>();
+  let staged = 0;
+  do {
+    const page = await client.sources("initial", state.cursor ?? undefined);
+    stageCmsFeedPage(state, page);
+    staged += page.items.length;
+    if (state.cursor !== null) {
+      if (sourceCursors.has(state.cursor)) throw new Error("CMS recovery snapshot repeated a source cursor.");
+      sourceCursors.add(state.cursor);
+    }
+  } while (state.cursor !== null);
+  if (state.checkpoint === null) throw new Error("CMS recovery snapshot did not return a checkpoint.");
+
+  const unmatched = new Set(Object.keys(state.mappings));
+  const mappingCursors = new Set<string>();
+  let cursor: string | null = null;
+  do {
+    const page: { items: CmsMapping[]; next_cursor: string | null } = await client.request(
+      "V4-10", { query: cursor === null ? {} : { cursor } },
+    );
+    for (const remote of page.items) {
+      const local = state.mappings[remote.source_id];
+      const pending = state.reservations?.[remote.source_id]?.body;
+      const matches = local
+        ? unmatched.delete(remote.source_id) && remote.mapping_id === local.mapping_id
+          && remote.resource_id === local.resource_id && remote.external_id === local.external_id
+          && remote.canonical_url === local.canonical_url
+          && (local.destination_native_id === null || remote.destination_native_id === local.destination_native_id)
+        : pending && remote.external_id === pending.external_id && remote.canonical_url === pending.canonical_url;
+      if (remote.connection_id !== state.connectionId || !matches) {
+        throw new Error("CMS recovery mapping inventory requires ownership reconciliation.");
+      }
+    }
+    cursor = page.next_cursor;
+    if (cursor !== null) {
+      if (mappingCursors.has(cursor)) throw new Error("CMS recovery mapping inventory repeated a cursor.");
+      mappingCursors.add(cursor);
+    }
+  } while (cursor !== null);
+  if (unmatched.size) throw new Error("CMS recovery mapping inventory is missing a retained mapping.");
+  return staged;
 }
 
 /** Native file reservation uses the existing routeBase and Astro page ID scheme. */
