@@ -1,12 +1,13 @@
 ---
 import config from "virtual:discussion-bridge/config";
+import "../assets/discussion-credit.css";
 
 const credit = config.comments.credit;
 ---
 
 {credit.enabled && (
   <footer
-    class="discussion-bridge-credit"
+    class="discussion-bridge-credit discussionbridge-credit"
     data-discussion-bridge-credit
     aria-label={`${credit.label} credit`}
   >
@@ -19,57 +20,3 @@ const credit = config.comments.credit;
     </a>
   </footer>
 )}
-
-<style>
-  .discussion-bridge-credit {
-    margin: 0.45rem 0 0;
-    color: var(--sl-color-gray-3, #555962);
-    text-align: center;
-    font-size: var(--sl-text-sm, 0.875rem);
-    font-weight: 600;
-    line-height: 1.4;
-  }
-
-  .discussion-bridge-credit__brand {
-    position: relative;
-    padding-inline: 0.2em;
-    border-radius: 0.2em;
-    color: inherit;
-    text-decoration: none;
-    transition: color 160ms ease, background-color 160ms ease;
-  }
-
-  .discussion-bridge-credit__brand::after {
-    position: absolute;
-    inset-inline: 0.2em;
-    bottom: -0.12em;
-    height: 1px;
-    background: currentColor;
-    content: "";
-    transform: scaleX(0);
-    transform-origin: center;
-    transition: transform 180ms ease;
-  }
-
-  .discussion-bridge-credit__brand:is(:hover, :focus-visible) {
-    color: var(--sl-color-accent-high, #3451b2);
-    background-color: color-mix(in srgb, var(--sl-color-accent-high, #3451b2) 10%, transparent);
-  }
-
-  .discussion-bridge-credit__brand:hover::after,
-  .discussion-bridge-credit__brand:focus-visible::after {
-    transform: scaleX(1);
-  }
-
-  .discussion-bridge-credit__brand:focus-visible {
-    outline: 2px solid var(--sl-color-accent-high, #3451b2);
-    outline-offset: 0.2rem;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .discussion-bridge-credit__brand,
-    .discussion-bridge-credit__brand::after {
-      transition: none;
-    }
-  }
-</style>

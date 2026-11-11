@@ -199,8 +199,6 @@ export function assertCmsConnection(connection, state) {
         || !connection.directions.includes("from_discourse") || !connection.policy.enabled || connection.policy.publication_kind !== "static" || connection.native_capabilities.publication_kind !== "static"
         || !connection.native_capabilities.supported_presentations.includes(connection.policy.presentation_mode) || !connection.native_capabilities.complete_content_supported)
         throw new Error("CMS receiver-authorized Astro static publication is unavailable.");
-    if (state.scopeRevision !== null && state.scopeRevision !== connection.scope_revision || state.policyRevision !== null && state.policyRevision !== connection.policy.policy_revision)
-        throw new Error("CMS scope or policy changed; source and prepared work require reconciliation.");
 }
 const sourceId = (event) => event.event_type === "publication" ? event.source.source_id : event.source_id;
 export function stageCmsFeedPage(state, feed) {

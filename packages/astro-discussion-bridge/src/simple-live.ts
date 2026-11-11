@@ -104,7 +104,9 @@ function render(root: HTMLElement, replies: PublicPost[], topicUrl: string, disc
   const attributions = root.querySelector<HTMLElement>("[data-discussionbridge-attributions]");
   const fragment = document.createDocumentFragment();
   const header = element("div", "discussion-bridge-simple__header");
-  header.append(element("h2", "", "Comments"), link(topicUrl, "Open discussion"));
+  const discussion = link(topicUrl, "Open in forum");
+  discussion.setAttribute("data-discussionbridge-forum-label", `Open in ${forumName}`);
+  header.append(element("h2", "", "Discussion"), discussion);
   fragment.append(header);
 
   if (!replies.length) {

@@ -104,7 +104,9 @@ function render(root, replies, topicUrl, discourseUrl, truncated, forumName) {
     const attributions = root.querySelector("[data-discussionbridge-attributions]");
     const fragment = document.createDocumentFragment();
     const header = element("div", "discussion-bridge-simple__header");
-    header.append(element("h2", "", "Comments"), link(topicUrl, "Open discussion"));
+    const discussion = link(topicUrl, "Open in forum");
+    discussion.setAttribute("data-discussionbridge-forum-label", `Open in ${forumName}`);
+    header.append(element("h2", "", "Discussion"), discussion);
     fragment.append(header);
     if (!replies.length) {
         const empty = element("p", "", "No comments yet. ");

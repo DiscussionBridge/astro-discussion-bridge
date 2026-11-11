@@ -77,6 +77,8 @@ function stringValue(value: unknown): string | undefined {
         sourceUrl={Astro.props.sourceUrl}
         topicId={topicId}
         topicUrl={topicUrl}
+        forumName={frontmatter.discussionbridgeForumName}
+        connectedSource={sourcePresentation}
       />
     )}
     <DiscussionCredit />

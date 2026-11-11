@@ -21,6 +21,7 @@ export interface CmsNativeState {
   stream: "initial" | "changes";
   cursor: string | null;
   checkpoint: string | null;
+  priorPolicyFeeds?: { scopeRevision: string | null; policyRevision: string; stream: CmsNativeState["stream"]; cursor: string | null; checkpoint: string | null }[];
   events: Record<string, CmsEvent>;
   sources: Record<string, CmsEvent>;
   mappings: Record<string, CmsMapping>;
@@ -170,7 +171,6 @@ export function assertCmsConnection(connection: CmsConnection, state: CmsNativeS
   if (connection.connection_id !== state.connectionId || connection.profile !== "astro" || !sameCmsOrigin(connection.destination_origin, state.destinationOrigin)
     || !connection.directions.includes("from_discourse") || !connection.policy.enabled || connection.policy.publication_kind !== "static" || connection.native_capabilities.publication_kind !== "static"
     || !connection.native_capabilities.supported_presentations.includes(connection.policy.presentation_mode) || !connection.native_capabilities.complete_content_supported) throw new Error("CMS receiver-authorized Astro static publication is unavailable.");
-  if (state.scopeRevision !== null && state.scopeRevision !== connection.scope_revision || state.policyRevision !== null && state.policyRevision !== connection.policy.policy_revision) throw new Error("CMS scope or policy changed; source and prepared work require reconciliation.");
 }
 
 const sourceId = (event: CmsEvent) => event.event_type === "publication" ? event.source.source_id : event.source_id;

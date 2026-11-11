@@ -14,6 +14,13 @@ export interface CmsNativeState {
     stream: "initial" | "changes";
     cursor: string | null;
     checkpoint: string | null;
+    priorPolicyFeeds?: {
+        scopeRevision: string | null;
+        policyRevision: string;
+        stream: CmsNativeState["stream"];
+        cursor: string | null;
+        checkpoint: string | null;
+    }[];
     events: Record<string, CmsEvent>;
     sources: Record<string, CmsEvent>;
     mappings: Record<string, CmsMapping>;

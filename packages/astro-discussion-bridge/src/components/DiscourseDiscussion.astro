@@ -1,9 +1,12 @@
 ---
 import config from "virtual:discussion-bridge/config";
+import discussionLabels from "../assets/discussion-labels.js?raw";
+import { resolveForumName, validateForumName } from "../forum-name";
 import {
   normalizePublicHttpUrl,
   normalizeServiceBaseUrl,
   parsePublicDiscourseTopicUrl,
+  readPublicForumSettings, cmsFetch,
 } from "astro-discussion-bridge/server-url";
 import { isInteractiveCommentsMode } from "../comments-mode";
 import { normalizeTopicId } from "../topic-identity";
@@ -18,6 +21,8 @@ interface Props {
   sourceUrl?: unknown;
   topicId?: unknown;
   topicUrl?: unknown;
+  forumName?: unknown;
+  connectedSource?: boolean;
 }
 
 const discourseUrl = `${normalizeServiceBaseUrl(
@@ -29,7 +34,7 @@ const embedHeight = config.comments.embedHeight;
 const dynamicHeight = config.comments.dynamicHeight;
 const embedMinHeight = config.comments.embedMinHeight;
 const fullApp = Astro.props.fullApp ?? isInteractiveCommentsMode(config.comments.display);
-const heading = Astro.props.heading ?? "Comments";
+const heading = Astro.props.heading ?? "Discussion";
 const topicIdValue = Astro.props.topicId ?? Astro.props.frontmatter?.discourseTopicId;
 const topicId = normalizeTopicId(topicIdValue, "DiscourseDiscussion topicId");
 const topicUrlValue = Astro.props.topicUrl ?? Astro.props.frontmatter?.discourseTopicUrl;
@@ -44,7 +49,20 @@ if (topicId !== undefined && topicReference && String(topicReference.topicId) !=
   throw new Error("DiscourseDiscussion topicId and topicUrl must identify the same topic.");
 }
 const resolvedTopicId = topicId ?? normalizeTopicId(topicReference?.topicId, "DiscourseDiscussion topicUrl ID");
-const topicUrl = topicReference?.href;
+const topicUrl = topicReference?.href ?? (resolvedTopicId ? new URL(`t/${resolvedTopicId}`, discourseUrl).href : undefined);
+let forumName = "";
+if (config.comments.enabled && topicUrl) {
+  try {
+    const supplied = Astro.props.forumName ?? Astro.props.frontmatter?.discussionbridgeForumName;
+    if (Astro.props.connectedSource && supplied !== undefined) forumName = validateForumName(supplied);
+    else {
+      const settings = config.forumName === undefined ? await readPublicForumSettings(discourseUrl, cmsFetch) : undefined;
+      forumName = resolveForumName(config.forumName, settings?.title);
+    }
+  } catch {
+    // An unavailable optional label does not hide a known discussion.
+  }
+}
 const sourceUrl = resolvedTopicId === undefined
   ? normalizePublicHttpUrl(
       requiredString(Astro.props.sourceUrl ?? Astro.url.href, "DiscourseDiscussion sourceUrl"),
@@ -68,11 +86,13 @@ function requiredString(value: unknown, label: string): string {
     data-discussionbridge-discourse-url={discourseUrl}>
     <div class="discussion-bridge-discussion__header">
       <h2>{heading}</h2>
-      {topicUrl && <a href={topicUrl}>Open discussion</a>}
+      {topicUrl && <a href={topicUrl} data-discussionbridge-forum-label={forumName ? `Open in ${forumName}` : ""}>Open in forum</a>}
     </div>
     <div id="discourse-comments"></div>
   </section>
 )}
+
+{config.comments.enabled && topicUrl && <script is:inline set:html={discussionLabels}></script>}
 
 {config.comments.enabled && (
   <script define:vars={{ discourseUrl, embedClassName, embedHeight, dynamicHeight, embedMinHeight, fullApp, resolvedTopicId, sourceUrl }}>

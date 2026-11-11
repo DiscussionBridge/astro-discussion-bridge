@@ -1,6 +1,7 @@
 ---
 import sanitizeHtml from "sanitize-html";
 import discourseWordmark from "../assets/discourse-wordmark.svg?raw";
+import discussionLabels from "../assets/discussion-labels.js?raw";
 import config from "virtual:discussion-bridge/config";
 import { resolveConnectedForumName, resolveForumName } from "../forum-name";
 import { normalizeTopicId, parsePublicTopicJson } from "../topic-identity";
@@ -86,7 +87,7 @@ const replies = replyIds.map((id) => {
 const initialReplies = replies.slice(0, INITIAL_REPLIES);
 const remainingReplies = replies.slice(INITIAL_REPLIES);
 const exceedsBound = stream.length - 1 > MAX_REPLIES;
-const heading = Astro.props.heading ?? "Comments";
+const heading = Astro.props.heading ?? "Discussion";
 const settings = await readPublicForumSettings(discourseUrl, cmsFetch).catch(() => undefined);
 const forumName = Astro.props.connectedSource
   ? await resolveConnectedForumName(Astro.props.forumName)
@@ -172,6 +173,7 @@ function cookedHtml(post: PublicPost): string {
 
 <section
   class:list={["discussion-bridge-simple", Astro.props.class]}
+  data-discussionbridge-simple={Astro.props.connectedSource ? "" : undefined}
   data-discussionbridge-simple-live
   data-discourse-origin={discourseUrl}
   data-topic-id={topicId}
@@ -179,7 +181,7 @@ function cookedHtml(post: PublicPost): string {
   data-forum-name={Astro.props.connectedSource ? forumName : config.forumName}
   data-discussionbridge-mode="simple"
 >
-  <div class="discussion-bridge-simple__header"><h2>{heading}</h2><a href={topicUrl}>Join the discussion</a></div>
+  <div class="discussion-bridge-simple__header"><h2>{heading}</h2><a href={topicUrl} data-discussionbridge-forum-label={`Open in ${forumName}`}>Open in forum</a></div>
   {replies.length ? (
     <>
     <ol>{initialReplies.map((post) => (
@@ -209,6 +211,7 @@ function cookedHtml(post: PublicPost): string {
   </div>
   <p data-discussionbridge-simple-status hidden>Live comments are temporarily unavailable; showing the most recently published snapshot.</p>
 </section>
+<script is:inline set:html={discussionLabels}></script>
 
 <style is:global>
   .discussion-bridge-simple { margin-block-start: 3rem; border-block-start: 1px solid var(--sl-color-gray-5); padding-block-start: 2rem; }

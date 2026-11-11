@@ -22,9 +22,27 @@ export async function withCmsCoordinator(options, action) {
             const state = await readCmsState(options.stateFile, emptyCmsState(client, options.siteUrl, options.connectionId));
             const connection = await client.connection();
             assertCmsConnection(connection, state);
+            const save = () => writeCmsState(options.stateFile, state);
+            const policyChanged = state.policyRevision !== null && state.policyRevision !== connection.policy.policy_revision;
+            if (policyChanged) {
+                const command = state.nativeCommand;
+                if (state.pendingClaim || Object.keys(state.reservations ?? {}).length
+                    || Object.values(state.transactions).some(work => ["claimed", "staged", "prepared"].includes(work.stage))
+                    || ["starting", "running", "uncertain"].includes(command?.phase ?? "")) {
+                    throw new Error("CMS policy changed while native work is unresolved; reconcile that work first.");
+                }
+                const { scopeRevision, policyRevision, stream, cursor, checkpoint } = state;
+                await recoverCmsSources(client, state);
+                state.priorPolicyFeeds ??= [];
+                state.priorPolicyFeeds.push({ scopeRevision, policyRevision: policyRevision, stream, cursor, checkpoint });
+            }
+            else if (state.scopeRevision !== null && state.scopeRevision !== connection.scope_revision) {
+                throw new Error("CMS scope changed; source and prepared work require reconciliation.");
+            }
             state.scopeRevision = connection.scope_revision;
             state.policyRevision = connection.policy.policy_revision;
-            const save = () => writeCmsState(options.stateFile, state);
+            if (policyChanged)
+                await save();
             return action({ client, connection, state, save });
         });
     }

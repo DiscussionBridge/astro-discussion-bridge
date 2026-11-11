@@ -91,6 +91,42 @@ test("expired feed checkpoints refresh source discovery without dropping retaine
   assert.deepEqual(await journal(options), { ...before, checkpoint: "ZnJlc2g", sources: {} });
 });
 
+test("a receiver mode change needs matching mapping inventory before replacing the saved feed", async t => {
+  let configured = connection;
+  let retained;
+  let inventory = [];
+  const options = await fixture(t, async (url, init) => {
+    const endpoint = new URL(url);
+    if (endpoint.pathname.endsWith("connection.json")) return Response.json(configured);
+    if (endpoint.pathname.endsWith("mappings/prepare.json")) {
+      retained = mapping(JSON.parse(init.body));
+      return Response.json(retained, { status: 201 });
+    }
+    if (endpoint.pathname.endsWith("mappings.json")) return Response.json({ items: inventory, next_cursor: null });
+    assert.match(endpoint.pathname, /sources\.json$/);
+    if (endpoint.searchParams.get("stream") === "initial") {
+      return Response.json({ stream: "initial", items: [event], next_cursor: null, checkpoint_cursor: configured === connection ? "b2xk" : "bmV3" });
+    }
+    assert.equal(endpoint.searchParams.get("cursor"), "bmV3");
+    return Response.json({ stream: "changes", items: [], next_cursor: null, checkpoint_cursor: "bmV3" });
+  });
+  await pollCmsSources(options);
+  await reserveCmsSource(options, source.source_id);
+  const before = await journal(options);
+  configured = { ...connection, scope_revision: "scope-2",
+    policy: { ...connection.policy, policy_revision: "policy-2", presentation_mode: "simple" } };
+  await assert.rejects(pollCmsSources(options), /missing a retained mapping/);
+  assert.deepEqual(await journal(options), before);
+  inventory = [{ ...retained, presentation_mode: "simple" }];
+  await pollCmsSources(options);
+  const after = await journal(options);
+  assert.equal(after.policyRevision, "policy-2");
+  assert.equal(after.checkpoint, "bmV3");
+  assert.equal(after.priorPolicyFeeds[0].checkpoint, before.checkpoint);
+  assert.deepEqual(after.mappings, before.mappings);
+  assert.deepEqual(after.events, before.events);
+});
+
 test("uncertain native reservation replays the exact durable mutation and stable file identity", async t => {
   const bodies = [];
   const options = await fixture(t, async (url, init) => {
