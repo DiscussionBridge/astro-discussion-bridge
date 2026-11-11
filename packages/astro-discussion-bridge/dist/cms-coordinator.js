@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import path from "node:path";
 import { lock } from "proper-lockfile";
-import { CmsClient, CmsRequestError } from "./cms-client.js";
+import { CmsClient, CmsRequestError, validatedCmsErrorResponse } from "./cms-client.js";
 import { assertCmsConnection, emptyCmsState, readCmsState, stageCmsClaim, stageCmsFeedPage, withCmsStateLock, writeCmsState } from "./cms-state.js";
 import { nativePublicationFiles } from "./native-publication.js";
 import { semanticIdentity, validateCms } from "../src/private/cms-runtime.mjs";
@@ -128,12 +128,37 @@ export async function reserveCmsSource(options, sourceId) {
             throw new Error("Existing native page requires explicit ownership reconciliation.");
         state.reservations ??= Object.create(null);
         let operation = state.reservations[sourceId];
-        if (operation && operation.body.source_revision !== event.source.source_revision)
-            throw new Error("An uncertain CMS reservation must reconcile before a new source revision.");
         operation ??= { body: { mutation_id: randomUUID(), source_id: sourceId, source_revision: event.source.source_revision, policy_revision: state.policyRevision, external_id: reservation.externalId, canonical_url: reservation.canonicalUrl } };
+        if (operation.body.source_id !== sourceId || operation.body.external_id !== reservation.externalId ||
+            operation.body.canonical_url !== reservation.canonicalUrl || operation.body.policy_revision !== state.policyRevision) {
+            throw new Error("CMS reservation scope changed before reconciliation.");
+        }
         state.reservations[sourceId] = operation;
         await save();
-        const mapping = await client.request("V4-09", { body: operation.body });
+        let mapping;
+        try {
+            mapping = await client.request("V4-09", { body: operation.body });
+        }
+        catch (error) {
+            const refusal = validatedCmsErrorResponse(error, client, "V4-09", operation.body);
+            const owned = state.mappings[sourceId];
+            // An exact refusal and a later, durable source event are both required.
+            // In particular, an unknown response cannot authorize a replacement.
+            if (refusal?.httpStatus !== 409 || refusal.envelope.code !== "revision_conflict" || refusal.envelope.retryable ||
+                !owned || !owned.destination_native_id || event.source.source_revision === operation.body.source_revision ||
+                !Object.values(state.events).some(prior => prior.event_type === "publication" &&
+                    prior.source.source_id === sourceId && prior.source.source_revision === operation.body.source_revision &&
+                    BigInt(prior.event_sequence) < BigInt(event.event_sequence)))
+                throw error;
+            mapping = await client.request("V4-11", { path: { mapping_id: owned.mapping_id } });
+            if (mapping.mapping_id !== owned.mapping_id || mapping.resource_id !== owned.resource_id ||
+                mapping.destination_native_id !== owned.destination_native_id || mapping.source_id !== sourceId ||
+                mapping.connection_id !== state.connectionId || mapping.external_id !== reservation.externalId ||
+                mapping.canonical_url !== reservation.canonicalUrl || mapping.desired_source_revision !== event.source.source_revision)
+                throw error;
+            state.retiredReservations ??= [];
+            state.retiredReservations.push({ body: operation.body, refusal, successorEventId: event.event_id });
+        }
         if (mapping.source_id !== sourceId || mapping.connection_id !== state.connectionId || mapping.external_id !== operation.body.external_id || mapping.canonical_url !== operation.body.canonical_url)
             throw new Error("CMS native reservation binding requires reconciliation.");
         state.mappings[sourceId] = mapping;

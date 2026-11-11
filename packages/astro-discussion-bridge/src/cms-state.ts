@@ -27,6 +27,8 @@ export interface CmsNativeState {
   generations: Record<string, number>;
   transactions: Record<string, CmsNativeTransaction>;
   reservations?: Record<string, { body: { mutation_id: string; source_id: string; source_revision: string; policy_revision: string; external_id: string; canonical_url: string } }>;
+  retiredReservations?: { body: NonNullable<CmsNativeState["reservations"]>[string]["body"];
+    refusal: import("./cms-client.js").CmsValidatedErrorResponse; successorEventId: string }[];
   pendingClaim?: { body: { mutation_id: string; mapping_id?: string }; intake?: true };
   /** Local positive-selector progress only; never a wire cursor or authority. */
   intakeAfterMappingId?: string;

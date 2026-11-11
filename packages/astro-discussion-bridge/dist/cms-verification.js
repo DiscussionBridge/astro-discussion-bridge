@@ -24,6 +24,12 @@ const nodes = (root) => {
     return output;
 };
 const textOf = (node) => node.data ?? (node.children ?? []).map(textOf).join("");
+function renderedContentIdentity(html) {
+    const element = (node) => [node.type, node.name ?? null, node.data ?? null,
+        Object.entries(node.attribs ?? {}).sort(([left], [right]) => left.localeCompare(right)),
+        (node.children ?? []).map(element)];
+    return JSON.stringify(element(parseDocument(html, { decodeEntities: true })));
+}
 function fragment(html, node) {
     if (typeof node.startIndex !== "number" || typeof node.endIndex !== "number")
         throw new Error("CMS rendered fragment boundaries require attention.");
@@ -89,7 +95,10 @@ export async function verifyCmsPublication(expected, deployment, fetchImplementa
     const rendered = await processor.render(expected.stagedMarkdownBody);
     const contentDocument = parseDocument(rendered.code, { decodeEntities: true, withStartIndices: true, withEndIndices: true });
     const sourceContent = nodes(contentDocument).filter(node => node.attribs?.["data-discussionbridge-cms-content"] === expected.resourceId);
-    if (sourceContent.length !== 1 || sha256(prepared.content) !== sha256(fragment(rendered.code, sourceContent[0])))
+    // Astro's native HTML and the independent Markdown renderer serialize
+    // entities and void tags differently. Compare their actual content tree.
+    if (sourceContent.length !== 1 || renderedContentIdentity(prepared.content) !==
+        renderedContentIdentity(fragment(rendered.code, sourceContent[0])))
         throw new Error("CMS actual native build did not render the complete prepared content.");
     // This budget grows with the actual expected native artifact. It is not a
     // metadata JSON bound or a whole-publication size policy. No truncation.

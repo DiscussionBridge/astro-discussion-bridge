@@ -29,6 +29,11 @@ export interface CmsNativeState {
             canonical_url: string;
         };
     }>;
+    retiredReservations?: {
+        body: NonNullable<CmsNativeState["reservations"]>[string]["body"];
+        refusal: import("./cms-client.js").CmsValidatedErrorResponse;
+        successorEventId: string;
+    }[];
     pendingClaim?: {
         body: {
             mutation_id: string;

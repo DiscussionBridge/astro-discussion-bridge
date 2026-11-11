@@ -15,6 +15,7 @@ export interface NativePresentationEvidence {
     fullHtmlSha256: string;
     portableHtmlSha256: string;
     controls: NativeControlRange[];
+    generatedCodeMarkdown?: string;
 }
 /** Only a registered SDK producer can issue the runtime object behind this type. */
 export interface NativeRenderedArticle {
@@ -27,6 +28,8 @@ export interface NativeRenderEdit {
     value: string;
 }
 export declare const nativeRenderHash: (value: string) => string;
+/** Accept only plain authored Markdown fences that match the actual Starlight display and copy text. */
+export declare function starlightCodeEdits(html: string, markdown: string): NativeRenderEdit[] | undefined;
 export declare function validateNativePresentation(value: NativePresentationEvidence, html: string): void;
 /** SDK-private issuance, called only after actual registered producer validation. */
 export declare function issueNativeRenderedArticle(html: string, source: Omit<NativePresentationEvidence, "version" | "recipe" | "fullHtmlSha256" | "portableHtmlSha256">): NativeRenderedArticle;

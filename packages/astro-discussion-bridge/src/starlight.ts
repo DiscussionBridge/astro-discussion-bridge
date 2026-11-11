@@ -10,7 +10,7 @@ import { nativePublicationFiles } from "./native-publication.js";
 import { nativeLifecycle, parseMarkdown } from "./native-source.js";
 import { sourceOriginalKey } from "./to-source-profile.js";
 import { captureNativeArticle, NativePreparationLimitation } from "./native-preparation.js";
-import { issueNativeRenderedArticle, nativeRenderHash as hash, type NativeRenderedArticle, type NativeControlRange } from "./native-render.js";
+import { issueNativeRenderedArticle, nativeRenderHash as hash, starlightCodeEdits, type NativeRenderedArticle, type NativeControlRange } from "./native-render.js";
 
 const recipe = "starlight-heading-controls-1";
 const controlMarker = "data-discussionbridge-native-heading";
@@ -221,7 +221,9 @@ export async function createNativeStarlightPublication(options: NativeStarlightP
       const artifactSha256 = hash(artifact); await immutable(`render-${artifactSha256}.json`, artifact + "\n");
       const checked = await nativePublicationFiles.readExisting(file);
       requireCondition(checked && checked.dev === current!.dev && checked.ino === current!.ino && checked.contents === original, "Native Starlight source changed during render association.");
-      return issueNativeRenderedArticle(full, { nativeFile: file, originalMarkdownSha256: hash(parseMarkdown(original).body), originalKey, producerKey, artifactSha256, controls });
+      const markdown = parseMarkdown(original).body;
+      return issueNativeRenderedArticle(full, { nativeFile: file, originalMarkdownSha256: hash(markdown), originalKey,
+        producerKey, artifactSha256, controls, ...(starlightCodeEdits(full, markdown) ? { generatedCodeMarkdown: markdown } : {}) });
     } catch (error) {
       const limitation = error instanceof NativePreparationLimitation ? error : new NativePreparationLimitation("Native Starlight render-origin evidence requires reconciliation; original retained.");
       limitation.capture = { ...captureNativeArticle(parseMarkdown(original).body, input.sourceArticleUrl, "markdown"), renderedHtml: input.html }; throw limitation;

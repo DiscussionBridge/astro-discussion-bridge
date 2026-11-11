@@ -5,11 +5,78 @@ const issued = new WeakMap();
 export const nativeRenderHash = (value) => createHash("sha256").update(value, "utf8").digest("hex");
 const hashPattern = /^[a-f0-9]{64}$/u;
 const { parseDocument } = createRequire(createRequire(import.meta.url).resolve("sanitize-html"))("htmlparser2");
-function removeControls(html, controls) {
+function projectHtml(html, controls, codeMarkdown) {
+    const code = codeMarkdown === undefined ? [] : starlightCodeEdits(html, codeMarkdown);
+    if (!code)
+        throw new Error("Starlight code decoration no longer matches the authored fences.");
+    const edits = [...controls.map(control => ({ ...control, value: "" })), ...code].sort((a, b) => b.start - a.start);
     let result = html;
-    for (const control of [...controls].reverse())
-        result = result.slice(0, control.start) + result.slice(control.end);
+    let boundary = html.length;
+    for (const edit of edits) {
+        if (edit.end > boundary)
+            throw new Error("Native presentation ranges overlap.");
+        result = result.slice(0, edit.start) + edit.value + result.slice(edit.end);
+        boundary = edit.start;
+    }
     return result;
+}
+const descendants = (node) => [node, ...(node.children ?? []).flatMap(descendants)];
+const nodeText = (node) => node.data ?? (node.children ?? []).map(nodeText).join("");
+const classIs = (node, value) => (node.attribs?.class ?? "").split(/\s+/u).includes(value);
+const escapeCode = (value) => value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+/** Accept only plain authored Markdown fences that match the actual Starlight display and copy text. */
+export function starlightCodeEdits(html, markdown) {
+    const fences = [];
+    const lines = markdown.split(/\r?\n/u);
+    for (let index = 0; index < lines.length; index++) {
+        const line = lines[index];
+        const fence = /^(\x60{3,}|~{3,})([a-z0-9_+-]+)\s*$/iu.exec(line);
+        if (!fence) {
+            // A raw HTML article may supply its own scripts or controls. Leave it
+            // on the existing preservation path rather than treating it as theme UI.
+            if (/<[a-z!/?]|^\s{0,3}(?:\x60{3,}|~{3,})/iu.test(line))
+                return;
+            continue;
+        }
+        const body = [];
+        const closing = new RegExp("^" + fence[1][0] + "{" + fence[1].length + ",}\\s*$", "u");
+        while (++index < lines.length && !closing.test(lines[index]))
+            body.push(lines[index]);
+        if (index === lines.length)
+            return;
+        fences.push({ language: fence[2], text: body.join("\n") });
+    }
+    if (!fences.length)
+        return;
+    const nodes = descendants(parseDocument(html, { withStartIndices: true, withEndIndices: true }));
+    const wrappers = nodes.filter(node => node.name === "div" && classIs(node, "expressive-code"));
+    const scripts = nodes.filter(node => node.name === "script");
+    if (wrappers.length !== fences.length || scripts.length !== 1)
+        return;
+    const [script] = scripts;
+    if (Object.keys(script.attribs ?? {}).length !== 2 || script.attribs?.type !== "module" ||
+        !/^\/_astro\/ec\.[a-z0-9]+\.js$/u.test(script.attribs?.src ?? "") || nodeText(script).trim())
+        return;
+    const edits = [];
+    let scriptInWrapper = false;
+    for (const [index, wrapper] of wrappers.entries()) {
+        const parts = descendants(wrapper);
+        const pre = parts.filter(node => node.name === "pre");
+        const copy = parts.filter(node => node.name === "button");
+        const codeLines = parts.filter(node => node.name === "div" && classIs(node, "code"));
+        const { language, text } = fences[index];
+        if (pre.length !== 1 || pre[0].attribs?.["data-language"] !== language || copy.length !== 1 ||
+            copy[0].attribs?.["data-code"]?.replaceAll("\u007f", "\n") !== text ||
+            codeLines.map(nodeText).join("\n") !== text ||
+            parts.some(node => node !== script && ["a", "img", "input", "form", "style", "script", "iframe"].includes(node.name ?? "")))
+            return;
+        scriptInWrapper ||= parts.includes(script);
+        edits.push({ start: wrapper.startIndex, end: wrapper.endIndex + 1,
+            value: '<pre><code class="language-' + language + '">' + escapeCode(text) + '\n</code></pre>' });
+    }
+    if (!scriptInWrapper)
+        edits.push({ start: script.startIndex, end: script.endIndex + 1, value: "" });
+    return edits;
 }
 export function validateNativePresentation(value, html) {
     if (!value || value.version !== 1 || value.recipe !== "starlight-heading-controls-1" || typeof value.nativeFile !== "string" || !path.isAbsolute(value.nativeFile)
@@ -33,13 +100,15 @@ export function validateNativePresentation(value, html) {
             throw new Error("Native control range differs from its exact rendered anchor.");
         end = control.end;
     }
-    if (nativeRenderHash(removeControls(html, value.controls)) !== value.portableHtmlSha256)
-        throw new Error("Native portable projection differs from its witnessed control ranges.");
+    if (value.generatedCodeMarkdown !== undefined && nativeRenderHash(value.generatedCodeMarkdown) !== value.originalMarkdownSha256)
+        throw new Error("Native code projection belongs to a different source.");
+    if (nativeRenderHash(projectHtml(html, value.controls, value.generatedCodeMarkdown)) !== value.portableHtmlSha256)
+        throw new Error("Native portable projection differs from its witnessed presentation.");
 }
 /** SDK-private issuance, called only after actual registered producer validation. */
 export function issueNativeRenderedArticle(html, source) {
     const evidence = { ...structuredClone(source), version: 1, recipe: "starlight-heading-controls-1",
-        fullHtmlSha256: nativeRenderHash(html), portableHtmlSha256: nativeRenderHash(removeControls(html, source.controls)) };
+        fullHtmlSha256: nativeRenderHash(html), portableHtmlSha256: nativeRenderHash(projectHtml(html, source.controls, source.generatedCodeMarkdown)) };
     validateNativePresentation(evidence, html);
     const handle = Object.freeze({ kind: "native-rendered-article" });
     issued.set(handle, { html, evidence });
@@ -53,7 +122,12 @@ function view(value) {
     return result;
 }
 export function fullNativeHtml(value) { return typeof value === "string" ? value : view(value).html; }
-export function portableNativeHtml(value) { return typeof value === "string" ? value : removeControls(view(value).html, view(value).evidence.controls); }
+export function portableNativeHtml(value) {
+    if (typeof value === "string")
+        return value;
+    const { html, evidence } = view(value);
+    return projectHtml(html, evidence.controls, evidence.generatedCodeMarkdown);
+}
 export function nativePresentation(value) { return typeof value === "string" ? undefined : structuredClone(view(value).evidence); }
 export function nativeControlStarts(value) { return new Set(typeof value === "string" ? [] : view(value).evidence.controls.map(control => control.start)); }
 export function assertNativeRenderSource(value, file, originalMarkdown) {
