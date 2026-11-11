@@ -93,6 +93,7 @@ test("CMS native stage writes complete owned source with feedback guards, then p
   assert.equal(fields.discourseTopicId, "53");
   assert.equal(fields.discussionbridgeSourceCreatedAt, source.source_created_at);
   assert.equal(fields.discussionbridgeSourceUpdatedAt, source.source_updated_at);
+  assert.ok(contents.includes(`<time datetime="${source.source_updated_at}">${source.source_updated_at}</time>`));
   assert.equal(fields.discussionbridgeCmsOwnership.source_revision, source.source_revision);
   assert.equal(fields.discussionbridgeCmsOwnership.last_lease_generation, 1);
   assert.equal(fields.discussionbridgeCmsOwnership.schema_version, "db-native-ownership-1");

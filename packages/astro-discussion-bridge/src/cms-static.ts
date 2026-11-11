@@ -231,7 +231,9 @@ export async function prepareCmsNativeWork(options: CmsCoordinatorOptions, workI
           throw error;
         }
         const authors = await sourceByline(source, state.serviceOrigin);
-        body = `\n<div data-discussionbridge-cms-content="${current.mapping.resource_id}">\n${content}\n\n<hr>\n<aside class="discussionbridge-publication">${authors ? `<p>Originally authored by ${authors}</p>` : ""}<p>Originally published as <a href="${text(source.topic_url)}">${text(source.title)}</a> on ${text(connection.forum_name)}.</p></aside>\n</div>\n`;
+        const updatedAt = source.source_updated_at;
+        const updateLine = updatedAt === null ? "<p>Source update date unknown.</p>" : `<p>Updated <time datetime="${updatedAt}">${updatedAt}</time></p>`;
+        body = `\n<div data-discussionbridge-cms-content="${current.mapping.resource_id}">\n${content}\n\n<hr>\n<aside class="discussionbridge-publication">${authors ? `<p>Originally authored by ${authors}</p>` : ""}<p>Originally published as <a href="${text(source.topic_url)}">${text(source.title)}</a> on ${text(connection.forum_name)}.</p>${updateLine}</aside>\n</div>\n`;
         Object.assign(fields, { title: source.title, description: `Published from ${connection.forum_name}.`, discussionCommentsDisplay: current.mapping.presentation_mode, discussionbridgeCmsMode: current.mapping.presentation_mode,
           discussionSync: false, discussionFromDiscourse: true, discussionbridgeNativePublication: true, discussionbridgeResourceId: current.mapping.resource_id, discourseTopicId: source.topic_id, discourseTopicUrl: source.topic_url,
           discussionbridgeSourceRevision: source.source_revision, discussionbridgeSourceCreatedAt: source.source_created_at, discussionbridgeSourceUpdatedAt: source.source_updated_at, discussionbridgeForumName: connection.forum_name,
