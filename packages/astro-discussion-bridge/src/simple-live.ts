@@ -74,12 +74,12 @@ export function startSimpleComments(): void {
   }
 }
 
-async function publicJson(url: URL, expectedOrigin: string): Promise<TopicPayload> {
+export async function publicJson(url: URL, expectedOrigin: string, fetchImpl = fetch): Promise<TopicPayload> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
   let response: Response | undefined;
   try {
-    response = await fetch(url, {
+    response = await fetchImpl(url, {
       credentials: "omit",
       headers: { Accept: "application/json" },
       redirect: "error",

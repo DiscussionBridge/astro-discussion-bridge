@@ -11,10 +11,29 @@ import { NativeMediaUnsupportedError } from "./native-media.js";
 import { cmsUrl, sameCmsOrigin } from "./native-url.js";
 import { assertNativeArticleCapture, captureNativeArticle, NativePreparationLimitation } from "./native-preparation.js";
 import { assertWorkReclaimAllowed, expiryRefusal, workRequest, workRequestRefusal, workRequestResponse } from "./cms-work-requests.js";
+import { publicJson } from "./simple-live.js";
 const hash = (value) => createHash("sha256").update(value, "utf8").digest("hex");
 const publicationBody = (contents) => contents.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/u, "");
 const nativeRevisionFor = (body, fields) => hash(JSON.stringify([body, fields.discussionbridgeNativeManagedFields, fields.discussionbridgeSourceStatus]));
 const text = (value) => value.replace(/[&<>"']/gu, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+async function sourceByline(source, origin) {
+    const id = source.source_authors[0]?.id;
+    let profile;
+    if (id && /^[1-9][0-9]*$/u.test(id)) {
+        const topic = await publicJson(new URL(`/t/${source.topic_id}.json`, origin), origin).catch(() => undefined);
+        const posts = topic?.post_stream?.posts;
+        const first = (Array.isArray(posts) ? posts : []).find((value) => !!value && typeof value === "object" && "post_number" in value && value.post_number === 1 &&
+            "topic_id" in value && value.topic_id === source.topic_id && "user_id" in value &&
+            Number.isSafeInteger(value.user_id) && String(value.user_id) === id &&
+            "username" in value && typeof value.username === "string" && /^[a-z0-9_][a-z0-9_.-]*$/iu.test(value.username));
+        if (first)
+            profile = new URL(`/u/${encodeURIComponent(first.username)}`, origin).href;
+    }
+    return source.source_authors.map(author => {
+        const attr = `data-source-author-id="${text(author.id)}"`, label = text(author.name);
+        return profile && author.id === id ? `<a ${attr} href="${text(profile)}">${label}</a>` : `<span ${attr}>${label}</span>`;
+    }).join(", ");
+}
 export const cmsAuthority = (transaction) => ({
     work_id: transaction.lease.work.work_id, lease_token: transaction.lease.lease_token, lease_generation: transaction.lease.lease_generation,
     source_revision: transaction.lease.work.source_revision, policy_revision: transaction.lease.work.policy_revision,
@@ -253,8 +272,8 @@ export async function prepareCmsNativeWork(options, workId, completedMoveCommand
                     }
                     throw error;
                 }
-                const authors = source.source_authors.map(author => `<span data-source-author-id="${text(author.id)}">${text(author.name)}</span>`).join(", ");
-                body = `\n<div data-discussionbridge-cms-content="${current.mapping.resource_id}">\n${content}\n\n<hr>\n<aside class="discussionbridge-publication"><p>Published from <a href="${text(source.topic_url)}">${text(connection.forum_name)}</a></p>${authors ? `<p>Source authors: ${authors}</p>` : ""}${source.source_updated_at === null ? "<p>Source update date unknown.</p>" : `<p>Updated <time datetime="${source.source_updated_at}">${source.source_updated_at}</time></p>`}</aside>\n</div>\n`;
+                const authors = await sourceByline(source, state.serviceOrigin);
+                body = `\n<div data-discussionbridge-cms-content="${current.mapping.resource_id}">\n${content}\n\n<hr>\n<aside class="discussionbridge-publication">${authors ? `<p>Originally authored by ${authors}</p>` : ""}<p>Originally published as <a href="${text(source.topic_url)}">${text(source.title)}</a> on ${text(connection.forum_name)}.</p></aside>\n</div>\n`;
                 Object.assign(fields, { title: source.title, description: `Published from ${connection.forum_name}.`, discussionCommentsDisplay: current.mapping.presentation_mode, discussionbridgeCmsMode: current.mapping.presentation_mode,
                     discussionSync: false, discussionFromDiscourse: true, discussionbridgeNativePublication: true, discussionbridgeResourceId: current.mapping.resource_id, discourseTopicId: source.topic_id, discourseTopicUrl: source.topic_url,
                     discussionbridgeSourceRevision: source.source_revision, discussionbridgeSourceCreatedAt: source.source_created_at, discussionbridgeSourceUpdatedAt: source.source_updated_at, discussionbridgeForumName: connection.forum_name,

@@ -66,12 +66,12 @@ export function startSimpleComments() {
         });
     }
 }
-async function publicJson(url, expectedOrigin) {
+export async function publicJson(url, expectedOrigin, fetchImpl = fetch) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
     let response;
     try {
-        response = await fetch(url, {
+        response = await fetchImpl(url, {
             credentials: "omit",
             headers: { Accept: "application/json" },
             redirect: "error",
