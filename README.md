@@ -1,17 +1,14 @@
-# DiscussionBridge for Astro — V4 construction
+# DiscussionBridge for Astro and Starlight
 
-Unpublished implementation `0.4.0-alpha.1`. This repo selectively retains native
-Astro source rendering, safe files/state, comments and browser enhancement with
-the exact single V4 development Contract packet. Release identity is null.
+DiscussionBridge for Astro works with plain Astro and Astro with Starlight.
+It publishes eligible native articles to Discourse, materializes authorized
+Discourse content as native pages, and displays discussions.
 
-The packaged native source publisher, CMS static coordinator, explicit lifecycle
-commands and local limitations are documented in
-[NATIVE_V4.md](packages/astro-discussion-bridge/docs/NATIVE_V4.md).
+**V4 Alpha source:** [`v0.4.0-alpha.1.astro.3`](https://github.com/DiscussionBridge/astro-discussion-bridge/tree/v0.4.0-alpha.1.astro.3) · [GitHub Actions](https://github.com/DiscussionBridge/astro-discussion-bridge/actions/runs/43107201438)
 
-The current carry/prune decisions, local checks and unresolved qualification are
-in [V4_CARRY_FORWARD.md](docs/V4_CARRY_FORWARD.md). Historical inventory and prior
-author evidence remain in the separately maintained Astro successor checkpoint.
-They do not establish V4 installation, public delivery or release qualification.
+The adapter uses the [V4 R7 contract](https://github.com/DiscussionBridge/discussionbridge-adapter-contract/tree/09d77c0209835c2d996aad294d161f167c7bd838). See the
+[setup and native publication guide](packages/astro-discussion-bridge/docs/NATIVE_V4.md)
+for configuration, lifecycle commands, and local limitations.
 
 ## Ordinary development and package checks
 
@@ -32,13 +29,6 @@ members from the three fixed development fixtures. The browser build stages
 outputs and actual dependency permission notices before writes; unknown or
 edited notice files are preserved. No CDN or new customer build hook is added.
 
-This remains an unqualified development candidate. The locked native development
-fixture uses Astro 7.3.8; the adapter's Astro peer range is unchanged. Phil approved
-a development/test-only Satteri 0.11.6 override after the original 45,000-quotation
-native package case passed with it on Windows. The older parser also fails on a
-plain Astro page without DiscussionBridge; the fixture has not been reduced or
-skipped. The parser and its platform binaries must remain development-only in
-the ordinary lock. This development-project override does not install a parser patch
-in an operator's site or change the adapter's runtime dependencies. Full current
-Windows, CI and exact-package qualification of this successor remain required;
-the isolated diagnostic result is not their acceptance.
+The native development fixture uses Astro 7.3.8 and pins Satteri 0.11.6 for
+development tests. The adapter's peer dependency range is defined by the
+[package manifest](packages/astro-discussion-bridge/package.json).
