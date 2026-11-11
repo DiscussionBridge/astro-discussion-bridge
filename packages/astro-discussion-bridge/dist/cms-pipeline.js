@@ -225,13 +225,41 @@ async function executeCmsNativeBuild(options, command, allowIdle) {
             // Do not manufacture a command owner, deployment receipt or checked time.
             const idle = allowIdle && (!prior || prior.phase === "succeeded")
                 && !state.pendingClaim && !Object.keys(state.reservations ?? {}).length
-                && Object.values(state.transactions).every(transaction => transaction.stage === "verified"
-                    && (!presentationOf(transaction) || presentationOf(transaction)?.phase === "committed"))
                 && Object.values(state.mappings).every(mapping => mapping.desired_source_revision === mapping.publicly_verified_source_revision)
                 && Object.entries(state.sources).every(([id, event]) => state.mappings[id]
                     && (event.event_type !== "publication" || state.mappings[id].desired_source_revision === event.source.source_revision));
-            if (idle)
-                return null;
+            if (idle) {
+                let settled = true;
+                for (const [id, transaction] of Object.entries(state.transactions)) {
+                    const move = presentationOf(transaction);
+                    if (transaction.stage === "verified" && (!move || move.phase === "committed"))
+                        continue;
+                    const work = transaction.lease.work;
+                    const recovered = transaction.stage === "attention" && transaction.plan && !move
+                        && Object.values(state.transactions).some(successor => {
+                            const recovery = successor.attentionRecovery;
+                            return successor.stage === "verified" && successor.lease.work.mapping_id === work.mapping_id
+                                && typeof recovery === "object" && recovery !== null
+                                && "predecessor_work_id" in recovery && recovery.predecessor_work_id === id
+                                && "predecessor_attempt_cycle" in recovery && recovery.predecessor_attempt_cycle === work.attempt_cycle;
+                        });
+                    if (!recovered) {
+                        settled = false;
+                        break;
+                    }
+                    // The native file was checked above. Keep the original journal entry,
+                    // and also require the receiver to recognize the exact old work as superseded.
+                    const { work: previous, mapping } = await client.query(id);
+                    if (previous.state !== "superseded" || previous.work_id !== id || previous.attempt_cycle !== work.attempt_cycle
+                        || previous.mapping_id !== work.mapping_id || mapping.mapping_id !== work.mapping_id
+                        || mapping.desired_source_revision !== mapping.publicly_verified_source_revision) {
+                        settled = false;
+                        break;
+                    }
+                }
+                if (settled)
+                    return null;
+            }
             throw new Error("CMS deployment has no observed prepared native build.");
         }
         const phases = Object.fromEntries(workIds.map(id => [id, presentationOf(state.transactions[id])?.phase === "applied" ? "move" : "publication"]));
