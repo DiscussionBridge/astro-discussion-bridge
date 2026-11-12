@@ -58,8 +58,7 @@ function validateState(value: unknown): PublicationOperationalState {
       if (Object.hasOwn(evidence.envelope, "correlation_id")) validateCms("Error", evidence.envelope);
       if (rejection.code === "content_preservation_unavailable" && (!rejection.recordedAt || !evidence.requestSha256 || !evidence.candidateId || !evidence.schemaSha256 || !evidence.contractSha256
         || !Object.hasOwn(evidence.envelope, "correlation_id"))) throw new Error("Known preservation rejection lacks its exact historical validated response provenance.");
-      // Historical provenance remains historical across a normal V4 upgrade;
-      // it is never retagged or required to equal the current loaded candidate.
+      // Keep the protocol identity recorded with the original refusal across upgrades.
     }
     for (const [id, entry] of Object.entries(to.rejectedRequests ?? {})) if (id !== entry.body.mutation_id) throw new Error("Known source rejection history identity differs.");
     if (to.pending?.rejection && semanticIdentity(to.rejectedRequests?.[to.pending.body.mutation_id]) !== semanticIdentity(to.pending)) throw new Error("Pending known rejection/history differ.");
